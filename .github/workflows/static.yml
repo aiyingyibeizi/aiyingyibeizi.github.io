@@ -28,7 +28,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    publish_dir: ./CESI
+    publish_dir: ./cesi
     steps:
       - name: Checkout
         uses: actions/checkout@v4
