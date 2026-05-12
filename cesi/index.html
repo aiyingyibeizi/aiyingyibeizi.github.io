@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key == 'F12' || (e.ctrlKey && e.key == 'u') || (e.ctrlKey && e.shiftKey && e.key == 'I')) e.preventDefault();
+        });
+    </script>
+
+    <meta charset="UTF-8">
+    <title>全能测试主界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            padding: 30px 20px;
+            background: #f0f0f0;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #222;
+        }
+
+        .item-card {
+            display: block;
+            text-decoration: none;
+            width: 100%;
+            background: #fff;
+            margin-bottom: 15px;
+            padding: 25px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 20px;
+            color: #222;
+            transition: 0.2s;
+        }
+
+        .item-card:hover {
+            background: #e8e8e8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>全能能力测试 主界面</h1>
+        <a href="reaction.html" class="item-card">反应时间测试</a>
+        <a href="type.html" class="item-card">打字训练测试</a>
+    </div>
+</body>
+
+</html>

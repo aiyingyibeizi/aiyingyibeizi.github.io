@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key == 'F12' || (e.ctrlKey && e.key == 'u') || (e.ctrlKey && e.shiftKey && e.key == 'I')) e.preventDefault();
+        });
+    </script>
+
+    <meta charset="UTF-8">
+    <title>打字训练测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            padding: 30px 20px;
+            background: #f0f0f0;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        #testBox {
+            width: 100%;
+            background: #222;
+            border-radius: 14px;
+            padding: 30px;
+            color: #fff;
+            font-size: 20px;
+            line-height: 1.8;
+            user-select: none;
+        }
+
+        #inputArea {
+            width: 100%;
+            height: 140px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 18px;
+            resize: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .btn-group {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 26px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #444;
+        }
+
+        .wrong {
+            color: #ff5555;
+        }
+
+        .right {
+            color: #55ff55;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="testBox"></div>
+        <textarea id="inputArea" placeholder="在这里开始输入..."></textarea>
+        <div class="result" id="result"></div>
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()">再来一次</button>
+            <button class="btn" onclick="backHome()">返回主界面</button>
+        </div>
+    </div>
+
+    <script>
+        const sentences = [
+            "星光不问赶路人人心依旧奔赴远方从未停下脚步",
+            "生活原本平淡无风奔跑起来自有清风和光亮",
+            "心怀温柔奔赴前路认真生活不负时光不负自己",
+            "保持初心踏实前行每一步都向着理想慢慢靠近",
+            "看淡世事内心安然静静努力默默沉淀慢慢发光",
+            "迎着风雨勇敢向前所有坎坷终会变成过往云烟",
+            "守住本心稳住心态安静成长不慌不忙变优秀",
+            "一路向前不问归途只管努力剩下的交给时光吧",
+            "平凡日子认真过点滴努力终会汇聚成万丈光芒",
+            "心怀热爱奔赴山海不惧前路漫长只管踏实前行",
+            "放下焦虑稳住脚步慢慢沉淀终会遇见更好的自己",
+            "岁月无言沉淀成长默默坚持总有一天会闪闪发光",
+            "晨雾不阻行者步履始终向着理想不曾停歇",
+            "岁月本就寻常坚持前行自会遇见温暖与希望",
+            "怀揣赤诚踏遍征途用心度日不负韶华不负初心",
+            "坚守信念稳步向前每段征程都向美好缓缓抵达",
+            "看透纷扰心境平和默默耕耘静静积蓄悄然绽放",
+            "直面困境无畏前行所有磨难终将化作成长勋章",
+            "坚守自我放平心境悄然蜕变从容不迫成为更好",
+            "坚定前行不问终点全心付出余下皆为岁月馈赠",
+            "寻常岁月用心经营微小付出终将凝聚成耀眼光芒",
+            "怀揣热忱踏遍山河不畏征途遥远只管坚定向前",
+            "抛开浮躁放缓步伐默默积蓄终将邂逅更优秀的你",
+            "时光不语滋养成长恒久坚守终有一日绽放璀璨"
+        ];
+
+        let nowText = "";
+        let startTime = 0;
+        let isStart = false;
+
+        const totalRound = 5;
+        let currentRound = 0;
+        let timeList = [];
+        let accList = [];
+
+        const box = document.getElementById('testBox');
+        const input = document.getElementById('inputArea');
+        const resDom = document.getElementById('result');
+
+        box.oncontextmenu = function () { return false; };
+
+        function getRandomText() {
+            let idx = Math.floor(Math.random() * sentences.length);
+            return sentences[idx];
+        }
+
+        function isChineseChar(str) {
+            return /^[\u4E00-\u9FA5]$/.test(str);
+        }
+
+        function getValidChineseCount(str) {
+            let count = 0;
+            for (let c of str) {
+                if (isChineseChar(c)) count++;
+            }
+            return count;
+        }
+
+        function initText() {
+            isStart = false;
+            input.value = "";
+            nowText = getRandomText();
+            if (currentRound === 0) {
+                timeList = [];
+                accList = [];
+            }
+            box.innerText = `第${currentRound + 1}/${totalRound}轮\n请准确输入下面这段话：\n\n` + nowText;
+            resDom.innerText = "";
+            input.disabled = false;
+        }
+
+        function restartTest() {
+            currentRound = 0;
+            initText();
+        }
+
+        function backHome() {
+            window.location.href = "index.html";
+        }
+
+        function calcAvg(arr) {
+            let sum = 0;
+            arr.forEach(item => sum += parseFloat(item));
+            return (sum / arr.length).toFixed(1);
+        }
+
+        function showAllResult() {
+            let html = "";
+            for (let i = 0; i < totalRound; i++) {
+                html += `第${i + 1}轮用时：${timeList[i]} 秒 &nbsp;&nbsp; 第${i + 1}轮正确率：${accList[i]}%<br>`;
+            }
+            html += `<br>平均用时：${calcAvg(timeList)} 秒 &nbsp;&nbsp; 平均正确率：${calcAvg(accList)}%`;
+            resDom.innerHTML = html;
+        }
+
+        input.addEventListener('input', function () {
+            if (!isStart) {
+                isStart = true;
+                startTime = performance.now();
+            }
+            let inputVal = input.value;
+            let right = 0;
+            let showHtml = "";
+            for (let i = 0; i < nowText.length; i++) {
+                if (i < inputVal.length) {
+                    showHtml += inputVal[i] === nowText[i]
+                        ? `<span class="right">${nowText[i]}</span>`
+                        : `<span class="wrong">${nowText[i]}</span>`;
+                    if (inputVal[i] === nowText[i]) right++;
+                } else {
+                    showHtml += nowText[i];
+                }
+            }
+            box.innerHTML = `第${currentRound + 1}/${totalRound}轮 对照输入：<br><br>` + showHtml;
+
+            let inputChineseLen = getValidChineseCount(inputVal);
+            let targetLen = getValidChineseCount(nowText);
+
+            if (inputChineseLen >= targetLen) {
+                let timeS = ((performance.now() - startTime) / 1000).toFixed(1);
+                let accuracy = ((right / nowText.length) * 100).toFixed(1);
+
+                timeList.push(timeS);
+                accList.push(accuracy);
+                currentRound++;
+
+                if (currentRound >= totalRound) {
+                    input.disabled = true;
+                    showAllResult();
+                } else {
+                    input.disabled = true;
+                    setTimeout(() => {
+                        input.disabled = false;
+                        initText();
+                    }, 800);
+                    resDom.innerHTML = `本轮用时：${timeS} 秒 &nbsp;&nbsp; 本轮正确率：${accuracy}%`;
+                }
+            }
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'v')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        input.onpaste = function (e) {
+            e.preventDefault();
+            return false;
+        };
+
+        initText();
+    </script>
+</body>
+
+</html>
