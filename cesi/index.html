@@ -4,14 +4,23 @@
 <head>
     <meta name="robots" content="noindex, nofollow">
     <script>
-        document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
-            if (e.key == 'F12' || (e.ctrlKey && e.key == 'u') || (e.ctrlKey && e.shiftKey && e.key == 'I')) e.preventDefault();
+            if (
+                e.key == 'F12' ||
+                (e.ctrlKey && e.key == 'u') ||
+                (e.ctrlKey && e.shiftKey && e.key == 'I') ||
+                (e.ctrlKey && e.key == 's') ||
+                (e.ctrlKey && e.key == 'p')
+            ) {
+                e.preventDefault();
+                return false;
+            }
         });
     </script>
 
     <meta charset="UTF-8">
     <title>全能测试主界面</title>
+
     <style>
         * {
             margin: 0;
@@ -32,8 +41,35 @@
 
         h1 {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             color: #222;
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .search-box input {
+            width: 450px;
+            height: 44px;
+            font-size: 16px;
+            padding: 0 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px 0 0 6px;
+            outline: none;
+        }
+
+        .search-box button {
+            height: 46px;
+            font-size: 16px;
+            padding: 0 20px;
+            border: none;
+            background: #222;
+            color: white;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
         }
 
         .item-card {
@@ -59,6 +95,12 @@
 <body>
     <div class="container">
         <h1>全能能力测试 主界面</h1>
+
+        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
+            <input name="q" placeholder="输入关键词，搜索全世界" required autocomplete="off" autofocus>
+            <button type="submit">搜索</button>
+        </form>
+
         <a href="reaction.html" class="item-card">反应时间测试</a>
         <a href="type.html" class="item-card">打字训练测试</a>
     </div>
