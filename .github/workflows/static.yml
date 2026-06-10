@@ -30,7 +30,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './cesi'   # ✅ 这里指定你的目录
+          path: './cesi'
 
       - name: Deploy to GitHub Pages
         id: deployment
