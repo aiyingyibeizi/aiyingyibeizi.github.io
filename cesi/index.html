@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/webp" href="apexon.webp">
-    <link rel="icon" type="image/avif" href="apexon.avif" sizes="32x32">
+    <link rel="icon" type="image/avif" href="apexon.avif">
     <title>Apexon测试</title>
     <style>
         * {
@@ -44,7 +43,7 @@
             font-size: 16px;
             padding: 0 12px;
             border: 1px solid #ccc;
-            border-radius: 6px 0 0 6px;
+            border-radius: 12px 0 0 12px;
             outline: none;
         }
 
@@ -55,7 +54,7 @@
             border: none;
             background: #222;
             color: white;
-            border-radius: 0 6px 6px 0;
+            border-radius: 0 12px 12px 0;
             cursor: pointer;
         }
 
@@ -66,7 +65,7 @@
             background: #fff;
             margin-bottom: 15px;
             padding: 25px;
-            border-radius: 14px;
+            border-radius: 16px;
             text-align: center;
             font-size: 20px;
             color: #222;
@@ -77,6 +76,18 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             background: #e8e8e8;
+        }
+
+        .logo-fixed {
+            position: fixed;
+            top: 36px;
+            left: 44px;
+            z-index: 99999999;
+        }
+
+        .logo-fixed img {
+            display: block;
+            border-radius: 20px;
         }
 
         @media (max-width: 768px) {
@@ -94,11 +105,11 @@
 </head>
 
 <body>
-    <div class="logo-fixed" style="position:fixed;top:36px;left:44px;z-index:99999999;">
+    <div class="logo-fixed">
         <picture>
             <source srcset="apexon.avif" type="image/avif">
             <source srcset="apexon.webp" type="image/webp">
-            <img src="apexon.avif" width="84" height="84" alt="Apexon Logo" style="display:block;">
+            <img src="apexon.png" width="84" height="84" alt="Apexon Logo">
         </picture>
     </div>
     <div class="container">
