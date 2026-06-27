@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>持续注意力测试</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        canvas {
+            width: 100%;
+            height: 360px;
+            border-radius: var(--radius);
+            display: block;
+            background: linear-gradient(135deg, #7c6bc4, #9b8fd4);
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(124, 107, 196, 0.3);
+            touch-action: none;
+        }
+        .countdown-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .countdown-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-purple);
+            font-variant-numeric: tabular-nums;
+        }
+        .score-live {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <img src="assets/favicon.png" alt="Logo" class="auth-logo">
+            <button style="position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;background:transparent;border-radius:50%;cursor:pointer;font-size:20px;color:#94a3b8;" onclick="hideAuth()">✕</button>
+            <h2>登录 APEXON</h2>
+            <div class="auth-sub">登录后保存成绩</div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')" id="tabLogin">登录</button>
+                <button class="auth-tab" onclick="switchTab('register')" id="tabRegister">注册</button>
+            </div>
+            <div id="authFormLogin">
+                <input type="text" class="auth-input" id="loginUser" placeholder="用户名" maxlength="20">
+                <input type="password" class="auth-input" id="loginPass" placeholder="密码" maxlength="30">
+                <label class="remember-row">
+                    <input type="checkbox" id="loginRemember" checked>
+                    <span>30天内自动登录</span>
+                </label>
+                <div class="auth-error" id="loginError"></div>
+                <button class="auth-btn" onclick="handleLogin()">登录</button>
+            </div>
+            <div id="authFormRegister" style="display:none">
+                <input type="text" class="auth-input" id="regUser" placeholder="用户名（2-20位）" maxlength="20">
+                <input type="password" class="auth-input" id="regPass" placeholder="密码（至少8位，含字母+数字）" maxlength="30">
+                <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                <div class="strength-text" id="strengthText"></div>
+                <input type="password" class="auth-input" id="regPass2" placeholder="确认密码" maxlength="30">
+                <div class="auth-error" id="regError"></div>
+                <button class="auth-btn" onclick="handleRegister()">注册并登录</button>
+            </div>
+            <div class="auth-hint">未登录也能测试，但成绩不会保存</div>
+        </div>
+    </div>
+
+    <header class="apexon-header">
+        <a href="index.html" class="apexon-header-logo">
+            <img src="assets/favicon.png" alt="Logo">
+            <span>APEXON</span>
+        </a>
+        <button class="apexon-menu-btn" onclick="toggleMenu()">☰</button>
+        <nav class="apexon-header-nav" id="headerNav">
+            <a href="index.html">首页</a>
+            <a href="reaction.html">反应测试</a>
+            <a href="type.html">打字测试</a>
+            <a href="stick.html" class="active">注意力测试</a>
+        </nav>
+        <div class="user-dropdown-wrap" id="userDropdownWrap" style="display:none">
+            <button class="user-btn" onclick="toggleUserMenu()">
+                <span class="user-avatar" id="userAvatar">A</span>
+                <span id="userName">用户</span>
+            </button>
+            <div class="user-menu" id="userMenu">
+                <div class="user-menu-item" style="cursor:default;color:#64748b;font-size:12px;">已登录：<strong id="menuUserName">用户</strong></div>
+                <div class="user-menu-hr"></div>
+                <button class="user-menu-item" onclick="APEXON.logout()">退出登录</button>
+                <button class="user-menu-item danger" onclick="APEXON.deleteAccount()">注销账号</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>持续注意力测试</h1>
+
+        <div class="countdown-wrap">
+            <div class="countdown-number" id="countdownNum">60</div>
+            <div class="score-live">得分: <span id="scoreLive">0</span></div>
+        </div>
+
+        <canvas id="testBox"></canvas>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()">再来一次</button>
+            <button class="btn" onclick="backHome()">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title">最近记录</div>
+            <div id="historyContent">还没有记录</div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+    (function () {
+        const authOverlay = document.getElementById('authOverlay');
+        const loginUser = document.getElementById('loginUser');
+        const loginPass = document.getElementById('loginPass');
+        const loginRemember = document.getElementById('loginRemember');
+        const regUser = document.getElementById('regUser');
+        const regPass = document.getElementById('regPass');
+        const regPass2 = document.getElementById('regPass2');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+        const loginError = document.getElementById('loginError');
+        const regError = document.getElementById('regError');
+
+        function showAuth() { if(authOverlay) authOverlay.classList.add('show'); }
+        function hideAuth() { if(authOverlay) authOverlay.classList.remove('show'); }
+        window.hideAuth = hideAuth;
+        window.switchTab = function(tab) {
+            document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+            document.getElementById('authFormLogin').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('authFormRegister').style.display = tab === 'register' ? 'block' : 'none';
+            loginError.textContent = ''; regError.textContent = '';
+        };
+        regPass.addEventListener('input', function() {
+            const val = this.value;
+            let score = 0;
+            if (val.length >= 8) score++;
+            if (val.length >= 12) score++;
+            if (/[a-z]/.test(val) && /[A-Z]/.test(val)) score++;
+            if (/\d/.test(val)) score++;
+            if (/[^a-zA-Z0-9]/.test(val)) score++;
+            const colors = ['#e2e8f0', '#ef4444', '#f59e0b', '#22c55e', '#10b981', '#0ea5e9'];
+            const texts = ['', '太弱', '一般', '还行', '不错', '很强'];
+            const pct = Math.min(score / 5 * 100, 100);
+            strengthFill.style.width = pct + '%';
+            strengthFill.style.background = colors[score] || colors[0];
+            strengthText.textContent = texts[score] || '';
+        });
+        window.handleLogin = function() {
+            if (typeof APEXON === 'undefined') { alert('系统未加载，请刷新页面'); return; }
+            const res = APEXON.Account.login(loginUser.value, loginPass.value, loginRemember.checked);
+            if (!res.success) { loginError.textContent = res.message; return; }
+            hideAuth(); initUser();
+        };
+        window.handleRegister = function() {
+            if (typeof APEXON === 'undefined') { alert('系统未加载，请刷新页面'); return; }
+            if (regPass.value !== regPass2.value) { regError.textContent = '两次密码不一致'; return; }
+            const res = APEXON.Account.register(regUser.value, regPass.value);
+            if (!res.success) { regError.textContent = res.message; return; }
+            hideAuth(); initUser();
+        };
+        [loginUser, loginPass].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); }));
+        [regUser, regPass, regPass2].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); }));
+        window.toggleUserMenu = function() { document.getElementById('userMenu').classList.toggle('show'); };
+        document.addEventListener('click', e => { if (!e.target.closest('.user-dropdown-wrap')) document.getElementById('userMenu').classList.remove('show'); });
+        function initUser() {
+            if (typeof APEXON === 'undefined') return;
+            const user = APEXON.Account.getUser();
+            if (!user) return;
+            document.getElementById('userDropdownWrap').style.display = 'block';
+            document.getElementById('userName').textContent = user;
+            document.getElementById('userAvatar').textContent = user.charAt(0).toUpperCase();
+            document.getElementById('menuUserName').textContent = user;
+            renderHistory();
+        }
+        if (typeof APEXON !== 'undefined' && APEXON.Account && APEXON.Account.isLoggedIn()) { initUser(); }
+        else { showAuth(); }
+
+        const BALL_RADIUS = 35, MIN_SPEED = 2, MAX_SPEED_BASE = 5, CHANGE_RATE = 0.03;
+        const INITIAL_HP = 100, CLICK_DAMAGE = 1.2, HOVER_BONUS = 5;
+        const HOVER_INTERVAL_MS = 100, HOVER_DISTANCE_OFFSET = 10;
+        const GAME_DURATION = 60, TICK_INTERVAL_MS = 1000;
+
+        const canvas = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const countdownNum = document.getElementById('countdownNum');
+        const scoreLive = document.getElementById('scoreLive');
+        const historyContent = document.getElementById('historyContent');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const ctx = canvas.getContext('2d');
+
+        let score = 0, timeLeft = GAME_DURATION, running = false;
+        let timer = null, animationId = null, hoverTime = 0;
+        let lastFrameTime = performance.now(), mouseX = 0, mouseY = 0;
+        let started = false, ball = null, particles = [], isPaused = false;
+
+        window.toggleMenu = function () {
+            document.getElementById('headerNav').classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
+        });
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.life = 1.0; this.color = color;
+                this.size = Math.random() * 4 + 2;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.vy += 0.2; this.life -= 0.02; this.size *= 0.97;
+            }
+            draw(ctx) {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function isMouseHovering() {
+            return Math.hypot(ball.x - mouseX, ball.y - mouseY) < ball.r + HOVER_DISTANCE_OFFSET;
+        }
+
+        function randomSpeed() {
+            const boost = 1 + (GAME_DURATION - timeLeft) / GAME_DURATION * 0.5;
+            return (Math.random() * (MAX_SPEED_BASE * boost - MIN_SPEED) + MIN_SPEED) * (Math.random() > 0.5 ? 1 : -1);
+        }
+
+        class Ball {
+            constructor() { this.reset(); }
+            reset() {
+                this.r = BALL_RADIUS;
+                this.x = Math.random() * (canvas.width - this.r * 2) + this.r;
+                this.y = Math.random() * (canvas.height - this.r * 2) + this.r;
+                this.vx = randomSpeed(); this.vy = randomSpeed();
+                this.hp = INITIAL_HP;
+            }
+            update() {
+                if (!running) return;
+                if (Math.random() < CHANGE_RATE) { this.vx = randomSpeed(); this.vy = randomSpeed(); }
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < this.r || this.x > canvas.width - this.r) this.vx *= -1;
+                if (this.y < this.r || this.y > canvas.height - this.r) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = '#4caf50'; ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x - 8, this.y - 8, this.r * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(this.x - 40, this.y - this.r - 16, 80, 8);
+                ctx.fillStyle = this.hp > 50 ? '#4caf50' : this.hp > 25 ? '#ff9800' : '#f44336';
+                ctx.fillRect(this.x - 40, this.y - this.r - 16, 80 * (this.hp / INITIAL_HP), 8);
+            }
+        }
+
+        function renderHistory() {
+            if (typeof APEXON === 'undefined') {
+                historyContent.innerHTML = '<div style="color:#999;font-size:13px">登录后保存记录</div>';
+                return;
+            }
+            const esc = APEXON.Security.escapeHtml;
+            const history = APEXON.Storage.getHistory('stick', 5);
+            if (!history.length) {
+                historyContent.innerHTML = '<div style="color:#999;font-size:13px">还没有记录</div>';
+                return;
+            }
+            historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' 分</span></div>').join('');
+        }
+
+        function handleStart() { if (!started) { started = true; startGame(); } }
+
+        let lastTouchTime = 0;
+        function handleTouchStart(e) {
+            const now = performance.now();
+            if (now - lastTouchTime < 100) return;
+            lastTouchTime = now;
+            e.preventDefault();
+            if (!started) { handleStart(); return; }
+            const r = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            mouseX = touch.clientX - r.left; mouseY = touch.clientY - r.top;
+            if (isMouseHovering()) ball.hp -= CLICK_DAMAGE;
+        }
+
+        canvas.addEventListener('click', handleStart);
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!running || !ball) return;
+            const r = canvas.getBoundingClientRect();
+            mouseX = e.clientX - r.left; mouseY = e.clientY - r.top;
+            if (isMouseHovering()) ball.hp -= CLICK_DAMAGE;
+        });
+
+        function drawScene() {
+            if (isPaused) { animationId = requestAnimationFrame(drawScene); return; }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+            if (!started) {
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('点击开始测试', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.font = '16px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.fillText('鼠标悬停在球上即可得分', canvas.width / 2, canvas.height / 2 + 24);
+            }
+
+            if (running) {
+                const currentTime = performance.now();
+                const deltaTime = currentTime - lastFrameTime;
+                lastFrameTime = currentTime;
+                ball.update(); ball.draw();
+                if (ball.hp <= 0) {
+                    spawnParticles(ball.x, ball.y, '#4caf50');
+                    ball.reset(); score += 1; scoreLive.textContent = score;
+                    try { if (typeof APEXON !== 'undefined' && APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
+                }
+                const hovering = isMouseHovering();
+                if (hovering) {
+                    hoverTime += deltaTime;
+                    while (hoverTime >= HOVER_INTERVAL_MS) { score += HOVER_BONUS; hoverTime -= HOVER_INTERVAL_MS; scoreLive.textContent = score; }
+                } else { hoverTime = 0; }
+                particles = particles.filter(p => p.life > 0);
+                particles.forEach(p => { p.update(); p.draw(ctx); });
+            }
+            animationId = requestAnimationFrame(drawScene);
+        }
+
+        function startGame() {
+            score = 0; timeLeft = GAME_DURATION; running = true;
+            ball = new Ball(); hoverTime = 0; particles = [];
+            lastFrameTime = performance.now();
+            countdownNum.textContent = timeLeft; scoreLive.textContent = score;
+            result.innerHTML = '';
+            timer = setInterval(() => {
+                timeLeft--; countdownNum.textContent = timeLeft;
+                if (timeLeft <= 10) { countdownNum.style.color = '#f44336'; try { if (typeof APEXON !== 'undefined' && APEXON.Audio) APEXON.Audio.playTick(); } catch(e){} }
+                if (timeLeft <= 0) endGame();
+            }, TICK_INTERVAL_MS);
+            try { if (typeof APEXON !== 'undefined' && APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
+        }
+
+        function endGame() {
+            running = false; clearInterval(timer); cancelAnimationFrame(animationId);
+            countdownNum.style.color = '';
+            const grades = [
+                { min: 200, grade: 'S', color: '#FFD700' },
+                { min: 150, grade: 'A', color: '#FF6B6B' },
+                { min: 100, grade: 'B', color: '#4ECDC4' },
+                { min: 50, grade: 'C', color: '#95E1D3' },
+                { min: 0, grade: 'D', color: '#aaa' }
+            ];
+            const grade = grades.find(g => score >= g.min) || grades[grades.length - 1];
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">最终得分 ' + score + ' 分</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">总得分</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">时长</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
+            if (typeof APEXON !== 'undefined' && APEXON.Account && APEXON.Account.isLoggedIn()) {
+                APEXON.Storage.saveRecord('stick', { score: score });
+            }
+            try { if (typeof APEXON !== 'undefined' && APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
+            try { if (navigator.vibrate) navigator.vibrate(50); } catch(e){}
+            renderHistory();
+        }
+
+        window.restartTest = function () {
+            clearInterval(timer); cancelAnimationFrame(animationId);
+            started = false; running = false; particles = [];
+            countdownNum.textContent = GAME_DURATION; countdownNum.style.color = '';
+            scoreLive.textContent = '0'; result.innerHTML = '';
+            drawScene();
+        };
+
+        if (typeof APEXON !== 'undefined' && APEXON.Visibility && APEXON.Visibility.onChange) {
+            APEXON.Visibility.onChange((visible) => {
+                if (!visible) isPaused = true;
+                else { isPaused = false; lastFrameTime = performance.now(); }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!started) handleStart(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        if (typeof APEXON !== 'undefined' && APEXON.Utils && APEXON.Utils.debounce) {
+            window.addEventListener('resize', APEXON.Utils.debounce(() => {
+                canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+            }, 250));
+        } else {
+            window.addEventListener('resize', () => {
+                canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+            });
+        }
+
+        renderHistory();
+        drawScene();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
