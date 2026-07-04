@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>序列记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        #testBox {
+            display: grid;
+            gap: 10px;
+            justify-content: center;
+            align-content: center;
+            padding: 24px;
+            max-width: 420px;
+            margin: 0 auto;
+            min-height: 320px;
+        }
+        #testBox .seq-cell {
+            aspect-ratio: 1;
+            border-radius: var(--apex-radius-sm);
+            cursor: pointer;
+            transition: transform var(--apex-transition-fast), filter var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        #testBox .seq-cell.lit {
+            filter: brightness(1.45);
+            transform: scale(1.08);
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+            z-index: 1;
+        }
+        #testBox .seq-cell.success {
+            filter: brightness(1.25);
+            transform: scale(1.05);
+        }
+        #testBox .seq-cell.error {
+            filter: brightness(0.7) grayscale(0.4);
+        }
+        #testBox .seq-hint {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+    </style>
+    <!-- Clerk 登录系统 -->
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key="pk_test_c3Rhci1zdG9yay00LmNsZXJrLmFjY291bnRzLmRldiQ"
+      src="https://star-stork-4.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+      type="text/javascript">
+    </script>
+</head>
+<body>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <a href="index.html" class="apexon-header-logo">
+                <img src="assets/favicon.png" alt="Logo">
+                <span>APEXON</span>
+            </a>
+            <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
+            <nav class="apexon-header-nav" id="headerNav">
+                <a href="index.html">首页</a>
+                <a href="reaction.html">反应测试</a>
+                <a href="type.html">打字测试</a>
+                <a href="stick.html">注意力测试</a>
+                <a href="number.html">数字记忆</a>
+                <a href="verbal.html">单词记忆</a>
+                <a href="visual.html">视觉记忆</a>
+                <a href="aim.html">瞄准训练</a>
+                <a href="sequence.html" class="active">序列记忆</a>
+            </nav>
+            <div class="header-actions">
+                <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon"></span>
+                        </span>
+                    </span>
+                </label>
+                <div class="header-user-wrap" id="headerUserWrap">
+                    <div id="user-menu-container"></div>
+                    <span class="header-user-login" id="headerUserLogin">
+                        <svg class="header-user-avatar header-user-avatar--guest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+                        </svg>
+                        <span>登录</span>
+                    </span>
+                    <span class="header-user-name" id="headerUserName"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>序列记忆测试</h1>
+
+        <div class="info-row">当前关卡：<span id="levelDisplay">1</span></div>
+
+        <div id="testBox" data-test-type="sequence">
+            <div class="seq-hint">点击开始测试</div>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()">再来一次</button>
+            <button class="btn" onclick="backHome()">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title">最近记录</div>
+            <div id="historyContent">还没有记录</div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+    (function () {
+        window.toggleMenu = function () {
+            document.getElementById('headerNav').classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
+        });
+
+        APEXON.UI.mountUserButton('user-menu-container');
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const levelDisplay = document.getElementById('levelDisplay');
+
+        const COLORS = [
+            '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981',
+            '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef',
+            '#f43f5e', '#14b8a6', '#0ea5e9', '#a855f7', '#ec4899',
+            '#22c55e'
+        ];
+
+        let level = 1;
+        let state = 'idle';
+        let sequence = [];
+        let clickIndex = 0;
+        let timers = [];
+
+        function playSuccess() { try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch (e) {} }
+        function playFail() { try { if (APEXON.Audio) APEXON.Audio.playFail(); } catch (e) {} }
+
+        function clearTimers() {
+            timers.forEach(t => clearTimeout(t));
+            timers = [];
+        }
+
+        function gridSizeForLevel(l) { return l >= 6 ? 4 : 3; }
+        function seqLengthForLevel(l) { return l + 1; }
+
+        function generateSequence(n, len) {
+            const seq = [];
+            for (let i = 0; i < len; i++) seq.push(Math.floor(Math.random() * n * n));
+            return seq;
+        }
+
+        function renderHistory() {
+            if (!APEXON.Auth.isLoggedIn()) {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
+                return;
+            }
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'sequence', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">还没有记录</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">第 ' + esc(h.score) + ' 关</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
+            });
+        }
+
+        function buildGrid(n) {
+            testBox.innerHTML = '';
+            testBox.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+            for (let i = 0; i < n * n; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'seq-cell';
+                cell.dataset.index = i;
+                cell.style.background = COLORS[i % COLORS.length];
+                testBox.appendChild(cell);
+            }
+        }
+
+        function flashCell(cell) {
+            cell.classList.add('lit');
+            setTimeout(() => cell.classList.remove('lit'), 420);
+        }
+
+        function playSequence() {
+            state = 'showing';
+            const n = gridSizeForLevel(level);
+            const len = seqLengthForLevel(level);
+            sequence = generateSequence(n, len);
+            clickIndex = 0;
+            buildGrid(n);
+            const hint = document.createElement('div');
+            hint.className = 'seq-hint';
+            hint.textContent = '请注意观察闪烁顺序';
+            testBox.appendChild(hint);
+
+            sequence.forEach((idx, i) => {
+                const t = setTimeout(() => {
+                    const cell = testBox.querySelector('.seq-cell[data-index="' + idx + '"]');
+                    if (cell) flashCell(cell);
+                    if (i === sequence.length - 1) {
+                        timers.push(setTimeout(() => {
+                            state = 'input';
+                            hint.textContent = '请按相同顺序点击';
+                        }, 650));
+                    }
+                }, 700 * i + 400);
+                timers.push(t);
+            });
+        }
+
+        function handleCellClick(e) {
+            if (state !== 'input') return;
+            const cell = e.target.closest('.seq-cell');
+            if (!cell) return;
+            const idx = parseInt(cell.dataset.index, 10);
+            if (idx !== sequence[clickIndex]) {
+                cell.classList.add('error');
+                playFail();
+                endGame(level);
+                return;
+            }
+            cell.classList.add('success');
+            setTimeout(() => cell.classList.remove('success'), 200);
+            clickIndex++;
+            if (clickIndex >= sequence.length) {
+                state = 'transition';
+                playSuccess();
+                level++;
+                levelDisplay.textContent = level;
+                timers.push(setTimeout(() => playSequence(), 700));
+            }
+        }
+
+        function endGame(score) {
+            state = 'ended';
+            clearTimers();
+            const grade = APEXON.Utils.getGrade(score, 'sequence');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">通过第 ' + score + ' 关</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">关卡</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
+
+            if (APEXON.Auth.isLoggedIn()) {
+                APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'sequence', { score: score }).then(saved => {
+                    if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+                });
+            }
+            try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {}
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            level = 1;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            playSequence();
+        }
+
+        window.restartTest = function () {
+            clearTimers();
+            state = 'idle';
+            level = 1;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            testBox.innerHTML = '<div class="seq-hint">点击开始测试</div>';
+            testBox.style.gridTemplateColumns = '';
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (state === 'idle') startTest();
+            else handleCellClick(e);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
