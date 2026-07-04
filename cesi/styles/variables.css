@@ -1,0 +1,367 @@
+/**
+ * APEXON Design Tokens
+ * 视觉风格：高级科技风 · 赛博朋克 · 毛玻璃 · 雷电将军青紫配色 · 深邃冷静
+ */
+
+/* ------------------------------------------------------------------
+   Tech Dark Theme（默认：深邃科技暗色）
+   ------------------------------------------------------------------ */
+:root {
+  /* 核心品牌色：冷淡科技紫 */
+  --apex-primary: #8b7efc;
+  --apex-primary-dark: #6d5dfc;
+  --apex-primary-light: #a5a2fd;
+
+  /* 功能强调色 */
+  --apex-accent-green: #34d399;
+  --apex-accent-red: #f87171;
+  --apex-accent-orange: #f59e0b;
+  --apex-accent-cyan: #22d3ee;
+  --apex-accent-purple: #a855f7;
+
+  /* 语义色 */
+  --apex-success: #34d399;
+  --apex-warning: #f59e0b;
+  --apex-danger: #f87171;
+  --apex-info: #22d3ee;
+
+  /* 背景与表面：深邃靛黑 */
+  --apex-bg: #05070d;
+  --apex-bg-elevated: #0a0e18;
+  --apex-surface: rgba(10, 14, 28, 0.72);
+  --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+  --apex-overlay: rgba(2, 5, 12, 0.82);
+
+  /* 文字 */
+  --apex-text: #f8fafc;
+  --apex-text-secondary: #9fb0c7;
+  --apex-text-tertiary: #5e6e85;
+  --apex-text-inverse: #03050a;
+
+  /* 边框：极淡的青紫光晕 */
+  --apex-border: rgba(34, 211, 238, 0.08);
+  --apex-border-subtle: rgba(34, 211, 238, 0.035);
+  --apex-border-strong: rgba(139, 92, 246, 0.12);
+
+  /* 发光与阴影 */
+  --apex-glow-primary: rgba(34, 211, 238, 0.38);
+  --apex-glow-violet: rgba(139, 92, 246, 0.38);
+  --apex-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --apex-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.48);
+  --apex-shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.58);
+  --apex-shadow-glow: 0 0 28px rgba(34, 211, 238, 0.14), 0 0 48px rgba(139, 92, 246, 0.10);
+
+  /* 圆角 */
+  --apex-radius-sm: 10px;
+  --apex-radius: 18px;
+  --apex-radius-lg: 22px;
+  --apex-radius-xl: 30px;
+  --apex-radius-full: 9999px;
+
+  /* 动效 */
+  --apex-transition-fast: 160ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --apex-transition-base: 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --apex-transition-theme: 350ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --apex-transition-bounce: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* 布局 */
+  --header-height: 72px;
+  --container-max: 720px;
+  --container-padding: 16px;
+  --grid-columns: 1;
+  --grid-gap: 16px;
+  --section-gap: 20px;
+
+  /* Hero */
+  --hero-title: 40px;
+  --hero-logo: 120px;
+  --hero-subtitle: 15px;
+
+  /* 字体 */
+  --font-base: 16px;
+  --font-scale: 1;
+  --line-height: 1.6;
+  --font-mono: "SF Mono", "Fira Code", Consolas, monospace;
+
+  /* 聚焦环 */
+  --focus-ring: 0 0 0 3px var(--apex-glow-primary);
+
+  /*
+   * 游戏卡片：高级科技风 · 深邃毛玻璃
+   * 低饱和深蓝灰基调 + 极淡的青紫渐变微光 + 纤细边框发光
+   * 标题纯白/淡蓝，描述浅灰，克制不刺眼
+   */
+  --game-card-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.68) 0%, rgba(20, 30, 55, 0.62) 55%, rgba(30, 41, 72, 0.58) 100%);
+  --game-card-glow: linear-gradient(135deg, rgba(56, 189, 248, 0.10) 0%, rgba(139, 92, 246, 0.08) 100%);
+  --game-card-border: rgba(148, 163, 184, 0.12);
+  --game-card-border-hover: rgba(148, 163, 184, 0.28);
+  --game-card-title: #f1f5f9;
+  --game-card-desc: #94a3b8;
+
+  /* Clerk UserButton */
+  --clerk-avatar-bg: linear-gradient(135deg, #6d5dfc 0%, #a855f7 100%);
+  --clerk-avatar-text: #ffffff;
+}
+
+/* ------------------------------------------------------------------
+   Dark Theme：保留暗色能力，深靛蓝 + 紫罗兰
+   ------------------------------------------------------------------ */
+[data-theme="dark"],
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --apex-primary: #8b7efc;
+  --apex-primary-dark: #6d5dfc;
+  --apex-primary-light: #a5a2fd;
+
+  --apex-accent-green: #34d399;
+  --apex-accent-red: #f87171;
+  --apex-accent-orange: #fbbf24;
+  --apex-accent-cyan: #22d3ee;
+  --apex-accent-purple: #a78bfa;
+
+  --apex-success: #34d399;
+  --apex-warning: #fbbf24;
+  --apex-danger: #f87171;
+  --apex-info: #8b7efc;
+
+  --apex-bg: #05070d;
+  --apex-bg-elevated: #0a0e18;
+  --apex-surface: rgba(10, 14, 28, 0.72);
+  --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+  --apex-overlay: rgba(2, 5, 12, 0.82);
+
+  --apex-text: #f8fafc;
+  --apex-text-secondary: #9fb0c7;
+  --apex-text-tertiary: #5e6e85;
+  --apex-text-inverse: #03050a;
+
+  --apex-border: rgba(34, 211, 238, 0.08);
+  --apex-border-subtle: rgba(34, 211, 238, 0.035);
+  --apex-border-strong: rgba(139, 92, 246, 0.12);
+
+  --apex-glow-primary: rgba(34, 211, 238, 0.38);
+  --apex-glow-violet: rgba(139, 92, 246, 0.38);
+  --apex-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --apex-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.48);
+  --apex-shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.58);
+  --apex-shadow-glow: 0 0 28px rgba(34, 211, 238, 0.14), 0 0 48px rgba(139, 92, 246, 0.10);
+
+  --focus-ring: 0 0 0 3px var(--apex-glow-primary), 0 0 12px var(--apex-glow-violet);
+
+  --game-card-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.68) 0%, rgba(20, 30, 55, 0.62) 55%, rgba(30, 41, 72, 0.58) 100%);
+  --game-card-glow: linear-gradient(135deg, rgba(56, 189, 248, 0.10) 0%, rgba(139, 92, 246, 0.08) 100%);
+  --game-card-border: rgba(148, 163, 184, 0.12);
+  --game-card-border-hover: rgba(148, 163, 184, 0.28);
+  --game-card-title: #f1f5f9;
+  --game-card-desc: #94a3b8;
+
+  --clerk-avatar-bg: linear-gradient(135deg, #8b7efc 0%, #a855f7 100%);
+  --clerk-avatar-text: #ffffff;
+}
+
+/* 无 JS 时跟随系统偏好 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --apex-primary: #8b7efc;
+    --apex-primary-dark: #6d5dfc;
+    --apex-primary-light: #a5a2fd;
+
+    --apex-success: #34d399;
+    --apex-warning: #fbbf24;
+    --apex-danger: #f87171;
+    --apex-info: #8b7efc;
+
+    --apex-bg: #05070d;
+    --apex-bg-elevated: #0a0e18;
+    --apex-surface: rgba(10, 14, 28, 0.72);
+    --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+    --apex-overlay: rgba(2, 5, 12, 0.82);
+
+    --apex-text: #f8fafc;
+    --apex-text-secondary: #9fb0c7;
+    --apex-text-tertiary: #5e6e85;
+    --apex-text-inverse: #03050a;
+
+    --apex-border: rgba(34, 211, 238, 0.08);
+    --apex-border-subtle: rgba(34, 211, 238, 0.035);
+    --apex-border-strong: rgba(139, 92, 246, 0.12);
+
+    --apex-glow-primary: rgba(34, 211, 238, 0.38);
+    --apex-glow-violet: rgba(139, 92, 246, 0.38);
+    --apex-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --apex-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.48);
+    --apex-shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.58);
+    --apex-shadow-glow: 0 0 28px rgba(34, 211, 238, 0.14), 0 0 48px rgba(139, 92, 246, 0.10);
+
+    --focus-ring: 0 0 0 3px var(--apex-glow-primary), 0 0 12px var(--apex-glow-violet);
+
+    --game-card-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.68) 0%, rgba(20, 30, 55, 0.62) 55%, rgba(30, 41, 72, 0.58) 100%);
+    --game-card-glow: linear-gradient(135deg, rgba(56, 189, 248, 0.10) 0%, rgba(139, 92, 246, 0.08) 100%);
+    --game-card-border: rgba(148, 163, 184, 0.12);
+    --game-card-border-hover: rgba(148, 163, 184, 0.28);
+    --game-card-title: #f1f5f9;
+    --game-card-desc: #94a3b8;
+
+    --clerk-avatar-bg: linear-gradient(135deg, #8b7efc 0%, #a855f7 100%);
+    --clerk-avatar-text: #ffffff;
+  }
+}
+
+/* ------------------------------------------------------------------
+   主题过渡基础：平滑切换
+   ------------------------------------------------------------------ */
+html,
+body,
+.apexon-header,
+.apexon-header-nav,
+.container,
+.item-card,
+.stats-box,
+.score-card,
+.history-list,
+.info-panel,
+.leaderboard,
+.personal-stats,
+.forum-section,
+.feedback-section,
+.auth-box,
+.profile-box,
+.user-menu,
+.search-box input,
+.feedback-form input,
+.feedback-form textarea,
+.forum-input-wrap textarea,
+.profile-input,
+.profile-textarea,
+#inputArea,
+#testBox,
+.game-stage,
+.memory-grid-cell,
+.focus-target {
+  transition:
+    background-color var(--apex-transition-theme),
+    color var(--apex-transition-theme),
+    border-color var(--apex-transition-theme),
+    box-shadow var(--apex-transition-theme),
+    fill var(--apex-transition-theme),
+    stroke var(--apex-transition-theme);
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --apex-transition-fast: 0.01ms;
+    --apex-transition-base: 0.01ms;
+    --apex-transition-theme: 0.01ms;
+    --apex-transition-bounce: 0.01ms;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Desktop Token 覆盖
+   ------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 20px;
+    --grid-columns: 2;
+    --grid-gap: 18px;
+    --section-gap: 24px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --header-height: 76px;
+    --container-max: 780px;
+    --container-padding: 24px;
+    --grid-columns: 2;
+    --grid-gap: 20px;
+    --section-gap: 24px;
+    --hero-title: 44px;
+    --hero-logo: 132px;
+    --hero-subtitle: 16px;
+    --font-base: 16px;
+    --font-scale: 1;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --container-max: 840px;
+    --grid-gap: 22px;
+    --hero-title: 48px;
+    --hero-logo: 144px;
+    --hero-subtitle: 17px;
+    --font-base: 17px;
+    --font-scale: 1.0625;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --container-max: 920px;
+    --hero-title: 52px;
+    --hero-logo: 156px;
+    --font-base: 18px;
+    --font-scale: 1.125;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Light / 白色明亮主题（通过 data-bw="true" 触发）
+   ------------------------------------------------------------------ */
+html[data-bw="true"] {
+  color-scheme: light;
+
+  --apex-primary: #7c6bc4;
+  --apex-primary-dark: #6d5dfc;
+  --apex-primary-light: #9b8fd4;
+
+  --apex-accent-green: #10b981;
+  --apex-accent-red: #ef4444;
+  --apex-accent-orange: #f59e0b;
+  --apex-accent-cyan: #06b6d4;
+  --apex-accent-purple: #8b5cf6;
+
+  --apex-success: #10b981;
+  --apex-warning: #f59e0b;
+  --apex-danger: #ef4444;
+  --apex-info: #7c6bc4;
+
+  --apex-bg: #eef6ff;
+  --apex-bg-elevated: #ffffff;
+  --apex-surface: #ffffff;
+  --apex-surface-elevated: #ffffff;
+  --apex-overlay: rgba(255, 255, 255, 0.96);
+
+  --apex-text: #1e1b4b;
+  --apex-text-secondary: #5b56a6;
+  --apex-text-tertiary: #8b87c9;
+  --apex-text-inverse: #ffffff;
+
+  --apex-border: rgba(124, 107, 196, 0.14);
+  --apex-border-subtle: rgba(124, 107, 196, 0.08);
+  --apex-border-strong: rgba(124, 107, 196, 0.22);
+
+  --apex-glow-primary: rgba(124, 107, 196, 0.25);
+  --apex-glow-violet: rgba(139, 92, 246, 0.25);
+  --apex-shadow-sm: 0 2px 8px rgba(124, 107, 196, 0.10);
+  --apex-shadow-md: 0 8px 28px rgba(124, 107, 196, 0.14);
+  --apex-shadow-lg: 0 22px 60px rgba(124, 107, 196, 0.18);
+  --apex-shadow-glow: 0 0 24px rgba(124, 107, 196, 0.20), 0 0 40px rgba(139, 92, 246, 0.16);
+
+  --focus-ring: 0 0 0 3px rgba(124, 107, 196, 0.25);
+
+  --game-card-bg: linear-gradient(135deg, #c4f0ff 0%, #e6d5ff 100%);
+  --game-card-glow: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.10) 100%);
+  --game-card-border: rgba(124, 107, 196, 0.14);
+  --game-card-border-hover: rgba(124, 107, 196, 0.28);
+  --game-card-title: #312e81;
+  --game-card-desc: #5b56a6;
+
+  --clerk-avatar-bg: linear-gradient(135deg, #7c6bc4 0%, #a855f7 100%);
+  --clerk-avatar-text: #ffffff;
+}
