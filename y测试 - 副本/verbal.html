@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 24px;
+            padding: 36px 24px;
+        }
+        #testBox .verbal-word {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 700;
+            color: var(--apex-text);
+            min-height: 1.4em;
+        }
+        #testBox .verbal-hint {
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+        #testBox .verbal-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #testBox .verbal-buttons .btn {
+            min-width: 140px;
+        }
+        #testBox .verbal-feedback {
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 1.4em;
+        }
+    </style>
+    <!-- Clerk 登录系统 -->
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key="pk_test_c3Rhci1zdG9yay00LmNsZXJrLmFjY291bnRzLmRldiQ"
+      src="https://star-stork-4.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+      type="text/javascript">
+    </script>
+</head>
+<body>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <a href="index.html" class="apexon-header-logo">
+                <img src="assets/favicon.png" alt="Logo">
+                <span>APEXON</span>
+            </a>
+            <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
+            <nav class="apexon-header-nav" id="headerNav">
+                <a href="index.html">首页</a>
+                <a href="reaction.html">反应测试</a>
+                <a href="type.html">打字测试</a>
+                <a href="stick.html">注意力测试</a>
+                <a href="number.html">数字记忆</a>
+                <a href="verbal.html" class="active">单词记忆</a>
+                <a href="visual.html">视觉记忆</a>
+                <a href="aim.html">瞄准训练</a>
+                <a href="sequence.html">序列记忆</a>
+            </nav>
+            <div class="header-actions">
+                <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon"></span>
+                        </span>
+                    </span>
+                </label>
+                <div class="header-user-wrap" id="headerUserWrap">
+                    <div id="user-menu-container"></div>
+                    <span class="header-user-login" id="headerUserLogin">
+                        <svg class="header-user-avatar header-user-avatar--guest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+                        </svg>
+                        <span>登录</span>
+                    </span>
+                    <span class="header-user-name" id="headerUserName"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>单词记忆测试</h1>
+
+        <div class="info-row">进度：<span id="progressText">0 / 30</span>　正确：<span id="correctDisplay">0</span></div>
+
+        <div id="testBox" data-test-type="verbal">
+            <div class="verbal-hint">点击开始测试</div>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()">再来一次</button>
+            <button class="btn" onclick="backHome()">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title">最近记录</div>
+            <div id="historyContent">还没有记录</div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+    (function () {
+        window.toggleMenu = function () {
+            document.getElementById('headerNav').classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
+        });
+
+        APEXON.UI.mountUserButton('user-menu-container');
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const progressText = document.getElementById('progressText');
+        const correctDisplay = document.getElementById('correctDisplay');
+
+        const WORD_POOL = [
+            'apple','table','river','house','music','garden','bridge','window','flower','school',
+            'market','orange','planet','rocket','coffee','summer','winter','forest','danger','silent',
+            'friend','family','travel','camera','bottle','pillow','blanket','mirror','closet','guitar',
+            'pencil','rabbit','turtle','monkey','giraffe','penguin','dolphin','island','desert','ocean',
+            'castle','village','station','library','theater','museum','stationery','weather','morning','evening'
+        ];
+        const TOTAL = 30;
+
+        let sequence = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let state = 'idle';
+
+        function playSuccess() { try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch (e) {} }
+        function playFail() { try { if (APEXON.Audio) APEXON.Audio.playFail(); } catch (e) {} }
+
+        function generateSequence() {
+            const pool = WORD_POOL.slice();
+            const used = new Set();
+            const seen = [];
+            const seq = [];
+            for (let i = 0; i < TOTAL; i++) {
+                const canRepeat = seen.length >= 2 && Math.random() < 0.45;
+                if (canRepeat) {
+                    const word = seen[Math.floor(Math.random() * seen.length)];
+                    seq.push({ word: word, isRepeated: true });
+                } else {
+                    const available = pool.filter(w => !used.has(w));
+                    const word = available[Math.floor(Math.random() * available.length)];
+                    used.add(word);
+                    seen.push(word);
+                    seq.push({ word: word, isRepeated: false });
+                }
+            }
+            return seq;
+        }
+
+        function renderHistory() {
+            if (!APEXON.Auth.isLoggedIn()) {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
+                return;
+            }
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'verbal', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">还没有记录</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' 个</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
+            });
+        }
+
+        function showCard() {
+            const item = sequence[currentIndex];
+            const isRepeated = item.isRepeated;
+            testBox.innerHTML = '<div class="verbal-hint">第 ' + (currentIndex + 1) + ' / ' + TOTAL + ' 个</div><div class="verbal-word">' + item.word + '</div><div class="verbal-buttons"><button class="btn" id="seenBtn">见过</button><button class="btn" id="newBtn">新词</button></div><div class="verbal-feedback" id="feedback"></div>';
+            const seenBtn = document.getElementById('seenBtn');
+            const newBtn = document.getElementById('newBtn');
+
+            function answer(chosenSeen) {
+                seenBtn.disabled = true;
+                newBtn.disabled = true;
+                const isCorrect = chosenSeen === isRepeated;
+                const feedback = document.getElementById('feedback');
+                if (isCorrect) {
+                    correctCount++;
+                    correctDisplay.textContent = correctCount;
+                    feedback.textContent = '正确';
+                    feedback.style.color = 'var(--apex-success)';
+                    playSuccess();
+                } else {
+                    feedback.textContent = '错误';
+                    feedback.style.color = 'var(--apex-danger)';
+                    playFail();
+                }
+                currentIndex++;
+                progressText.textContent = currentIndex + ' / ' + TOTAL;
+                setTimeout(() => {
+                    if (currentIndex >= TOTAL) endGame();
+                    else showCard();
+                }, 600);
+            }
+            seenBtn.addEventListener('click', () => answer(true));
+            newBtn.addEventListener('click', () => answer(false));
+        }
+
+        function endGame() {
+            state = 'ended';
+            const grade = APEXON.Utils.getGrade(correctCount, 'verbal');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">正确记忆 ' + correctCount + ' / ' + TOTAL + ' 个单词</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + correctCount + '</div><div class="score-detail-label">正确数</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
+
+            if (APEXON.Auth.isLoggedIn()) {
+                APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'verbal', { score: correctCount }).then(saved => {
+                    if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+                });
+            }
+            try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {}
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            state = 'running';
+            sequence = generateSequence();
+            currentIndex = 0;
+            correctCount = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '1 / ' + TOTAL;
+            result.innerHTML = '';
+            showCard();
+        }
+
+        window.restartTest = function () {
+            state = 'idle';
+            sequence = [];
+            currentIndex = 0;
+            correctCount = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '0 / ' + TOTAL;
+            result.innerHTML = '';
+            testBox.innerHTML = '<div class="verbal-hint">点击开始测试</div>';
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (state === 'idle') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
