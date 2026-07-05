@@ -1707,3 +1707,9 @@ img, canvas {
     .forum-btn { width: 100%; }
     .feedback-submit { width: 100%; }
 }
+/* 暴力隐藏 Clerk 的手机号输入框 */
+.cl-formFieldInputPhone, 
+.cl-formFieldLabelPhone,
+input[name="phoneNumber"] {
+  display: none !important;
+}
