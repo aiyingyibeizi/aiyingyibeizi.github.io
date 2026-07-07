@@ -274,6 +274,7 @@
   APEXON.DB = DB;
 
   // ===== 2. Clerk 认证 =====
+  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
   const ClerkAuth = {
     user: null,
     isReady: false,
@@ -404,6 +405,23 @@
     }
   };
   APEXON.Auth = ClerkAuth;
+  */
+
+  // 登录系统禁用期间的占位对象，保证非登录代码正常运行
+  APEXON.Auth = {
+    user: null,
+    isReady: true,
+    async init() {},
+    isLoggedIn() { return false; },
+    getUser() { return null; },
+    getUserId() { return null; },
+    async logout() {},
+    async deleteAccount() {},
+    async updateUser() { throw new Error('登录系统已禁用'); },
+    async uploadAvatar() { throw new Error('登录系统已禁用'); },
+    getAvatarUrl() { return null; },
+    getCreatedAt() { return null; }
+  };
 
   // ===== 3. 音频 =====
   const AudioManager = {
@@ -547,6 +565,7 @@
       }
     },
 
+    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
     async mountUserButton(containerId = 'user-menu-container') {
       await ClerkAuth.init();
       let container = document.getElementById(containerId);
@@ -605,6 +624,10 @@
 
       UI.updateUserDisplay();
     },
+    */
+
+    // 登录系统禁用期间的占位方法
+    async mountUserButton() { return; },
 
     updateUserDisplay() {
       const nameEl = document.getElementById('headerUserName');
@@ -736,6 +759,7 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (!ClerkAuth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
@@ -752,6 +776,8 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
+          */
+          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const initText = () => {
@@ -793,10 +819,12 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均用时 ' + avgTime + ' 秒 · 正确率 ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">WPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">CPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">平均用时</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">正确率</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
           }
 
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (ClerkAuth.isLoggedIn()) {
             const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
+          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}
@@ -902,6 +930,7 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (!ClerkAuth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
@@ -918,6 +947,8 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
+          */
+          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const resetAll = () => {
@@ -952,10 +983,12 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均反应时间 ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
           }
 
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (ClerkAuth.isLoggedIn()) {
             const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
+          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}

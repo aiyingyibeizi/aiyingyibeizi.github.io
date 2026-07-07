@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
-    <!-- Clerk 登录系统 -->
+    <!-- Clerk 登录系统（已临时禁用，取消注释即可恢复）
     <script
       async
       crossorigin="anonymous"
@@ -16,6 +16,7 @@
       src="https://star-stork-4.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
       type="text/javascript">
     </script>
+    -->
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -43,7 +44,7 @@
                         </span>
                     </span>
                 </label>
-                <!-- Clerk 官方 UserButton 挂载点（纯 JS mountUserButton） -->
+                <!-- Clerk 官方 UserButton 挂载点（已临时禁用，取消注释即可恢复）
                 <div class="header-user-wrap" id="headerUserWrap">
                     <div id="user-menu-container"></div>
                     <span class="header-user-login" id="headerUserLogin">
@@ -55,6 +56,7 @@
                     </span>
                     <span class="header-user-name" id="headerUserName"></span>
                 </div>
+                -->
             </div>
         </div>
     </header>
@@ -207,6 +209,7 @@
 
         // ===== 应用初始化 =====
         async function initApp() {
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             await APEXON.Auth.init();
             const user = APEXON.Auth.getUser();
             const userId = APEXON.Auth.getUserId();
@@ -223,6 +226,7 @@
 
             document.getElementById('forumLoginTip').style.display = 'none';
             document.getElementById('forumInputWrap').style.display = 'flex';
+            */
             loadLeaderboard('reaction');
             loadPersonal();
             loadComments();
@@ -264,6 +268,7 @@
 
         // ===== 个人成绩 =====
         async function loadPersonal() {
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const esc = APEXON.Security.escapeHtml;
             const userId = APEXON.Auth.getUserId();
             if (!userId) return;
@@ -284,14 +289,20 @@
             }
             html += '</table>';
             document.getElementById('personalContent').innerHTML = html;
+            */
+            document.getElementById('personalContent').innerHTML = '<div style="color:var(--apex-text-tertiary);text-align:center;padding:20px;">🔒 登录系统维护中</div>';
         }
 
         // ===== 讨论区 =====
         window.postComment = async function() {
             const text = document.getElementById('forumText').value;
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast('请先登录'); return; }
+            */
+            const userId = 'anonymous';
+            const username = '匿名用户';
             const success = await APEXON.DB.addComment(userId, username, text);
             if (!success) { APEXON.UI.toast('发布失败'); return; }
             document.getElementById('forumText').value = '';
@@ -343,6 +354,7 @@
             if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
         });
 
+        /* ===== 个人资料与 Clerk 登录相关代码已临时禁用，取消块注释即可恢复 =====
         // ===== 个人资料（只读展示，编辑通过 Clerk UserButton > 管理账户） =====
         function buildProfileMeta(profile, esc) {
             const parts = [];
@@ -420,8 +432,12 @@
 
         // 挂载 Clerk 官方 UserButton（纯 JS API）
         APEXON.UI.mountUserButton('user-menu-container');
+        */
+
         await initApp();
+        /* 登录系统已临时禁用
         await loadProfile();
+        */
         document.body.classList.add('loaded');
     })();
     </script>
