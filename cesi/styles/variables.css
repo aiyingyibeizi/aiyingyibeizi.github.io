@@ -98,6 +98,8 @@
   --game-card-title: #f1f5f9;
   --game-card-desc: #94a3b8;
 
+  --game-canvas-bg: rgba(10, 14, 28, 0.55);
+
   /* Clerk UserButton */
   --clerk-avatar-bg: linear-gradient(135deg, #6d5dfc 0%, #a855f7 100%);
   --clerk-avatar-text: #ffffff;
@@ -155,6 +157,8 @@
   --game-card-border-hover: rgba(148, 163, 184, 0.28);
   --game-card-title: #f1f5f9;
   --game-card-desc: #94a3b8;
+
+  --game-canvas-bg: rgba(10, 14, 28, 0.55);
 
   --clerk-avatar-bg: linear-gradient(135deg, #8b7efc 0%, #a855f7 100%);
   --clerk-avatar-text: #ffffff;
@@ -311,9 +315,14 @@ body,
 }
 
 /* ------------------------------------------------------------------
-   Light / 白色明亮主题（通过 data-bw="true" 触发）
+   Light / 白色明亮主题（通过 data-bw="true" 或 data-theme="light" 触发）
    ------------------------------------------------------------------ */
-html[data-bw="true"] {
+/*
+ * 提高 data-bw 选择器优先级（0,2,1），确保覆盖 :root[data-theme="dark"]（0,2,0）
+ * 否则 html 同时带有 data-theme="dark" 与 data-bw="true" 时，深色变量会胜出。
+ */
+html[data-bw="true"][data-theme],
+html[data-theme="light"] {
   color-scheme: light;
 
   --apex-primary: #7c6bc4;
@@ -361,6 +370,8 @@ html[data-bw="true"] {
   --game-card-border-hover: rgba(124, 107, 196, 0.28);
   --game-card-title: #312e81;
   --game-card-desc: #5b56a6;
+
+  --game-canvas-bg: rgba(238, 246, 255, 0.72);
 
   --clerk-avatar-bg: linear-gradient(135deg, #7c6bc4 0%, #a855f7 100%);
   --clerk-avatar-text: #ffffff;

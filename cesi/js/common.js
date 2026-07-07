@@ -63,6 +63,16 @@
         if (isNaN(score) || score < 0 || score > 100000) return false;
         return true;
       }
+      if (['number', 'sequence', 'visual', 'verbal'].includes(type)) {
+        const score = parseInt(data.score, 10);
+        if (isNaN(score) || score < 0 || score > 10000) return false;
+        return true;
+      }
+      if (type === 'aim') {
+        const avg = parseFloat(data.avg);
+        if (isNaN(avg) || avg < 0 || avg > 100000) return false;
+        return true;
+      }
       return false;
     }
   };
@@ -609,34 +619,34 @@
     },
 
     initTheme() {
-      const stored = localStorage.getItem('apex-theme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = stored || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      const toggle = document.getElementById('themeToggle');
-      if (toggle) {
-        toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-        toggle.addEventListener('click', () => {
-          const current = document.documentElement.getAttribute('data-theme');
-          const next = current === 'dark' ? 'light' : 'dark';
-          document.documentElement.setAttribute('data-theme', next);
-          localStorage.setItem('apex-theme', next);
-          toggle.textContent = next === 'dark' ? '☀️' : '🌙';
-        });
-      }
-
-      // 深色科技风 / 白色明亮主题切换
+      // 深色科技风 / 白色明亮主题切换（由 data-bw 与 body.theme-light 控制）
+      const applyBW = (isBW) => {
+        document.documentElement.setAttribute('data-bw', String(isBW));
+        if (document.body) document.body.classList.toggle('theme-light', isBW);
+        document.dispatchEvent(new CustomEvent('apexon:themechange', { detail: { isLight: isBW } }));
+      };
       const bwStored = localStorage.getItem('apex-bw-mode');
       const isBW = bwStored === 'true';
-      document.documentElement.setAttribute('data-bw', String(isBW));
+      applyBW(isBW);
       const bwInput = document.getElementById('bwToggleInput');
+      const bwToggle = document.getElementById('bwToggle');
       if (bwInput) {
         bwInput.checked = isBW;
-        bwInput.addEventListener('change', () => {
+        const handler = () => {
           const next = bwInput.checked;
-          document.documentElement.setAttribute('data-bw', String(next));
+          applyBW(next);
           localStorage.setItem('apex-bw-mode', String(next));
-        });
+        };
+        bwInput.addEventListener('change', handler);
+        // 兼容移动端 label/track 点击，避免与 input change 重复触发
+        if (bwToggle) {
+          bwToggle.addEventListener('click', (e) => {
+            if (e.target === bwInput || bwInput.contains(e.target)) return;
+            e.preventDefault();
+            bwInput.checked = !bwInput.checked;
+            handler();
+          });
+        }
       }
     },
 
@@ -737,7 +747,390 @@
   };
   APEXON.UI = UI;
 
-  // ===== 7. 测试引擎 =====
+  // ===== 7. 粒子背景系统 =====
+  const ParticleSystem = {
+    defaults: {
+      selector: 'particles',
+      darkPalette: ['#22d3ee', '#a855f7', '#34d399', '#f472b6', '#fbbf24', '#60a5fa', '#f87171', '#818cf8', '#2dd4bf', '#e879f9', '#38bdf8'],
+      lightPalette: ['#0891b2', '#7c3aed', '#059669', '#db2777', '#d97706', '#2563eb', '#dc2626', '#4f46e5', '#0d9488', '#c026d3', '#0284c7'],
+      baseCount: 260,
+      mobileCount: 130,
+      connectionDistance: 220,
+      mouseDistance: 240,
+      speed: 1.1
+    },
+
+    init(options = {}) {
+      const config = Object.assign({}, this.defaults, options);
+      const canvas = typeof config.selector === 'string' ? document.getElementById(config.selector) : config.selector;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      let w, h, particles = [], stars = [], bursts = [], orbs = [], ripples = [];
+      let mouse = { x: null, y: null, active: false };
+      let frameId = null;
+      let isActive = true;
+      let hueShift = 0;
+
+      const isLight = () =>
+        document.documentElement.getAttribute('data-bw') === 'true' ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('theme-light');
+      const colorPalette = () => isLight() ? config.lightPalette : config.darkPalette;
+      const palette = colorPalette();
+
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+        w = canvas.width = cw * dpr;
+        h = canvas.height = ch * dpr;
+        canvas.style.width = cw + 'px';
+        canvas.style.height = ch + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      const createParticles = () => {
+        particles = [];
+        orbs = [];
+        const isMobile = window.innerWidth < 768;
+        const area = window.innerWidth * window.innerHeight;
+        const density = isMobile ? 18000 : 9000;
+        const count = Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount);
+        for (let i = 0; i < count; i++) {
+          const speed = config.speed * (Math.random() * 1.6 + 0.5);
+          const angle = Math.random() * Math.PI * 2;
+          const isOrb = Math.random() < 0.08;
+          const p = {
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            baseR: isOrb ? Math.random() * 2.5 + 2.2 : Math.random() * 2.2 + 0.8,
+            color: palette[Math.floor(Math.random() * palette.length)],
+            alpha: Math.random() * 0.4 + 0.28,
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.05 + 0.02,
+            orb: isOrb,
+            trail: []
+          };
+          particles.push(p);
+          if (isOrb) orbs.push(p);
+        }
+      };
+
+      const spawnStar = () => {
+        if (stars.length >= 10) return;
+        if (Math.random() > 0.018) return;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 4;
+        stars.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          len: Math.random() * 160 + 100,
+          life: 1,
+          decay: Math.random() * 0.008 + 0.006,
+          color: palette[Math.floor(Math.random() * palette.length)]
+        });
+      };
+
+      const spawnBurst = (x, y) => {
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        for (let i = 0; i < 24; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5 + 2;
+          bursts.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1,
+            decay: Math.random() * 0.02 + 0.018,
+            color,
+            size: Math.random() * 2.5 + 0.8
+          });
+        }
+        // 点击/触摸产生扩散能量环
+        ripples.push({ x, y, r: 2, alpha: 0.9, color, width: 3 });
+      };
+
+      const spawnRipple = () => {
+        if (Math.random() > 0.015 || ripples.length >= 4) return;
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        ripples.push({ x, y, r: 1, alpha: 0.55, color, width: 2 });
+      };
+
+      const updateParticles = () => {
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.x < 0) { p.x = 0; p.vx *= -1; }
+          if (p.x > window.innerWidth) { p.x = window.innerWidth; p.vx *= -1; }
+          if (p.y < 0) { p.y = 0; p.vy *= -1; }
+          if (p.y > window.innerHeight) { p.y = window.innerHeight; p.vy *= -1; }
+
+          if (mouse.active) {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < config.mouseDistance && d > 1) {
+              const force = (config.mouseDistance - d) / config.mouseDistance;
+              const push = p.orb ? 0.10 : 0.22;
+              const nx = dx / d, ny = dy / d;
+              // 排斥冲击
+              p.vx += nx * force * push;
+              p.vy += ny * force * push;
+              // 漩涡切向力（让粒子绕鼠标旋转）
+              const swirl = p.orb ? 0.05 : 0.09;
+              p.vx += -ny * force * swirl;
+              p.vy += nx * force * swirl;
+            }
+          }
+
+          // 全局轻微漩涡场（让画面更有动感）
+          const cx = window.innerWidth / 2;
+          const cy = window.innerHeight / 2;
+          const cdx = p.x - cx;
+          const cdy = p.y - cy;
+          const cd = Math.sqrt(cdx * cdx + cdy * cdy);
+          if (cd > 1) {
+            const swirlForce = 0.00008 * (p.orb ? 1.5 : 1);
+            p.vx += -cdy / cd * cd * swirlForce;
+            p.vy += cdx / cd * cd * swirlForce;
+          }
+
+          p.vx *= 0.993;
+          p.vy *= 0.993;
+          p.pulse += p.pulseSpeed;
+
+          if (p.trail) {
+            p.trail.push({ x: p.x, y: p.y });
+            if (p.trail.length > (p.orb ? 10 : 5)) p.trail.shift();
+          }
+        }
+      };
+
+      const updateBursts = () => {
+        for (let i = bursts.length - 1; i >= 0; i--) {
+          const b = bursts[i];
+          b.x += b.vx;
+          b.y += b.vy;
+          b.vx *= 0.96;
+          b.vy *= 0.96;
+          b.life -= b.decay;
+          if (b.life <= 0) bursts.splice(i, 1);
+        }
+      };
+
+      const updateRipples = () => {
+        spawnRipple();
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          const r = ripples[i];
+          r.r += 4.5;
+          r.alpha -= 0.012;
+          r.width *= 0.985;
+          if (r.alpha <= 0 || r.r > Math.max(window.innerWidth, window.innerHeight) * 0.55) {
+            ripples.splice(i, 1);
+          }
+        }
+      };
+
+      const drawConnections = () => {
+        const maxDist = config.connectionDistance;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < particles.length; i++) {
+          let near = [];
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < maxDist) {
+              const opacity = (1 - d / maxDist) * 0.32;
+              const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
+              gradient.addColorStop(0, particles[i].color);
+              gradient.addColorStop(1, particles[j].color);
+              ctx.beginPath();
+              ctx.strokeStyle = gradient;
+              ctx.globalAlpha = opacity;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+              near.push(j);
+            }
+          }
+          // 偶尔绘制三点连成的霓虹三角
+          if (near.length >= 2 && particles[i].orb) {
+            const j = near[0], k = near[1];
+            ctx.beginPath();
+            ctx.fillStyle = particles[i].color;
+            ctx.globalAlpha = 0.04;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.lineTo(particles[k].x, particles[k].y);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      const drawParticles = () => {
+        for (const p of particles) {
+          const r = p.baseR * (1 + Math.sin(p.pulse) * (p.orb ? 0.35 : 0.3));
+
+          if (p.trail && p.trail.length > 1) {
+            ctx.beginPath();
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = p.orb ? 2 : 1;
+            for (let i = 0; i < p.trail.length; i++) {
+              const t = p.trail[i];
+              ctx.globalAlpha = (i / p.trail.length) * (p.orb ? 0.35 : 0.2);
+              if (i === 0) ctx.moveTo(t.x, t.y);
+              else ctx.lineTo(t.x, t.y);
+            }
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.shadowBlur = p.orb ? 22 : 14;
+          ctx.shadowColor = p.color;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      const drawBursts = () => {
+        for (const b of bursts) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.globalAlpha = b.life;
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = b.color;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      const drawRipples = () => {
+        for (const r of ripples) {
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+          ctx.strokeStyle = r.color;
+          ctx.lineWidth = Math.max(0.5, r.width);
+          ctx.globalAlpha = r.alpha;
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = r.color;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      const drawStars = () => {
+        spawnStar();
+        for (let i = stars.length - 1; i >= 0; i--) {
+          const s = stars[i];
+          s.x += s.vx;
+          s.y += s.vy;
+          s.life -= s.decay;
+          if (s.life <= 0 || s.x < -200 || s.x > window.innerWidth + 200 || s.y < -200 || s.y > window.innerHeight + 200) {
+            stars.splice(i, 1);
+            continue;
+          }
+          const tailX = s.x - s.vx * (s.len / 6);
+          const tailY = s.y - s.vy * (s.len / 6);
+          const gradient = ctx.createLinearGradient(s.x, s.y, tailX, tailY);
+          gradient.addColorStop(0, s.color);
+          gradient.addColorStop(0.4, s.color);
+          gradient.addColorStop(1, 'transparent');
+          ctx.beginPath();
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 2.6;
+          ctx.globalAlpha = s.life;
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = s.color;
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      const draw = () => {
+        if (!isActive) return;
+        hueShift = (hueShift + 0.12) % 360;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        updateParticles();
+        updateBursts();
+        updateRipples();
+        drawConnections();
+        drawRipples();
+        drawParticles();
+        drawBursts();
+        drawStars();
+        frameId = requestAnimationFrame(draw);
+      };
+
+      const onResize = () => { resize(); createParticles(); };
+      const onMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; };
+      const onMouseLeave = () => { mouse.active = false; };
+      const onTouchMove = (e) => {
+        if (e.touches && e.touches[0]) {
+          mouse.x = e.touches[0].clientX;
+          mouse.y = e.touches[0].clientY;
+          mouse.active = true;
+        }
+      };
+      const onTouchEnd = () => { mouse.active = false; };
+      const onPointerDown = (e) => {
+        spawnBurst(e.clientX, e.clientY);
+        mouse.active = true;
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      };
+      const onVisibility = () => {
+        if (document.hidden) {
+          isActive = false;
+          if (frameId) cancelAnimationFrame(frameId);
+        } else {
+          isActive = true;
+          draw();
+        }
+      };
+      const onThemeChange = () => {
+        const newPalette = colorPalette();
+        for (const p of particles) p.color = newPalette[Math.floor(Math.random() * newPalette.length)];
+        for (const s of stars) s.color = newPalette[Math.floor(Math.random() * newPalette.length)];
+      };
+
+      document.addEventListener('apexon:themechange', onThemeChange);
+      window.addEventListener('resize', Utils.debounce(onResize, 250));
+      window.addEventListener('mousemove', onMouseMove, { passive: true });
+      window.addEventListener('mouseleave', onMouseLeave);
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd);
+      window.addEventListener('pointerdown', onPointerDown, { passive: true });
+      document.addEventListener('visibilitychange', onVisibility);
+
+      resize();
+      createParticles();
+      draw();
+    }
+  };
+  APEXON.Particles = ParticleSystem;
+
+  // ===== 8. 测试引擎 =====
   const Tests = {
     // ---------- 打字测试 ----------
     Type: {

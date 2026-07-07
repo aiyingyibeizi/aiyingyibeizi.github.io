@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -48,6 +48,7 @@
     -->
 </head>
 <body>
+    <canvas id="particles"></canvas>
     <header class="apexon-header">
         <div class="apexon-header__inner">
             <a href="index.html" class="apexon-header-logo">
@@ -60,13 +61,18 @@
                 <a href="reaction.html">反应测试</a>
                 <a href="type.html">打字测试</a>
                 <a href="stick.html" class="active">注意力测试</a>
+                <a href="number.html">数字记忆</a>
+                <a href="verbal.html">单词记忆</a>
+                <a href="visual.html">视觉记忆</a>
+                <a href="aim.html">瞄准训练</a>
+                <a href="sequence.html">序列记忆</a>
             </nav>
             <div class="header-actions">
                 <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
-                            <span class="apex-bw-toggle__icon" id="bwToggleIcon"></span>
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
                         </span>
                     </span>
                 </label>
@@ -124,6 +130,9 @@
         // 挂载 Clerk UserButton
         APEXON.UI.mountUserButton('user-menu-container');
         */
+
+        // 粒子背景
+        APEXON.Particles.init();
 
         // ===== 测试逻辑 =====
         const BALL_RADIUS = 35, MIN_SPEED = 2, MAX_SPEED_BASE = 5, CHANGE_RATE = 0.03;

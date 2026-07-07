@@ -33,6 +33,11 @@
                 <a href="reaction.html">反应测试</a>
                 <a href="type.html">打字测试</a>
                 <a href="stick.html">注意力测试</a>
+                <a href="number.html">数字记忆</a>
+                <a href="verbal.html">单词记忆</a>
+                <a href="visual.html">视觉记忆</a>
+                <a href="aim.html">瞄准训练</a>
+                <a href="sequence.html">序列记忆</a>
             </nav>
             <div class="header-actions">
                 <!-- 黑白 / 彩色全局切换 -->
@@ -91,6 +96,26 @@
                 <strong>持续注意力测试</strong>
                 <div class="card-desc">60秒专注力挑战，追踪你的注意力曲线</div>
             </a>
+            <a href="number.html" class="item-card">
+                <strong>数字记忆测试</strong>
+                <div class="card-desc">挑战数字记忆广度，逐级突破记忆极限</div>
+            </a>
+            <a href="verbal.html" class="item-card">
+                <strong>单词记忆测试</strong>
+                <div class="card-desc">辨别新旧词汇，评估言语工作记忆能力</div>
+            </a>
+            <a href="visual.html" class="item-card">
+                <strong>视觉记忆测试</strong>
+                <div class="card-desc">记住闪烁方块位置，锻炼空间视觉记忆</div>
+            </a>
+            <a href="aim.html" class="item-card">
+                <strong>瞄准训练</strong>
+                <div class="card-desc">快速精准点击目标，提升手眼协调</div>
+            </a>
+            <a href="sequence.html" class="item-card">
+                <strong>序列记忆测试</strong>
+                <div class="card-desc">复现闪烁顺序，训练短时序列记忆</div>
+            </a>
         </div>
 
         <div class="personal-stats" id="userProfile">
@@ -106,6 +131,11 @@
                 <button class="leaderboard-tab active" onclick="showLb('reaction')">反应</button>
                 <button class="leaderboard-tab" onclick="showLb('type')">打字</button>
                 <button class="leaderboard-tab" onclick="showLb('stick')">注意力</button>
+                <button class="leaderboard-tab" onclick="showLb('number')">数字</button>
+                <button class="leaderboard-tab" onclick="showLb('verbal')">单词</button>
+                <button class="leaderboard-tab" onclick="showLb('visual')">视觉</button>
+                <button class="leaderboard-tab" onclick="showLb('aim')">瞄准</button>
+                <button class="leaderboard-tab" onclick="showLb('sequence')">序列</button>
             </div>
             <div id="lbContent">还没有人上榜</div>
         </div>
@@ -148,64 +178,7 @@
     <script>
     (async function() {
         // ===== 粒子背景 =====
-        (function() {
-            const canvas = document.getElementById('particles');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let w, h, particles = [];
-            function resize() {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
-            }
-            function createParticles() {
-                particles = [];
-                const isMobile = window.innerWidth < 768;
-                const count = Math.min(Math.floor(w * h / (isMobile ? 36000 : 18000)), isMobile ? 40 : 80);
-                for (let i = 0; i < count; i++) {
-                    particles.push({
-                        x: Math.random() * w, y: Math.random() * h,
-                        vx: (Math.random() - 0.5) * 0.4,
-                        vy: (Math.random() - 0.5) * 0.4,
-                        r: Math.random() * 2 + 0.5
-                    });
-                }
-            }
-            function draw() {
-                ctx.clearRect(0, 0, w, h);
-                for (let i = 0; i < particles.length; i++) {
-                    const p = particles[i];
-                    p.x += p.vx; p.y += p.vy;
-                    if (p.x < 0 || p.x > w) p.vx *= -1;
-                    if (p.y < 0 || p.y > h) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    const hue = (p.x / w) * 60 + 180 + Math.random() * 40;
-                    ctx.fillStyle = 'hsla(' + hue + ', 85%, 65%, 0.28)';
-                    ctx.fill();
-                }
-                const maxDist = window.innerWidth < 768 ? 80 : 100;
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const dx = particles[i].x - particles[j].x;
-                        const dy = particles[i].y - particles[j].y;
-                        const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < maxDist) {
-                            ctx.beginPath();
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            const midX = (particles[i].x + particles[j].x) / 2;
-                            const lineHue = (midX / w) * 60 + 180;
-                            ctx.strokeStyle = 'hsla(' + lineHue + ', 85%, 65%, ' + (1 - d / maxDist) * 0.14 + ')';
-                            ctx.lineWidth = 0.8;
-                            ctx.stroke();
-                        }
-                    }
-                }
-                requestAnimationFrame(draw);
-            }
-            resize(); createParticles(); draw();
-            window.addEventListener('resize', APEXON.Utils && APEXON.Utils.debounce ? APEXON.Utils.debounce(() => { resize(); createParticles(); }, 250) : () => { resize(); createParticles(); });
-        })();
+        APEXON.Particles.init();
 
         // ===== 应用初始化 =====
         async function initApp() {
@@ -229,10 +202,15 @@
 
         // ===== 排行榜 =====
         let currentLb = 'reaction';
+        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence'];
+        const LB_UNITS = {
+            reaction: 'ms', type: 's', stick: '分',
+            number: '级', verbal: '分', visual: '级', aim: '分', sequence: '级'
+        };
         window.showLb = function(type) {
             currentLb = type;
             document.querySelectorAll('.leaderboard-tab').forEach((t, i) => {
-                t.classList.toggle('active', ['reaction','type','stick'][i] === type);
+                t.classList.toggle('active', LB_TYPES[i] === type);
             });
             loadLeaderboard(type);
         };
@@ -243,7 +221,7 @@
                 document.getElementById('lbContent').innerHTML = '<div class="forum-empty">还没有人上榜，快来成为第一个！</div>';
                 return;
             }
-            const unit = type === 'reaction' ? 'ms' : type === 'type' ? 's' : '分';
+            const unit = LB_UNITS[type] || '分';
             document.getElementById('lbContent').innerHTML = entries.map((e, i) => {
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
                 const val = e.score_value || 0;
@@ -260,7 +238,12 @@
             const types = [
                 { key: 'reaction', name: '反应', unit: 'ms' },
                 { key: 'type', name: '打字', unit: 's' },
-                { key: 'stick', name: '注意力', unit: '分' }
+                { key: 'stick', name: '注意力', unit: '分' },
+                { key: 'number', name: '数字记忆', unit: '级' },
+                { key: 'verbal', name: '单词记忆', unit: '分' },
+                { key: 'visual', name: '视觉记忆', unit: '级' },
+                { key: 'aim', name: '瞄准训练', unit: '分' },
+                { key: 'sequence', name: '序列记忆', unit: '级' }
             ];
             let html = '<table style="width:100%;border-collapse:collapse">';
             for (const t of types) {
