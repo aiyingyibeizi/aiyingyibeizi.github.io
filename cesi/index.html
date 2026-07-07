@@ -209,24 +209,9 @@
 
         // ===== 应用初始化 =====
         async function initApp() {
-            /* 登录系统已临时禁用，取消下方块注释即可恢复
             await APEXON.Auth.init();
-            const user = APEXON.Auth.getUser();
-            const userId = APEXON.Auth.getUserId();
-
-            if (!user) {
-                document.getElementById('personalContent').innerHTML = '<div style="color:var(--apex-text-tertiary);text-align:center;padding:20px;">🔒 登录后查看</div>';
-                document.getElementById('forumLoginTip').style.display = 'block';
-                document.getElementById('forumInputWrap').style.display = 'none';
-                loadLeaderboard('reaction');
-                loadComments();
-                updateStats();
-                return;
-            }
-
             document.getElementById('forumLoginTip').style.display = 'none';
             document.getElementById('forumInputWrap').style.display = 'flex';
-            */
             loadLeaderboard('reaction');
             loadPersonal();
             loadComments();
@@ -268,7 +253,6 @@
 
         // ===== 个人成绩 =====
         async function loadPersonal() {
-            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const esc = APEXON.Security.escapeHtml;
             const userId = APEXON.Auth.getUserId();
             if (!userId) return;
@@ -289,20 +273,14 @@
             }
             html += '</table>';
             document.getElementById('personalContent').innerHTML = html;
-            */
-            document.getElementById('personalContent').innerHTML = '<div style="color:var(--apex-text-tertiary);text-align:center;padding:20px;">🔒 登录系统维护中</div>';
         }
 
         // ===== 讨论区 =====
         window.postComment = async function() {
             const text = document.getElementById('forumText').value;
-            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast('请先登录'); return; }
-            */
-            const userId = 'anonymous';
-            const username = '匿名用户';
             const success = await APEXON.DB.addComment(userId, username, text);
             if (!success) { APEXON.UI.toast('发布失败'); return; }
             document.getElementById('forumText').value = '';

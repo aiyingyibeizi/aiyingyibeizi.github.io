@@ -407,21 +407,96 @@
   APEXON.Auth = ClerkAuth;
   */
 
-  // 登录系统禁用期间的占位对象，保证非登录代码正常运行
-  APEXON.Auth = {
+  // 登录系统已临时禁用，改用匿名身份继续记录成绩到数据库
+  const AnonymousAuth = {
     user: null,
     isReady: true,
-    async init() {},
-    isLoggedIn() { return false; },
-    getUser() { return null; },
-    getUserId() { return null; },
-    async logout() {},
-    async deleteAccount() {},
-    async updateUser() { throw new Error('登录系统已禁用'); },
-    async uploadAvatar() { throw new Error('登录系统已禁用'); },
-    getAvatarUrl() { return null; },
-    getCreatedAt() { return null; }
+
+    _ensureIdentity() {
+      if (this.user) return this.user;
+      let id = localStorage.getItem('apexon-anon-id');
+      let name = localStorage.getItem('apexon-anon-name');
+      let createdAt = localStorage.getItem('apexon-anon-created');
+      if (!id) {
+        id = this._generateId();
+        name = this._generateName();
+        createdAt = new Date().toISOString();
+        localStorage.setItem('apexon-anon-id', id);
+        localStorage.setItem('apexon-anon-name', name);
+        localStorage.setItem('apexon-anon-created', createdAt);
+      }
+      this.user = { id, name, createdAt };
+      return this.user;
+    },
+
+    _generateId() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'anon_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    },
+
+    _generateName() {
+      const adjectives = ['快乐', '勇敢', '安静', '聪明', '好奇', '机灵', '温柔', '调皮', '稳重', '活泼', '神秘', '幸运'];
+      const nouns = ['小猫', '熊猫', '海豚', '狐狸', '企鹅', '松鼠', '考拉', '兔子', '老虎', '狮子', '猫头鹰', '蝴蝶'];
+      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const noun = nouns[Math.floor(Math.random() * nouns.length)];
+      return adj + noun + Math.floor(Math.random() * 1000);
+    },
+
+    async init() {
+      this._ensureIdentity();
+    },
+
+    isLoggedIn() {
+      return true;
+    },
+
+    getUser() {
+      return this._ensureIdentity().name;
+    },
+
+    getUserId() {
+      return this._ensureIdentity().id;
+    },
+
+    async logout() {
+      localStorage.removeItem('apexon-anon-id');
+      localStorage.removeItem('apexon-anon-name');
+      localStorage.removeItem('apexon-anon-created');
+      this.user = null;
+      location.reload();
+    },
+
+    async deleteAccount() {
+      if (!confirm('确定清除本地匿名记录？历史数据仍会保留在数据库中。')) return;
+      await this.logout();
+    },
+
+    async updateUser(updates) {
+      if (updates.username != null) {
+        const user = this._ensureIdentity();
+        user.name = String(updates.username).slice(0, 30);
+        localStorage.setItem('apexon-anon-name', user.name);
+        this.user = user;
+      }
+      return this.user;
+    },
+
+    async uploadAvatar() {
+      throw new Error('匿名模式不支持上传头像');
+    },
+
+    getAvatarUrl() {
+      return null;
+    },
+
+    getCreatedAt() {
+      const createdAt = this._ensureIdentity().createdAt;
+      return createdAt ? new Date(createdAt).toLocaleDateString('zh-CN') : null;
+    }
   };
+  APEXON.Auth = AnonymousAuth;
 
   // ===== 3. 音频 =====
   const AudioManager = {
@@ -761,13 +836,12 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
-          /* 登录系统已临时禁用，取消下方块注释即可恢复
-          if (!ClerkAuth.isLoggedIn()) {
+          if (!APEXON.Auth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
           }
           try {
-            const history = await DB.getHistoryByUserAndType(ClerkAuth.getUserId(), 'type', 5);
+            const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'type', 5);
             if (!history.length) {
               historyContent.innerHTML = '<div class="forum-empty">还没有记录</div>';
               return;
@@ -778,8 +852,6 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
-          */
-          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const initText = () => {
@@ -821,12 +893,10 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均用时 ' + avgTime + ' 秒 · 正确率 ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">WPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">CPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">平均用时</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">正确率</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
           }
 
-          /* 登录系统已临时禁用，取消下方块注释即可恢复
-          if (ClerkAuth.isLoggedIn()) {
-            const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
+          if (APEXON.Auth.isLoggedIn()) {
+            const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
-          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}
@@ -932,13 +1002,12 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
-          /* 登录系统已临时禁用，取消下方块注释即可恢复
-          if (!ClerkAuth.isLoggedIn()) {
+          if (!APEXON.Auth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
           }
           try {
-            const history = await DB.getHistoryByUserAndType(ClerkAuth.getUserId(), 'reaction', 5);
+            const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'reaction', 5);
             if (!history.length) {
               historyContent.innerHTML = '<div class="forum-empty">还没有记录</div>';
               return;
@@ -949,8 +1018,6 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
-          */
-          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const resetAll = () => {
@@ -985,12 +1052,10 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均反应时间 ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
           }
 
-          /* 登录系统已临时禁用，取消下方块注释即可恢复
-          if (ClerkAuth.isLoggedIn()) {
-            const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
+          if (APEXON.Auth.isLoggedIn()) {
+            const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
-          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}

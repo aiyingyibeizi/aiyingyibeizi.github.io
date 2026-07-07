@@ -159,7 +159,6 @@
         function playSuccess() { try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch (e) {} }
 
         function renderHistory() {
-            /* 登录系统已临时禁用，取消下方块注释即可恢复
             if (!APEXON.Auth.isLoggedIn()) {
                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
                 return;
@@ -174,8 +173,6 @@
             }).catch(() => {
                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
             });
-            */
-            historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录系统维护中</div>';
         }
 
         function updateStats() {
@@ -221,13 +218,11 @@
             const grade = APEXON.Utils.getGrade(avgMs, 'aim');
             result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均每点 ' + avgMs + ' ms</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgMs + '</div><div class="score-detail-label">平均耗时</div></div><div class="score-detail-item"><div class="score-detail-value">' + TOTAL_TARGETS + '</div><div class="score-detail-label">目标数</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
 
-            /* 登录系统已临时禁用，取消下方块注释即可恢复
             if (APEXON.Auth.isLoggedIn()) {
                 APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'aim', { avg: avgMs }).then(saved => {
                     if (!saved) APEXON.UI.toast('数据保存失败，请重试');
                 });
             }
-            */
             try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {}
             renderHistory();
         }
