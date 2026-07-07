@@ -629,6 +629,7 @@
     // 登录系统禁用期间的占位方法
     async mountUserButton() { return; },
 
+    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
     updateUserDisplay() {
       const nameEl = document.getElementById('headerUserName');
       const wrap = document.getElementById('headerUserWrap');
@@ -652,6 +653,7 @@
       if (forumInput) forumInput.style.display = 'flex';
       document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: ClerkAuth.user } }));
     },
+    */
 
     backHome() {
       document.body.style.opacity = '0';
@@ -1097,8 +1099,10 @@
 
   // ===== 8. 全局接口 =====
   global.backHome = UI.backHome;
+  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
   global.APEXON.logout = ClerkAuth.logout.bind(ClerkAuth);
   global.APEXON.deleteAccount = ClerkAuth.deleteAccount.bind(ClerkAuth);
+  */
 
   // ===== 9. 初始化 =====
   function boot() {

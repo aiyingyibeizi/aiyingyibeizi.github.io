@@ -208,6 +208,7 @@
 
         async function renderHistory() {
             const esc = APEXON.Security.escapeHtml;
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             if (!APEXON.Auth.isLoggedIn()) {
                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
                 return;
@@ -222,6 +223,8 @@
             } catch(e) {
                  historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
             }
+            */
+            historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录系统维护中</div>';
         }
 
         function handleStart() { if (!started) { started = true; startGame(); } }
@@ -310,10 +313,12 @@
             const grade = grades.find(g => score >= g.min) || grades[grades.length - 1];
             result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">最终得分 ' + score + ' 分</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">总得分</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">时长</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
 
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             if (APEXON.Auth.isLoggedIn()) {
                 const saved = await APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'stick', { score: score });
                 if (!saved) APEXON.UI.toast('数据保存失败，请重试');
             }
+            */
 
             try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
             try { if (navigator.vibrate) navigator.vibrate(50); } catch(e){}
