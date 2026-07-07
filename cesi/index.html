@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
-    <!-- Clerk 登录系统 -->
+    <!-- Clerk 登录系统（已临时禁用，取消注释即可恢复）
     <script
       async
       crossorigin="anonymous"
@@ -16,6 +16,7 @@
       src="https://star-stork-4.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
       type="text/javascript">
     </script>
+    -->
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -32,11 +33,6 @@
                 <a href="reaction.html">反应测试</a>
                 <a href="type.html">打字测试</a>
                 <a href="stick.html">注意力测试</a>
-                <a href="number.html">数字记忆</a>
-                <a href="verbal.html">单词记忆</a>
-                <a href="visual.html">视觉记忆</a>
-                <a href="aim.html">瞄准训练</a>
-                <a href="sequence.html">序列记忆</a>
             </nav>
             <div class="header-actions">
                 <!-- 黑白 / 彩色全局切换 -->
@@ -48,7 +44,7 @@
                         </span>
                     </span>
                 </label>
-                <!-- Clerk 官方 UserButton 挂载点（纯 JS mountUserButton） -->
+                <!-- Clerk 官方 UserButton 挂载点（已临时禁用，取消注释即可恢复）
                 <div class="header-user-wrap" id="headerUserWrap">
                     <div id="user-menu-container"></div>
                     <span class="header-user-login" id="headerUserLogin">
@@ -60,6 +56,7 @@
                     </span>
                     <span class="header-user-name" id="headerUserName"></span>
                 </div>
+                -->
             </div>
         </div>
     </header>
@@ -94,26 +91,6 @@
                 <strong>持续注意力测试</strong>
                 <div class="card-desc">60秒专注力挑战，追踪你的注意力曲线</div>
             </a>
-            <a href="number.html" class="item-card">
-                <strong>数字记忆测试</strong>
-                <div class="card-desc">挑战短时记忆极限，数字串逐级递增</div>
-            </a>
-            <a href="verbal.html" class="item-card">
-                <strong>单词记忆测试</strong>
-                <div class="card-desc">识别新旧词汇，锻炼语言工作记忆</div>
-            </a>
-            <a href="visual.html" class="item-card">
-                <strong>视觉记忆测试</strong>
-                <div class="card-desc">记住网格亮点位置，提升空间记忆能力</div>
-            </a>
-            <a href="aim.html" class="item-card">
-                <strong>瞄准训练测试</strong>
-                <div class="card-desc">快速点击随机目标，训练手眼协调</div>
-            </a>
-            <a href="sequence.html" class="item-card">
-                <strong>序列记忆测试</strong>
-                <div class="card-desc">跟随亮灯顺序，锻炼模式记忆能力</div>
-            </a>
         </div>
 
         <div class="personal-stats" id="userProfile">
@@ -129,11 +106,6 @@
                 <button class="leaderboard-tab active" onclick="showLb('reaction')">反应</button>
                 <button class="leaderboard-tab" onclick="showLb('type')">打字</button>
                 <button class="leaderboard-tab" onclick="showLb('stick')">注意力</button>
-                <button class="leaderboard-tab" onclick="showLb('number')">数字</button>
-                <button class="leaderboard-tab" onclick="showLb('verbal')">单词</button>
-                <button class="leaderboard-tab" onclick="showLb('visual')">视觉</button>
-                <button class="leaderboard-tab" onclick="showLb('aim')">瞄准</button>
-                <button class="leaderboard-tab" onclick="showLb('sequence')">序列</button>
             </div>
             <div id="lbContent">还没有人上榜</div>
         </div>
@@ -237,6 +209,7 @@
 
         // ===== 应用初始化 =====
         async function initApp() {
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             await APEXON.Auth.init();
             const user = APEXON.Auth.getUser();
             const userId = APEXON.Auth.getUserId();
@@ -253,6 +226,7 @@
 
             document.getElementById('forumLoginTip').style.display = 'none';
             document.getElementById('forumInputWrap').style.display = 'flex';
+            */
             loadLeaderboard('reaction');
             loadPersonal();
             loadComments();
@@ -269,27 +243,14 @@
         }
 
         // ===== 排行榜 =====
-        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence'];
-        const LB_UNITS = {
-            reaction: 'ms',
-            type: 's',
-            stick: '分',
-            number: '位',
-            verbal: '个',
-            visual: '关',
-            aim: 'ms',
-            sequence: '关'
-        };
         let currentLb = 'reaction';
         window.showLb = function(type) {
             currentLb = type;
-            const idx = LB_TYPES.indexOf(type);
             document.querySelectorAll('.leaderboard-tab').forEach((t, i) => {
-                t.classList.toggle('active', i === idx);
+                t.classList.toggle('active', ['reaction','type','stick'][i] === type);
             });
             loadLeaderboard(type);
         };
-
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
             const entries = await APEXON.DB.getLeaderboard(type, 10);
@@ -297,7 +258,7 @@
                 document.getElementById('lbContent').innerHTML = '<div class="forum-empty">还没有人上榜，快来成为第一个！</div>';
                 return;
             }
-            const unit = LB_UNITS[type] || '分';
+            const unit = type === 'reaction' ? 'ms' : type === 'type' ? 's' : '分';
             document.getElementById('lbContent').innerHTML = entries.map((e, i) => {
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
                 const val = e.score_value || 0;
@@ -307,6 +268,7 @@
 
         // ===== 个人成绩 =====
         async function loadPersonal() {
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const esc = APEXON.Security.escapeHtml;
             const userId = APEXON.Auth.getUserId();
             if (!userId) return;
@@ -327,14 +289,20 @@
             }
             html += '</table>';
             document.getElementById('personalContent').innerHTML = html;
+            */
+            document.getElementById('personalContent').innerHTML = '<div style="color:var(--apex-text-tertiary);text-align:center;padding:20px;">🔒 登录系统维护中</div>';
         }
 
         // ===== 讨论区 =====
         window.postComment = async function() {
             const text = document.getElementById('forumText').value;
+            /* 登录系统已临时禁用，取消下方块注释即可恢复
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast('请先登录'); return; }
+            */
+            const userId = 'anonymous';
+            const username = '匿名用户';
             const success = await APEXON.DB.addComment(userId, username, text);
             if (!success) { APEXON.UI.toast('发布失败'); return; }
             document.getElementById('forumText').value = '';
@@ -386,6 +354,7 @@
             if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
         });
 
+        /* ===== 个人资料与 Clerk 登录相关代码已临时禁用，取消块注释即可恢复 =====
         // ===== 个人资料（只读展示，编辑通过 Clerk UserButton > 管理账户） =====
         function buildProfileMeta(profile, esc) {
             const parts = [];
@@ -450,10 +419,25 @@
             }
         });
 
+        // 点击名字/头像胶囊任意位置都触发 Clerk UserButton
+        const headerUserWrap = document.getElementById('headerUserWrap');
+        if (headerUserWrap) {
+            headerUserWrap.addEventListener('click', e => {
+                const btn = document.querySelector('#user-menu-container button, #user-menu-container [role="button"]');
+                if (!btn) return;
+                if (e.target === btn || btn.contains(e.target)) return;
+                btn.click();
+            });
+        }
+
         // 挂载 Clerk 官方 UserButton（纯 JS API）
         APEXON.UI.mountUserButton('user-menu-container');
+        */
+
         await initApp();
+        /* 登录系统已临时禁用
         await loadProfile();
+        */
         document.body.classList.add('loaded');
     })();
     </script>

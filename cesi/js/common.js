@@ -63,21 +63,6 @@
         if (isNaN(score) || score < 0 || score > 100000) return false;
         return true;
       }
-      if (type === 'number' || type === 'visual' || type === 'sequence') {
-        const score = parseInt(data.score, 10);
-        if (isNaN(score) || score < 0 || score > 10000) return false;
-        return true;
-      }
-      if (type === 'verbal') {
-        const score = parseInt(data.score, 10);
-        if (isNaN(score) || score < 0 || score > 10000) return false;
-        return true;
-      }
-      if (type === 'aim') {
-        const avg = parseFloat(data.avg);
-        if (isNaN(avg) || avg < 0 || avg > 100000) return false;
-        return true;
-      }
       return false;
     }
   };
@@ -143,8 +128,7 @@
     },
 
     async getLeaderboard(testType, limit = 10) {
-      const higherIsBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
-      const order = higherIsBetter.includes(testType) ? 'score_value.desc' : 'score_value.asc';
+      const order = testType === 'stick' ? 'score_value.desc' : 'score_value.asc';
       const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=${limit}`;
       try {
         const res = await fetch(url, {
@@ -290,6 +274,7 @@
   APEXON.DB = DB;
 
   // ===== 2. Clerk 认证 =====
+  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
   const ClerkAuth = {
     user: null,
     isReady: false,
@@ -420,6 +405,23 @@
     }
   };
   APEXON.Auth = ClerkAuth;
+  */
+
+  // 登录系统禁用期间的占位对象，保证非登录代码正常运行
+  APEXON.Auth = {
+    user: null,
+    isReady: true,
+    async init() {},
+    isLoggedIn() { return false; },
+    getUser() { return null; },
+    getUserId() { return null; },
+    async logout() {},
+    async deleteAccount() {},
+    async updateUser() { throw new Error('登录系统已禁用'); },
+    async uploadAvatar() { throw new Error('登录系统已禁用'); },
+    getAvatarUrl() { return null; },
+    getCreatedAt() { return null; }
+  };
 
   // ===== 3. 音频 =====
   const AudioManager = {
@@ -511,34 +513,6 @@
         if (val < 50) return { grade: 'C', color: '#95E1D3' };
         return { grade: 'D', color: '#aaa' };
       }
-      if (type === 'number' || type === 'sequence') {
-        if (val >= 12) return { grade: 'S', color: '#FFD700' };
-        if (val >= 9) return { grade: 'A', color: '#FF6B6B' };
-        if (val >= 7) return { grade: 'B', color: '#4ECDC4' };
-        if (val >= 5) return { grade: 'C', color: '#95E1D3' };
-        return { grade: 'D', color: '#aaa' };
-      }
-      if (type === 'verbal') {
-        if (val >= 60) return { grade: 'S', color: '#FFD700' };
-        if (val >= 45) return { grade: 'A', color: '#FF6B6B' };
-        if (val >= 30) return { grade: 'B', color: '#4ECDC4' };
-        if (val >= 15) return { grade: 'C', color: '#95E1D3' };
-        return { grade: 'D', color: '#aaa' };
-      }
-      if (type === 'visual') {
-        if (val >= 15) return { grade: 'S', color: '#FFD700' };
-        if (val >= 11) return { grade: 'A', color: '#FF6B6B' };
-        if (val >= 8) return { grade: 'B', color: '#4ECDC4' };
-        if (val >= 5) return { grade: 'C', color: '#95E1D3' };
-        return { grade: 'D', color: '#aaa' };
-      }
-      if (type === 'aim') {
-        if (val < 400) return { grade: 'S', color: '#FFD700' };
-        if (val < 550) return { grade: 'A', color: '#FF6B6B' };
-        if (val < 700) return { grade: 'B', color: '#4ECDC4' };
-        if (val < 900) return { grade: 'C', color: '#95E1D3' };
-        return { grade: 'D', color: '#aaa' };
-      }
       return { grade: '-', color: '#aaa' };
     }
   };
@@ -591,21 +565,18 @@
       }
     },
 
+    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
     async mountUserButton(containerId = 'user-menu-container') {
       await ClerkAuth.init();
       let container = document.getElementById(containerId);
       // 兼容旧页面仍使用 #user-button
       if (!container) container = document.getElementById('user-button');
-      if (!container || !window.Clerk || !window.Clerk.mountUserButton) {
-        console.error('[Clerk] 无法挂载 UserButton:', { container: !!container, clerk: !!window.Clerk, mountUserButton: !!(window.Clerk && window.Clerk.mountUserButton) });
-        return;
-      }
+      if (!container || !window.Clerk || !window.Clerk.mountUserButton) return;
 
       const doMount = () => {
         if (container.dataset.clerkMounted === 'true') return;
         container.dataset.clerkMounted = 'true';
         try {
-          console.log('[Clerk] 正在挂载 UserButton...');
           window.Clerk.mountUserButton(container, {
             afterSignOutUrl: window.location.href,
             appearance: {
@@ -651,31 +622,14 @@
         });
       }
 
-      // 点击外层胶囊任意位置都触发 Clerk UserButton（兼容所有页面）
-      const headerUserWrap = document.getElementById('headerUserWrap');
-      if (headerUserWrap) {
-        headerUserWrap.addEventListener('click', e => {
-          console.log('[登录按钮] 被点击');
-          const btn = container.querySelector('button, [role="button"]');
-          if (btn) {
-            console.log('[登录按钮] 找到 Clerk 按钮，触发点击');
-            if (e.target === btn || btn.contains(e.target)) return;
-            btn.click();
-            return;
-          }
-          // 兜底：如果 Clerk 按钮没渲染出来，直接打开登录弹窗
-          console.log('[登录按钮] 没找到 Clerk 按钮，尝试 openSignIn');
-          if (window.Clerk && window.Clerk.openSignIn) {
-            window.Clerk.openSignIn({ redirectUrl: window.location.href });
-          } else {
-            console.error('[登录按钮] Clerk 未加载完成');
-          }
-        });
-      }
-
       UI.updateUserDisplay();
     },
+    */
 
+    // 登录系统禁用期间的占位方法
+    async mountUserButton() { return; },
+
+    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
     updateUserDisplay() {
       const nameEl = document.getElementById('headerUserName');
       const wrap = document.getElementById('headerUserWrap');
@@ -699,6 +653,7 @@
       if (forumInput) forumInput.style.display = 'flex';
       document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: ClerkAuth.user } }));
     },
+    */
 
     backHome() {
       document.body.style.opacity = '0';
@@ -806,6 +761,7 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (!ClerkAuth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
@@ -822,6 +778,8 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
+          */
+          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const initText = () => {
@@ -863,10 +821,12 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均用时 ' + avgTime + ' 秒 · 正确率 ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">WPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">CPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">平均用时</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">正确率</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
           }
 
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (ClerkAuth.isLoggedIn()) {
             const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
+          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}
@@ -972,6 +932,7 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (!ClerkAuth.isLoggedIn()) {
             historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
             return;
@@ -988,6 +949,8 @@
           } catch (e) {
             historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
           }
+          */
+          historyContent.innerHTML = '<div class="forum-empty">登录系统维护中</div>';
         };
 
         const resetAll = () => {
@@ -1022,10 +985,12 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均反应时间 ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
           }
 
+          /* 登录系统已临时禁用，取消下方块注释即可恢复
           if (ClerkAuth.isLoggedIn()) {
             const saved = await DB.saveScore(ClerkAuth.getUserId(), ClerkAuth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
             if (!saved) UI.toast('数据保存失败，请重试');
           }
+          */
 
           try { AudioManager.playSuccess(); } catch (e) {}
           try { Utils.vibrate(30); } catch (e) {}
@@ -1134,8 +1099,10 @@
 
   // ===== 8. 全局接口 =====
   global.backHome = UI.backHome;
+  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
   global.APEXON.logout = ClerkAuth.logout.bind(ClerkAuth);
   global.APEXON.deleteAccount = ClerkAuth.deleteAccount.bind(ClerkAuth);
+  */
 
   // ===== 9. 初始化 =====
   function boot() {
