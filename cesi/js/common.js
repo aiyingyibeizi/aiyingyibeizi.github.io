@@ -1093,11 +1093,19 @@
         }
       };
       const onTouchEnd = () => { mouse.active = false; };
-      const onPointerDown = (e) => {
+      const onMouseDown = (e) => {
         spawnBurst(e.clientX, e.clientY);
         mouse.active = true;
         mouse.x = e.clientX;
         mouse.y = e.clientY;
+      };
+      const onTouchStart = (e) => {
+        if (e.touches && e.touches[0]) {
+          spawnBurst(e.touches[0].clientX, e.touches[0].clientY);
+          mouse.active = true;
+          mouse.x = e.touches[0].clientX;
+          mouse.y = e.touches[0].clientY;
+        }
       };
       const onVisibility = () => {
         if (document.hidden) {
@@ -1120,7 +1128,8 @@
       window.addEventListener('mouseleave', onMouseLeave);
       window.addEventListener('touchmove', onTouchMove, { passive: true });
       window.addEventListener('touchend', onTouchEnd);
-      window.addEventListener('pointerdown', onPointerDown, { passive: true });
+      window.addEventListener('mousedown', onMouseDown, { passive: true });
+      window.addEventListener('touchstart', onTouchStart, { passive: true });
       document.addEventListener('visibilitychange', onVisibility);
 
       resize();
