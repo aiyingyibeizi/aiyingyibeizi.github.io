@@ -751,14 +751,14 @@
   const ParticleSystem = {
     defaults: {
       selector: 'particles',
-      // 科技感冷色：青、蓝、紫、白，去掉高饱和彩虹色
+      // 科技感冷色：青、蓝、紫、白
       darkPalette: ['#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e2e8f0'],
       lightPalette: ['#0891b2', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#475569', '#334155'],
-      baseCount: 72,
-      mobileCount: 36,
-      connectionDistance: 110,
-      mouseDistance: 140,
-      speed: 0.45
+      baseCount: 44,
+      mobileCount: 24,
+      connectionDistance: 130,
+      mouseDistance: 150,
+      speed: 0.42
     },
 
     init(options = {}) {
@@ -767,18 +767,52 @@
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
+      const offscreen = document.createElement('canvas');
+      const offCtx = offscreen.getContext('2d');
       let w, h, particles = [], stars = [], bursts = [];
+      let packets = [], scanLines = [], glyphs = [], rings = [];
       let mouse = { x: null, y: null, active: false };
       let frameId = null;
       let isActive = true;
+      let frameCount = 0;
 
       const isLight = () =>
         document.documentElement.getAttribute('data-bw') === 'true' ||
         document.documentElement.getAttribute('data-theme') === 'light' ||
         document.body.classList.contains('theme-light');
       const colorPalette = () => isLight() ? config.lightPalette : config.darkPalette;
-      const palette = colorPalette();
-      const linkColor = palette[0];
+      let palette = colorPalette();
+      const accent = () => palette[0];
+
+      const drawHexGridToOffscreen = () => {
+        const r = 64;
+        const hh = r * Math.sqrt(3);
+        offscreen.width = window.innerWidth;
+        offscreen.height = window.innerHeight;
+        offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+        offCtx.strokeStyle = accent();
+        offCtx.lineWidth = 0.8;
+        offCtx.globalAlpha = isLight() ? 0.06 : 0.11;
+        const cols = Math.ceil(window.innerWidth / (r * 3)) + 1;
+        const rows = Math.ceil(window.innerHeight / hh) + 1;
+        for (let row = -1; row < rows; row++) {
+          for (let col = -1; col < cols; col++) {
+            const cx = col * r * 3 + (row % 2) * r * 1.5;
+            const cy = row * hh * 0.5;
+            offCtx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              const a = Math.PI / 3 * i;
+              const hx = cx + r * Math.cos(a);
+              const hy = cy + r * Math.sin(a);
+              if (i === 0) offCtx.moveTo(hx, hy);
+              else offCtx.lineTo(hx, hy);
+            }
+            offCtx.closePath();
+            offCtx.stroke();
+          }
+        }
+        offCtx.globalAlpha = 1;
+      };
 
       const resize = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -789,62 +823,127 @@
         canvas.style.width = cw + 'px';
         canvas.style.height = ch + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawHexGridToOffscreen();
       };
+
+      const randColor = () => palette[Math.floor(Math.random() * palette.length)];
 
       const createParticles = () => {
         particles = [];
         const isMobile = window.innerWidth < 768;
         const area = window.innerWidth * window.innerHeight;
-        const density = isMobile ? 28000 : 18000;
+        const density = isMobile ? 26000 : 16000;
         const count = Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount);
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = config.speed * (Math.random() * 0.8 + 0.6);
-          const color = palette[Math.floor(Math.random() * palette.length)];
+          const speed = config.speed * (Math.random() * 0.9 + 0.5);
+          const isCore = Math.random() < 0.18;
           particles.push({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            baseR: Math.random() * 1.2 + 0.5,
-            color,
-            alpha: Math.random() * 0.35 + 0.25,
+            baseR: isCore ? Math.random() * 1.6 + 1.1 : Math.random() * 1.0 + 0.4,
+            color: randColor(),
+            alpha: Math.random() * 0.32 + 0.28,
             pulse: Math.random() * Math.PI * 2,
-            pulseSpeed: Math.random() * 0.03 + 0.01
+            pulseSpeed: Math.random() * 0.04 + 0.02,
+            core: isCore,
+            ring: Math.random() * Math.PI * 2
           });
         }
       };
 
       const spawnStar = () => {
-        if (stars.length >= 2) return;
-        if (Math.random() > 0.003) return;
+        if (stars.length >= 3 || Math.random() > 0.005) return;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 2 + 1.5;
+        const speed = Math.random() * 3 + 2;
         stars.push({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          len: Math.random() * 80 + 60,
+          len: Math.random() * 100 + 80,
           life: 1,
-          decay: Math.random() * 0.006 + 0.004,
-          color: linkColor
+          decay: Math.random() * 0.008 + 0.005,
+          color: accent()
         });
       };
 
       const spawnBurst = (x, y) => {
-        for (let i = 0; i < 8; i++) {
+        const color = accent();
+        for (let i = 0; i < 14; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 2 + 1;
+          const speed = Math.random() * 3.5 + 1.5;
           bursts.push({
             x, y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
             life: 1,
-            decay: Math.random() * 0.025 + 0.02,
-            color: linkColor,
-            size: Math.random() * 1.5 + 0.5
+            decay: Math.random() * 0.03 + 0.02,
+            color,
+            size: Math.random() * 1.8 + 0.6,
+            core: i < 3
           });
+        }
+        rings.push({ x, y, r: 2, alpha: 0.85, color, width: 2.5 });
+      };
+
+      const spawnGlyph = () => {
+        if (glyphs.length >= 4 || Math.random() > 0.006) return;
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        glyphs.push({
+          x, y,
+          size: Math.random() * 16 + 14,
+          life: 1,
+          decay: Math.random() * 0.006 + 0.004,
+          color: randColor(),
+          rot: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.03,
+          type: Math.random() < 0.5 ? 'cross' : 'hex'
+        });
+      };
+
+      const buildConnectionList = () => {
+        const maxDist = config.connectionDistance;
+        const maxLinks = 3;
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].links = [];
+        }
+        for (let i = 0; i < particles.length; i++) {
+          let links = 0;
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < maxDist * maxDist) {
+              const dist = Math.sqrt(d2);
+              particles[i].links.push({ idx: j, dist });
+              particles[j].links.push({ idx: i, dist });
+              links++;
+              if (links >= maxLinks) break;
+            }
+          }
+        }
+      };
+
+      const spawnPackets = () => {
+        if (packets.length >= 10 || Math.random() > 0.06) return;
+        for (let i = 0; i < particles.length; i++) {
+          if (particles[i].links && particles[i].links.length && Math.random() < 0.3) {
+            const link = particles[i].links[Math.floor(Math.random() * particles[i].links.length)];
+            const target = particles[link.idx];
+            packets.push({
+              from: i,
+              to: link.idx,
+              t: 0,
+              speed: 0.01 + Math.random() * 0.02,
+              color: particles[i].color,
+              size: Math.random() * 1.5 + 0.8
+            });
+            break;
+          }
         }
       };
 
@@ -864,14 +963,19 @@
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d < config.mouseDistance && d > 1) {
               const force = (config.mouseDistance - d) / config.mouseDistance;
-              p.vx += (dx / d) * force * 0.03;
-              p.vy += (dy / d) * force * 0.03;
+              // 磁场排斥 + 切向旋转
+              const push = 0.06;
+              const swirl = 0.04;
+              const nx = dx / d, ny = dy / d;
+              p.vx += nx * force * push - ny * force * swirl;
+              p.vy += ny * force * push + nx * force * swirl;
             }
           }
 
-          p.vx *= 0.995;
-          p.vy *= 0.995;
+          p.vx *= 0.994;
+          p.vy *= 0.994;
           p.pulse += p.pulseSpeed;
+          p.ring += 0.03;
         }
       };
 
@@ -885,45 +989,70 @@
           b.life -= b.decay;
           if (b.life <= 0) bursts.splice(i, 1);
         }
+        for (let i = rings.length - 1; i >= 0; i--) {
+          const r = rings[i];
+          r.r += 5;
+          r.alpha -= 0.015;
+          r.width *= 0.985;
+          if (r.alpha <= 0) rings.splice(i, 1);
+        }
       };
 
-      const drawGrid = () => {
-        const step = 80;
-        ctx.strokeStyle = linkColor;
-        ctx.lineWidth = 0.5;
-        ctx.globalAlpha = isLight() ? 0.04 : 0.06;
-        for (let x = 0; x < window.innerWidth; x += step) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, window.innerHeight);
-          ctx.stroke();
+      const updatePackets = () => {
+        spawnPackets();
+        for (let i = packets.length - 1; i >= 0; i--) {
+          const pk = packets[i];
+          pk.t += pk.speed;
+          if (pk.t >= 1) packets.splice(i, 1);
         }
-        for (let y = 0; y < window.innerHeight; y += step) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(window.innerWidth, y);
-          ctx.stroke();
+      };
+
+      const updateGlyphs = () => {
+        spawnGlyph();
+        for (let i = glyphs.length - 1; i >= 0; i--) {
+          const g = glyphs[i];
+          g.life -= g.decay;
+          g.rot += g.rotSpeed;
+          if (g.life <= 0) glyphs.splice(i, 1);
         }
-        ctx.globalAlpha = 1;
+      };
+
+      const updateScanLines = () => {
+        if (scanLines.length < 2 && Math.random() < 0.012) {
+          scanLines.push({ y: -4, speed: Math.random() * 1.8 + 1.2, alpha: 0.45, width: Math.random() * 2 + 1 });
+        }
+        for (let i = scanLines.length - 1; i >= 0; i--) {
+          const s = scanLines[i];
+          s.y += s.speed;
+          if (s.y > window.innerHeight + 10) scanLines.splice(i, 1);
+        }
+      };
+
+      const drawHexGrid = () => {
+        ctx.drawImage(offscreen, 0, 0);
       };
 
       const drawConnections = () => {
         const maxDist = config.connectionDistance;
-        const maxLinks = 3;
-        ctx.lineWidth = 0.8;
-        ctx.strokeStyle = linkColor;
+        const maxLinks = 2;
+        ctx.lineWidth = 1.4;
+        ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < particles.length; i++) {
+          const p1 = particles[i];
           let links = 0;
           for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const d = dx * dx + dy * dy;
-            if (d < maxDist * maxDist) {
-              const dist = Math.sqrt(d);
-              ctx.globalAlpha = (1 - dist / maxDist) * 0.18;
+            const p2 = particles[j];
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < maxDist * maxDist) {
+              const dist = Math.sqrt(d2);
+              const alpha = (1 - dist / maxDist) * 0.28;
+              ctx.strokeStyle = p1.color;
+              ctx.globalAlpha = alpha;
               ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
               ctx.stroke();
               links++;
               if (links >= maxLinks) break;
@@ -931,71 +1060,210 @@
           }
         }
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      const drawPackets = () => {
+        ctx.globalCompositeOperation = 'lighter';
+        for (const pk of packets) {
+          const p1 = particles[pk.from];
+          const p2 = particles[pk.to];
+          if (!p1 || !p2) continue;
+          const x = p1.x + (p2.x - p1.x) * pk.t;
+          const y = p1.y + (p2.y - p1.y) * pk.t;
+          ctx.beginPath();
+          ctx.arc(x, y, pk.size * 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = pk.color;
+          ctx.globalAlpha = 0.45;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x, y, pk.size * 0.7, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = 0.95;
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
       };
 
       const drawParticles = () => {
+        // 光晕层（lighter 合成，无 shadowBlur）
+        ctx.globalCompositeOperation = 'lighter';
         for (const p of particles) {
-          const r = p.baseR * (1 + Math.sin(p.pulse) * 0.2);
+          const r = p.baseR * (1 + Math.sin(p.pulse) * 0.3);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(0.5, r * (p.core ? 4 : 2.6)), 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha * (p.core ? 0.35 : 0.22);
+          ctx.fill();
+        }
+        // 核心层
+        ctx.globalCompositeOperation = 'source-over';
+        for (const p of particles) {
+          const r = p.baseR * (1 + Math.sin(p.pulse) * 0.3);
+
+          if (p.core) {
+            const ringR = r * 3 + Math.sin(p.ring) * 2;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(0.5, ringR), 0, Math.PI * 2);
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = p.alpha * 0.6;
+            ctx.stroke();
+          }
+
           ctx.beginPath();
           ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = p.alpha;
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = p.color;
+          ctx.fillStyle = p.core ? '#ffffff' : p.color;
+          ctx.globalAlpha = p.core ? 0.95 : p.alpha;
           ctx.fill();
-          ctx.shadowBlur = 0;
         }
         ctx.globalAlpha = 1;
       };
 
       const drawBursts = () => {
+        ctx.globalCompositeOperation = 'lighter';
         for (const b of bursts) {
           ctx.beginPath();
-          ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI * 2);
+          ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 2.2 : 1.6), 0, Math.PI * 2);
           ctx.fillStyle = b.color;
-          ctx.globalAlpha = b.life * 0.7;
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = b.color;
+          ctx.globalAlpha = b.life * (b.core ? 0.5 : 0.3);
           ctx.fill();
-          ctx.shadowBlur = 0;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        for (const b of bursts) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 1.4 : 1), 0, Math.PI * 2);
+          ctx.fillStyle = b.core ? '#ffffff' : b.color;
+          ctx.globalAlpha = b.life * (b.core ? 0.95 : 0.6);
+          ctx.fill();
+        }
+        for (const r of rings) {
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+          ctx.strokeStyle = r.color;
+          ctx.lineWidth = Math.max(0.5, r.width);
+          ctx.globalAlpha = r.alpha;
+          ctx.stroke();
         }
         ctx.globalAlpha = 1;
       };
 
       const drawStars = () => {
         spawnStar();
+        ctx.globalCompositeOperation = 'lighter';
         for (let i = stars.length - 1; i >= 0; i--) {
           const s = stars[i];
           s.x += s.vx;
           s.y += s.vy;
           s.life -= s.decay;
-          if (s.life <= 0 || s.x < -100 || s.x > window.innerWidth + 100 || s.y < -100 || s.y > window.innerHeight + 100) {
+          if (s.life <= 0 || s.x < -120 || s.x > window.innerWidth + 120 || s.y < -120 || s.y > window.innerHeight + 120) {
             stars.splice(i, 1);
             continue;
           }
-          const tailX = s.x - s.vx * (s.len / 4);
-          const tailY = s.y - s.vy * (s.len / 4);
+          const tailX = s.x - s.vx * (s.len / 5);
+          const tailY = s.y - s.vy * (s.len / 5);
           ctx.beginPath();
           ctx.strokeStyle = s.color;
-          ctx.lineWidth = 1.2;
-          ctx.globalAlpha = s.life * 0.5;
+          ctx.lineWidth = 2.2;
+          ctx.globalAlpha = s.life * 0.35;
           ctx.moveTo(s.x, s.y);
           ctx.lineTo(tailX, tailY);
           ctx.stroke();
         }
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      const drawGlyphs = () => {
+        ctx.globalCompositeOperation = 'lighter';
+        for (const g of glyphs) {
+          ctx.save();
+          ctx.translate(g.x, g.y);
+          ctx.rotate(g.rot);
+          ctx.strokeStyle = g.color;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = g.life * 0.55;
+          const s = g.size;
+          if (g.type === 'cross') {
+            ctx.beginPath();
+            ctx.moveTo(-s, 0); ctx.lineTo(s, 0);
+            ctx.moveTo(0, -s); ctx.lineTo(0, s);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+              const a = Math.PI / 3 * i;
+              const hx = s * Math.cos(a);
+              const hy = s * Math.sin(a);
+              if (i === 0) ctx.moveTo(hx, hy);
+              else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.25, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      const drawScanLines = () => {
+        ctx.globalCompositeOperation = 'lighter';
+        for (const s of scanLines) {
+          ctx.beginPath();
+          ctx.strokeStyle = accent();
+          ctx.lineWidth = s.width * 2.5;
+          ctx.globalAlpha = s.alpha * 0.5;
+          ctx.moveTo(0, s.y);
+          ctx.lineTo(window.innerWidth, s.y);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      const drawMouseField = () => {
+        if (!mouse.active) return;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, config.mouseDistance * 0.6, 0, Math.PI * 2);
+        ctx.strokeStyle = accent();
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.18;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, config.mouseDistance * 0.3, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.28;
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
       };
 
       const draw = () => {
         if (!isActive) return;
+        frameCount++;
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        drawGrid();
+        drawHexGrid();
         updateParticles();
+        if (frameCount % 2 === 0) buildConnectionList();
+        updatePackets();
         updateBursts();
+        updateGlyphs();
+        updateScanLines();
         drawConnections();
+        drawPackets();
         drawParticles();
         drawBursts();
         drawStars();
+        drawGlyphs();
+        drawScanLines();
+        drawMouseField();
         frameId = requestAnimationFrame(draw);
       };
 
@@ -1034,9 +1302,11 @@
         }
       };
       const onThemeChange = () => {
-        const newPalette = colorPalette();
-        for (const p of particles) p.color = newPalette[Math.floor(Math.random() * newPalette.length)];
-        for (const s of stars) s.color = newPalette[0];
+        palette = colorPalette();
+        drawHexGridToOffscreen();
+        for (const p of particles) p.color = randColor();
+        for (const s of stars) s.color = accent();
+        for (const g of glyphs) g.color = randColor();
       };
 
       document.addEventListener('apexon:themechange', onThemeChange);
