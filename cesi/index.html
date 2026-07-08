@@ -147,7 +147,7 @@
 
         <div class="forum-section" id="forumSection">
             <div class="forum-title">💬 玩家讨论区</div>
-            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">登录后可以参与讨论</div>
+            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">讨论功能暂未开放</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
                 <textarea id="forumText" placeholder="分享你的测试心得..." maxlength="500"></textarea>
                 <button class="forum-btn" onclick="postComment()">发布</button>
@@ -183,10 +183,11 @@
         // ===== 应用初始化 =====
         async function initApp() {
             await APEXON.Auth.init();
-            document.getElementById('forumLoginTip').style.display = 'none';
-            document.getElementById('forumInputWrap').style.display = 'flex';
+            const isLoggedIn = APEXON.Auth.isLoggedIn && APEXON.Auth.isLoggedIn();
+            document.getElementById('forumLoginTip').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('forumInputWrap').style.display = isLoggedIn ? 'flex' : 'none';
             loadLeaderboard('reaction');
-            loadPersonal();
+            if (isLoggedIn) loadPersonal();
             loadComments();
             updateStats();
         }

@@ -459,7 +459,7 @@
     },
 
     isLoggedIn() {
-      return true;
+      return false;
     },
 
     getUser() {
@@ -751,13 +751,14 @@
   const ParticleSystem = {
     defaults: {
       selector: 'particles',
-      darkPalette: ['#22d3ee', '#a855f7', '#34d399', '#f472b6', '#fbbf24', '#60a5fa', '#f87171', '#818cf8', '#2dd4bf', '#e879f9', '#38bdf8'],
-      lightPalette: ['#0891b2', '#7c3aed', '#059669', '#db2777', '#d97706', '#2563eb', '#dc2626', '#4f46e5', '#0d9488', '#c026d3', '#0284c7'],
-      baseCount: 260,
-      mobileCount: 130,
-      connectionDistance: 220,
-      mouseDistance: 240,
-      speed: 1.1
+      // 科技感冷色：青、蓝、紫、白，去掉高饱和彩虹色
+      darkPalette: ['#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e2e8f0'],
+      lightPalette: ['#0891b2', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#475569', '#334155'],
+      baseCount: 72,
+      mobileCount: 36,
+      connectionDistance: 110,
+      mouseDistance: 140,
+      speed: 0.45
     },
 
     init(options = {}) {
@@ -766,11 +767,10 @@
       if (!canvas) return;
 
       const ctx = canvas.getContext('2d');
-      let w, h, particles = [], stars = [], bursts = [], orbs = [], ripples = [];
+      let w, h, particles = [], stars = [], bursts = [];
       let mouse = { x: null, y: null, active: false };
       let frameId = null;
       let isActive = true;
-      let hueShift = 0;
 
       const isLight = () =>
         document.documentElement.getAttribute('data-bw') === 'true' ||
@@ -778,6 +778,7 @@
         document.body.classList.contains('theme-light');
       const colorPalette = () => isLight() ? config.lightPalette : config.darkPalette;
       const palette = colorPalette();
+      const linkColor = palette[0];
 
       const resize = () => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -792,75 +793,59 @@
 
       const createParticles = () => {
         particles = [];
-        orbs = [];
         const isMobile = window.innerWidth < 768;
         const area = window.innerWidth * window.innerHeight;
-        const density = isMobile ? 18000 : 9000;
+        const density = isMobile ? 28000 : 18000;
         const count = Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount);
         for (let i = 0; i < count; i++) {
-          const speed = config.speed * (Math.random() * 1.6 + 0.5);
           const angle = Math.random() * Math.PI * 2;
-          const isOrb = Math.random() < 0.08;
-          const p = {
+          const speed = config.speed * (Math.random() * 0.8 + 0.6);
+          const color = palette[Math.floor(Math.random() * palette.length)];
+          particles.push({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            baseR: isOrb ? Math.random() * 2.5 + 2.2 : Math.random() * 2.2 + 0.8,
-            color: palette[Math.floor(Math.random() * palette.length)],
-            alpha: Math.random() * 0.4 + 0.28,
+            baseR: Math.random() * 1.2 + 0.5,
+            color,
+            alpha: Math.random() * 0.35 + 0.25,
             pulse: Math.random() * Math.PI * 2,
-            pulseSpeed: Math.random() * 0.05 + 0.02,
-            orb: isOrb,
-            trail: []
-          };
-          particles.push(p);
-          if (isOrb) orbs.push(p);
+            pulseSpeed: Math.random() * 0.03 + 0.01
+          });
         }
       };
 
       const spawnStar = () => {
-        if (stars.length >= 10) return;
-        if (Math.random() > 0.018) return;
+        if (stars.length >= 2) return;
+        if (Math.random() > 0.003) return;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 5 + 4;
+        const speed = Math.random() * 2 + 1.5;
         stars.push({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          len: Math.random() * 160 + 100,
+          len: Math.random() * 80 + 60,
           life: 1,
-          decay: Math.random() * 0.008 + 0.006,
-          color: palette[Math.floor(Math.random() * palette.length)]
+          decay: Math.random() * 0.006 + 0.004,
+          color: linkColor
         });
       };
 
       const spawnBurst = (x, y) => {
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        for (let i = 0; i < 24; i++) {
+        for (let i = 0; i < 8; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 5 + 2;
+          const speed = Math.random() * 2 + 1;
           bursts.push({
             x, y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
             life: 1,
-            decay: Math.random() * 0.02 + 0.018,
-            color,
-            size: Math.random() * 2.5 + 0.8
+            decay: Math.random() * 0.025 + 0.02,
+            color: linkColor,
+            size: Math.random() * 1.5 + 0.5
           });
         }
-        // 点击/触摸产生扩散能量环
-        ripples.push({ x, y, r: 2, alpha: 0.9, color, width: 3 });
-      };
-
-      const spawnRipple = () => {
-        if (Math.random() > 0.015 || ripples.length >= 4) return;
-        const x = Math.random() * window.innerWidth;
-        const y = Math.random() * window.innerHeight;
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        ripples.push({ x, y, r: 1, alpha: 0.55, color, width: 2 });
       };
 
       const updateParticles = () => {
@@ -879,38 +864,14 @@
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d < config.mouseDistance && d > 1) {
               const force = (config.mouseDistance - d) / config.mouseDistance;
-              const push = p.orb ? 0.10 : 0.22;
-              const nx = dx / d, ny = dy / d;
-              // 排斥冲击
-              p.vx += nx * force * push;
-              p.vy += ny * force * push;
-              // 漩涡切向力（让粒子绕鼠标旋转）
-              const swirl = p.orb ? 0.05 : 0.09;
-              p.vx += -ny * force * swirl;
-              p.vy += nx * force * swirl;
+              p.vx += (dx / d) * force * 0.03;
+              p.vy += (dy / d) * force * 0.03;
             }
           }
 
-          // 全局轻微漩涡场（让画面更有动感）
-          const cx = window.innerWidth / 2;
-          const cy = window.innerHeight / 2;
-          const cdx = p.x - cx;
-          const cdy = p.y - cy;
-          const cd = Math.sqrt(cdx * cdx + cdy * cdy);
-          if (cd > 1) {
-            const swirlForce = 0.00008 * (p.orb ? 1.5 : 1);
-            p.vx += -cdy / cd * cd * swirlForce;
-            p.vy += cdx / cd * cd * swirlForce;
-          }
-
-          p.vx *= 0.993;
-          p.vy *= 0.993;
+          p.vx *= 0.995;
+          p.vy *= 0.995;
           p.pulse += p.pulseSpeed;
-
-          if (p.trail) {
-            p.trail.push({ x: p.x, y: p.y });
-            if (p.trail.length > (p.orb ? 10 : 5)) p.trail.shift();
-          }
         }
       };
 
@@ -919,60 +880,54 @@
           const b = bursts[i];
           b.x += b.vx;
           b.y += b.vy;
-          b.vx *= 0.96;
-          b.vy *= 0.96;
+          b.vx *= 0.95;
+          b.vy *= 0.95;
           b.life -= b.decay;
           if (b.life <= 0) bursts.splice(i, 1);
         }
       };
 
-      const updateRipples = () => {
-        spawnRipple();
-        for (let i = ripples.length - 1; i >= 0; i--) {
-          const r = ripples[i];
-          r.r += 4.5;
-          r.alpha -= 0.012;
-          r.width *= 0.985;
-          if (r.alpha <= 0 || r.r > Math.max(window.innerWidth, window.innerHeight) * 0.55) {
-            ripples.splice(i, 1);
-          }
+      const drawGrid = () => {
+        const step = 80;
+        ctx.strokeStyle = linkColor;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = isLight() ? 0.04 : 0.06;
+        for (let x = 0; x < window.innerWidth; x += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, window.innerHeight);
+          ctx.stroke();
         }
+        for (let y = 0; y < window.innerHeight; y += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(window.innerWidth, y);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
       };
 
       const drawConnections = () => {
         const maxDist = config.connectionDistance;
-        ctx.lineWidth = 1;
+        const maxLinks = 3;
+        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = linkColor;
         for (let i = 0; i < particles.length; i++) {
-          let near = [];
+          let links = 0;
           for (let j = i + 1; j < particles.length; j++) {
             const dx = particles[i].x - particles[j].x;
             const dy = particles[i].y - particles[j].y;
-            const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < maxDist) {
-              const opacity = (1 - d / maxDist) * 0.32;
-              const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y);
-              gradient.addColorStop(0, particles[i].color);
-              gradient.addColorStop(1, particles[j].color);
+            const d = dx * dx + dy * dy;
+            if (d < maxDist * maxDist) {
+              const dist = Math.sqrt(d);
+              ctx.globalAlpha = (1 - dist / maxDist) * 0.18;
               ctx.beginPath();
-              ctx.strokeStyle = gradient;
-              ctx.globalAlpha = opacity;
               ctx.moveTo(particles[i].x, particles[i].y);
               ctx.lineTo(particles[j].x, particles[j].y);
               ctx.stroke();
-              near.push(j);
+              links++;
+              if (links >= maxLinks) break;
             }
-          }
-          // 偶尔绘制三点连成的霓虹三角
-          if (near.length >= 2 && particles[i].orb) {
-            const j = near[0], k = near[1];
-            ctx.beginPath();
-            ctx.fillStyle = particles[i].color;
-            ctx.globalAlpha = 0.04;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.lineTo(particles[k].x, particles[k].y);
-            ctx.closePath();
-            ctx.fill();
           }
         }
         ctx.globalAlpha = 1;
@@ -980,26 +935,12 @@
 
       const drawParticles = () => {
         for (const p of particles) {
-          const r = p.baseR * (1 + Math.sin(p.pulse) * (p.orb ? 0.35 : 0.3));
-
-          if (p.trail && p.trail.length > 1) {
-            ctx.beginPath();
-            ctx.strokeStyle = p.color;
-            ctx.lineWidth = p.orb ? 2 : 1;
-            for (let i = 0; i < p.trail.length; i++) {
-              const t = p.trail[i];
-              ctx.globalAlpha = (i / p.trail.length) * (p.orb ? 0.35 : 0.2);
-              if (i === 0) ctx.moveTo(t.x, t.y);
-              else ctx.lineTo(t.x, t.y);
-            }
-            ctx.stroke();
-          }
-
+          const r = p.baseR * (1 + Math.sin(p.pulse) * 0.2);
           ctx.beginPath();
           ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
           ctx.fillStyle = p.color;
           ctx.globalAlpha = p.alpha;
-          ctx.shadowBlur = p.orb ? 22 : 14;
+          ctx.shadowBlur = 6;
           ctx.shadowColor = p.color;
           ctx.fill();
           ctx.shadowBlur = 0;
@@ -1012,25 +953,10 @@
           ctx.beginPath();
           ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI * 2);
           ctx.fillStyle = b.color;
-          ctx.globalAlpha = b.life;
-          ctx.shadowBlur = 12;
+          ctx.globalAlpha = b.life * 0.7;
+          ctx.shadowBlur = 6;
           ctx.shadowColor = b.color;
           ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-        ctx.globalAlpha = 1;
-      };
-
-      const drawRipples = () => {
-        for (const r of ripples) {
-          ctx.beginPath();
-          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
-          ctx.strokeStyle = r.color;
-          ctx.lineWidth = Math.max(0.5, r.width);
-          ctx.globalAlpha = r.alpha;
-          ctx.shadowBlur = 16;
-          ctx.shadowColor = r.color;
-          ctx.stroke();
           ctx.shadowBlur = 0;
         }
         ctx.globalAlpha = 1;
@@ -1043,39 +969,30 @@
           s.x += s.vx;
           s.y += s.vy;
           s.life -= s.decay;
-          if (s.life <= 0 || s.x < -200 || s.x > window.innerWidth + 200 || s.y < -200 || s.y > window.innerHeight + 200) {
+          if (s.life <= 0 || s.x < -100 || s.x > window.innerWidth + 100 || s.y < -100 || s.y > window.innerHeight + 100) {
             stars.splice(i, 1);
             continue;
           }
-          const tailX = s.x - s.vx * (s.len / 6);
-          const tailY = s.y - s.vy * (s.len / 6);
-          const gradient = ctx.createLinearGradient(s.x, s.y, tailX, tailY);
-          gradient.addColorStop(0, s.color);
-          gradient.addColorStop(0.4, s.color);
-          gradient.addColorStop(1, 'transparent');
+          const tailX = s.x - s.vx * (s.len / 4);
+          const tailY = s.y - s.vy * (s.len / 4);
           ctx.beginPath();
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = 2.6;
-          ctx.globalAlpha = s.life;
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = s.color;
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = 1.2;
+          ctx.globalAlpha = s.life * 0.5;
           ctx.moveTo(s.x, s.y);
           ctx.lineTo(tailX, tailY);
           ctx.stroke();
-          ctx.shadowBlur = 0;
         }
         ctx.globalAlpha = 1;
       };
 
       const draw = () => {
         if (!isActive) return;
-        hueShift = (hueShift + 0.12) % 360;
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        drawGrid();
         updateParticles();
         updateBursts();
-        updateRipples();
         drawConnections();
-        drawRipples();
         drawParticles();
         drawBursts();
         drawStars();
@@ -1119,7 +1036,7 @@
       const onThemeChange = () => {
         const newPalette = colorPalette();
         for (const p of particles) p.color = newPalette[Math.floor(Math.random() * newPalette.length)];
-        for (const s of stars) s.color = newPalette[Math.floor(Math.random() * newPalette.length)];
+        for (const s of stars) s.color = newPalette[0];
       };
 
       document.addEventListener('apexon:themechange', onThemeChange);
@@ -1239,7 +1156,7 @@
         const renderHistory = async () => {
           if (!historyContent) return;
           if (!APEXON.Auth.isLoggedIn()) {
-            historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
+            historyContent.innerHTML = '<div class="forum-empty">暂无记录</div>';
             return;
           }
           try {
@@ -1311,6 +1228,7 @@
           wpmList.push(wpm);
           cpmList.push(cpm);
           currentRound++;
+          updateProgress();
           input.disabled = true;
           if (currentRound >= this.TOTAL_ROUNDS) showAllResult();
           else {
@@ -1405,7 +1323,7 @@
         const renderHistory = async () => {
           if (!historyContent) return;
           if (!APEXON.Auth.isLoggedIn()) {
-            historyContent.innerHTML = '<div class="forum-empty">登录后同步云端记录</div>';
+            historyContent.innerHTML = '<div class="forum-empty">暂无记录</div>';
             return;
           }
           try {
@@ -1466,6 +1384,7 @@
 
         const advanceRound = () => {
           currentRound++;
+          updateProgress();
           if (currentRound >= this.TOTAL_ROUNDS) showScoreCard();
           else initRound();
         };
