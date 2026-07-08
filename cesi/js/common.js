@@ -753,7 +753,8 @@
       selector: 'particles',
       // 科技感冷色：青、蓝、紫、白
       darkPalette: ['#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e2e8f0'],
-      lightPalette: ['#0891b2', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#475569', '#334155'],
+      // 白色背景下使用高饱和、高对比的亮蓝/电紫/深靛，避免发灰
+      lightPalette: ['#0066ff', '#0088ff', '#6d28ff', '#4f46e5', '#0891b2', '#1e1b4b', '#0f172a'],
       baseCount: 44,
       mobileCount: 24,
       connectionDistance: 130,
@@ -783,6 +784,7 @@
       const colorPalette = () => isLight() ? config.lightPalette : config.darkPalette;
       let palette = colorPalette();
       const accent = () => palette[0];
+      const lightBoost = () => isLight() ? 1.8 : 1;
 
       const drawHexGridToOffscreen = () => {
         const r = 64;
@@ -791,8 +793,8 @@
         offscreen.height = window.innerHeight;
         offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
         offCtx.strokeStyle = accent();
-        offCtx.lineWidth = 0.8;
-        offCtx.globalAlpha = isLight() ? 0.06 : 0.11;
+        offCtx.lineWidth = isLight() ? 1.1 : 0.8;
+        offCtx.globalAlpha = isLight() ? 0.16 : 0.11;
         const cols = Math.ceil(window.innerWidth / (r * 3)) + 1;
         const rows = Math.ceil(window.innerHeight / hh) + 1;
         for (let row = -1; row < rows; row++) {
@@ -1035,8 +1037,9 @@
       const drawConnections = () => {
         const maxDist = config.connectionDistance;
         const maxLinks = 2;
-        ctx.lineWidth = 1.4;
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.lineWidth = isLight() ? 1.6 : 1.4;
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (let i = 0; i < particles.length; i++) {
           const p1 = particles[i];
           let links = 0;
@@ -1047,7 +1050,7 @@
             const d2 = dx * dx + dy * dy;
             if (d2 < maxDist * maxDist) {
               const dist = Math.sqrt(d2);
-              const alpha = (1 - dist / maxDist) * 0.28;
+              const alpha = (1 - dist / maxDist) * 0.28 * boost;
               ctx.strokeStyle = p1.color;
               ctx.globalAlpha = alpha;
               ctx.beginPath();
@@ -1064,7 +1067,8 @@
       };
 
       const drawPackets = () => {
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const pk of packets) {
           const p1 = particles[pk.from];
           const p2 = particles[pk.to];
@@ -1074,11 +1078,11 @@
           ctx.beginPath();
           ctx.arc(x, y, pk.size * 2.2, 0, Math.PI * 2);
           ctx.fillStyle = pk.color;
-          ctx.globalAlpha = 0.45;
+          ctx.globalAlpha = 0.45 * boost;
           ctx.fill();
           ctx.beginPath();
           ctx.arc(x, y, pk.size * 0.7, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle = isLight() ? '#000000' : '#ffffff';
           ctx.globalAlpha = 0.95;
           ctx.fill();
         }
@@ -1087,14 +1091,15 @@
       };
 
       const drawParticles = () => {
-        // 光晕层（lighter 合成，无 shadowBlur）
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        // 光晕层：白色背景用 source-over 更干净，深色背景用 lighter 更发光
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const p of particles) {
           const r = p.baseR * (1 + Math.sin(p.pulse) * 0.3);
           ctx.beginPath();
           ctx.arc(p.x, p.y, Math.max(0.5, r * (p.core ? 4 : 2.6)), 0, Math.PI * 2);
           ctx.fillStyle = p.color;
-          ctx.globalAlpha = p.alpha * (p.core ? 0.35 : 0.22);
+          ctx.globalAlpha = p.alpha * (p.core ? 0.35 : 0.22) * boost;
           ctx.fill();
         }
         // 核心层
@@ -1107,43 +1112,44 @@
             ctx.beginPath();
             ctx.arc(p.x, p.y, Math.max(0.5, ringR), 0, Math.PI * 2);
             ctx.strokeStyle = p.color;
-            ctx.lineWidth = 1;
-            ctx.globalAlpha = p.alpha * 0.6;
+            ctx.lineWidth = isLight() ? 1.4 : 1;
+            ctx.globalAlpha = p.alpha * 0.6 * boost;
             ctx.stroke();
           }
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
-          ctx.fillStyle = p.core ? '#ffffff' : p.color;
-          ctx.globalAlpha = p.core ? 0.95 : p.alpha;
+          ctx.fillStyle = p.core ? (isLight() ? '#000000' : '#ffffff') : p.color;
+          ctx.globalAlpha = p.core ? 0.95 : p.alpha * boost;
           ctx.fill();
         }
         ctx.globalAlpha = 1;
       };
 
       const drawBursts = () => {
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const b of bursts) {
           ctx.beginPath();
           ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 2.2 : 1.6), 0, Math.PI * 2);
           ctx.fillStyle = b.color;
-          ctx.globalAlpha = b.life * (b.core ? 0.5 : 0.3);
+          ctx.globalAlpha = b.life * (b.core ? 0.5 : 0.3) * boost;
           ctx.fill();
         }
         ctx.globalCompositeOperation = 'source-over';
         for (const b of bursts) {
           ctx.beginPath();
           ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 1.4 : 1), 0, Math.PI * 2);
-          ctx.fillStyle = b.core ? '#ffffff' : b.color;
-          ctx.globalAlpha = b.life * (b.core ? 0.95 : 0.6);
+          ctx.fillStyle = b.core ? (isLight() ? '#000000' : '#ffffff') : b.color;
+          ctx.globalAlpha = b.life * (b.core ? 0.95 : 0.6) * boost;
           ctx.fill();
         }
         for (const r of rings) {
           ctx.beginPath();
           ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
           ctx.strokeStyle = r.color;
-          ctx.lineWidth = Math.max(0.5, r.width);
-          ctx.globalAlpha = r.alpha;
+          ctx.lineWidth = Math.max(0.5, r.width * (isLight() ? 1.4 : 1));
+          ctx.globalAlpha = r.alpha * boost;
           ctx.stroke();
         }
         ctx.globalAlpha = 1;
@@ -1151,7 +1157,8 @@
 
       const drawStars = () => {
         spawnStar();
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (let i = stars.length - 1; i >= 0; i--) {
           const s = stars[i];
           s.x += s.vx;
@@ -1165,8 +1172,8 @@
           const tailY = s.y - s.vy * (s.len / 5);
           ctx.beginPath();
           ctx.strokeStyle = s.color;
-          ctx.lineWidth = 2.2;
-          ctx.globalAlpha = s.life * 0.35;
+          ctx.lineWidth = isLight() ? 3 : 2.2;
+          ctx.globalAlpha = s.life * 0.35 * boost;
           ctx.moveTo(s.x, s.y);
           ctx.lineTo(tailX, tailY);
           ctx.stroke();
@@ -1176,14 +1183,15 @@
       };
 
       const drawGlyphs = () => {
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const g of glyphs) {
           ctx.save();
           ctx.translate(g.x, g.y);
           ctx.rotate(g.rot);
           ctx.strokeStyle = g.color;
-          ctx.lineWidth = 2;
-          ctx.globalAlpha = g.life * 0.55;
+          ctx.lineWidth = isLight() ? 2.6 : 2;
+          ctx.globalAlpha = g.life * 0.55 * boost;
           const s = g.size;
           if (g.type === 'cross') {
             ctx.beginPath();
@@ -1215,12 +1223,13 @@
       };
 
       const drawScanLines = () => {
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const s of scanLines) {
           ctx.beginPath();
           ctx.strokeStyle = accent();
-          ctx.lineWidth = s.width * 2.5;
-          ctx.globalAlpha = s.alpha * 0.5;
+          ctx.lineWidth = s.width * (isLight() ? 3.2 : 2.5);
+          ctx.globalAlpha = s.alpha * 0.5 * boost;
           ctx.moveTo(0, s.y);
           ctx.lineTo(window.innerWidth, s.y);
           ctx.stroke();
@@ -1231,16 +1240,17 @@
 
       const drawMouseField = () => {
         if (!mouse.active) return;
-        ctx.globalCompositeOperation = 'lighter';
+        const boost = lightBoost();
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, config.mouseDistance * 0.6, 0, Math.PI * 2);
         ctx.strokeStyle = accent();
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = isLight() ? 2.6 : 2;
+        ctx.globalAlpha = 0.18 * boost;
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, config.mouseDistance * 0.3, 0, Math.PI * 2);
-        ctx.globalAlpha = 0.28;
+        ctx.globalAlpha = 0.28 * boost;
         ctx.stroke();
         ctx.globalCompositeOperation = 'source-over';
       };
