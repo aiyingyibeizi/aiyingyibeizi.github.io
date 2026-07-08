@@ -874,18 +874,23 @@
 
       const spawnBurst = (x, y) => {
         const color = accent();
-        for (let i = 0; i < 14; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 3.5 + 1.5;
+        const shapes = ['circle', 'triangle', 'diamond', 'hex', 'cross'];
+        const count = 16;
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 / count) * i + Math.random() * 0.4;
+          const speed = Math.random() * 3.5 + 1.8;
           bursts.push({
             x, y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
             life: 1,
-            decay: Math.random() * 0.03 + 0.02,
+            decay: Math.random() * 0.025 + 0.018,
             color,
-            size: Math.random() * 1.8 + 0.6,
-            core: i < 3
+            size: Math.random() * 2.4 + 0.9,
+            core: i < 4,
+            shape: shapes[Math.floor(Math.random() * shapes.length)],
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.18
           });
         }
         rings.push({ x, y, r: 2, alpha: 0.85, color, width: 2.5 });
@@ -988,6 +993,7 @@
           b.y += b.vy;
           b.vx *= 0.95;
           b.vy *= 0.95;
+          b.rot += b.rotSpeed;
           b.life -= b.decay;
           if (b.life <= 0) bursts.splice(i, 1);
         }
@@ -1126,23 +1132,75 @@
         ctx.globalAlpha = 1;
       };
 
+      const drawBurstShape = (b, s, glow) => {
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.rot);
+        ctx.beginPath();
+        const shape = b.shape || 'circle';
+        if (shape === 'circle') {
+          ctx.arc(0, 0, s, 0, Math.PI * 2);
+        } else if (shape === 'triangle') {
+          for (let i = 0; i < 3; i++) {
+            const a = -Math.PI / 2 + (Math.PI * 2 / 3) * i;
+            const px = s * Math.cos(a);
+            const py = s * Math.sin(a);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        } else if (shape === 'diamond') {
+          ctx.moveTo(0, -s);
+          ctx.lineTo(s, 0);
+          ctx.lineTo(0, s);
+          ctx.lineTo(-s, 0);
+          ctx.closePath();
+        } else if (shape === 'hex') {
+          for (let i = 0; i < 6; i++) {
+            const a = (Math.PI / 3) * i;
+            const px = s * Math.cos(a);
+            const py = s * Math.sin(a);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        } else if (shape === 'cross') {
+          const t = s * 0.35;
+          const l = s;
+          ctx.moveTo(-t, -l); ctx.lineTo(t, -l); ctx.lineTo(t, -t);
+          ctx.lineTo(l, -t); ctx.lineTo(l, t); ctx.lineTo(t, t);
+          ctx.lineTo(t, l); ctx.lineTo(-t, l); ctx.lineTo(-t, t);
+          ctx.lineTo(-l, t); ctx.lineTo(-l, -t); ctx.lineTo(-t, -t);
+          ctx.closePath();
+        }
+        if (glow) {
+          ctx.fillStyle = b.color;
+          ctx.fill();
+        } else {
+          ctx.fillStyle = b.core ? (isLight() ? '#000000' : '#ffffff') : b.color;
+          ctx.fill();
+          if (!b.core) {
+            ctx.strokeStyle = b.color;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      };
+
       const drawBursts = () => {
         const boost = lightBoost();
         ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const b of bursts) {
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 2.2 : 1.6), 0, Math.PI * 2);
-          ctx.fillStyle = b.color;
-          ctx.globalAlpha = b.life * (b.core ? 0.5 : 0.3) * boost;
-          ctx.fill();
+          const s = b.size * b.life * (b.core ? 2.6 : 1.8);
+          ctx.globalAlpha = b.life * (b.core ? 0.5 : 0.32) * boost;
+          drawBurstShape(b, s, true);
         }
         ctx.globalCompositeOperation = 'source-over';
         for (const b of bursts) {
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.size * b.life * (b.core ? 1.4 : 1), 0, Math.PI * 2);
-          ctx.fillStyle = b.core ? (isLight() ? '#000000' : '#ffffff') : b.color;
-          ctx.globalAlpha = b.life * (b.core ? 0.95 : 0.6) * boost;
-          ctx.fill();
+          const s = b.size * b.life * (b.core ? 1.6 : 1.1);
+          ctx.globalAlpha = b.life * (b.core ? 0.95 : 0.7) * boost;
+          drawBurstShape(b, s, false);
         }
         for (const r of rings) {
           ctx.beginPath();
@@ -1265,15 +1323,12 @@
         updatePackets();
         updateBursts();
         updateGlyphs();
-        updateScanLines();
         drawConnections();
         drawPackets();
         drawParticles();
         drawBursts();
         drawStars();
         drawGlyphs();
-        drawScanLines();
-        drawMouseField();
         frameId = requestAnimationFrame(draw);
       };
 
