@@ -129,6 +129,19 @@
         return false;
       }
       const scoreValue = parseFloat(data.avg || data.score || 0);
+      const lowerIsBetter = ['reaction', 'type', 'aim'].includes(testType);
+
+      const history = await this.getHistoryByUserAndType(userId, testType, 1);
+      if (history.length) {
+        const best = history[0].score;
+        const isBetter = lowerIsBetter ? scoreValue < best : scoreValue > best;
+        if (!isBetter) {
+          console.log('[saveScore] not better than current best, skipped');
+          return true;
+        }
+        await this.deleteScore(history[0].id);
+      }
+
       const result = await this.request('scores', 'POST', {
         user_id: userId,
         username: username || '',
@@ -143,17 +156,40 @@
       return !!result;
     },
 
+    async deleteScore(id) {
+      if (!id) return false;
+      const result = await this.request('scores', 'DELETE', null, `id=eq.${id}`);
+      return !!result;
+    },
+
     async getLeaderboard(testType, limit = 100) {
       // 反应/打字/瞄准：数值越低越好；其他：数值越高越好
       const lowerIsBetter = ['reaction', 'type', 'aim'];
       const order = lowerIsBetter.includes(testType) ? 'score_value.asc' : 'score_value.desc';
-      const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=${limit}`;
+      const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=1000`;
       try {
         const res = await fetch(url, {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
         if (!res.ok) return [];
-        return await res.json();
+        const rows = await res.json();
+        const bestByUser = new Map();
+        for (const row of rows) {
+          const existing = bestByUser.get(row.user_id);
+          if (!existing) {
+            bestByUser.set(row.user_id, row);
+            continue;
+          }
+          const isBetter = lowerIsBetter.includes(testType)
+            ? row.score_value < existing.score_value
+            : row.score_value > existing.score_value;
+          if (isBetter) bestByUser.set(row.user_id, row);
+        }
+        const bestRows = Array.from(bestByUser.values());
+        bestRows.sort((a, b) => lowerIsBetter.includes(testType)
+          ? a.score_value - b.score_value
+          : b.score_value - a.score_value);
+        return bestRows.slice(0, limit);
       } catch (e) {
         return [];
       }
