@@ -26,12 +26,12 @@
 
     filterDangerous(input) {
       if (!input || typeof input !== 'string') return input;
-      const dangerousPattern = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/gi;
-      const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/gi;
-      const eventHandler = /on\w+\s*=/gi;
       // 注：Supabase REST 请求本身参数化，SQL 注入风险极低；此处不再把单独的分号/关键字当作危险内容，
       // 避免正常评论（如包含 ";" 或 "create" 等英文单词）被整段过滤。
-      if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input)) {
+      const hasDangerousTag = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/i;
+      const hasJsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/i;
+      const hasEventHandler = /on\w+\s*=/i;
+      if (hasDangerousTag.test(input) || hasJsProtocol.test(input) || hasEventHandler.test(input)) {
         return '[内容已过滤]';
       }
       return input.replace(/<[^>]*>/g, '');
