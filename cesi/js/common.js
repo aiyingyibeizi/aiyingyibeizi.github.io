@@ -98,7 +98,8 @@
           throw new Error('DB error ' + res.status + ': ' + errText);
         }
         const text = await res.text();
-        return text ? JSON.parse(text) : null;
+        // 空响应视为成功（如 INSERT 不返回 representation 时）
+        return text ? JSON.parse(text) : {};
       } catch (e) {
         console.error('DB request failed:', e);
         return null;
@@ -1646,7 +1647,6 @@
         let currentRound = 0;
         let timeList = [];
         let foulCount = 0;
-        let isLocked = false;
         let frameStartTime = 0;
         let isProcessing = false;
         let lastClickTime = 0;
@@ -1687,7 +1687,6 @@
           box.textContent = `第${currentRound + 1}/${this.TOTAL_ROUNDS}轮\n点击开始`;
           if (resDom) resDom.textContent = '';
           updateProgress();
-          isLocked = false;
         };
 
         const showScoreCard = async () => {
@@ -1736,16 +1735,14 @@
         const handleClick = () => {
           if (isFinished || isProcessing) return;
           const now = performance.now();
-          if (now - lastClickTime < 50) return;
+          if (now - lastClickTime < 80) return;
           lastClickTime = now;
-          if (isLocked) return;
 
           switch (state) {
             case this.STATE_IDLE: {
               box.textContent = `第${currentRound + 1}/${this.TOTAL_ROUNDS}轮\n等待变绿`;
               state = this.STATE_WAITING;
               box.className = 'reaction-click-area waiting';
-              isLocked = true;
               const wait = Math.floor(Math.random() * (this.MAX_WAIT_MS - this.MIN_WAIT_MS + 1)) + this.MIN_WAIT_MS;
               timer = setTimeout(() => {
                 requestAnimationFrame(() => {
@@ -1754,7 +1751,6 @@
                     box.className = 'reaction-click-area green';
                     box.textContent = '立刻点击！';
                     state = this.STATE_CLICK;
-                    isLocked = false;
                     try { AudioManager.playTick(); } catch (e) {}
                   });
                 });
@@ -1802,7 +1798,6 @@
           if (!visible && state === this.STATE_WAITING) {
             resetAll();
             box.textContent = '测试已暂停，点击重新开始';
-            isLocked = false;
           }
         });
 

@@ -177,9 +177,9 @@
         async function initApp() {
             await APEXON.Auth.init();
             const isLoggedIn = APEXON.Auth.isLoggedIn && APEXON.Auth.isLoggedIn();
-            // 讨论区保持关闭，匿名模式下也不开放
-            document.getElementById('forumLoginTip').style.display = 'block';
-            document.getElementById('forumInputWrap').style.display = 'none';
+            // 讨论区对匿名用户也开放
+            document.getElementById('forumLoginTip').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('forumInputWrap').style.display = isLoggedIn ? 'flex' : 'none';
             loadLeaderboard('reaction');
             loadPersonal();
             loadComments();
