@@ -26,12 +26,10 @@
 
     filterDangerous(input) {
       if (!input || typeof input !== 'string') return input;
-      // 注：Supabase REST 请求本身参数化，SQL 注入风险极低；此处不再把单独的分号/关键字当作危险内容，
-      // 避免正常评论（如包含 ";" 或 "create" 等英文单词）被整段过滤。
-      const hasDangerousTag = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/i;
-      const hasJsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/i;
-      const hasEventHandler = /on\w+\s*=/i;
-      if (hasDangerousTag.test(input) || hasJsProtocol.test(input) || hasEventHandler.test(input)) {
+      const dangerousPattern = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/gi;
+      const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/gi;
+      const eventHandler = /on\w+\s*=/gi;
+      if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input)) {
         return '[内容已过滤]';
       }
       return input.replace(/<[^>]*>/g, '');
@@ -1583,8 +1581,8 @@
             if (!saved) UI.toast('数据保存失败，请重试');
           }
 
-          try { AudioManager.playSuccess(); } catch (e) {}
-          try { Utils.vibrate(30); } catch (e) {}
+          AudioManager.playSuccess();
+          Utils.vibrate(30);
           renderHistory();
         };
 
@@ -1740,8 +1738,8 @@
             if (!saved) UI.toast('数据保存失败，请重试');
           }
 
-          try { AudioManager.playSuccess(); } catch (e) {}
-          try { Utils.vibrate(30); } catch (e) {}
+          AudioManager.playSuccess();
+          Utils.vibrate(30);
           renderHistory();
         };
 
@@ -1767,7 +1765,7 @@
           lastClickTime = now;
 
           // 首次交互时预热音频上下文，避免第一轮因创建 AudioContext 产生额外延迟
-          try { AudioManager.warmUp(); } catch (e) {}
+          AudioManager.warmUp();
 
           switch (state) {
             case this.STATE_IDLE: {
@@ -1782,7 +1780,7 @@
                   box.className = 'reaction-click-area green';
                   box.textContent = '立刻点击！';
                   state = this.STATE_CLICK;
-                  try { AudioManager.playTick(); } catch (e) {}
+                  AudioManager.playTick();
                 });
               }, wait);
               break;
@@ -1794,7 +1792,7 @@
               timeList.push(null); // 记录本轮为违规跳过
               box.className = 'reaction-click-area foul';
               box.textContent = '提前点击，本轮跳过';
-              try { AudioManager.playFail(); } catch (e) {}
+              AudioManager.playFail();
               timer = setTimeout(() => { isProcessing = false; advanceRound(); }, 900);
               break;
             }
@@ -1810,8 +1808,8 @@
               box.className = 'reaction-click-area blue';
               box.textContent = t + ' ms';
               state = this.STATE_IDLE;
-              try { AudioManager.playSuccess(); } catch (e) {}
-              try { Utils.vibrate(15); } catch (e) {}
+              AudioManager.playSuccess();
+              Utils.vibrate(15);
               timer = setTimeout(() => { isProcessing = false; advanceRound(); }, 1200);
               break;
             }

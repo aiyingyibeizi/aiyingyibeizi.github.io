@@ -159,8 +159,8 @@
         let clickIndex = 0;
         let timers = [];
 
-        function playSuccess() { try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch (e) {} }
-        function playFail() { try { if (APEXON.Audio) APEXON.Audio.playFail(); } catch (e) {} }
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
 
         function clearTimers() {
             timers.forEach(t => clearTimeout(t));
@@ -271,7 +271,7 @@
                     if (!saved) APEXON.UI.toast('数据保存失败，请重试');
                 });
             }
-            try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {}
+            if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
         }
 

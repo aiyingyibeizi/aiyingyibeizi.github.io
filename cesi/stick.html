@@ -279,7 +279,7 @@
                 if (ball.hp <= 0) {
                     spawnParticles(ball.x, ball.y, '#4caf50');
                     ball.reset(); score += 1; scoreLive.textContent = score;
-                    try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
+                    if (APEXON.Audio) APEXON.Audio.playSuccess();
                 }
                 const hovering = isMouseHovering();
                 if (hovering) {
@@ -300,10 +300,10 @@
             result.innerHTML = '';
             timer = setInterval(() => {
                 timeLeft--; countdownNum.textContent = timeLeft;
-                if (timeLeft <= 10) { countdownNum.style.color = '#f44336'; try { if (APEXON.Audio) APEXON.Audio.playTick(); } catch(e){} }
+                if (timeLeft <= 10) { countdownNum.style.color = '#f44336'; if (APEXON.Audio) APEXON.Audio.playTick(); }
                 if (timeLeft <= 0) endGame();
             }, TICK_INTERVAL_MS);
-            try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
+            if (APEXON.Audio) APEXON.Audio.playSuccess();
         }
 
         async function endGame() {
@@ -324,8 +324,8 @@
                 if (!saved) APEXON.UI.toast('数据保存失败，请重试');
             }
 
-            try { if (APEXON.Audio) APEXON.Audio.playSuccess(); } catch(e){}
-            try { if (navigator.vibrate) navigator.vibrate(50); } catch(e){}
+            if (APEXON.Audio) APEXON.Audio.playSuccess();
+            if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
         }
 
