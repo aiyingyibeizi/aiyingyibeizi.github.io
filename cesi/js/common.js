@@ -1761,12 +1761,13 @@
             }
             case this.STATE_WAITING: {
               resetAll();
+              isProcessing = true;
               foulCount++;
               timeList.push(null); // 记录本轮为违规跳过
               box.className = 'reaction-click-area foul';
               box.textContent = '提前点击，本轮跳过';
               try { AudioManager.playFail(); } catch (e) {}
-              timer = setTimeout(advanceRound, 900);
+              timer = setTimeout(() => { isProcessing = false; advanceRound(); }, 900);
               break;
             }
             case this.STATE_CLICK: {
