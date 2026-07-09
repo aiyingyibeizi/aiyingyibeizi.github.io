@@ -45,6 +45,22 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+input *,
+textarea *,
+[contenteditable="true"] * {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
 }
 
 /* 白色明亮主题：背景与顶栏适配（退回早期浅色界面） */

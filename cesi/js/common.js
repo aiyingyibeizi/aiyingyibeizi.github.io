@@ -1825,10 +1825,46 @@
   global.APEXON.deleteAccount = ClerkAuth.deleteAccount.bind(ClerkAuth);
   */
 
-  // ===== 9. 初始化 =====
+  // ===== 9. 全局防复制/防选中（输入框除外）=====
+  function initTextProtection() {
+    const isEditable = (target) => !!target && (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.isContentEditable ||
+      target.closest('input, textarea, [contenteditable="true"]')
+    );
+
+    document.addEventListener('selectstart', (e) => {
+      if (!isEditable(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener('copy', (e) => {
+      if (!isEditable(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener('cut', (e) => {
+      if (!isEditable(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener('paste', (e) => {
+      if (!isEditable(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (isEditable(e.target)) return;
+      const key = e.key.toLowerCase();
+      // 仅拦截与复制、粘贴、全选相关的快捷键
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a'].includes(key)) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  // ===== 10. 初始化 =====
   function boot() {
     VisibilityManager.init();
     UI.initTheme();
+    initTextProtection();
 
     // 注意：Clerk user-button 与测试引擎由各页面显式初始化，
     // 不在此处自动挂载/启动，避免重复绑定导致事件/状态错乱。
