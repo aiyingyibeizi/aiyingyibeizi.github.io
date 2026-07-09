@@ -137,7 +137,7 @@
       return !!result;
     },
 
-    async getLeaderboard(testType, limit = 10) {
+    async getLeaderboard(testType, limit = 100) {
       const order = testType === 'stick' ? 'score_value.desc' : 'score_value.asc';
       const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=${limit}`;
       try {
@@ -459,7 +459,8 @@
     },
 
     isLoggedIn() {
-      return false;
+      // 匿名模式下始终视为已登录，用于成绩记录和排行榜
+      return true;
     },
 
     getUser() {

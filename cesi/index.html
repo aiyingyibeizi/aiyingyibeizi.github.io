@@ -118,13 +118,6 @@
             </a>
         </div>
 
-        <div class="personal-stats" id="userProfile">
-            <div class="personal-stats-title">👤 我的资料</div>
-            <div id="profileContent">
-                <div style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">登录后查看个人资料</div>
-            </div>
-        </div>
-
         <div class="leaderboard" id="leaderboard">
             <div class="leaderboard-title">🏆 排行榜</div>
             <div class="leaderboard-tabs">
@@ -142,7 +135,7 @@
 
         <div class="personal-stats" id="personalStats">
             <div class="personal-stats-title">📊 我的成绩</div>
-            <div id="personalContent">登录后查看</div>
+            <div id="personalContent">加载中...</div>
         </div>
 
         <div class="forum-section" id="forumSection">
@@ -184,10 +177,11 @@
         async function initApp() {
             await APEXON.Auth.init();
             const isLoggedIn = APEXON.Auth.isLoggedIn && APEXON.Auth.isLoggedIn();
-            document.getElementById('forumLoginTip').style.display = isLoggedIn ? 'none' : 'block';
-            document.getElementById('forumInputWrap').style.display = isLoggedIn ? 'flex' : 'none';
+            // 讨论区保持关闭，匿名模式下也不开放
+            document.getElementById('forumLoginTip').style.display = 'block';
+            document.getElementById('forumInputWrap').style.display = 'none';
             loadLeaderboard('reaction');
-            if (isLoggedIn) loadPersonal();
+            loadPersonal();
             loadComments();
             updateStats();
         }
@@ -217,7 +211,7 @@
         };
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
-            const entries = await APEXON.DB.getLeaderboard(type, 10);
+            const entries = await APEXON.DB.getLeaderboard(type, 100);
             if (!entries.length) {
                 document.getElementById('lbContent').innerHTML = '<div class="forum-empty">还没有人上榜，快来成为第一个！</div>';
                 return;
