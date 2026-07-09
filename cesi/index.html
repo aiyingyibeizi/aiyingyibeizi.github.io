@@ -260,8 +260,11 @@
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast('请先登录'); return; }
-            const success = await APEXON.DB.addComment(userId, username, text);
-            if (!success) { APEXON.UI.toast('发布失败'); return; }
+            const res = await APEXON.DB.addComment(userId, username, text);
+            if (!res || !res.success) {
+                APEXON.UI.toast(res && res.error ? res.error : '发布失败');
+                return;
+            }
             document.getElementById('forumText').value = '';
             loadComments();
         };

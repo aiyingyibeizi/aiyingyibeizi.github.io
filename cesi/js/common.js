@@ -29,8 +29,9 @@
       const dangerousPattern = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/gi;
       const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/gi;
       const eventHandler = /on\w+\s*=/gi;
-      const sqlInjection = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|EXEC|SCRIPT|ALTER|CREATE|TRUNCATE)\b|--|;|\/\*|\*\/)/gi;
-      if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input) || sqlInjection.test(input)) {
+      // 注：Supabase REST 请求本身参数化，SQL 注入风险极低；此处不再把单独的分号/关键字当作危险内容，
+      // 避免正常评论（如包含 ";" 或 "create" 等英文单词）被整段过滤。
+      if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input)) {
         return '[内容已过滤]';
       }
       return input.replace(/<[^>]*>/g, '');
@@ -96,13 +97,14 @@
         const res = await fetch(url, options);
         if (!res.ok) {
           const errText = await res.text();
+          console.error(`[DB ${method}] ${table} ${res.status}:`, errText, 'body=', body);
           throw new Error('DB error ' + res.status + ': ' + errText);
         }
         const text = await res.text();
         // 空响应视为成功（如 INSERT 不返回 representation 时）
         return text ? JSON.parse(text) : {};
       } catch (e) {
-        console.error('DB request failed:', e);
+        console.error('[DB request failed]', table, method, e);
         return null;
       }
     },
@@ -124,7 +126,10 @@
         console.error('saveScore rejected: missing userId');
         return false;
       }
-      if (!Security.validateRecord(testType, data)) return false;
+      if (!Security.validateRecord(testType, data)) {
+        console.warn('[saveScore] validation failed:', testType, data);
+        return false;
+      }
       const scoreValue = parseFloat(data.avg || data.score || 0);
       const result = await this.request('scores', 'POST', {
         user_id: userId,
@@ -136,6 +141,7 @@
         cpm: data.cpm || null,
         created_at: new Date().toISOString()
       });
+      console.log('[saveScore]', testType, scoreValue, 'result:', result);
       return !!result;
     },
 
@@ -183,14 +189,27 @@
     },
 
     async addComment(userId, username, content) {
-      const filtered = Security.filterDangerous(content.trim());
-      if (!filtered || filtered.length > 500) return false;
+      const raw = String(content || '').trim();
+      const filtered = Security.filterDangerous(raw);
+      console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length);
+      if (!filtered) {
+        console.warn('[addComment] rejected: empty content');
+        return { success: false, error: '评论内容不能为空' };
+      }
+      if (filtered.length > 500) {
+        console.warn('[addComment] rejected: too long', filtered.length);
+        return { success: false, error: '评论内容超过 500 字限制' };
+      }
       const result = await this.request('comments', 'POST', {
         user_id: userId,
         username: username,
         content: filtered
       });
-      return !!result;
+      console.log('[addComment] result:', result);
+      if (!result) {
+        return { success: false, error: '发布失败，请检查网络或稍后重试（详细错误请查看控制台）' };
+      }
+      return { success: true };
     },
 
     async getComments(limit = 50) {
@@ -520,6 +539,13 @@
     _init() {
       if (this.ctx) return;
       try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { this.enabled = false; }
+    },
+    warmUp() {
+      // 在用户首次交互时预热 AudioContext，避免首次播放阻塞测试计时
+      this._init();
+      if (this.ctx && this.ctx.state === 'suspended') {
+        try { this.ctx.resume(); } catch (e) {}
+      }
     },
     play(freq, dur, type) {
       if (!this.enabled) return;
@@ -1740,6 +1766,9 @@
           if (now - lastClickTime < 80) return;
           lastClickTime = now;
 
+          // 首次交互时预热音频上下文，避免第一轮因创建 AudioContext 产生额外延迟
+          try { AudioManager.warmUp(); } catch (e) {}
+
           switch (state) {
             case this.STATE_IDLE: {
               box.textContent = `第${currentRound + 1}/${this.TOTAL_ROUNDS}轮\n等待变绿`;
@@ -1747,14 +1776,13 @@
               box.className = 'reaction-click-area waiting';
               const wait = Math.floor(Math.random() * (this.MAX_WAIT_MS - this.MIN_WAIT_MS + 1)) + this.MIN_WAIT_MS;
               timer = setTimeout(() => {
+                // 单次 rAF 即可同步样式与计时，双重 rAF 会引入额外一帧延迟
                 requestAnimationFrame(() => {
-                  requestAnimationFrame(() => {
-                    frameStartTime = performance.now();
-                    box.className = 'reaction-click-area green';
-                    box.textContent = '立刻点击！';
-                    state = this.STATE_CLICK;
-                    try { AudioManager.playTick(); } catch (e) {}
-                  });
+                  frameStartTime = performance.now();
+                  box.className = 'reaction-click-area green';
+                  box.textContent = '立刻点击！';
+                  state = this.STATE_CLICK;
+                  try { AudioManager.playTick(); } catch (e) {}
                 });
               }, wait);
               break;
