@@ -83,11 +83,12 @@
     async request(table, method, body, query) {
       let url = `${SUPABASE_URL}/rest/v1/${table}`;
       if (query) url += '?' + query;
+      const isMergeUpsert = method === 'POST' && query && query.includes('on_conflict');
       const headers = {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': method === 'POST' ? 'return=representation,resolution=merge-duplicates' : 'return=representation'
+        'Prefer': isMergeUpsert ? 'return=representation,resolution=merge-duplicates' : 'return=representation'
       };
       const options = { method, headers };
       if (body) options.body = JSON.stringify(body);
@@ -139,7 +140,9 @@
     },
 
     async getLeaderboard(testType, limit = 100) {
-      const order = testType === 'stick' ? 'score_value.desc' : 'score_value.asc';
+      // 反应/打字/瞄准：数值越低越好；其他：数值越高越好
+      const lowerIsBetter = ['reaction', 'type', 'aim'];
+      const order = lowerIsBetter.includes(testType) ? 'score_value.asc' : 'score_value.desc';
       const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=${limit}`;
       try {
         const res = await fetch(url, {
@@ -1610,7 +1613,6 @@
         });
 
         input.addEventListener('paste', (e) => { e.preventDefault(); return false; });
-        box.addEventListener('contextmenu', (e) => e.preventDefault());
 
         VisibilityManager.onChange((visible) => {
           if (!visible && isStart && currentRound < this.TOTAL_ROUNDS) { input.disabled = true; if (resDom) resDom.textContent = '测试已暂停'; }

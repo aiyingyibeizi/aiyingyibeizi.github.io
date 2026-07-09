@@ -241,10 +241,11 @@
                 { key: 'sequence', name: '序列记忆', unit: '级' }
             ];
             let html = '<table style="width:100%;border-collapse:collapse">';
+            const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
             for (const t of types) {
                 const scores = await APEXON.DB.getLeaderboard(t.key, 9999);
                 const myScores = scores.filter(s => s.user_id === userId);
-                const best = myScores.length ? myScores.reduce((a, b) => t.key === 'stick' ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
+                const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(t.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
                 const count = myScores.length;
                 html += '<tr><td style="padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)">' + esc(t.name) + '</td><td style="text-align:right;padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)"><strong style="color:var(--apex-text)">' + esc(val) + '</strong> ' + esc(t.unit) + ' · ' + esc(count) + ' 次</td></tr>';
