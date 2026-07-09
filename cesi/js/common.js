@@ -8,7 +8,7 @@
   const APEXON = global.APEXON = global.APEXON || {};
 
   // ===== 配置 =====
-  const SUPABASE_URL = 'https://kpmsljgonualekjyrkzs.supabase.co';
+  const SUPABASE_URL = 'https://kpmsijgonualekjyrkzs.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u';
 
   // ===== 0. 安全层 =====
