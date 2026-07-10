@@ -6,15 +6,11 @@
     <meta name="robots" content="noindex, nofollow">
     <title>APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
     <canvas id="particles"></canvas>
-    <div id="apex-scanline" aria-hidden="true"></div>
 
     <header class="apexon-header">
         <div class="apexon-header__inner">
@@ -50,8 +46,6 @@
 
     <div class="container">
         <div class="hero-apexon">
-            <div class="hero-rings" aria-hidden="true"><span></span><span></span><span></span></div>
-            <div class="hero-badge">Human Performance Lab</div>
             <img src="assets/favicon.png" alt="Logo" class="hero-logo-main">
             <div class="hero-title-main">APEXON</div>
             <div class="hero-tagline">全能能力测试系统 · 挑战人类极限</div>
@@ -69,51 +63,41 @@
 
         <div class="cards-grid">
             <a href="reaction.html" class="item-card">
-                <span class="item-card__icon">⚡</span>
                 <strong>反应时间测试</strong>
                 <div class="card-desc">测试你的神经反应速度，毫秒级精准测量</div>
             </a>
             <a href="type.html" class="item-card">
-                <span class="item-card__icon">⌨️</span>
                 <strong>打字训练测试</strong>
                 <div class="card-desc">提升打字速度与准确度，挑战中文输入极限</div>
             </a>
             <a href="stick.html" class="item-card">
-                <span class="item-card__icon">🎯</span>
                 <strong>持续注意力测试</strong>
                 <div class="card-desc">60秒专注力挑战，追踪你的注意力曲线</div>
             </a>
             <a href="number.html" class="item-card">
-                <span class="item-card__icon">🔢</span>
                 <strong>数字记忆测试</strong>
                 <div class="card-desc">挑战数字记忆广度，逐级突破记忆极限</div>
             </a>
             <a href="verbal.html" class="item-card">
-                <span class="item-card__icon">🧠</span>
                 <strong>单词记忆测试</strong>
                 <div class="card-desc">辨别新旧词汇，评估言语工作记忆能力</div>
             </a>
             <a href="visual.html" class="item-card">
-                <span class="item-card__icon">👁️</span>
                 <strong>视觉记忆测试</strong>
                 <div class="card-desc">记住闪烁方块位置，锻炼空间视觉记忆</div>
             </a>
             <a href="aim.html" class="item-card">
-                <span class="item-card__icon">🖱️</span>
                 <strong>瞄准训练</strong>
                 <div class="card-desc">快速精准点击目标，提升手眼协调</div>
             </a>
             <a href="sequence.html" class="item-card">
-                <span class="item-card__icon">🔁</span>
                 <strong>序列记忆测试</strong>
                 <div class="card-desc">复现闪烁顺序，训练短时序列记忆</div>
             </a>
         </div>
 
         <div class="leaderboard" id="leaderboard">
-            <div class="hud-corners" aria-hidden="true"></div>
-            <div class="hud-scanline" aria-hidden="true"></div>
-            <div class="leaderboard-title"><span class="hud-title__index">01</span> 🏆 排行榜</div>
+            <div class="leaderboard-title">🏆 排行榜</div>
             <div class="leaderboard-tabs">
                 <button class="leaderboard-tab active" onclick="showLb('reaction')">反应</button>
                 <button class="leaderboard-tab" onclick="showLb('type')">打字</button>
@@ -128,43 +112,35 @@
         </div>
 
         <div class="personal-stats" id="personalStats">
-            <div class="hud-corners" aria-hidden="true"></div>
-            <div class="hud-scanline" aria-hidden="true"></div>
-            <div class="personal-stats-title"><span class="hud-title__index">02</span> 📊 我的成绩</div>
+            <div class="personal-stats-title">📊 我的成绩</div>
             <div id="personalContent">加载中...</div>
         </div>
 
         <div class="forum-section" id="forumSection">
-            <div class="hud-corners" aria-hidden="true"></div>
-            <div class="hud-scanline" aria-hidden="true"></div>
-            <div class="forum-title"><span class="hud-title__index">03</span> 💬 玩家讨论区</div>
-            <div id="forumLoginTip" class="forum-login-tip">游客模式可发表评论，登录后可修改用户名与资料</div>
+            <div class="forum-title">💬 玩家讨论区</div>
+            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
-                <div class="forum-input-toolbar">
-                    <select id="forumCategory" class="forum-category-select">
-                        <option value="chat">💬 闲聊</option>
-                        <option value="score">🏆 分数讨论</option>
-                        <option value="bug">🐛 Bug 反馈</option>
-                        <option value="suggestion">💡 网站建议</option>
-                    </select>
-                    <button class="forum-btn" onclick="postComment()">发布评论</button>
-                </div>
+                <select id="forumCategory" class="forum-category-select">
+                    <option value="chat">闲聊</option>
+                    <option value="score">分数讨论</option>
+                    <option value="bug">Bug 反馈</option>
+                    <option value="suggestion">网站建议</option>
+                </select>
                 <textarea id="forumText" placeholder="分享你的测试心得..." maxlength="500"></textarea>
+                <button class="forum-btn" onclick="postComment()">发布</button>
             </div>
             <div class="forum-filter-bar" id="forumFilterBar">
-                <button class="forum-filter-btn active" data-cat="all" onclick="setCommentFilter('all')">📋 全部</button>
-                <button class="forum-filter-btn" data-cat="chat" onclick="setCommentFilter('chat')">💬 闲聊</button>
-                <button class="forum-filter-btn" data-cat="score" onclick="setCommentFilter('score')">🏆 分数讨论</button>
-                <button class="forum-filter-btn" data-cat="bug" onclick="setCommentFilter('bug')">🐛 Bug 反馈</button>
-                <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')">💡 网站建议</button>
+                <button class="forum-filter-btn active" data-cat="all" onclick="setCommentFilter('all')">全部</button>
+                <button class="forum-filter-btn" data-cat="chat" onclick="setCommentFilter('chat')">闲聊</button>
+                <button class="forum-filter-btn" data-cat="score" onclick="setCommentFilter('score')">分数讨论</button>
+                <button class="forum-filter-btn" data-cat="bug" onclick="setCommentFilter('bug')">Bug 反馈</button>
+                <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')">网站建议</button>
             </div>
             <div class="forum-list" id="forumList"></div>
         </div>
 
         <div class="feedback-section" id="feedbackSection">
-            <div class="hud-corners" aria-hidden="true"></div>
-            <div class="hud-scanline" aria-hidden="true"></div>
-            <div class="feedback-title"><span class="hud-title__index">04</span> 📮 反馈与联系</div>
+            <div class="feedback-title">📮 反馈与联系</div>
             <div class="feedback-email-box">
                 <div class="feedback-email-icon">✉</div>
                 <div class="feedback-email-info">
@@ -269,23 +245,17 @@
                 { key: 'aim', name: '瞄准训练', unit: '分' },
                 { key: 'sequence', name: '序列记忆', unit: '级' }
             ];
+            let html = '<table style="width:100%;border-collapse:collapse">';
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
-            let html = '<div class="personal-grid">';
             for (const t of types) {
                 const scores = await APEXON.DB.getLeaderboard(t.key, 9999);
                 const myScores = scores.filter(s => s.user_id === userId);
                 const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(t.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
                 const count = myScores.length;
-                html += '<div class="personal-card">' +
-                    '<div class="personal-card-main">' +
-                        '<div class="personal-card-name">' + esc(t.name) + '</div>' +
-                        '<div class="personal-card-count">' + esc(count) + ' 次测试</div>' +
-                    '</div>' +
-                    '<div class="personal-card-score">' + esc(val) + '<span class="personal-card-unit">' + esc(t.unit) + '</span></div>' +
-                '</div>';
+                html += '<tr><td style="padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)">' + esc(t.name) + '</td><td style="text-align:right;padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)"><strong style="color:var(--apex-text)">' + esc(val) + '</strong> ' + esc(t.unit) + ' · ' + esc(count) + ' 次</td></tr>';
             }
-            html += '</div>';
+            html += '</table>';
             document.getElementById('personalContent').innerHTML = html;
         }
 
@@ -328,28 +298,16 @@
                 document.getElementById('forumList').innerHTML = '<div class="forum-empty">该分类下还没有讨论</div>';
                 return;
             }
-            const userIds = list.map(c => c.user_id);
-            const profiles = await APEXON.DB.getProfilesForUsers(userIds);
-            const profileMap = new Map();
-            profiles.forEach(p => profileMap.set(p.user_id, p));
-
-            document.getElementById('forumList').innerHTML = list.map(c => {
-                const profile = profileMap.get(c.user_id);
-                const avatar = '<div class="forum-item-avatar" onclick="viewProfile(\'' + esc(c.user_id) + '\')">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
-                return '<div class="forum-item">' +
-                    avatar +
-                    '<div class="forum-item-body">' +
-                        '<div class="forum-item-header">' +
-                            '<div class="forum-item-meta">' +
-                                '<div class="forum-item-user">' + esc(c.username) + '</div>' +
-                                '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
-                            '</div>' +
-                            '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
-                        '</div>' +
-                        '<div class="forum-item-content">' + esc(c.content) + '</div>' +
+            document.getElementById('forumList').innerHTML = list.map(c =>
+                '<div class="forum-item">' +
+                    '<div class="forum-item-header">' +
+                        '<div class="forum-item-user">' + esc(c.username) + '</div>' +
+                        '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
+                        '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
                     '</div>' +
-                '</div>';
-            }).join('');
+                    '<div class="forum-item-content">' + esc(c.content) + '</div>' +
+                '</div>'
+            ).join('');
         }
 
         // ===== 反馈 =====
@@ -384,6 +342,5 @@
         document.body.classList.add('loaded');
     })();
     </script>
-
 </body>
 </html>

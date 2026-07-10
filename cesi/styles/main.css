@@ -2,8 +2,7 @@
  * ============================================================================
  * APEXON Main Stylesheet
  * ----------------------------------------------------------------------------
- * 视觉风格：人类性能实验室 · 战术 HUD · 酸橙/电青/深炭黑
- * 原则：极高对比、锋利边缘、数据感、去玻璃态、拒绝 AI 紫渐变
+ * 视觉风格：截图级还原 · 纯白浅灰 · 紫色主色 · 大圆角 · 极致流畅
  * 策略：Mobile First，断点覆盖 320 / 375 / 768 / 1024 / 1440 / 1920 / 2560 / 4K
  * 命名：BEM（Block__Element--Modifier）
  * ============================================================================
@@ -33,10 +32,11 @@ html {
 /* 白色明亮主题由 variables.css 提供变量覆盖，这里不再使用 grayscale */
 
 body {
-  font-family: var(--font-body);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 80% 90%, rgba(0, 240, 255, 0.03) 0%, transparent 30%),
+    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
+    radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%),
     var(--apex-bg);
   background-attachment: fixed;
   color: var(--apex-text);
@@ -49,55 +49,6 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-}
-
-/* 实验室网格纹理 + 扫描线 */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 80px 80px;
-  opacity: 0.6;
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.08) 2px,
-    rgba(0, 0, 0, 0.08) 4px
-  );
-  opacity: 0.35;
-}
-
-/* 全局移动扫描线 */
-#apex-scanline {
-  position: fixed;
-  top: -10%;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background: linear-gradient(180deg, transparent, rgba(204, 255, 0, 0.06), transparent);
-  z-index: 9998;
-  pointer-events: none;
-  opacity: 0.6;
-  animation: scanlineMove 7s linear infinite;
-}
-
-@keyframes scanlineMove {
-  0% { top: -10%; }
-  100% { top: 110%; }
 }
 
 input,
@@ -120,18 +71,6 @@ body.theme-light {
   background-attachment: scroll !important;
 }
 
-html[data-bw="true"] body::before,
-html[data-theme="light"] body::before,
-body.theme-light::before {
-  opacity: 0.25;
-}
-
-html[data-bw="true"] body::after,
-html[data-theme="light"] body::after,
-body.theme-light::after {
-  opacity: 0.08;
-}
-
 /* 移动端背景统一使用 scroll，避免 fixed 附件导致重绘异常 */
 @media (max-width: 767px) {
   body {
@@ -142,8 +81,8 @@ body.theme-light::after {
 html[data-bw="true"] .apexon-header,
 html[data-theme="light"] .apexon-header {
   background: rgba(255, 255, 255, 0.96);
-  border-bottom-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-bottom-color: rgba(124, 107, 196, 0.12);
+  box-shadow: 0 4px 20px rgba(124, 107, 196, 0.10);
 }
 
 html[data-bw="true"] .apexon-header-nav,
@@ -154,27 +93,27 @@ html[data-theme="light"] .apexon-header-nav {
 
 html[data-bw="true"] .header-user-wrap,
 html[data-theme="light"] .header-user-wrap {
-  background: linear-gradient(135deg, rgba(250, 250, 250, 0.96) 0%, rgba(245, 245, 245, 0.96) 100%);
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 0 14px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, rgba(248, 247, 255, 0.96) 0%, rgba(240, 245, 255, 0.96) 100%);
+  border-color: rgba(124, 107, 196, 0.28);
+  box-shadow: 0 0 14px rgba(124, 107, 196, 0.10);
 }
 
 html[data-bw="true"] .header-user-wrap:hover,
 html[data-theme="light"] .header-user-wrap:hover {
-  background: linear-gradient(135deg, rgba(250, 250, 250, 1) 0%, rgba(245, 245, 245, 1) 100%);
-  border-color: rgba(0, 0, 0, 0.22);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, rgba(248, 247, 255, 1) 0%, rgba(240, 245, 255, 1) 100%);
+  border-color: rgba(124, 107, 196, 0.46);
+  box-shadow: 0 0 24px rgba(124, 107, 196, 0.18);
 }
 
 html[data-bw="true"] .header-user-name,
 html[data-theme="light"] .header-user-name {
-  color: var(--apex-text);
+  color: #5b56a6;
   text-shadow: none;
 }
 
 html[data-bw="true"] .header-user-login .header-user-name,
 html[data-theme="light"] .header-user-login .header-user-name {
-  color: var(--apex-text);
+  color: #5b56a6;
 }
 
 html[data-bw="true"] .header-user-avatar,
@@ -414,11 +353,13 @@ body.loaded .apexon-page {
   right: 0;
   height: var(--header-height);
   z-index: 1000;
-  background: rgba(8, 8, 8, 0.92);
-  border-bottom: 1px solid var(--apex-border-subtle);
+  background: rgba(5, 7, 13, 0.72);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.08);
   box-shadow:
-    0 1px 0 rgba(204, 255, 0, 0.08),
-    0 12px 40px rgba(0, 0, 0, 0.6);
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   padding: 0;
@@ -449,26 +390,21 @@ body.loaded .apexon-page {
 }
 
 .apexon-header-logo img {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   object-fit: contain;
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
+  background: var(--apex-surface);
   box-shadow: var(--apex-shadow-sm);
-  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast);
+  transition: transform var(--apex-transition-fast);
 }
 
 .apexon-header-logo span {
-  font-size: 1.25rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 1.375rem;
 }
 
 .apexon-header-logo:hover img {
-  transform: scale(1.05);
-  border-color: var(--apex-border);
+  transform: scale(1.06);
 }
 
 .apexon-header-nav {
@@ -478,9 +414,11 @@ body.loaded .apexon-page {
   left: 0;
   right: 0;
   background: var(--apex-overlay);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   flex-direction: column;
   padding: 12px;
-  gap: 4px;
+  gap: 6px;
   border-bottom: 1px solid var(--apex-border);
   box-shadow: var(--apex-shadow-md);
 }
@@ -494,25 +432,25 @@ body.loaded .apexon-page {
   align-items: center;
   justify-content: center;
   padding: 10px 18px;
-  border-radius: var(--apex-radius-sm);
+  border-radius: var(--apex-radius-full);
   color: var(--apex-text-secondary);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-size: 0.9375rem;
+  font-weight: 500;
   transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
 }
 
 .apexon-header-nav a:hover {
-  background: rgba(204, 255, 0, 0.08);
-  color: var(--apex-text);
+  background: var(--apex-border-subtle);
+  color: var(--apex-accent-cyan);
 }
 
 .apexon-header-nav a.active {
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  box-shadow: none;
-  border: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 16px var(--apex-glow-primary);
+  border: 1px solid var(--apex-border-strong);
 }
 
 .apexon-menu-btn {
@@ -524,15 +462,9 @@ body.loaded .apexon-page {
   border-radius: var(--apex-radius-sm);
   font-size: 1.25rem;
   color: var(--apex-text);
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
   flex-shrink: 0;
-  transition: border-color var(--apex-transition-fast), color var(--apex-transition-fast);
-}
-
-.apexon-menu-btn:hover {
-  border-color: var(--apex-border);
-  color: var(--apex-primary);
 }
 
 /* 桌面端：Logo 绝对定位贴最左，菜单栏居中，登录绝对定位贴最右 */
@@ -560,31 +492,32 @@ body.loaded .apexon-page {
     display: flex !important;
     flex-direction: row;
     align-items: center;
-    gap: 2px;
-    padding: 4px;
+    gap: 4px;
+    padding: 6px;
     margin: 0;
-    background: var(--apex-bg-elevated);
-    border: 1px solid var(--apex-border-subtle);
-    border-radius: var(--apex-radius-sm);
+    background: var(--apex-surface);
+    border: 1px solid var(--apex-border);
+    border-radius: var(--apex-radius-full);
     box-shadow: var(--apex-shadow-sm);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
   }
 
   .apexon-header-nav a {
-    padding: 8px 14px;
+    padding: 8px 16px;
     white-space: nowrap;
-    border-radius: var(--apex-radius-sm);
   }
 
   .apexon-header-nav a:hover {
-    background: rgba(204, 255, 0, 0.1);
-    color: var(--apex-text);
+    background: var(--apex-primary-light);
+    color: var(--apex-text-inverse);
   }
 
   .apexon-header-nav a.active {
     background: var(--apex-primary);
     color: var(--apex-text-inverse);
     border: none;
-    box-shadow: none;
+    box-shadow: var(--apex-shadow-sm);
   }
 
   .header-actions {
@@ -642,9 +575,11 @@ body.loaded .apexon-page {
   min-width: 86px;
   min-height: 40px;
   border-radius: var(--apex-radius-full);
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  box-shadow: var(--apex-shadow-sm);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 41, 72, 0.78) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  box-shadow:
+    0 0 14px rgba(34, 211, 238, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   cursor: pointer;
   flex-shrink: 0;
   transition: background-color var(--apex-transition-fast), border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
@@ -656,9 +591,11 @@ body.loaded .apexon-page {
 }
 
 .header-user-wrap:hover {
-  background: var(--apex-surface-elevated);
-  border-color: var(--apex-border);
-  box-shadow: var(--apex-shadow-md);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 72, 0.88) 100%);
+  border-color: rgba(34, 211, 238, 0.48);
+  box-shadow:
+    0 0 24px rgba(34, 211, 238, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 
 .header-user-wrap:focus-within {
@@ -721,8 +658,9 @@ body.loaded .apexon-page {
   display: inline;
   width: auto;
   font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--apex-text);
+  font-weight: 600;
+  color: #e0f2fe;
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
   white-space: nowrap;
 }
 
@@ -730,11 +668,12 @@ body.loaded .apexon-page {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  color: var(--apex-primary);
+  color: #a5f3fc;
   flex-shrink: 0;
-  background: rgba(204, 255, 0, 0.08);
+  background: rgba(34, 211, 238, 0.12);
   padding: 3px;
-  border: 1px solid rgba(204, 255, 0, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.14);
 }
 
 /* 未登录时隐藏用户名 span；已登录时隐藏默认登录组合 */
@@ -755,8 +694,9 @@ body.loaded .apexon-page {
   margin-left: 38px;
   margin-right: 0;
   font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--apex-text);
+  font-weight: 600;
+  color: #e0f2fe;
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -825,12 +765,12 @@ body.loaded .apexon-page {
   padding: 0 0 0 5px !important;
 }
 
- .apex-clerk-avatar {
+.apex-clerk-avatar {
   width: 32px !important;
   height: 32px !important;
   border-radius: 50% !important;
   background: var(--clerk-avatar-bg) !important;
-  box-shadow: 0 2px 8px rgba(204, 255, 0, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(34, 211, 238, 0.25) !important;
 }
 
 .apex-clerk-popover {
@@ -895,10 +835,9 @@ body.loaded .apexon-page {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
-  transition: background-color 400ms ease, box-shadow 400ms ease, border-color 400ms ease;
+  background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: background-color 400ms ease, box-shadow 400ms ease;
 }
 
 .apex-bw-toggle__thumb {
@@ -908,20 +847,19 @@ body.loaded .apexon-page {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--apex-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track {
-  background: var(--apex-bg);
-  border-color: var(--apex-border);
-  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15);
+  background: #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
   transform: translateX(32px);
-  background: var(--apex-text);
+  background: #f8fafc;
 }
 
 .apex-bw-toggle__icon {
@@ -950,53 +888,6 @@ body.loaded .apexon-page {
   }
 }
 
-/* 顶部用户菜单 */
-.apex-user-menu {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  margin-left: 12px;
-}
-
-.apex-user-bar {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 5px;
-  border-radius: var(--apex-radius-full);
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  cursor: pointer;
-  transition: all var(--apex-transition-fast);
-}
-
-.apex-user-bar:hover {
-  border-color: var(--apex-border);
-  box-shadow: var(--apex-shadow-md);
-}
-
-.apex-user-wrap.is-guest .apex-user-bar {
-  background: linear-gradient(135deg, rgba(204, 255, 0, 0.92) 0%, rgba(168, 214, 0, 0.92) 100%);
-  border-color: rgba(204, 255, 0, 0.5);
-  color: var(--apex-text-inverse);
-  box-shadow: 0 4px 14px rgba(204, 255, 0, 0.25);
-}
-
-.apex-user-wrap.is-guest .apex-user-bar:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(204, 255, 0, 0.35);
-}
-
-.apex-user-wrap.is-guest .apex-user-name,
-.apex-user-wrap.is-guest .apex-user-caret {
-  color: var(--apex-text-inverse);
-}
-
-.apex-user-wrap.is-guest .apex-avatar {
-  background: rgba(8, 8, 8, 0.2);
-  border-color: rgba(8, 8, 8, 0.15);
-}
-
 /* ============================================================================
    Section: User Dropdown (legacy, kept for compatibility)
    ============================================================================ */
@@ -1014,7 +905,7 @@ body.loaded .apexon-page {
   gap: 8px;
   padding: 6px 12px 6px 6px;
   border-radius: var(--apex-radius-full);
-  background: rgba(204, 255, 0, 0.1);
+  background: rgba(109, 93, 252, 0.08);
   color: var(--apex-text);
   font-size: 0.875rem;
   font-weight: 500;
@@ -1023,7 +914,7 @@ body.loaded .apexon-page {
 
 .user-btn:hover,
 .apex-user__btn:hover {
-  background: rgba(204, 255, 0, 0.14);
+  background: rgba(109, 93, 252, 0.14);
 }
 
 .user-avatar,
@@ -1130,105 +1021,19 @@ body.loaded .apexon-page {
 
 .hero-apexon {
   text-align: center;
-  padding: clamp(28px, 6vw, 56px) 0 clamp(20px, 4vw, 32px);
+  padding: clamp(24px, 5vw, 48px) 0 clamp(16px, 3vw, 28px);
   position: relative;
 }
 
-.hero-apexon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(120%, 720px);
-  height: min(120%, 720px);
-  background:
-    radial-gradient(circle, rgba(204, 255, 0, 0.08) 0%, transparent 60%),
-    radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.hero-rings {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(140%, 860px);
-  height: min(140%, 860px);
-  pointer-events: none;
-  z-index: -2;
-}
-
-.hero-rings span {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(204, 255, 0, 0.08);
-  border-radius: 50%;
-  animation: heroRingPulse 4s ease-out infinite;
-}
-
-.hero-rings span:nth-child(2) {
-  animation-delay: 1.3s;
-  border-color: rgba(0, 240, 255, 0.07);
-}
-
-.hero-rings span:nth-child(3) {
-  animation-delay: 2.6s;
-  border-color: rgba(204, 255, 0, 0.05);
-}
-
-@keyframes heroRingPulse {
-  0% { transform: scale(0.7); opacity: 0; }
-  40% { opacity: 1; }
-  100% { transform: scale(1.05); opacity: 0; }
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.1);
-  border: 1px solid rgba(204, 255, 0, 0.2);
-  color: var(--apex-primary);
-  font-size: 0.625rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 14px;
-  font-family: var(--font-mono);
-}
-
-.hero-badge::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--apex-primary);
-  box-shadow: 0 0 8px var(--apex-primary);
-  animation: badgeDotPulse 1.6s ease-in-out infinite;
-}
-
-@keyframes badgeDotPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
 .hero-apexon .hero-logo-main {
-  width: clamp(80px, 18vw, var(--hero-logo));
-  height: clamp(80px, 18vw, var(--hero-logo));
-  border-radius: 16px;
+  width: clamp(96px, 24vw, var(--hero-logo));
+  height: clamp(96px, 24vw, var(--hero-logo));
+  border-radius: 28px;
   object-fit: contain;
-  background: var(--apex-bg-elevated);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--apex-border-subtle),
-    0 0 0 4px rgba(204, 255, 0, 0.06);
-  margin: 0 auto 22px;
+  background: var(--apex-surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(15, 23, 42, 0.08);
+  margin: 0 auto 20px;
   animation: floatLogo 4s ease-in-out infinite;
-  padding: 10px;
 }
 
 @keyframes floatLogo {
@@ -1237,63 +1042,50 @@ body.loaded .apexon-page {
 }
 
 .hero-apexon .hero-title-main {
-  font-size: clamp(2.25rem, 7vw, var(--hero-title));
-  font-weight: 900;
-  letter-spacing: -0.03em;
+  font-size: clamp(2rem, 6vw, var(--hero-title));
+  font-weight: 800;
+  letter-spacing: 1px;
   color: var(--apex-text);
-  margin-bottom: 10px;
-  font-family: var(--font-display);
+  text-shadow: 0 0 24px rgba(148, 163, 184, 0.22);
+  margin-bottom: 8px;
 }
 
 html[data-bw="true"] .hero-apexon .hero-title-main,
 html[data-theme="light"] .hero-apexon .hero-title-main {
-  color: var(--apex-text);
-  text-shadow: none;
+  text-shadow: 0 0 18px rgba(124, 107, 196, 0.18);
 }
 
 .hero-apexon .hero-tagline {
   font-size: clamp(0.8125rem, 2vw, var(--hero-subtitle));
   color: var(--apex-text-secondary);
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .hero-stats-bar {
   display: flex;
   justify-content: center;
-  gap: clamp(10px, 2vw, 18px);
-  margin-top: 24px;
+  gap: clamp(10px, 2vw, 16px);
+  margin-top: 20px;
   flex-wrap: wrap;
 }
 
 .hero-stat-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--apex-bg-elevated);
-  padding: 10px 18px;
-  border-radius: var(--apex-radius-sm);
-  font-size: 0.75rem;
+  gap: 6px;
+  background: var(--apex-surface);
+  padding: 8px 16px;
+  border-radius: var(--apex-radius-full);
+  font-size: 0.8125rem;
   color: var(--apex-text-secondary);
   border: 1px solid var(--apex-border-subtle);
   box-shadow: var(--apex-shadow-sm);
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), border-color var(--apex-transition-fast);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.hero-stat-chip:hover {
-  transform: translateY(-2px);
-  border-color: var(--apex-border);
-  box-shadow: var(--apex-shadow-md);
 }
 
 .hero-stat-chip strong {
-  color: var(--apex-primary);
-  font-weight: 800;
-  font-size: 1rem;
-  font-family: var(--font-mono);
+  color: var(--apex-text);
+  font-weight: 700;
 }
 
 /* ============================================================================
@@ -1303,35 +1095,22 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 .search-box {
   display: flex;
   gap: 10px;
-  margin-bottom: 32px;
-  background: var(--apex-bg-elevated);
-  padding: 8px;
+  margin-bottom: 28px;
+  background: var(--apex-surface);
+  padding: 6px;
   border-radius: var(--apex-radius);
   box-shadow: var(--apex-shadow-md);
   border: 1px solid var(--apex-border-subtle);
-  position: relative;
-}
-
-.search-box::before {
-  content: '🔍';
-  position: absolute;
-  left: 22px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9375rem;
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 .search-box input {
   flex: 1;
-  padding: 14px 18px 14px 44px;
+  padding: 12px 16px;
   border-radius: var(--apex-radius-sm);
   font-size: 0.9375rem;
   background: var(--apex-bg);
   color: var(--apex-text);
-  border: 1px solid var(--apex-border-subtle);
-  transition: background-color var(--apex-transition-fast), border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+  transition: background-color var(--apex-transition-fast);
 }
 
 .search-box input::placeholder {
@@ -1340,25 +1119,25 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 
 .search-box input:focus {
   background: var(--apex-surface-elevated);
-  border-color: var(--apex-border-strong);
   box-shadow: var(--focus-ring);
 }
 
 .search-box button {
-  padding: 14px 28px;
+  padding: 12px 24px;
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
   border-radius: var(--apex-radius-sm);
   font-size: 0.9375rem;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
 }
 
 .search-box button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(204, 255, 0, 0.25);
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
+  background: var(--apex-primary-dark);
 }
 
 .search-box button:active {
@@ -1381,7 +1160,7 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 24px 22px;
+  padding: 24px;
   border-radius: var(--apex-radius);
   text-decoration: none;
   font-size: 1.125rem;
@@ -1391,31 +1170,52 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   background: var(--game-card-bg);
   color: var(--apex-text);
   border: 1px solid var(--game-card-border);
-  box-shadow: var(--apex-shadow-md);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: transform var(--apex-transition-base), box-shadow var(--apex-transition-base), border-color var(--apex-transition-base), background-color var(--apex-transition-base);
 }
 
-/* 顶部酸橙指示条 */
+/* 极淡青紫渐变微光层 */
 .item-card::before,
 .apex-card--game::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%);
-  opacity: 0;
+  inset: 0;
+  background: var(--game-card-glow);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: var(--apex-radius);
+  opacity: 0.6;
   transition: opacity var(--apex-transition-base);
+}
+
+/* 右侧箭头 */
+.item-card::after,
+.apex-card--game::after {
+  content: ">";
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  opacity: 0.4;
+  color: var(--apex-text-secondary);
+  transition: opacity var(--apex-transition-fast), transform var(--apex-transition-fast), color var(--apex-transition-fast);
+  z-index: 1;
 }
 
 .item-card:hover,
 .apex-card--game:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   border-color: var(--game-card-border-hover);
   box-shadow:
-    0 20px 48px rgba(0, 0, 0, 0.55),
-    0 0 24px rgba(204, 255, 0, 0.08);
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(148, 163, 184, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(20, 30, 55, 0.72) 0%, rgba(25, 36, 62, 0.66) 55%, rgba(35, 47, 80, 0.62) 100%);
 }
 
 .item-card:hover::before,
@@ -1423,21 +1223,26 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   opacity: 1;
 }
 
+.item-card:hover::after,
+.apex-card--game:hover::after {
+  opacity: 0.8;
+  transform: translateY(-50%) translateX(4px);
+  color: var(--apex-text);
+}
+
 .item-card:active,
 .apex-card--game:active {
-  transform: translateY(-1px) scale(0.99);
+  transform: translateY(0) scale(0.99);
 }
 
 .item-card strong,
 .apex-card--game strong {
   color: var(--game-card-title);
-  font-weight: 800;
-  margin-bottom: 8px;
-  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 1.125rem;
   position: relative;
   z-index: 1;
-  letter-spacing: -0.01em;
-  font-family: var(--font-display);
 }
 
 .item-card .card-desc,
@@ -1451,48 +1256,39 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   z-index: 1;
 }
 
-/* 白色明亮主题 */
+/* 白色明亮主题下卡片 hover 不再切回深色，保持淡紫浅色风格 */
 html[data-bw="true"] .item-card,
 html[data-bw="true"] .apex-card--game,
 html[data-theme="light"] .item-card,
 html[data-theme="light"] .apex-card--game {
-  box-shadow: var(--apex-shadow-md);
+  box-shadow: 0 8px 32px rgba(124, 107, 196, 0.14);
 }
 
 html[data-bw="true"] .item-card:hover,
 html[data-bw="true"] .apex-card--game:hover,
 html[data-theme="light"] .item-card:hover,
 html[data-theme="light"] .apex-card--game:hover {
-  background: var(--apex-surface-elevated);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #b2e8ff 0%, #dcc9ff 100%);
+  box-shadow: 0 20px 50px rgba(124, 107, 196, 0.18);
 }
 
-/* 统一卡片标题 */
+/* 统一卡片标题为淡蓝/纯白，不再按游戏区分高饱和颜色条 */
 .item-card strong,
 .apex-card--game strong {
   color: var(--game-card-title);
 }
 
-.apex-card__icon,
-.item-card__icon {
-  width: 44px;
-  height: 44px;
+.apex-card__icon {
+  width: 48px;
+  height: 48px;
   border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.1);
-  border: 1px solid rgba(204, 255, 0, 0.18);
-  color: var(--apex-primary);
+  background: var(--apex-primary);
+  color: var(--apex-text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  margin-bottom: 14px;
-  transition: transform var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
-}
-
-.item-card:hover .item-card__icon {
-  transform: scale(1.08);
-  background: rgba(204, 255, 0, 0.18);
-  box-shadow: 0 0 18px rgba(204, 255, 0, 0.15);
+  margin-bottom: 12px;
 }
 
 /* ============================================================================
@@ -1645,7 +1441,7 @@ html[data-theme="light"] .apex-card--game:hover {
   color: var(--apex-text-inverse);
   font-size: 0.9375rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(204, 255, 0, 0.28);
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
   transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
 }
 
@@ -1653,7 +1449,7 @@ html[data-theme="light"] .apex-card--game:hover {
 .profile-btn:hover,
 .login-box button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(204, 255, 0, 0.38);
+  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
   background: var(--apex-primary-dark);
 }
 
@@ -1769,7 +1565,7 @@ html[data-theme="light"] .apex-card--game:hover {
 }
 
 .profile-avatar-btn:hover {
-  background: rgba(204, 255, 0, 0.1);
+  background: rgba(109, 93, 252, 0.08);
   color: var(--apex-primary);
   border-color: var(--apex-primary);
 }
@@ -1985,10 +1781,10 @@ html[data-theme="light"] .apex-card--game:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 13px 26px;
-  border-radius: var(--apex-radius-full);
+  padding: 12px 24px;
+  border-radius: var(--apex-radius-sm);
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: 600;
   min-width: 120px;
   text-align: center;
   position: relative;
@@ -1996,20 +1792,20 @@ html[data-theme="light"] .apex-card--game:hover {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
+  background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.32);
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(204, 255, 0, 0.42);
-  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
+  background: var(--apex-primary-dark);
 }
 
 .btn:active {
-  transform: scale(0.97) translateY(0);
+  transform: scale(0.96) translateY(0);
 }
 
 .btn:disabled,
@@ -2042,7 +1838,7 @@ html[data-theme="light"] .apex-card--game:hover {
 
 .btn--ghost:hover {
   color: var(--apex-primary);
-  background: rgba(204, 255, 0, 0.08);
+  background: rgba(109, 93, 252, 0.06);
 }
 
 /* ============================================================================
@@ -2305,101 +2101,13 @@ html[data-theme="light"] .apex-card--game:hover {
    Section: Leaderboard
    ============================================================================ */
 
-/* ============================================================================
-   Section: Shared Section Shells
-   ============================================================================ */
-
-.leaderboard,
-.personal-stats,
-.forum-section,
-.feedback-section {
-  background:
-    linear-gradient(180deg, rgba(16, 16, 16, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+.leaderboard {
+  background: var(--apex-surface);
   border-radius: var(--apex-radius);
-  padding: 26px;
+  padding: 20px;
   margin-bottom: var(--section-gap);
-  box-shadow:
-    var(--apex-shadow-lg),
-    inset 0 0 0 1px rgba(204, 255, 0, 0.06),
-    0 0 48px rgba(204, 255, 0, 0.04);
-  border: 1px solid var(--apex-border);
-  position: relative;
-  overflow: hidden;
-  clip-path: polygon(
-    0 18px,
-    18px 0,
-    calc(100% - 18px) 0,
-    100% 18px,
-    100% calc(100% - 18px),
-    calc(100% - 18px) 100%,
-    18px 100%,
-    0 calc(100% - 18px)
-  );
-}
-
-.leaderboard::before,
-.personal-stats::before,
-.forum-section::before,
-.feedback-section::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 35%, var(--apex-accent-cyan) 65%, transparent 100%);
-  opacity: 1;
-  z-index: 2;
-  box-shadow: 0 0 16px rgba(204, 255, 0, 0.25);
-}
-
-.leaderboard::after,
-.personal-stats::after,
-.forum-section::after,
-.feedback-section::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(204, 255, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.35;
-  z-index: 0;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 100%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 100%);
-}
-
-.hud-corners {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.hud-corners::before,
-.hud-corners::after {
-  content: '';
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  border-color: var(--apex-primary);
-  border-style: solid;
-  opacity: 0.7;
-  filter: drop-shadow(0 0 6px rgba(204, 255, 0, 0.35));
-}
-
-.hud-corners::before {
-  top: 14px;
-  left: 14px;
-  border-width: 2px 0 0 2px;
-}
-
-.hud-corners::after {
-  bottom: 14px;
-  right: 14px;
-  border-width: 0 2px 2px 0;
+  box-shadow: var(--apex-shadow-md);
+  border: 1px solid var(--apex-border-subtle);
 }
 
 .leaderboard-title,
@@ -2407,728 +2115,283 @@ html[data-theme="light"] .apex-card--game:hover {
 .forum-title,
 .feedback-title {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--apex-text);
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  position: relative;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-family: var(--font-display);
-  z-index: 2;
-}
-
-.hud-title__index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 26px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.12);
-  border: 1px solid rgba(204, 255, 0, 0.28);
-  color: var(--apex-primary);
-  font-size: 0.6875rem;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.1);
-}
-
-.leaderboard-title::after,
-.personal-stats-title::after,
-.forum-title::after,
-.feedback-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--apex-border) 0%, rgba(0, 240, 255, 0.15) 50%, transparent 100%);
-  margin-left: 4px;
-}
-
-.leaderboard:hover,
-.personal-stats:hover,
-.forum-section:hover,
-.feedback-section:hover {
-  border-color: rgba(204, 255, 0, 0.28);
-  box-shadow:
-    var(--apex-shadow-lg),
-    inset 0 0 0 1px rgba(204, 255, 0, 0.08),
-    0 0 64px rgba(204, 255, 0, 0.06);
+  gap: 8px;
 }
 
 .leaderboard-tabs {
   display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
+  gap: 4px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-  position: relative;
-  padding: 4px;
-  background: var(--apex-bg-elevated);
-  border-radius: var(--apex-radius-sm);
-  border: 1px solid var(--apex-border-subtle);
 }
 
 .leaderboard-tab {
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  border-radius: var(--apex-radius-sm);
-  background: transparent;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  border-radius: var(--apex-radius-full);
+  background: var(--apex-bg);
   color: var(--apex-text-secondary);
-  font-weight: 700;
-  border: 1px solid transparent;
-  transition: all var(--apex-transition-fast);
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.leaderboard-tab:hover {
-  color: var(--apex-text);
-  background: rgba(204, 255, 0, 0.08);
+  font-weight: 500;
+  transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast);
 }
 
 .leaderboard-tab.active {
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  border-color: transparent;
-  box-shadow: none;
-  font-weight: 800;
 }
 
 .leaderboard-row {
   display: flex;
   align-items: center;
-  padding: 13px 16px;
-  margin-bottom: 8px;
-  border-radius: var(--apex-radius-sm);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--apex-border);
   font-size: 0.875rem;
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  transition: all var(--apex-transition-fast);
-  position: relative;
-}
-
-.leaderboard-row::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--apex-primary);
-  border-radius: var(--apex-radius-sm) 0 0 var(--apex-radius-sm);
-  opacity: 0;
-  transition: opacity var(--apex-transition-fast);
-}
-
-.leaderboard-row:hover {
-  background: var(--apex-surface-elevated);
-  transform: translateX(3px);
-  border-color: var(--apex-border);
-}
-
-.leaderboard-row:hover::before {
-  opacity: 1;
 }
 
 .leaderboard-row:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .leaderboard-rank {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--apex-radius-sm);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 0.75rem;
   margin-right: 12px;
   flex-shrink: 0;
   background: var(--apex-bg);
   color: var(--apex-text-secondary);
-  border: 1px solid var(--apex-border-subtle);
-  font-family: var(--font-mono);
 }
 
 .leaderboard-rank.gold {
-  background: var(--rank-gold);
-  color: #080808;
-  border-color: var(--rank-gold);
+  background: #ffd700;
+  color: #1f2937;
 }
 
 .leaderboard-rank.silver {
-  background: var(--rank-silver);
-  color: #080808;
-  border-color: var(--rank-silver);
+  background: #c0c0c0;
+  color: #1f2937;
 }
 
 .leaderboard-rank.bronze {
-  background: var(--rank-bronze);
-  color: #080808;
-  border-color: var(--rank-bronze);
-}
-
-.leaderboard-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--apex-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-right: 12px;
-  border: 1px solid var(--apex-border);
-  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast);
-}
-
-.leaderboard-avatar:hover {
-  transform: scale(1.1);
-  border-color: var(--apex-border-strong);
-}
-
-.leaderboard-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.leaderboard-avatar svg {
-  width: 20px;
-  height: 20px;
+  background: #cd7f32;
+  color: #ffffff;
 }
 
 .leaderboard-name {
   flex: 1;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--apex-text);
-  cursor: pointer;
-  transition: color var(--apex-transition-fast);
-}
-
-.leaderboard-name:hover {
-  color: var(--apex-primary);
 }
 
 .leaderboard-score {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--apex-primary);
-  font-size: 0.875rem;
-  background: rgba(204, 255, 0, 0.1);
-  padding: 5px 10px;
-  border-radius: var(--apex-radius-sm);
-  border: 1px solid rgba(204, 255, 0, 0.15);
-  font-family: var(--font-mono);
-}
-
-.leaderboard-podium {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 22px;
-  position: relative;
-  z-index: 1;
-}
-
-.leaderboard-podium-card {
-  position: relative;
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  border-radius: var(--apex-radius-sm);
-  padding: 18px 12px 14px;
-  text-align: center;
-  transition: all var(--apex-transition-fast);
-  overflow: hidden;
-}
-
-.leaderboard-podium-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  opacity: 0.8;
-}
-
-.leaderboard-podium-card.gold { border-color: rgba(255, 213, 0, 0.35); box-shadow: 0 8px 24px rgba(255, 213, 0, 0.1); transform: translateY(-6px); }
-.leaderboard-podium-card.gold::before { background: var(--rank-gold); box-shadow: 0 0 16px rgba(255, 213, 0, 0.4); }
-.leaderboard-podium-card.silver { border-color: rgba(192, 192, 192, 0.3); }
-.leaderboard-podium-card.silver::before { background: var(--rank-silver); }
-.leaderboard-podium-card.bronze { border-color: rgba(255, 140, 66, 0.3); }
-.leaderboard-podium-card.bronze::before { background: var(--rank-bronze); }
-
-.leaderboard-podium-rank {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 10px;
-  font-weight: 900;
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-}
-
-.leaderboard-podium-card.gold .leaderboard-podium-rank { background: var(--rank-gold); color: #080808; box-shadow: 0 0 14px rgba(255, 213, 0, 0.35); }
-.leaderboard-podium-card.silver .leaderboard-podium-rank { background: var(--rank-silver); color: #080808; }
-.leaderboard-podium-card.bronze .leaderboard-podium-rank { background: var(--rank-bronze); color: #080808; }
-
-.leaderboard-podium-name {
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--apex-text);
-  margin-bottom: 6px;
-  word-break: break-word;
-}
-
-.leaderboard-podium-score {
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--apex-primary);
-  font-family: var(--font-mono);
-}
-
-@media (max-width: 480px) {
-  .leaderboard-podium {
-    grid-template-columns: 1fr;
-  }
-  .leaderboard-podium-card.gold {
-    transform: none;
-  }
 }
 
 /* ============================================================================
    Section: Personal Stats
    ============================================================================ */
 
-.personal-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  position: relative;
-}
-
-.personal-card {
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  border-radius: var(--apex-radius-sm);
-  padding: 18px 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: all var(--apex-transition-fast);
-  position: relative;
-  overflow: hidden;
-  min-height: 110px;
-}
-
-.personal-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%);
-  opacity: 0;
-  transition: opacity var(--apex-transition-fast);
-}
-
-.personal-card:hover {
-  background: var(--apex-surface-elevated);
-  transform: translateY(-3px);
-  border-color: var(--apex-border);
+.personal-stats {
+  background: var(--apex-surface);
+  border-radius: var(--apex-radius);
+  padding: 20px;
+  margin-bottom: var(--section-gap);
   box-shadow: var(--apex-shadow-md);
-}
-
-.personal-card:hover::before {
-  opacity: 1;
-}
-
-.personal-card-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.08);
-  border: 1px solid rgba(204, 255, 0, 0.12);
-  color: var(--apex-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  margin-bottom: 10px;
-}
-
-.personal-card-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-.personal-card-progress::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: var(--personal-pct, 0%);
-  background: linear-gradient(90deg, var(--apex-primary), var(--apex-accent-cyan));
-  transition: width 0.6s ease;
-}
-
-.personal-card-main {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.personal-card-name {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--apex-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.personal-card-count {
-  font-size: 0.6875rem;
-  color: var(--apex-text-tertiary);
-  font-weight: 600;
-  background: var(--apex-bg);
-  padding: 3px 8px;
-  border-radius: var(--apex-radius-sm);
   border: 1px solid var(--apex-border-subtle);
 }
 
-.personal-card-score {
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: var(--apex-primary);
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  font-family: var(--font-mono);
-  line-height: 1;
+.personal-stats table td {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--apex-border);
+  font-size: 0.875rem;
 }
 
-.personal-card-unit {
-  font-size: 0.75rem;
+.personal-stats table tr:last-child td {
+  border-bottom: none;
   font-weight: 700;
-  color: var(--apex-text-secondary);
-}
-
-@media (max-width: 480px) {
-  .personal-grid {
-    grid-template-columns: 1fr;
-  }
+  color: var(--apex-text);
 }
 
 /* ============================================================================
    Section: Forum & Feedback
    ============================================================================ */
 
+.forum-section,
+.feedback-section {
+  background: var(--apex-surface);
+  border-radius: var(--apex-radius);
+  padding: 22px;
+  margin-top: var(--section-gap);
+  box-shadow: var(--apex-shadow-md);
+  border: 1px solid var(--apex-border-subtle);
+}
+
 .forum-input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 22px;
-  position: relative;
-  background: var(--apex-bg-elevated);
-  border: 1px solid var(--apex-border-subtle);
-  border-radius: var(--apex-radius-sm);
-  padding: 18px;
-}
-
-.forum-login-tip {
-  text-align: center;
-  color: var(--apex-text-tertiary);
-  font-size: 0.8125rem;
-  padding: 14px;
-  margin-bottom: 18px;
-  background: var(--apex-bg-elevated);
-  border-radius: var(--apex-radius-sm);
-  border: 1px dashed var(--apex-border);
-  line-height: 1.6;
-}
-
-.forum-input-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .forum-category-select {
-  padding: 9px 14px;
+  padding: 10px 12px;
   border-radius: var(--apex-radius-sm);
-  border: 1px solid var(--apex-border-subtle);
+  border: 1px solid var(--apex-border);
   background: var(--apex-bg);
   color: var(--apex-text);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.875rem;
   outline: none;
   cursor: pointer;
-  transition: all var(--apex-transition-fast);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  align-self: flex-start;
 }
 
-.forum-category-select:hover,
 .forum-category-select:focus {
-  border-color: var(--apex-border);
+  border-color: var(--apex-primary);
   box-shadow: var(--focus-ring);
-}
-
-.forum-input-wrap textarea,
-.feedback-form textarea {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--apex-border-subtle);
-  border-radius: var(--apex-radius-sm);
-  font-size: 0.875rem;
-  resize: vertical;
-  min-height: 100px;
-  background: var(--apex-bg);
-  color: var(--apex-text);
-  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
-  box-sizing: border-box;
-  line-height: 1.6;
-}
-
-.forum-input-wrap textarea::placeholder,
-.feedback-form textarea::placeholder,
-.feedback-form input::placeholder {
-  color: var(--apex-text-tertiary);
-}
-
-.forum-input-wrap textarea:focus,
-.feedback-form textarea:focus {
-  border-color: var(--apex-border-strong);
-  background: var(--apex-surface-elevated);
-  box-shadow: var(--focus-ring);
-}
-
-.forum-btn,
-.feedback-submit {
-  padding: 11px 22px;
-  border-radius: var(--apex-radius-sm);
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  font-size: 0.75rem;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.forum-btn:hover,
-.feedback-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(204, 255, 0, 0.25);
-  filter: brightness(1.05);
 }
 
 .forum-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 20px;
-  position: relative;
-  padding: 4px;
-  background: var(--apex-bg-elevated);
-  border-radius: var(--apex-radius-sm);
-  border: 1px solid var(--apex-border-subtle);
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .forum-filter-btn {
-  padding: 8px 12px;
-  border-radius: var(--apex-radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-bg);
   color: var(--apex-text-secondary);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
   cursor: pointer;
-  transition: all var(--apex-transition-fast);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  transition: all .15s ease;
 }
 
+.forum-filter-btn.active,
 .forum-filter-btn:hover {
-  background: rgba(204, 255, 0, 0.08);
-  color: var(--apex-text);
+  border-color: var(--apex-primary);
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--apex-primary);
 }
 
-.forum-filter-btn.active {
-  border-color: transparent;
+.forum-input-wrap textarea,
+.feedback-form textarea {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius-sm);
+  font-size: 0.9375rem;
+  resize: vertical;
+  min-height: 60px;
+  background: var(--apex-bg);
+  color: var(--apex-text);
+  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+}
+
+.forum-input-wrap textarea:focus,
+.feedback-form textarea:focus {
+  border-color: var(--apex-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.forum-btn,
+.feedback-submit {
+  padding: 10px 20px;
+  border-radius: var(--apex-radius-sm);
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  box-shadow: none;
-  font-weight: 800;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  align-self: flex-start;
+}
+
+.forum-btn:hover,
+.feedback-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
+  background: var(--apex-primary-dark);
 }
 
 .forum-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  position: relative;
+  gap: 10px;
 }
 
 .forum-item {
-  padding: 16px;
-  background: var(--apex-bg-elevated);
+  padding: 14px 16px;
+  background: var(--apex-bg);
   border-radius: var(--apex-radius-sm);
   border: 1px solid var(--apex-border-subtle);
-  transition: all var(--apex-transition-fast);
-  display: flex;
-  gap: 14px;
-  position: relative;
-}
-
-.forum-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--apex-primary);
-  border-radius: var(--apex-radius-sm) 0 0 var(--apex-radius-sm);
-  opacity: 0;
-  transition: opacity var(--apex-transition-fast);
+  transition: background-color var(--apex-transition-fast), transform var(--apex-transition-fast);
 }
 
 .forum-item:hover {
   background: var(--apex-surface-elevated);
-  transform: translateX(3px);
-  border-color: var(--apex-border);
-}
-
-.forum-item:hover::before {
-  opacity: 1;
-}
-
-.forum-item-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: var(--apex-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  border: 1px solid var(--apex-border);
-  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast);
-}
-
-.forum-item-avatar:hover {
-  transform: scale(1.1);
-  border-color: var(--apex-border-strong);
-}
-
-.forum-item-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.forum-item-avatar svg {
-  width: 24px;
-  height: 24px;
-}
-
-.forum-item-body {
-  flex: 1;
-  min-width: 0;
+  transform: translateX(2px);
 }
 
 .forum-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  gap: 10px;
-}
-
-.forum-item-meta {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  margin-bottom: 6px;
+  gap: 12px;
 }
 
 .forum-item-user {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.875rem;
   color: var(--apex-text);
-  cursor: pointer;
-  transition: color var(--apex-transition-fast);
-}
-
-.forum-item-user:hover {
-  color: var(--apex-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .forum-item-user::before {
-  content: none;
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--apex-primary);
 }
 
 .forum-item-time {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--apex-text-tertiary);
   flex-shrink: 0;
   margin-left: auto;
-  white-space: nowrap;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .forum-item-category {
-  font-size: 0.625rem;
-  padding: 3px 10px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.1);
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
   color: var(--apex-primary);
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
-  border: 1px solid rgba(204, 255, 0, 0.15);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
-
-.forum-item-category--chat { background: rgba(204, 255, 0, 0.1); color: var(--apex-primary); border-color: rgba(204, 255, 0, 0.15); }
-.forum-item-category--score { background: rgba(0, 240, 255, 0.1); color: var(--apex-accent-cyan); border-color: rgba(0, 240, 255, 0.15); }
-.forum-item-category--bug { background: rgba(255, 51, 102, 0.1); color: var(--apex-accent-red); border-color: rgba(255, 51, 102, 0.15); }
-.forum-item-category--suggestion { background: rgba(255, 153, 0, 0.1); color: var(--apex-accent-orange); border-color: rgba(255, 153, 0, 0.15); }
 
 .forum-item-content {
   font-size: 0.875rem;
   color: var(--apex-text-secondary);
-  line-height: 1.65;
+  line-height: 1.6;
   word-break: break-word;
 }
 
@@ -3136,40 +2399,30 @@ html[data-theme="light"] .apex-card--game:hover {
   text-align: center;
   color: var(--apex-text-tertiary);
   font-size: 0.875rem;
-  padding: 36px 24px;
-  background: var(--apex-bg-elevated);
-  border-radius: var(--apex-radius-sm);
-  border: 1px dashed var(--apex-border);
+  padding: 24px;
 }
 
 .feedback-email-box {
-  background: var(--apex-bg-elevated);
+  background: var(--apex-bg);
   border-radius: var(--apex-radius-sm);
-  padding: 18px 20px;
-  margin-bottom: 22px;
+  padding: 16px 20px;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   border: 1px solid var(--apex-border-subtle);
-  transition: all var(--apex-transition-fast);
-  position: relative;
-}
-
-.feedback-email-box:hover {
-  border-color: var(--apex-border);
-  transform: translateX(3px);
 }
 
 .feedback-email-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--apex-radius-sm);
   background: var(--apex-primary);
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--apex-text-inverse);
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   flex-shrink: 0;
 }
 
@@ -3178,17 +2431,14 @@ html[data-theme="light"] .apex-card--game:hover {
 }
 
 .feedback-email-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--apex-text-secondary);
-  margin-bottom: 4px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  margin-bottom: 2px;
 }
 
 .feedback-email-value {
-  font-size: 0.875rem;
-  font-weight: 800;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: var(--apex-primary);
   font-family: var(--font-mono);
 }
@@ -3196,77 +2446,26 @@ html[data-theme="light"] .apex-card--game:hover {
 .feedback-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  position: relative;
+  gap: 12px;
 }
 
 .feedback-form input {
-  padding: 14px 18px;
-  border: 1px solid var(--apex-border-subtle);
+  padding: 12px 14px;
+  border: 1px solid var(--apex-border);
   border-radius: var(--apex-radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   background: var(--apex-bg);
   color: var(--apex-text);
-  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
 }
 
 .feedback-form input:focus {
-  border-color: var(--apex-border-strong);
-  background: var(--apex-surface-elevated);
+  border-color: var(--apex-primary);
   box-shadow: var(--focus-ring);
 }
 
 .feedback-form textarea {
-  min-height: 130px;
-  border-radius: var(--apex-radius-sm);
-}
-
-.feedback-copy-btn {
-  margin-left: auto;
-  padding: 6px 12px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.08);
-  border: 1px solid rgba(204, 255, 0, 0.15);
-  color: var(--apex-primary);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all var(--apex-transition-fast);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.feedback-copy-btn:hover {
-  background: rgba(204, 255, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.feedback-copy-btn.copied {
-  background: var(--apex-success);
-  color: var(--apex-text-inverse);
-  border-color: var(--apex-success);
-}
-
-.feedback-form .feedback-field-label {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: var(--apex-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.feedback-form .feedback-field-label .apex-field-icon {
-  color: var(--apex-primary);
-  font-size: 10px;
-}
-
-.feedback-form > label {
-  display: flex;
-  flex-direction: column;
+  min-height: 100px;
 }
 
 /* ============================================================================
@@ -3274,45 +2473,30 @@ html[data-theme="light"] .apex-card--game:hover {
    ============================================================================ */
 
 .apexon-footer {
-  margin-top: 48px;
-  padding: 28px 16px;
+  margin-top: 40px;
+  padding: 24px 16px;
   border-top: 1px solid var(--apex-border-subtle);
   text-align: center;
   font-size: 0.8125rem;
   color: var(--apex-text-secondary);
   background: var(--apex-surface);
-  position: relative;
-  overflow: hidden;
-}
-
-.apexon-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%);
-  opacity: 0.4;
 }
 
 .apexon-footer-inner {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .apexon-footer a {
   color: var(--apex-primary);
-  font-weight: 600;
   transition: color var(--apex-transition-fast);
 }
 
 .apexon-footer a:hover {
-  color: var(--apex-primary-light);
+  color: var(--apex-primary-dark);
   text-decoration: underline;
 }
 
@@ -3322,15 +2506,15 @@ html[data-theme="light"] .apex-card--game:hover {
 
 .toast {
   position: fixed;
-  bottom: 28px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(120%);
-  background: var(--apex-surface);
-  color: var(--apex-text);
-  padding: 14px 28px;
+  background: var(--apex-text);
+  color: var(--apex-text-inverse);
+  padding: 12px 24px;
   border-radius: var(--apex-radius-full);
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   z-index: 9999;
   opacity: 0;
   transition: transform var(--apex-transition-base), opacity var(--apex-transition-base);
@@ -3338,10 +2522,7 @@ html[data-theme="light"] .apex-card--game:hover {
   white-space: nowrap;
   max-width: 90vw;
   text-align: center;
-  box-shadow: var(--apex-shadow-lg), var(--apex-shadow-inset-glow);
-  border: 1px solid var(--apex-border-strong);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--apex-shadow-lg);
 }
 
 .toast.show {
@@ -3684,7 +2865,7 @@ canvas#testBox,
 .sequence-memory__cell--active {
   background: var(--apex-primary);
   border-color: var(--apex-primary-light);
-  box-shadow: 0 0 18px rgba(204, 255, 0, 0.35);
+  box-shadow: 0 0 18px rgba(109, 93, 252, 0.3);
   transform: scale(1.05);
 }
 
@@ -3722,7 +2903,7 @@ canvas#testBox,
   border-radius: var(--apex-radius);
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  box-shadow: 0 0 24px rgba(204, 255, 0, 0.35);
+  box-shadow: 0 0 24px rgba(109, 93, 252, 0.3);
   transition: transform var(--apex-transition-fast), opacity var(--apex-transition-fast);
 }
 
@@ -3823,7 +3004,7 @@ canvas#testBox,
 
 .visual-memory__cell--active {
   background: var(--apex-primary);
-  box-shadow: 0 0 18px rgba(204, 255, 0, 0.35);
+  box-shadow: 0 0 18px rgba(109, 93, 252, 0.3);
 }
 
 .visual-memory__cell--error {
@@ -4131,315 +3312,6 @@ canvas#testBox,
 }
 
 /* ============================================================================
-   Section: Global HUD Enhancements v2
-   ============================================================================ */
-
-/* 科技感自定义光标 */
-html[data-theme="dark"],
-:root[data-theme="dark"] {
-  cursor: crosshair;
-}
-
-html[data-theme="dark"] a,
-html[data-theme="dark"] button,
-html[data-theme="dark"] input,
-html[data-theme="dark"] textarea,
-html[data-theme="dark"] select,
-html[data-theme="dark"] .item-card,
-html[data-theme="dark"] .leaderboard-row,
-html[data-theme="dark"] .personal-card,
-html[data-theme="dark"] .forum-item,
-html[data-theme="dark"] .forum-filter-btn,
-html[data-theme="dark"] .leaderboard-tab,
-html[data-theme="dark"] .forum-btn,
-html[data-theme="dark"] .feedback-submit,
-html[data-theme="dark"] .apex-user-bar {
-  cursor: pointer;
-}
-
-html[data-theme="dark"] input,
-html[data-theme="dark"] textarea {
-  cursor: text;
-}
-
-/* 强化模块外壳 */
-.leaderboard,
-.personal-stats,
-.forum-section,
-.feedback-section {
-  box-shadow:
-    var(--apex-shadow-md),
-    inset 0 0 0 1px rgba(204, 255, 0, 0.03),
-    0 0 40px rgba(204, 255, 0, 0.03);
-}
-
-.leaderboard:hover,
-.personal-stats:hover,
-.forum-section:hover,
-.feedback-section:hover {
-  border-color: rgba(204, 255, 0, 0.12);
-  box-shadow:
-    var(--apex-shadow-lg),
-    inset 0 0 0 1px rgba(204, 255, 0, 0.05),
-    0 0 60px rgba(204, 255, 0, 0.05);
-}
-
-/* HUD 标题统一编号 */
-.hud-title__index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 22px;
-  border-radius: var(--apex-radius-sm);
-  background: rgba(204, 255, 0, 0.1);
-  border: 1px solid rgba(204, 255, 0, 0.18);
-  color: var(--apex-primary);
-  font-size: 0.625rem;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
-}
-
-/* 强化排行榜领奖台 */
-.leaderboard-podium-card {
-  background:
-    linear-gradient(180deg, rgba(19, 19, 19, 0.9) 0%, rgba(12, 12, 12, 0.9) 100%);
-}
-
-.leaderboard-podium-card.gold {
-  border-color: rgba(255, 213, 0, 0.5);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(255, 213, 0, 0.15);
-}
-
-.leaderboard-podium-card.silver {
-  border-color: rgba(192, 192, 192, 0.4);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.45),
-    0 0 18px rgba(192, 192, 192, 0.08);
-}
-
-.leaderboard-podium-card.bronze {
-  border-color: rgba(255, 140, 66, 0.4);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.45),
-    0 0 18px rgba(255, 140, 66, 0.08);
-}
-
-/* 强化排行榜行 */
-.leaderboard-row {
-  background:
-    linear-gradient(90deg, rgba(12, 12, 12, 0.9) 0%, rgba(14, 14, 14, 0.9) 100%);
-}
-
-.leaderboard-row:hover {
-  transform: translateX(5px);
-  border-color: rgba(204, 255, 0, 0.22);
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.06);
-}
-
-.leaderboard-row:hover::before {
-  opacity: 1;
-  box-shadow: 0 0 8px var(--apex-primary);
-}
-
-.leaderboard-score {
-  background: rgba(204, 255, 0, 0.12);
-  border-color: rgba(204, 255, 0, 0.22);
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.08);
-}
-
-/* 强化个人成绩卡片 */
-.personal-card {
-  background:
-    linear-gradient(145deg, rgba(12, 12, 12, 0.95) 0%, rgba(16, 16, 16, 0.95) 100%);
-}
-
-.personal-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(204, 255, 0, 0.25);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(204, 255, 0, 0.08);
-}
-
-.personal-card-icon {
-  background: rgba(204, 255, 0, 0.1);
-  border-color: rgba(204, 255, 0, 0.2);
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.08);
-}
-
-.personal-card-score {
-  text-shadow: 0 0 16px rgba(204, 255, 0, 0.25);
-}
-
-/* 强化讨论区 */
-.forum-input-wrap {
-  background:
-    linear-gradient(180deg, rgba(12, 12, 12, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%);
-  border-color: rgba(204, 255, 0, 0.1);
-}
-
-.forum-login-tip {
-  background: rgba(204, 255, 0, 0.05);
-  border-style: solid;
-  border-color: rgba(204, 255, 0, 0.12);
-  color: var(--apex-text-secondary);
-}
-
-.forum-item {
-  background:
-    linear-gradient(90deg, rgba(12, 12, 12, 0.95) 0%, rgba(14, 14, 14, 0.95) 100%);
-}
-
-.forum-item:hover {
-  transform: translateX(5px);
-  border-color: rgba(204, 255, 0, 0.18);
-}
-
-.forum-item-user {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-.forum-item-category {
-  box-shadow: 0 0 10px rgba(204, 255, 0, 0.06);
-}
-
-.forum-empty {
-  background: rgba(204, 255, 0, 0.03);
-}
-
-/* 强化反馈区 */
-.feedback-email-box {
-  background:
-    linear-gradient(90deg, rgba(12, 12, 12, 0.95) 0%, rgba(14, 14, 14, 0.95) 100%);
-}
-
-.feedback-email-icon {
-  box-shadow: 0 0 16px rgba(204, 255, 0, 0.2);
-}
-
-.feedback-form input,
-.feedback-form textarea {
-  background: rgba(8, 8, 8, 0.65);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.feedback-form input:focus,
-.feedback-form textarea:focus {
-  background: rgba(8, 8, 8, 0.9);
-  border-color: var(--apex-border-strong);
-  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.1);
-}
-
-.feedback-submit {
-  position: relative;
-  overflow: hidden;
-}
-
-.feedback-submit::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transform: translateX(-100%);
-  transition: transform 0s;
-}
-
-.feedback-submit:hover::before {
-  transform: translateX(100%);
-  transition: transform 0.6s ease;
-}
-
-/* 强化登录弹窗 HUD 风格 */
-.apex-login-card.apex-login-card--hud {
-  clip-path: polygon(0 16px, 16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px));
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.85),
-    0 0 0 1px rgba(204, 255, 0, 0.08),
-    0 0 60px rgba(204, 255, 0, 0.08);
-}
-
-.apex-login-card.apex-login-card--hud::before {
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 30%, var(--apex-accent-cyan) 70%, transparent 100%);
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.4);
-}
-
-.apex-login-scanline {
-  background: linear-gradient(180deg, transparent, rgba(204, 255, 0, 0.4), transparent);
-  box-shadow: 0 0 16px rgba(204, 255, 0, 0.4);
-}
-
-.apex-login-corners span {
-  width: 22px;
-  height: 22px;
-  opacity: 0.8;
-  box-shadow: 0 0 8px rgba(204, 255, 0, 0.25);
-}
-
-/* 强化游戏卡片 */
-.item-card,
-.apex-card--game {
-  background:
-    linear-gradient(145deg, #0e0e0e 0%, #111111 50%, #151515 100%);
-}
-
-.item-card:hover,
-.apex-card--game:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow:
-    0 24px 56px rgba(0, 0, 0, 0.6),
-    0 0 32px rgba(204, 255, 0, 0.1);
-}
-
-/* 强化搜索框 */
-.search-box {
-  background:
-    linear-gradient(145deg, rgba(12, 12, 12, 0.95) 0%, rgba(16, 16, 16, 0.95) 100%);
-}
-
-.search-box input {
-  background: rgba(8, 8, 8, 0.65);
-}
-
-/* 强化 Hero */
-.hero-apexon::before {
-  background:
-    radial-gradient(circle, rgba(204, 255, 0, 0.1) 0%, transparent 55%),
-    radial-gradient(circle, rgba(0, 240, 255, 0.06) 0%, transparent 45%);
-}
-
-.hero-stat-chip:hover {
-  transform: translateY(-3px);
-  border-color: rgba(204, 255, 0, 0.15);
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.06);
-}
-
-/* 强化页脚 */
-.apexon-footer::before {
-  width: 80%;
-  opacity: 0.6;
-}
-
-/* 全局扫描线增强 */
-#apex-scanline {
-  background: linear-gradient(180deg, transparent, rgba(204, 255, 0, 0.08), transparent);
-  box-shadow: 0 0 16px rgba(204, 255, 0, 0.15);
-}
-
-/* 网格纹理增强 */
-body::before {
-  background-image:
-    linear-gradient(rgba(204, 255, 0, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ============================================================================
    Section: Emergency Override Patch
    ============================================================================ */
 
@@ -4620,1061 +3492,15 @@ html[data-bw="true"] .reaction-click-area.green {
 
 html[data-bw="true"] #testBox.reaction-click-area.blue,
 html[data-bw="true"] .reaction-click-area.blue {
-  background: linear-gradient(135deg, #00c2cc 0%, #0088ff 100%) !important;
+  background: linear-gradient(135deg, #8b7efc 0%, #7c6bc4 100%) !important;
 }
 
 html[data-bw="true"] #testBox.type-test-area,
 html[data-bw="true"] .type-test-area {
-  background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
 }
 
 html[data-bw="true"] canvas#testBox,
 html[data-bw="true"] .game-canvas {
-  background: linear-gradient(135deg, #e5e5e5 0%, #f0f0f0 100%) !important;
-}
-
-/* ============================================================================
-   Section: Global HUD Enhancements v3 — Module Polish
-   ============================================================================ */
-
-/* 四角 HUD 装饰（覆盖旧版，补全 4 个角 + 发光） */
-.hud-corners {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.hud-corners::before,
-.hud-corners::after {
-  content: '';
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-color: var(--apex-primary);
-  border-style: solid;
-  opacity: 0.55;
-  filter: drop-shadow(0 0 5px rgba(204, 255, 0, 0.35));
-  transition: opacity 0.25s ease, filter 0.25s ease;
-}
-
-.hud-corners::before {
-  top: 16px;
-  left: 16px;
-  border-width: 2px 0 0 2px;
-  box-shadow:
-    calc(100vw - 64px) 0 0 0 var(--apex-primary),
-    calc(100vw - 64px) 0 0 1px rgba(204, 255, 0, 0.35);
-}
-
-.hud-corners::after {
-  bottom: 16px;
-  right: 16px;
-  border-width: 0 2px 2px 0;
-  box-shadow:
-    calc(-100vw + 64px) 0 0 0 var(--apex-primary),
-    calc(-100vw + 64px) 0 0 1px rgba(204, 255, 0, 0.35);
-}
-
-.leaderboard:hover .hud-corners::before,
-.leaderboard:hover .hud-corners::after,
-.personal-stats:hover .hud-corners::before,
-.personal-stats:hover .hud-corners::after,
-.forum-section:hover .hud-corners::before,
-.forum-section:hover .hud-corners::after,
-.feedback-section:hover .hud-corners::before,
-.feedback-section:hover .hud-corners::after {
-  opacity: 0.9;
-  filter: drop-shadow(0 0 10px rgba(204, 255, 0, 0.55));
-}
-
-/* 模块内扫描线 */
-.hud-scanline {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(204, 255, 0, 0.35), rgba(0, 240, 255, 0.25), transparent);
-  opacity: 0.35;
-  z-index: 2;
-  pointer-events: none;
-  animation: hudSectionScan 4.5s linear infinite;
-}
-
-@keyframes hudSectionScan {
-  0% { top: 0; opacity: 0; }
-  10% { opacity: 0.4; }
-  90% { opacity: 0.4; }
-  100% { top: 100%; opacity: 0; }
-}
-
-/* HUD 标题编号强化 */
-.hud-title__index {
-  min-width: 32px;
-  height: 24px;
-  background:
-    linear-gradient(135deg, rgba(204, 255, 0, 0.16) 0%, rgba(204, 255, 0, 0.06) 100%);
-  border: 1px solid rgba(204, 255, 0, 0.35);
-  color: var(--apex-primary);
-  font-size: 0.6875rem;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  letter-spacing: 0.04em;
-  box-shadow:
-    0 0 12px rgba(204, 255, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-/* 模块标题发光 */
-.leaderboard-title,
-.personal-stats-title,
-.forum-title,
-.feedback-title {
-  text-shadow: 0 0 20px rgba(204, 255, 0, 0.12);
-}
-
-/* 排行榜：标签栏更紧凑科技感 */
-.leaderboard-tabs {
-  background:
-    linear-gradient(180deg, rgba(12, 12, 12, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.leaderboard-tab {
-  position: relative;
-  overflow: hidden;
-}
-
-.leaderboard-tab.active::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-/* 排行榜行：更清晰的悬停反馈 */
-.leaderboard-row {
-  background:
-    linear-gradient(90deg, rgba(11, 11, 11, 0.96) 0%, rgba(14, 14, 14, 0.96) 100%);
-  border-left: 2px solid transparent;
-}
-
-.leaderboard-row::before {
-  display: none;
-}
-
-.leaderboard-row:hover {
-  transform: translateX(6px);
-  border-left-color: var(--apex-primary);
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.55),
-    0 0 18px rgba(204, 255, 0, 0.08);
-}
-
-.leaderboard-rank {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.leaderboard-rank.gold {
-  background: var(--rank-gold);
-  color: #080808;
-  box-shadow: 0 0 16px rgba(255, 213, 0, 0.35);
-}
-
-.leaderboard-rank.silver {
-  background: var(--rank-silver);
-  color: #080808;
-  box-shadow: 0 0 12px rgba(192, 192, 192, 0.2);
-}
-
-.leaderboard-rank.bronze {
-  background: var(--rank-bronze);
-  color: #080808;
-  box-shadow: 0 0 12px rgba(255, 140, 66, 0.2);
-}
-
-.leaderboard-score {
-  background: rgba(204, 255, 0, 0.1);
-  border: 1px solid rgba(204, 255, 0, 0.2);
-  color: var(--apex-primary);
-  font-weight: 900;
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.06);
-}
-
-/* 个人成绩：图标 + 进度条 + 悬停光晕 */
-.personal-card {
-  background:
-    linear-gradient(145deg, rgba(11, 11, 11, 0.96) 0%, rgba(15, 15, 15, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.personal-card:hover {
-  transform: translateY(-5px) scale(1.01);
-  border-color: rgba(204, 255, 0, 0.3);
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.55),
-    0 0 28px rgba(204, 255, 0, 0.1);
-}
-
-.personal-card-icon {
-  background: rgba(204, 255, 0, 0.12);
-  border-color: rgba(204, 255, 0, 0.22);
-  box-shadow: 0 0 14px rgba(204, 255, 0, 0.1);
-}
-
-.personal-card-name {
-  color: var(--apex-text-secondary);
-}
-
-.personal-card-score {
-  text-shadow: 0 0 20px rgba(204, 255, 0, 0.3);
-}
-
-/* 讨论区：输入区 + 评论卡片 + 分类色 */
-.forum-input-wrap {
-  background:
-    linear-gradient(180deg, rgba(11, 11, 11, 0.96) 0%, rgba(9, 9, 9, 0.96) 100%);
-  border: 1px solid rgba(204, 255, 0, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.forum-login-tip {
-  background: rgba(204, 255, 0, 0.06);
-  border: 1px solid rgba(204, 255, 0, 0.14);
-  color: var(--apex-text-secondary);
-  position: relative;
-  overflow: hidden;
-}
-
-.forum-login-tip::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--apex-primary);
-  opacity: 0.5;
-}
-
-.forum-item {
-  background:
-    linear-gradient(90deg, rgba(11, 11, 11, 0.96) 0%, rgba(14, 14, 14, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-left: 2px solid transparent;
-}
-
-.forum-item:hover {
-  transform: translateX(6px);
-  border-left-color: var(--apex-primary);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-}
-
-.forum-item::before {
-  display: none;
-}
-
-.forum-item-avatar {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.forum-item-user {
-  color: var(--apex-text);
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-.forum-item-category {
-  background: rgba(204, 255, 0, 0.1);
-  color: var(--apex-primary);
-  border-color: rgba(204, 255, 0, 0.18);
-  box-shadow: 0 0 10px rgba(204, 255, 0, 0.06);
-}
-
-.forum-item-category--chat {
-  background: rgba(204, 255, 0, 0.1);
-  color: var(--apex-primary);
-  border-color: rgba(204, 255, 0, 0.18);
-}
-
-.forum-item-category--score {
-  background: rgba(0, 240, 255, 0.1);
-  color: var(--apex-accent-cyan);
-  border-color: rgba(0, 240, 255, 0.18);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.06);
-}
-
-.forum-item-category--bug {
-  background: rgba(255, 51, 102, 0.1);
-  color: var(--apex-accent-red);
-  border-color: rgba(255, 51, 102, 0.18);
-  box-shadow: 0 0 10px rgba(255, 51, 102, 0.06);
-}
-
-.forum-item-category--suggestion {
-  background: rgba(255, 153, 0, 0.1);
-  color: var(--apex-accent-orange);
-  border-color: rgba(255, 153, 0, 0.18);
-  box-shadow: 0 0 10px rgba(255, 153, 0, 0.06);
-}
-
-.forum-empty {
-  background: rgba(255, 255, 255, 0.03);
-  border-style: dashed;
-}
-
-/* 反馈区：邮箱卡片 + 表单 */
-.feedback-email-box {
-  background:
-    linear-gradient(90deg, rgba(11, 11, 11, 0.96) 0%, rgba(14, 14, 14, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.feedback-email-box:hover {
-  transform: translateX(6px);
-  border-color: rgba(204, 255, 0, 0.25);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-}
-
-.feedback-email-icon {
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  box-shadow: 0 0 20px rgba(204, 255, 0, 0.25);
-}
-
-.feedback-form input,
-.feedback-form textarea {
-  background: rgba(8, 8, 8, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.feedback-form input:focus,
-.feedback-form textarea:focus {
-  background: rgba(8, 8, 8, 0.9);
-  border-color: var(--apex-border-strong);
-  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.1);
-}
-
-.feedback-submit {
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  box-shadow: 0 4px 18px rgba(204, 255, 0, 0.28);
-}
-
-.feedback-submit:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 26px rgba(204, 255, 0, 0.38);
-  filter: brightness(1.05);
-}
-
-/* 登录弹窗 HUD 再强化 */
-.apex-login-card.apex-login-card--hud {
-  background:
-    linear-gradient(180deg, rgba(13, 13, 13, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
-  border: 1px solid rgba(204, 255, 0, 0.28);
-  clip-path: polygon(0 18px, 18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px));
-  box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(204, 255, 0, 0.06),
-    inset 0 0 50px rgba(204, 255, 0, 0.04),
-    0 0 70px rgba(204, 255, 0, 0.08);
-}
-
-.apex-login-card.apex-login-card--hud::before {
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 25%, var(--apex-accent-cyan) 75%, transparent 100%);
-  box-shadow: 0 0 16px rgba(204, 255, 0, 0.45);
-}
-
-.apex-login-card.apex-login-card--hud::after {
-  height: 180px;
-  background: linear-gradient(180deg, rgba(204, 255, 0, 0.07) 0%, transparent 100%);
-}
-
-.apex-login-header {
-  margin-bottom: 28px;
-}
-
-.apex-login-logo {
-  font-size: 26px;
-  letter-spacing: 4px;
-  text-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
-}
-
-.apex-login-subtitle {
-  color: var(--apex-text-secondary);
-  font-family: var(--font-mono);
-}
-
-.apex-login-tabs {
-  background: rgba(8, 8, 8, 0.7);
-}
-
-.apex-login-tab.active {
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  box-shadow: 0 4px 14px rgba(204, 255, 0, 0.25);
-}
-
-.apex-login-body input {
-  background: rgba(6, 6, 6, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.apex-login-body input:focus {
-  border-color: var(--apex-border-strong);
-  background: rgba(6, 6, 6, 0.95);
-  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.12);
-}
-
-.apex-login-submit {
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  box-shadow: 0 6px 22px rgba(204, 255, 0, 0.3);
-}
-
-.apex-login-submit:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(204, 255, 0, 0.4);
-}
-
-.apex-login-corners span {
-  width: 22px;
-  height: 22px;
-  opacity: 0.75;
-  filter: drop-shadow(0 0 6px rgba(204, 255, 0, 0.35));
-}
-
-.apex-login-scanline {
-  background: linear-gradient(180deg, transparent, rgba(204, 255, 0, 0.5), transparent);
-  box-shadow: 0 0 18px rgba(204, 255, 0, 0.45);
-}
-
-/* 入口动画 */
-.leaderboard,
-.personal-stats,
-.forum-section,
-.feedback-section {
-  animation: hudSectionIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-.personal-stats { animation-delay: 0.08s; }
-.forum-section { animation-delay: 0.16s; }
-.feedback-section { animation-delay: 0.24s; }
-
-@keyframes hudSectionIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* 响应式：小屏下缩小角标与扫描线 */
-@media (max-width: 480px) {
-  .hud-corners::before,
-  .hud-corners::after {
-    width: 18px;
-    height: 18px;
-  }
-
-  .hud-title__index {
-    min-width: 26px;
-    height: 20px;
-    font-size: 0.625rem;
-  }
-
-  .leaderboard,
-  .personal-stats,
-  .forum-section,
-  .feedback-section {
-    padding: 20px;
-  }
-}
-
-/* ============================================================================
-   Section: Global HUD Enhancements v4 — 终极模块抛光
-   ============================================================================ */
-
-/* 模块外壳：更强层次感 + 斜切角 + 内发光 */
-.leaderboard,
-.personal-stats,
-.forum-section,
-.feedback-section {
-  background:
-    radial-gradient(circle at 20% 0%, rgba(204, 255, 0, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 100% 100%, rgba(0, 240, 255, 0.03) 0%, transparent 30%),
-    linear-gradient(180deg, rgba(17, 17, 17, 0.98) 0%, rgba(11, 11, 11, 0.98) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-top-color: rgba(204, 255, 0, 0.22);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 0 1px rgba(204, 255, 0, 0.04),
-    0 0 56px rgba(204, 255, 0, 0.04);
-  clip-path: polygon(
-    0 22px,
-    22px 0,
-    calc(100% - 22px) 0,
-    100% 22px,
-    100% calc(100% - 22px),
-    calc(100% - 22px) 100%,
-    22px 100%,
-    0 calc(100% - 22px)
-  );
-}
-
-.leaderboard:hover,
-.personal-stats:hover,
-.forum-section:hover,
-.feedback-section:hover {
-  border-color: rgba(204, 255, 0, 0.22);
-  border-top-color: rgba(204, 255, 0, 0.45);
-  box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 1px rgba(204, 255, 0, 0.06),
-    0 0 80px rgba(204, 255, 0, 0.07);
-}
-
-/* 顶部霓虹指示条 */
-.leaderboard::before,
-.personal-stats::before,
-.forum-section::before,
-.feedback-section::before {
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 25%, var(--apex-accent-cyan) 50%, var(--apex-primary) 75%, transparent 100%);
-  box-shadow: 0 0 20px rgba(204, 255, 0, 0.35);
-}
-
-/* 内部 HUD 网格纹理 */
-.leaderboard::after,
-.personal-stats::after,
-.forum-section::after,
-.feedback-section::after {
-  background-image:
-    linear-gradient(rgba(204, 255, 0, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
-  background-size: 36px 36px;
-  opacity: 0.45;
-}
-
-/* 四角 HUD 装饰：补全 4 角 */
-.hud-corners::before,
-.hud-corners::after {
-  width: 34px;
-  height: 34px;
-  opacity: 0.65;
-  filter: drop-shadow(0 0 6px rgba(204, 255, 0, 0.45));
-}
-
-.hud-corners::before {
-  top: 18px;
-  left: 18px;
-  border-width: 2px 0 0 2px;
-}
-
-.hud-corners::after {
-  bottom: 18px;
-  right: 18px;
-  border-width: 0 2px 2px 0;
-}
-
-/* 用额外伪元素补全右上、左下两角 */
-.leaderboard,
-.personal-stats,
-.forum-section,
-.feedback-section {
-  --corner-size: 34px;
-  --corner-offset: 18px;
-}
-
-.leaderboard > .hud-corners,
-.personal-stats > .hud-corners,
-.forum-section > .hud-corners,
-.feedback-section > .hud-corners {
-  background:
-    linear-gradient(to right, var(--apex-primary) 2px, transparent 2px) calc(100% - var(--corner-offset)) var(--corner-offset) / var(--corner-size) var(--corner-size) no-repeat,
-    linear-gradient(to bottom, var(--apex-primary) 2px, transparent 2px) calc(100% - var(--corner-offset)) var(--corner-offset) / var(--corner-size) var(--corner-size) no-repeat,
-    linear-gradient(to left, var(--apex-primary) 2px, transparent 2px) var(--corner-offset) calc(100% - var(--corner-offset)) / var(--corner-size) var(--corner-size) no-repeat,
-    linear-gradient(to top, var(--apex-primary) 2px, transparent 2px) var(--corner-offset) calc(100% - var(--corner-offset)) / var(--corner-size) var(--corner-size) no-repeat;
-  opacity: 0.55;
-}
-
-.leaderboard:hover > .hud-corners,
-.personal-stats:hover > .hud-corners,
-.forum-section:hover > .hud-corners,
-.feedback-section:hover > .hud-corners {
-  opacity: 0.9;
-}
-
-/* 模块扫描线 */
-.hud-scanline {
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(204, 255, 0, 0.45), rgba(0, 240, 255, 0.3), transparent);
-  box-shadow: 0 0 12px rgba(204, 255, 0, 0.25);
-  animation: hudSectionScan 4s linear infinite;
-}
-
-/* 标题：更强科技感 */
-.leaderboard-title,
-.personal-stats-title,
-.forum-title,
-.feedback-title {
-  font-size: 1.0625rem;
-  letter-spacing: 0.08em;
-  text-shadow: 0 0 24px rgba(204, 255, 0, 0.18);
-  margin-bottom: 28px;
-}
-
-.hud-title__index {
-  min-width: 38px;
-  height: 28px;
-  font-size: 0.75rem;
-  background: linear-gradient(135deg, rgba(204, 255, 0, 0.18) 0%, rgba(204, 255, 0, 0.06) 100%);
-  border-color: rgba(204, 255, 0, 0.4);
-  box-shadow:
-    0 0 16px rgba(204, 255, 0, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* 排行榜 */
-.leaderboard-tabs {
-  background: rgba(8, 8, 8, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
-  padding: 5px;
-  gap: 4px;
-}
-
-.leaderboard-tab {
-  font-size: 0.6875rem;
-  padding: 9px 12px;
-  border-radius: calc(var(--apex-radius-sm) - 1px);
-}
-
-.leaderboard-tab:hover {
-  background: rgba(204, 255, 0, 0.1);
-  color: var(--apex-primary);
-}
-
-.leaderboard-tab.active {
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.25);
-}
-
-.leaderboard-tab.active::before {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
-}
-
-.leaderboard-row {
-  background: linear-gradient(90deg, rgba(10, 10, 10, 0.96) 0%, rgba(13, 13, 13, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-left: 2px solid transparent;
-  padding: 14px 18px;
-  margin-bottom: 10px;
-  border-radius: var(--apex-radius-sm);
-}
-
-.leaderboard-row:hover {
-  transform: translateX(8px);
-  border-left-color: var(--apex-primary);
-  border-top-color: rgba(204, 255, 0, 0.1);
-  border-bottom-color: rgba(204, 255, 0, 0.1);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.55),
-    0 0 20px rgba(204, 255, 0, 0.08);
-}
-
-.leaderboard-rank {
-  width: 34px;
-  height: 34px;
-  font-size: 0.8125rem;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.leaderboard-rank.gold {
-  box-shadow: 0 0 18px rgba(255, 213, 0, 0.45);
-}
-
-.leaderboard-name {
-  font-weight: 800;
-}
-
-.leaderboard-score {
-  padding: 6px 12px;
-  font-size: 0.9375rem;
-  background: rgba(204, 255, 0, 0.12);
-  border-color: rgba(204, 255, 0, 0.25);
-  box-shadow: 0 0 14px rgba(204, 255, 0, 0.1);
-}
-
-/* 个人成绩 */
-.personal-grid {
-  gap: 14px;
-}
-
-.personal-card {
-  background: linear-gradient(145deg, rgba(10, 10, 10, 0.96) 0%, rgba(14, 14, 14, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-top: 2px solid transparent;
-  padding: 20px 18px;
-  min-height: 120px;
-  border-radius: var(--apex-radius-sm);
-}
-
-.personal-card:hover {
-  transform: translateY(-6px) scale(1.015);
-  border-top-color: var(--apex-primary);
-  border-color: rgba(204, 255, 0, 0.2);
-  box-shadow:
-    0 16px 42px rgba(0, 0, 0, 0.6),
-    0 0 28px rgba(204, 255, 0, 0.1);
-}
-
-.personal-card::before {
-  opacity: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%);
-}
-
-.personal-card:hover::before {
-  opacity: 1;
-}
-
-.personal-card-icon {
-  width: 32px;
-  height: 32px;
-  font-size: 1rem;
-  background: rgba(204, 255, 0, 0.12);
-  border-color: rgba(204, 255, 0, 0.25);
-  box-shadow: 0 0 14px rgba(204, 255, 0, 0.1);
-}
-
-.personal-card-score {
-  font-size: 2rem;
-  text-shadow: 0 0 24px rgba(204, 255, 0, 0.35);
-}
-
-.personal-card-unit {
-  color: var(--apex-text-secondary);
-}
-
-/* 讨论区 */
-.forum-login-tip {
-  background: rgba(204, 255, 0, 0.05);
-  border: 1px solid rgba(204, 255, 0, 0.12);
-  border-left: 3px solid var(--apex-primary);
-  color: var(--apex-text-secondary);
-}
-
-.forum-input-wrap {
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.96) 0%, rgba(8, 8, 8, 0.96) 100%);
-  border: 1px solid rgba(204, 255, 0, 0.1);
-  border-radius: var(--apex-radius-sm);
-  padding: 20px;
-}
-
-.forum-category-select {
-  background: rgba(8, 8, 8, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
-  font-size: 0.6875rem;
-}
-
-.forum-input-wrap textarea {
-  background: rgba(6, 6, 6, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.forum-input-wrap textarea:focus {
-  background: rgba(6, 6, 6, 0.9);
-  border-color: var(--apex-border-strong);
-  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.1);
-}
-
-.forum-btn {
-  padding: 12px 24px;
-  font-size: 0.6875rem;
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.25);
-}
-
-.forum-filter-bar {
-  background: rgba(8, 8, 8, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.forum-filter-btn {
-  font-size: 0.6875rem;
-  padding: 8px 14px;
-}
-
-.forum-filter-btn:hover {
-  color: var(--apex-primary);
-}
-
-.forum-filter-btn.active {
-  box-shadow: 0 4px 14px rgba(204, 255, 0, 0.2);
-}
-
-.forum-item {
-  background: linear-gradient(90deg, rgba(10, 10, 10, 0.96) 0%, rgba(13, 13, 13, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-left: 3px solid transparent;
-  border-radius: var(--apex-radius-sm);
-  padding: 18px;
-}
-
-.forum-item:hover {
-  transform: translateX(8px);
-  border-left-color: var(--apex-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-.forum-item-avatar {
-  width: 44px;
-  height: 44px;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.forum-item-user {
-  font-size: 0.9375rem;
-}
-
-.forum-item-category {
-  font-size: 0.625rem;
-  padding: 4px 10px;
-}
-
-.forum-item-content {
-  font-size: 0.875rem;
-  line-height: 1.7;
-}
-
-.forum-empty {
-  background: rgba(255, 255, 255, 0.02);
-  border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* 反馈区 */
-.feedback-email-box {
-  background: linear-gradient(90deg, rgba(10, 10, 10, 0.96) 0%, rgba(13, 13, 13, 0.96) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-left: 3px solid var(--apex-primary);
-  border-radius: var(--apex-radius-sm);
-  padding: 20px 22px;
-}
-
-.feedback-email-box:hover {
-  transform: translateX(8px);
-  border-color: rgba(204, 255, 0, 0.2);
-  border-left-color: var(--apex-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-.feedback-email-icon {
-  width: 48px;
-  height: 48px;
-  font-size: 1.375rem;
-  box-shadow: 0 0 20px rgba(204, 255, 0, 0.3);
-}
-
-.feedback-form input,
-.feedback-form textarea {
-  background: rgba(6, 6, 6, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.feedback-form input:focus,
-.feedback-form textarea:focus {
-  background: rgba(6, 6, 6, 0.9);
-  border-color: var(--apex-border-strong);
-  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.1);
-}
-
-.feedback-submit {
-  padding: 14px 28px;
-  font-size: 0.8125rem;
-  box-shadow: 0 6px 22px rgba(204, 255, 0, 0.28);
-}
-
-/* 登录弹窗 HUD 终极版 */
-.apex-login-card.apex-login-card--hud {
-  background:
-    radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.06) 0%, transparent 40%),
-    linear-gradient(180deg, rgba(14, 14, 14, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
-  border: 1px solid rgba(204, 255, 0, 0.3);
-  clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px));
-  box-shadow:
-    0 40px 100px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(204, 255, 0, 0.08),
-    inset 0 0 60px rgba(204, 255, 0, 0.04),
-    0 0 80px rgba(204, 255, 0, 0.1);
-}
-
-.apex-login-card.apex-login-card--hud::before {
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 20%, var(--apex-accent-cyan) 50%, var(--apex-primary) 80%, transparent 100%);
-  box-shadow: 0 0 20px rgba(204, 255, 0, 0.5);
-}
-
-.apex-login-card.apex-login-card--hud::after {
-  height: 200px;
-  background: linear-gradient(180deg, rgba(204, 255, 0, 0.08) 0%, transparent 100%);
-}
-
-.apex-login-header {
-  margin-bottom: 30px;
-}
-
-.apex-login-logo {
-  font-size: 28px;
-  letter-spacing: 5px;
-  text-shadow: 0 0 24px rgba(204, 255, 0, 0.25);
-}
-
-.apex-login-subtitle {
-  color: var(--apex-text-secondary);
-  font-size: 0.6875rem;
-}
-
-.apex-login-tabs {
-  background: rgba(6, 6, 6, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 5px;
-}
-
-.apex-login-tab {
-  font-size: 0.8125rem;
-  padding: 11px;
-}
-
-.apex-login-tab.active {
-  box-shadow: 0 4px 16px rgba(204, 255, 0, 0.25);
-}
-
-.apex-login-body input {
-  background: rgba(5, 5, 5, 0.75);
-  border-color: rgba(255, 255, 255, 0.1);
-  padding: 14px 16px;
-}
-
-.apex-login-body input:focus {
-  border-color: var(--apex-border-strong);
-  background: rgba(5, 5, 5, 0.95);
-  box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.12);
-}
-
-.apex-login-submit {
-  padding: 15px;
-  font-size: 0.875rem;
-  box-shadow: 0 8px 26px rgba(204, 255, 0, 0.32);
-}
-
-.apex-login-submit:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 34px rgba(204, 255, 0, 0.42);
-}
-
-.apex-login-corners span {
-  width: 26px;
-  height: 26px;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 8px rgba(204, 255, 0, 0.45));
-}
-
-.apex-login-scanline {
-  background: linear-gradient(180deg, transparent, rgba(204, 255, 0, 0.55), transparent);
-  box-shadow: 0 0 22px rgba(204, 255, 0, 0.5);
-}
-
-/* 全局响应式细节 */
-@media (max-width: 480px) {
-  .leaderboard,
-  .personal-stats,
-  .forum-section,
-  .feedback-section {
-    padding: 22px 18px;
-    clip-path: polygon(
-      0 16px,
-      16px 0,
-      calc(100% - 16px) 0,
-      100% 16px,
-      100% calc(100% - 16px),
-      calc(100% - 16px) 100%,
-      16px 100%,
-      0 calc(100% - 16px)
-    );
-  }
-
-  .hud-corners::before,
-  .hud-corners::after {
-    width: 22px;
-    height: 22px;
-  }
-
-  .leaderboard > .hud-corners,
-  .personal-stats > .hud-corners,
-  .forum-section > .hud-corners,
-  .feedback-section > .hud-corners {
-    --corner-size: 22px;
-    --corner-offset: 14px;
-  }
-
-  .leaderboard-title,
-  .personal-stats-title,
-  .forum-title,
-  .feedback-title {
-    font-size: 0.9375rem;
-  }
-
-  .hud-title__index {
-    min-width: 32px;
-    height: 24px;
-    font-size: 0.6875rem;
-  }
-
-  .leaderboard-tab {
-    padding: 7px 10px;
-    font-size: 0.625rem;
-  }
-
-  .personal-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .forum-item {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .forum-item-header {
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .forum-item-time {
-    margin-left: 0;
-  }
-}
-
-/* 减少动画偏好 */
-@media (prefers-reduced-motion: reduce) {
-  .hud-scanline,
-  .leaderboard,
-  .personal-stats,
-  .forum-section,
-  .feedback-section {
-    animation: none;
-  }
+  background: linear-gradient(135deg, #7c6bc4 0%, #9b8fd4 100%) !important;
 }

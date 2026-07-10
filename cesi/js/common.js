@@ -955,156 +955,124 @@
       const style = document.createElement('style');
       style.id = 'apex-auth-styles';
       style.textContent = `
-        .apex-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--apex-surface); color: var(--apex-text); padding: 10px 18px; border-radius: var(--apex-radius-sm); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 1px solid var(--apex-border); z-index: 2000; }
+        .apex-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--apex-surface); color: var(--apex-text); padding: 10px 18px; border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid var(--apex-border-subtle); z-index: 2000; }
         .apex-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .apex-user-menu { display: flex; align-items: center; margin-left: 12px; position: relative; }
         .apex-login-btn {
-          border: none; border-radius: var(--apex-radius-sm); padding: 7px 16px; font-size: 12px; font-weight: 800;
-          color: var(--apex-text-inverse); cursor: pointer; background: var(--apex-primary);
-          box-shadow: 0 4px 14px rgba(204, 255, 0, 0.25); transition: transform .15s ease, box-shadow .15s ease;
-          text-transform: uppercase; letter-spacing: 0.06em;
+          border: none; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600;
+          color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%);
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease;
         }
-        .apex-login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(204, 255, 0, 0.35); }
+        .apex-login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
         .apex-user-bar {
           display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 6px;
-          border-radius: var(--apex-radius-sm); background: var(--apex-bg-elevated); border: 1px solid var(--apex-border-subtle);
-          cursor: pointer; transition: background .15s ease, box-shadow .15s ease, border-color .15s ease; user-select: none;
+          border-radius: 24px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);
+          cursor: pointer; transition: background .15s ease, box-shadow .15s ease; user-select: none;
         }
-        .apex-user-bar:hover { background: var(--apex-surface-elevated); border-color: var(--apex-border); box-shadow: var(--apex-shadow-md); }
+        .apex-user-bar:hover { background: rgba(124, 58, 237, 0.16); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15); }
         .apex-avatar-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
-        .apex-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--apex-bg); border: 1px solid var(--apex-border); display: flex; align-items: center; justify-content: center; }
+        .apex-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; }
         .apex-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .apex-avatar svg { width: 22px; height: 22px; }
         .apex-mini-icon { width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .apex-mini-icon svg { width: 100%; height: 100%; }
-        .apex-user-name { font-size: 13px; font-weight: 700; color: var(--apex-text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .apex-user-name { font-size: 13px; font-weight: 600; color: var(--apex-text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .apex-user-caret { font-size: 10px; color: var(--apex-text-secondary); margin-left: 2px; }
         .apex-user-dropdown {
           position: absolute; top: calc(100% + 8px); right: 0; min-width: 150px;
-          background: var(--apex-surface); border: 1px solid var(--apex-border);
-          border-radius: var(--apex-radius-sm); box-shadow: 0 12px 32px rgba(0,0,0,0.5); padding: 6px;
+          background: var(--apex-surface); border: 1px solid var(--apex-border-subtle);
+          border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); padding: 6px;
           opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .2s ease, transform .2s ease; z-index: 1001;
         }
         .apex-user-dropdown.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .apex-user-dropdown button {
-          width: 100%; text-align: left; padding: 10px 14px; border: none; border-radius: var(--apex-radius-sm);
+          width: 100%; text-align: left; padding: 10px 14px; border: none; border-radius: 10px;
           background: transparent; color: var(--apex-text); font-size: 13px; cursor: pointer;
           transition: background .15s ease;
         }
-        .apex-user-dropdown button:hover { background: rgba(204, 255, 0, 0.1); }
-        .apex-user-dropdown button.danger { color: var(--apex-danger); }
-        .apex-user-dropdown button.danger:hover { background: rgba(255, 51, 102, 0.1); }
+        .apex-user-dropdown button:hover { background: rgba(124, 58, 237, 0.1); }
+        .apex-user-dropdown button.danger { color: #ef4444; }
+        .apex-user-dropdown button.danger:hover { background: rgba(239, 68, 68, 0.1); }
         .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-login-modal.show { opacity: 1; pointer-events: auto; }
-        .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); }
-        .apex-login-card { position: relative; width: 92%; max-width: 420px; border-radius: var(--apex-radius); padding: 32px 28px 28px; background: var(--apex-surface); border: 1px solid var(--apex-border-subtle); box-shadow: 0 32px 80px rgba(0,0,0,0.85); overflow: hidden; transform: translateY(20px) scale(0.96); transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color .3s ease; }
-        .apex-login-modal.show .apex-login-card { transform: translateY(0) scale(1); border-color: var(--apex-border); }
-        .apex-login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%); }
-        .apex-login-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 120px; background: linear-gradient(180deg, rgba(204,255,0,0.04) 0%, transparent 100%); pointer-events: none; }
-        .apex-login-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: none; border-radius: var(--apex-radius-sm); background: transparent; color: var(--apex-text-secondary); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s ease; }
-        .apex-login-close:hover { background: rgba(204, 255, 0, 0.1); color: var(--apex-primary); transform: rotate(90deg); }
-        .apex-login-header { text-align: center; margin-bottom: 24px; position: relative; }
-        .apex-login-logo { font-size: 24px; font-weight: 900; letter-spacing: 3px; color: var(--apex-text); font-family: var(--font-display); }
-        .apex-login-logo span { color: var(--apex-primary); }
-        .apex-login-subtitle { font-size: 12px; color: var(--apex-text-secondary); margin-top: 8px; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.06em; }
-        .apex-login-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--apex-bg-elevated); border-radius: var(--apex-radius-sm); padding: 4px; position: relative; border: 1px solid var(--apex-border-subtle); }
-        .apex-login-tab { flex: 1; border: none; border-radius: var(--apex-radius-sm); padding: 10px; font-size: 13px; font-weight: 800; color: var(--apex-text-secondary); background: transparent; cursor: pointer; transition: all .2s ease; text-transform: uppercase; letter-spacing: 0.04em; }
-        .apex-login-tab:hover { color: var(--apex-text); }
-        .apex-login-tab.active { background: var(--apex-primary); color: var(--apex-text-inverse); }
-        .apex-login-body { display: flex; flex-direction: column; gap: 10px; position: relative; }
-        .apex-login-body input { width: 100%; box-sizing: border-box; padding: 13px 16px; border-radius: var(--apex-radius-sm); border: 1px solid var(--apex-border-subtle); background: var(--apex-bg-elevated); color: var(--apex-text); font-size: 14px; outline: none; transition: all .15s ease; }
-        .apex-login-body input:focus { border-color: var(--apex-border-strong); background: var(--apex-surface-elevated); box-shadow: var(--focus-ring); }
-        .apex-login-error { min-height: 20px; font-size: 13px; color: var(--apex-danger); text-align: center; font-weight: 700; }
-        .apex-login-submit { width: 100%; padding: 14px; border: none; border-radius: var(--apex-radius-sm); font-size: 14px; font-weight: 900; color: var(--apex-text-inverse); cursor: pointer; background: var(--apex-primary); box-shadow: 0 4px 16px rgba(204, 255, 0, 0.25); transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
-        .apex-login-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(204, 255, 0, 0.35); filter: brightness(1.05); }
-        .apex-login-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; filter: none; }
-        .apex-login-card.apex-login-card--hud { background: linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(10,10,10,0.98) 100%); border: 1px solid rgba(204,255,0,0.22); clip-path: polygon(0 14px, 14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px)); box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(204,255,0,0.06), inset 0 0 40px rgba(204,255,0,0.03); }
-        .apex-login-card.apex-login-card--hud::before { height: 2px; background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 25%, var(--apex-accent-cyan) 75%, transparent 100%); opacity: 1; }
-        .apex-login-card.apex-login-card--hud::after { height: 160px; background: linear-gradient(180deg, rgba(204,255,0,0.06) 0%, transparent 100%); }
-        .apex-login-card--error { animation: apexLoginShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-        @keyframes apexLoginShake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); } }
-        .apex-login-corners { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-        .apex-login-corners span { position: absolute; width: 18px; height: 18px; border-color: var(--apex-primary); border-style: solid; opacity: 0.7; }
-        .apex-login-corners span:first-child { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
-        .apex-login-corners span:last-child { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
-        .apex-login-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(204,255,0,0.6); box-shadow: 0 0 12px rgba(204,255,0,0.5); opacity: 0; z-index: 2; pointer-events: none; animation: apexScanMove 2.8s linear infinite; }
-        @keyframes apexScanMove { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-        .apex-login-cursor { animation: apexCursorBlink 1s step-end infinite; }
-        @keyframes apexCursorBlink { 50% { opacity: 0; } }
-        .apex-login-subtitle { font-family: var(--font-mono); }
-        .apex-login-tab { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .apex-login-tab-num { font-family: var(--font-mono); font-size: 10px; opacity: 0.6; }
-        .apex-login-tab.active .apex-login-tab-num { opacity: 1; color: var(--apex-text-inverse); }
-        .apex-field { display: flex; flex-direction: column; gap: 6px; }
-        .apex-field label { font-size: 11px; font-weight: 800; color: var(--apex-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 6px; }
-        .apex-field-icon { color: var(--apex-primary); font-size: 10px; }
-        .apex-login-body input { padding: 13px 16px; border: 1px solid rgba(255,255,255,0.1); background: rgba(8,8,8,0.65); }
-        .apex-login-body input:focus { border-color: var(--apex-border-strong); background: rgba(8,8,8,0.9); box-shadow: 0 0 0 2px rgba(204,255,0,0.12); }
-        .apex-login-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; position: relative; overflow: hidden; }
-        .apex-login-submit span { position: relative; z-index: 1; }
-        .apex-login-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); transform: translateX(-100%); transition: transform 0s; }
-        .apex-login-submit:hover::before { transform: translateX(100%); transition: transform 0.6s ease; }
-        .apex-spinner { width: 14px; height: 14px; border: 2px solid rgba(8,8,8,0.3); border-top-color: var(--apex-text-inverse); border-radius: 50%; animation: apexSpin 0.8s linear infinite; }
-        @keyframes apexSpin { to { transform: rotate(360deg); } }
+        .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
+        .apex-login-card { position: relative; width: 92%; max-width: 360px; border-radius: 20px; padding: 28px 24px 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; transform: translateY(12px); transition: transform .25s ease; }
+        .apex-login-modal.show .apex-login-card { transform: translateY(0); }
+        .apex-login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
+        .apex-login-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
+        .apex-login-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
+        .apex-login-header { text-align: center; margin-bottom: 20px; }
+        .apex-login-logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .apex-login-subtitle { font-size: 13px; color: var(--apex-text-secondary); margin-top: 4px; }
+        .apex-login-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(124, 58, 237, 0.08); border-radius: 12px; padding: 4px; }
+        .apex-login-tab { flex: 1; border: none; border-radius: 10px; padding: 8px; font-size: 13px; font-weight: 600; color: var(--apex-text-secondary); background: transparent; cursor: pointer; }
+        .apex-login-tab.active { background: var(--apex-surface); color: #7C3AED; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .apex-login-body { display: flex; flex-direction: column; gap: 12px; }
+        .apex-login-body input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; }
+        .apex-login-body input:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
+        .apex-login-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; }
+        .apex-login-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
+        .apex-login-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
+        .apex-login-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
         .apex-password-wrap { position: relative; }
-        .apex-password-wrap input { padding-right: 44px; }
+        .apex-password-wrap input { padding-right: 40px; }
         .apex-password-toggle {
-          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-          width: 32px; height: 32px; border: none; border-radius: var(--apex-radius-sm); background: transparent;
-          color: var(--apex-text-secondary); font-size: 12px; font-weight: 700; cursor: pointer; display: flex;
-          align-items: center; justify-content: center; transition: all .15s ease;
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+          width: 28px; height: 28px; border: none; border-radius: 8px; background: transparent;
+          color: var(--apex-text-secondary); font-size: 13px; cursor: pointer; display: flex;
+          align-items: center; justify-content: center;
         }
-        .apex-password-toggle:hover { background: rgba(204, 255, 0, 0.1); color: var(--apex-primary); }
+        .apex-password-toggle:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
         .apex-remember {
-          display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--apex-text-secondary);
-          cursor: pointer; user-select: none; margin-top: 2px;
+          display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--apex-text-secondary);
+          cursor: pointer; user-select: none;
         }
-        .apex-remember input { width: 16px; height: 16px; accent-color: var(--apex-primary); cursor: pointer; }
-        .apex-hint { font-size: 11px; color: var(--apex-text-tertiary); min-height: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
-        .apex-hint.invalid { color: var(--apex-danger); }
-        .apex-hint.valid { color: var(--apex-success); }
+        .apex-remember input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; }
+        .apex-hint { font-size: 12px; color: var(--apex-text-tertiary); min-height: 16px; }
+        .apex-hint.invalid { color: #ef4444; }
+        .apex-hint.valid { color: #10b981; }
         .apex-gender-group { margin-bottom: 12px; }
-        .apex-gender-label { font-size: 11px; color: var(--apex-text-secondary); margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+        .apex-gender-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 6px; }
         .apex-gender-options { display: flex; gap: 8px; }
         .apex-gender-option { flex: 1; position: relative; cursor: pointer; }
         .apex-gender-option input { position: absolute; opacity: 0; width: 0; height: 0; }
-        .apex-gender-option span { display: block; text-align: center; padding: 11px 4px; border-radius: var(--apex-radius-sm); border: 1px solid var(--apex-border-subtle); background: var(--apex-bg-elevated); color: var(--apex-text); font-size: 13px; font-weight: 700; transition: all .15s ease; }
-        .apex-gender-option input:checked + span { border-color: var(--apex-border-strong); background: rgba(204, 255, 0, 0.1); color: var(--apex-primary); box-shadow: 0 0 0 1px var(--apex-border); }
-        .apex-gender-tip { font-size: 11px; color: var(--apex-text-tertiary); margin-top: 8px; line-height: 1.5; }
-        .apex-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--apex-text-secondary); cursor: pointer; user-select: none; margin-bottom: 12px; margin-top: 2px; }
-        .apex-terms input { width: 16px; height: 16px; accent-color: var(--apex-primary); cursor: pointer; margin-top: 2px; flex-shrink: 0; }
-        .apex-terms a { color: var(--apex-primary); text-decoration: none; font-weight: 700; }
+        .apex-gender-option span { display: block; text-align: center; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 13px; transition: all .15s ease; }
+        .apex-gender-option input:checked + span { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.18); color: #7C3AED; font-weight: 600; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15); }
+        .apex-gender-tip { font-size: 12px; color: var(--apex-text-tertiary); margin-top: 6px; line-height: 1.4; }
+        .apex-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--apex-text-secondary); cursor: pointer; user-select: none; margin-bottom: 12px; }
+        .apex-terms input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; margin-top: 2px; flex-shrink: 0; }
+        .apex-terms a { color: #8B5CF6; text-decoration: none; }
         .apex-terms a:hover { text-decoration: underline; }
         .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-profile-modal.show { opacity: 1; pointer-events: auto; }
-        .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); }
-        .apex-profile-card { position: relative; width: 92%; max-width: 420px; max-height: 86vh; overflow-y: auto; border-radius: var(--apex-radius); padding: 26px; background: var(--apex-surface); border: 1px solid var(--apex-border-subtle); box-shadow: 0 32px 80px rgba(0,0,0,0.85); transform: translateY(16px); transition: transform .25s ease, border-color .25s ease; }
-        .apex-profile-modal.show .apex-profile-card { transform: translateY(0); border-color: var(--apex-border); }
-        .apex-profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%); }
-        .apex-profile-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border: none; border-radius: var(--apex-radius-sm); background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s ease; }
-        .apex-profile-close:hover { background: rgba(204, 255, 0, 0.1); color: var(--apex-primary); }
+        .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
+        .apex-profile-card { position: relative; width: 92%; max-width: 400px; max-height: 86vh; overflow-y: auto; border-radius: 20px; padding: 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: translateY(12px); transition: transform .25s ease; }
+        .apex-profile-modal.show .apex-profile-card { transform: translateY(0); }
+        .apex-profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
+        .apex-profile-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
+        .apex-profile-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
         .apex-profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-        .apex-profile-avatar { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: var(--apex-bg); border: 2px solid var(--apex-border); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .apex-profile-avatar { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
         .apex-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .apex-profile-avatar svg { width: 44px; height: 44px; }
-        .apex-profile-name { font-size: 18px; font-weight: 800; color: var(--apex-text); font-family: var(--font-display); }
+        .apex-profile-name { font-size: 18px; font-weight: 700; color: var(--apex-text); }
         .apex-profile-section { margin-bottom: 16px; }
-        .apex-profile-label { font-size: 11px; color: var(--apex-text-secondary); margin-bottom: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+        .apex-profile-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 4px; }
         .apex-profile-value { font-size: 14px; color: var(--apex-text); word-break: break-word; }
-        .apex-profile-value a { color: var(--apex-primary); text-decoration: none; }
+        .apex-profile-value a { color: #8B5CF6; text-decoration: none; }
         .apex-profile-value a:hover { text-decoration: underline; }
-        .apex-profile-body input, .apex-profile-body textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: var(--apex-radius-sm); border: 1px solid var(--apex-border-subtle); background: var(--apex-bg-elevated); color: var(--apex-text); font-size: 14px; outline: none; margin-bottom: 12px; transition: all .15s ease; }
-        .apex-profile-body input:focus, .apex-profile-body textarea:focus { border-color: var(--apex-border-strong); background: var(--apex-surface-elevated); box-shadow: var(--focus-ring); }
+        .apex-profile-body input, .apex-profile-body textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; margin-bottom: 12px; }
+        .apex-profile-body input:focus, .apex-profile-body textarea:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
         .apex-profile-body textarea { resize: vertical; min-height: 80px; font-family: inherit; }
         .apex-avatar-upload { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px; }
         .apex-avatar-upload input { display: none; }
         .apex-avatar-upload-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .apex-avatar-upload-text { font-size: 12px; color: var(--apex-text-secondary); }
-        .apex-profile-submit { width: 100%; padding: 13px; border: none; border-radius: var(--apex-radius-sm); font-size: 13px; font-weight: 900; color: var(--apex-text-inverse); cursor: pointer; background: var(--apex-primary); box-shadow: 0 4px 16px rgba(204, 255, 0, 0.25); transition: transform .15s ease, box-shadow .15s ease; text-transform: uppercase; letter-spacing: 0.06em; }
-        .apex-profile-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(204, 255, 0, 0.35); }
-        .apex-profile-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-        .apex-profile-error { min-height: 18px; font-size: 12px; color: var(--apex-danger); text-align: center; margin-top: -4px; margin-bottom: 8px; }
-        .leaderboard-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: var(--apex-bg); border: 1px solid var(--apex-border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-right: 10px; }
+        .apex-profile-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
+        .apex-profile-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
+        .apex-profile-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .apex-profile-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; margin-top: -4px; margin-bottom: 8px; }
+        .leaderboard-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-right: 10px; }
         .leaderboard-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .leaderboard-avatar svg { width: 18px; height: 18px; }
         @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } .apex-profile-card { padding: 20px; } }
@@ -1138,7 +1106,7 @@
       const userId = APEXON.Auth.getUserId();
 
       if (menu) {
-        const miniIcon = '<svg viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(204,255,0,0.35));"><defs><linearGradient id="miniGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ccff00"/><stop offset="100%" stop-color="#00f0ff"/></linearGradient></defs><path d="M12 2l10 6-10 6L2 8l10-6z" fill="url(#miniGrad)"/></svg>';
+        const miniIcon = '<svg viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(124,58,237,0.3));"><defs><linearGradient id="miniGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#60A5FA"/></linearGradient></defs><path d="M12 2l10 6-10 6L2 8l10-6z" fill="url(#miniGrad)"/></svg>';
         if (!isLoggedIn) {
           menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="login">登录 / 注册</button></div>';
         } else {
@@ -1380,58 +1348,9 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = `
-        <div class="apex-login-backdrop"></div>
-        <div class="apex-login-card apex-login-card--hud">
-          <div class="apex-login-corners" aria-hidden="true"><span></span><span></span></div>
-          <div class="apex-login-scanline" aria-hidden="true"></div>
-          <button class="apex-login-close" id="apexLoginClose" type="button">×</button>
-          <div class="apex-login-header">
-            <div class="apex-login-logo">APEX<span>ON</span></div>
-            <div class="apex-login-subtitle"><span class="apex-login-cursor">_</span> 身份验证系统 // 游客模式可正常使用</div>
-          </div>
-          <div class="apex-login-tabs">
-            <button class="apex-login-tab active" data-tab="login"><span class="apex-login-tab-num">01</span> 登录</button>
-            <button class="apex-login-tab" data-tab="register"><span class="apex-login-tab-num">02</span> 注册</button>
-          </div>
-          <div class="apex-login-body">
-            <div class="apex-field">
-              <label for="apexLoginUsername"><span class="apex-field-icon">◈</span> 用户名 // USERNAME</label>
-              <input type="text" id="apexLoginUsername" placeholder="输入用户名" maxlength="30" autocomplete="username">
-            </div>
-            <div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div>
-            <div class="apex-field apex-password-wrap">
-              <label for="apexLoginPassword"><span class="apex-field-icon">◉</span> 密码 // PASSWORD</label>
-              <input type="password" id="apexLoginPassword" placeholder="输入密码" maxlength="64" autocomplete="current-password">
-              <button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button>
-            </div>
-            <div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div>
-            <div class="apex-field apex-password-wrap" id="apexConfirmWrap" style="display:none;">
-              <label for="apexConfirmPassword"><span class="apex-field-icon">◉</span> 确认密码 // CONFIRM</label>
-              <input type="password" id="apexConfirmPassword" placeholder="再次输入密码" maxlength="64" autocomplete="new-password">
-            </div>
-            <div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div>
-            <div class="apex-gender-group" id="apexGenderGroup" style="display:none;">
-              <div class="apex-gender-label">性别 // GENDER</div>
-              <div class="apex-gender-options">
-                <label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label>
-                <label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label>
-                <label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label>
-              </div>
-              <div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div>
-            </div>
-            <label class="apex-terms" id="apexTermsGroup" style="display:none;">
-              <input type="checkbox" id="apexTerms">
-              <span>我已阅读并同意 <a href="terms.html" target="_blank">服务条款</a> 和 <a href="privacy.html" target="_blank">隐私政策</a></span>
-            </label>
-            <label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label>
-            <div class="apex-login-error" id="apexLoginError"></div>
-            <button class="apex-login-submit" id="apexLoginSubmit" type="button"><span>登录</span></button>
-          </div>
-        </div>`;
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="确认密码" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>我已阅读并同意 <a href="terms.html" target="_blank">服务条款</a> 和 <a href="privacy.html" target="_blank">隐私政策</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
       document.body.appendChild(modal);
 
-      const card = modal.querySelector('.apex-login-card');
       const tabs = modal.querySelectorAll('.apex-login-tab');
       const submitBtn = modal.querySelector('#apexLoginSubmit');
       const errorEl = modal.querySelector('#apexLoginError');
@@ -1452,9 +1371,8 @@
       const setMode = (m) => {
         mode = m;
         tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === m));
-        submitBtn.innerHTML = '<span>' + (m === 'login' ? '登录' : '注册') + '</span>';
+        submitBtn.textContent = m === 'login' ? '登录' : '注册';
         errorEl.textContent = '';
-        card.classList.remove('apex-login-card--error');
         const isRegister = m === 'register';
         confirmWrap.style.display = isRegister ? 'block' : 'none';
         confirmHint.style.display = isRegister ? 'block' : 'none';
@@ -1514,10 +1432,8 @@
         const p = passwordInput.value;
         if (submitBtn.disabled) return;
         submitBtn.disabled = true;
-        const originalText = mode === 'login' ? '登录' : '注册';
-        submitBtn.innerHTML = '<span class="apex-spinner"></span><span>处理中...</span>';
+        submitBtn.textContent = '处理中...';
         errorEl.textContent = '';
-        card.classList.remove('apex-login-card--error');
         const result = mode === 'login'
           ? await APEXON.Auth.login(u, p, rememberMe.checked)
           : await APEXON.Auth.register(u, p, rememberMe.checked, getGender());
@@ -1528,10 +1444,8 @@
           this.toast(mode === 'login' ? '登录成功' : '注册成功');
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
         } else {
-          submitBtn.innerHTML = '<span>' + originalText + '</span>';
+          submitBtn.textContent = mode === 'login' ? '登录' : '注册';
           errorEl.textContent = result.error || '操作失败';
-          card.classList.add('apex-login-card--error');
-          setTimeout(() => card.classList.remove('apex-login-card--error'), 520);
         }
       };
 
@@ -1561,10 +1475,10 @@
   const ParticleSystem = {
     defaults: {
       selector: 'particles',
-      // HUD 配色：酸橙绿 / 电青 / 高对比白
-      darkPalette: ['#ccff00', '#00f0ff', '#e5ff4d', '#a8d600', '#66f0ff', '#ffffff'],
-      // 白色背景下使用深炭黑 / 酸橙暗色 / 电青深色
-      lightPalette: ['#1a1a1a', '#3d4d00', '#00666d', '#0088a8', '#000000', '#333333'],
+      // 科技感冷色：青、蓝、紫、白
+      darkPalette: ['#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e2e8f0'],
+      // 白色背景下使用高饱和、高对比的亮蓝/电紫/深靛，避免发灰
+      lightPalette: ['#0066ff', '#0088ff', '#6d28ff', '#4f46e5', '#0891b2', '#1e1b4b', '#0f172a'],
       baseCount: 44,
       mobileCount: 24,
       connectionDistance: 130,
