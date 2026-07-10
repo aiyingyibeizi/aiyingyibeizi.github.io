@@ -148,10 +148,6 @@
         }
 
         function renderHistory() {
-            if (!APEXON.Auth.isLoggedIn()) {
-                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
-                return;
-            }
             APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'visual', 5).then(history => {
                 const esc = APEXON.Security.escapeHtml;
                 if (!history.length) {
@@ -236,11 +232,9 @@
             const grade = APEXON.Utils.getGrade(score, 'visual');
             result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">通过第 ' + score + ' 关</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">关卡</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
 
-            if (APEXON.Auth.isLoggedIn()) {
-                APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'visual', { score: score }).then(saved => {
-                    if (!saved) APEXON.UI.toast('数据保存失败，请重试');
-                });
-            }
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'visual', { score: score }).then(saved => {
+                if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+            });
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
         }

@@ -140,7 +140,7 @@
           console.log('[saveScore] not better than current best, skipped');
           return true;
         }
-        await this.deleteScore(history[0].id);
+        await this.deleteScore(history[0].id, userId);
       }
 
       const result = await this.request('scores', 'POST', {
@@ -157,9 +157,10 @@
       return !!result;
     },
 
-    async deleteScore(id) {
+    async deleteScore(id, userId) {
       if (!id) return false;
-      const result = await this.request('scores', 'DELETE', null, `id=eq.${id}`);
+      const extraHeaders = userId ? { 'x-user-id': userId } : undefined;
+      const result = await this.request('scores', 'DELETE', null, `id=eq.${id}`, extraHeaders);
       return !!result;
     },
 
@@ -344,9 +345,17 @@
   // ===== 2. 认证 =====
   const Auth = {
     currentUser: null,
+    anonId: null,
     SESSION_DAYS: 7,
 
     init() {
+      let anonId = localStorage.getItem('apexon-anon-id');
+      if (!anonId) {
+        anonId = this._generateAnonId();
+        localStorage.setItem('apexon-anon-id', anonId);
+      }
+      this.anonId = anonId;
+
       const saved = localStorage.getItem('apexon-session');
       if (!saved) return;
       try {
@@ -366,7 +375,7 @@
     },
 
     async validateSession() {
-      if (!this.currentUser) return false;
+      if (!this.currentUser) return true;
       const username = this.currentUser.username;
       const token = this.currentUser.token;
       const nowIso = new Date().toISOString();
@@ -382,23 +391,62 @@
         return true;
       }
       this._clearSession();
-      return false;
+      return true;
     },
 
     isLoggedIn() {
       return !!this.currentUser && !!this.currentUser.username && Date.now() < (this.currentUser.expiresAt || 0);
     },
 
+    isAnonymous() {
+      return !this.isLoggedIn();
+    },
+
     getUser() {
-      return this.currentUser ? this.currentUser.username : null;
+      if (this.currentUser) return this.currentUser.username;
+      return '游客 ' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
     },
 
     getUserId() {
-      return this.currentUser ? this.currentUser.username : null;
+      return this.currentUser ? this.currentUser.username : this.anonId;
     },
 
     getToken() {
       return this.currentUser ? this.currentUser.token : null;
+    },
+
+    async mergeAnonymousData() {
+      if (!this.currentUser || !this.anonId) return;
+      const anonId = this.anonId;
+      const username = this.currentUser.username;
+      const token = this.currentUser.token;
+
+      await DB.request(
+        'scores',
+        'PATCH',
+        { user_id: username, username: username },
+        `user_id=eq.${encodeURIComponent(anonId)}`,
+        { 'x-anon-id': anonId, 'x-username': username, 'x-token': token }
+      ).catch(e => console.error('[merge] scores failed:', e));
+
+      await DB.request(
+        'comments',
+        'PATCH',
+        { user_id: username, username: username },
+        `user_id=eq.${encodeURIComponent(anonId)}`,
+        { 'x-anon-id': anonId, 'x-username': username, 'x-token': token }
+      ).catch(e => console.error('[merge] comments failed:', e));
+
+      const newAnonId = this._generateAnonId();
+      localStorage.setItem('apexon-anon-id', newAnonId);
+      this.anonId = newAnonId;
+    },
+
+    _generateAnonId() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return 'anon_' + crypto.randomUUID();
+      }
+      return 'anon_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
     },
 
     _validateUsername(u) {
@@ -442,6 +490,7 @@
       if (!result) return { success: false, error: '注册失败，请重试' };
 
       this._setSession(u, token, expiresAt);
+      await this.mergeAnonymousData();
       return { success: true };
     },
 
@@ -472,6 +521,7 @@
       if (!updateResult) return { success: false, error: '登录失败，请重试' };
 
       this._setSession(u, token, expiresAt);
+      await this.mergeAnonymousData();
       return { success: true };
     },
 
@@ -785,14 +835,18 @@
       const forumInput = document.getElementById('forumInputWrap');
       const personalContent = document.getElementById('personalContent');
 
-      if (!APEXON.Auth.isLoggedIn()) {
+      const isLoggedIn = APEXON.Auth.isLoggedIn();
+      if (!isLoggedIn) {
         if (menu) {
-          menu.innerHTML = '<button class="apex-login-btn" id="apexLoginBtn">登录</button>';
+          menu.innerHTML = '<button class="apex-login-btn" id="apexLoginBtn">登录 / 注册</button>';
           menu.querySelector('#apexLoginBtn').addEventListener('click', () => this.showLoginModal());
         }
-        if (forumTip) forumTip.style.display = 'block';
-        if (forumInput) forumInput.style.display = 'none';
-        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">登录后查看个人成绩</div>';
+        if (forumTip) {
+          forumTip.style.display = 'block';
+          forumTip.textContent = '当前为游客模式，登录/注册后可将数据合并到账号';
+        }
+        if (forumInput) forumInput.style.display = 'flex';
+        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式的成绩也会被保存，登录后自动合并</div>';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
@@ -1644,10 +1698,6 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
-          if (!APEXON.Auth.isLoggedIn()) {
-            historyContent.innerHTML = '<div class="forum-empty">暂无记录</div>';
-            return;
-          }
           try {
             const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'type', 5);
             if (!history.length) {
@@ -1701,10 +1751,8 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均用时 ' + avgTime + ' 秒 · 正确率 ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">WPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">CPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">平均用时</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">正确率</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
           }
 
-          if (APEXON.Auth.isLoggedIn()) {
-            const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
-            if (!saved) UI.toast('数据保存失败，请重试');
-          }
+          const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
+          if (!saved) UI.toast('数据保存失败，请重试');
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -1809,10 +1857,6 @@
 
         const renderHistory = async () => {
           if (!historyContent) return;
-          if (!APEXON.Auth.isLoggedIn()) {
-            historyContent.innerHTML = '<div class="forum-empty">暂无记录</div>';
-            return;
-          }
           try {
             const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'reaction', 5);
             if (!history.length) {
@@ -1858,10 +1902,8 @@
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均反应时间 ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
           }
 
-          if (APEXON.Auth.isLoggedIn()) {
-            const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
-            if (!saved) UI.toast('数据保存失败，请重试');
-          }
+          const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
+          if (!saved) UI.toast('数据保存失败，请重试');
 
           AudioManager.playSuccess();
           Utils.vibrate(30);

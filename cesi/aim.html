@@ -137,10 +137,6 @@
         function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
 
         function renderHistory() {
-            if (!APEXON.Auth.isLoggedIn()) {
-                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">登录后同步云端记录</div>';
-                return;
-            }
             APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'aim', 5).then(history => {
                 const esc = APEXON.Security.escapeHtml;
                 if (!history.length) {
@@ -196,11 +192,9 @@
             const grade = APEXON.Utils.getGrade(avgMs, 'aim');
             result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均每点 ' + avgMs + ' ms</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgMs + '</div><div class="score-detail-label">平均耗时</div></div><div class="score-detail-item"><div class="score-detail-value">' + TOTAL_TARGETS + '</div><div class="score-detail-label">目标数</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
 
-            if (APEXON.Auth.isLoggedIn()) {
-                APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'aim', { avg: avgMs }).then(saved => {
-                    if (!saved) APEXON.UI.toast('数据保存失败，请重试');
-                });
-            }
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'aim', { avg: avgMs }).then(saved => {
+                if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+            });
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
         }
