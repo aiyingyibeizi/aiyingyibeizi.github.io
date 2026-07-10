@@ -6,6 +6,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -118,7 +121,7 @@
 
         <div class="forum-section" id="forumSection">
             <div class="forum-title">💬 玩家讨论区</div>
-            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">游客模式可发表评论，登录后可修改用户名与资料</div>
+            <div id="forumLoginTip" class="forum-login-tip">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
                 <div class="forum-input-toolbar">
                     <select id="forumCategory" class="forum-category-select">
@@ -247,17 +250,23 @@
                 { key: 'aim', name: '瞄准训练', unit: '分' },
                 { key: 'sequence', name: '序列记忆', unit: '级' }
             ];
-            let html = '<table style="width:100%;border-collapse:collapse">';
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
+            let html = '<div class="personal-grid">';
             for (const t of types) {
                 const scores = await APEXON.DB.getLeaderboard(t.key, 9999);
                 const myScores = scores.filter(s => s.user_id === userId);
                 const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(t.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
                 const count = myScores.length;
-                html += '<tr><td style="padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)">' + esc(t.name) + '</td><td style="text-align:right;padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)"><strong style="color:var(--apex-text)">' + esc(val) + '</strong> ' + esc(t.unit) + ' · ' + esc(count) + ' 次</td></tr>';
+                html += '<div class="personal-card">' +
+                    '<div class="personal-card-main">' +
+                        '<div class="personal-card-name">' + esc(t.name) + '</div>' +
+                        '<div class="personal-card-count">' + esc(count) + ' 次测试</div>' +
+                    '</div>' +
+                    '<div class="personal-card-score">' + esc(val) + '<span class="personal-card-unit">' + esc(t.unit) + '</span></div>' +
+                '</div>';
             }
-            html += '</table>';
+            html += '</div>';
             document.getElementById('personalContent').innerHTML = html;
         }
 
@@ -300,16 +309,28 @@
                 document.getElementById('forumList').innerHTML = '<div class="forum-empty">该分类下还没有讨论</div>';
                 return;
             }
-            document.getElementById('forumList').innerHTML = list.map(c =>
-                '<div class="forum-item">' +
-                    '<div class="forum-item-header">' +
-                        '<div class="forum-item-user">' + esc(c.username) + '</div>' +
-                        '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
-                        '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
+            const userIds = list.map(c => c.user_id);
+            const profiles = await APEXON.DB.getProfilesForUsers(userIds);
+            const profileMap = new Map();
+            profiles.forEach(p => profileMap.set(p.user_id, p));
+
+            document.getElementById('forumList').innerHTML = list.map(c => {
+                const profile = profileMap.get(c.user_id);
+                const avatar = '<div class="forum-item-avatar" onclick="viewProfile(\'' + esc(c.user_id) + '\')">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
+                return '<div class="forum-item">' +
+                    avatar +
+                    '<div class="forum-item-body">' +
+                        '<div class="forum-item-header">' +
+                            '<div class="forum-item-meta">' +
+                                '<div class="forum-item-user">' + esc(c.username) + '</div>' +
+                                '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
+                            '</div>' +
+                            '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
+                        '</div>' +
+                        '<div class="forum-item-content">' + esc(c.content) + '</div>' +
                     '</div>' +
-                    '<div class="forum-item-content">' + esc(c.content) + '</div>' +
-                '</div>'
-            ).join('');
+                '</div>';
+            }).join('');
         }
 
         // ===== 反馈 =====

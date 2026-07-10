@@ -993,55 +993,57 @@
         .apex-user-dropdown button:hover { background: rgba(124, 58, 237, 0.1); }
         .apex-user-dropdown button.danger { color: #ef4444; }
         .apex-user-dropdown button.danger:hover { background: rgba(239, 68, 68, 0.1); }
-        .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+        .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
         .apex-login-modal.show { opacity: 1; pointer-events: auto; }
-        .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
-        .apex-login-card { position: relative; width: 92%; max-width: 360px; border-radius: 20px; padding: 28px 24px 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; transform: translateY(12px); transition: transform .25s ease; }
-        .apex-login-modal.show .apex-login-card { transform: translateY(0); }
+        .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); }
+        .apex-login-card { position: relative; width: 92%; max-width: 400px; border-radius: 24px; padding: 32px 28px 28px; background: var(--apex-surface); box-shadow: 0 24px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(139, 92, 246, 0.12); overflow: hidden; transform: translateY(16px) scale(0.98); transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .apex-login-modal.show .apex-login-card { transform: translateY(0) scale(1); }
         .apex-login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
-        .apex-login-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
-        .apex-login-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
-        .apex-login-header { text-align: center; margin-bottom: 20px; }
-        .apex-login-logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .apex-login-subtitle { font-size: 13px; color: var(--apex-text-secondary); margin-top: 4px; }
-        .apex-login-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(124, 58, 237, 0.08); border-radius: 12px; padding: 4px; }
-        .apex-login-tab { flex: 1; border: none; border-radius: 10px; padding: 8px; font-size: 13px; font-weight: 600; color: var(--apex-text-secondary); background: transparent; cursor: pointer; }
-        .apex-login-tab.active { background: var(--apex-surface); color: #7C3AED; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .apex-login-body { display: flex; flex-direction: column; gap: 12px; }
-        .apex-login-body input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; }
-        .apex-login-body input:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
-        .apex-login-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; }
-        .apex-login-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
-        .apex-login-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
-        .apex-login-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .apex-login-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 50%); pointer-events: none; }
+        .apex-login-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s ease; }
+        .apex-login-close:hover { background: rgba(124, 58, 237, 0.12); color: #7C3AED; transform: rotate(90deg); }
+        .apex-login-header { text-align: center; margin-bottom: 24px; position: relative; }
+        .apex-login-logo { font-size: 26px; font-weight: 900; letter-spacing: 2px; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 50%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 2px 10px rgba(124, 58, 237, 0.15); }
+        .apex-login-subtitle { font-size: 13px; color: var(--apex-text-secondary); margin-top: 6px; line-height: 1.5; }
+        .apex-login-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: rgba(124, 58, 237, 0.08); border-radius: 14px; padding: 5px; position: relative; }
+        .apex-login-tab { flex: 1; border: none; border-radius: 12px; padding: 10px; font-size: 14px; font-weight: 700; color: var(--apex-text-secondary); background: transparent; cursor: pointer; transition: all .2s ease; }
+        .apex-login-tab:hover { color: var(--apex-text); }
+        .apex-login-tab.active { background: linear-gradient(135deg, var(--apex-surface) 0%, rgba(124, 58, 237, 0.1) 100%); color: #7C3AED; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .apex-login-body { display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .apex-login-body input { width: 100%; box-sizing: border-box; padding: 13px 16px; border-radius: 14px; border: 1px solid rgba(124, 58, 237, 0.18); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; transition: all .15s ease; }
+        .apex-login-body input:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12); }
+        .apex-login-error { min-height: 20px; font-size: 13px; color: #ef4444; text-align: center; font-weight: 600; }
+        .apex-login-submit { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 800; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4); transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; margin-top: 4px; }
+        .apex-login-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(124, 58, 237, 0.5); filter: brightness(1.08); }
+        .apex-login-submit:disabled { opacity: .65; cursor: not-allowed; transform: none; filter: none; }
         .apex-password-wrap { position: relative; }
-        .apex-password-wrap input { padding-right: 40px; }
+        .apex-password-wrap input { padding-right: 44px; }
         .apex-password-toggle {
-          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-          width: 28px; height: 28px; border: none; border-radius: 8px; background: transparent;
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          width: 32px; height: 32px; border: none; border-radius: 10px; background: transparent;
           color: var(--apex-text-secondary); font-size: 13px; cursor: pointer; display: flex;
-          align-items: center; justify-content: center;
+          align-items: center; justify-content: center; transition: all .15s ease;
         }
-        .apex-password-toggle:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
+        .apex-password-toggle:hover { background: rgba(124, 58, 237, 0.12); color: #7C3AED; }
         .apex-remember {
           display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--apex-text-secondary);
-          cursor: pointer; user-select: none;
+          cursor: pointer; user-select: none; margin-top: 2px;
         }
         .apex-remember input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; }
         .apex-hint { font-size: 12px; color: var(--apex-text-tertiary); min-height: 16px; }
         .apex-hint.invalid { color: #ef4444; }
         .apex-hint.valid { color: #10b981; }
         .apex-gender-group { margin-bottom: 12px; }
-        .apex-gender-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 6px; }
-        .apex-gender-options { display: flex; gap: 8px; }
+        .apex-gender-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 8px; font-weight: 600; }
+        .apex-gender-options { display: flex; gap: 10px; }
         .apex-gender-option { flex: 1; position: relative; cursor: pointer; }
         .apex-gender-option input { position: absolute; opacity: 0; width: 0; height: 0; }
-        .apex-gender-option span { display: block; text-align: center; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 13px; transition: all .15s ease; }
-        .apex-gender-option input:checked + span { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.18); color: #7C3AED; font-weight: 600; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15); }
-        .apex-gender-tip { font-size: 12px; color: var(--apex-text-tertiary); margin-top: 6px; line-height: 1.4; }
-        .apex-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--apex-text-secondary); cursor: pointer; user-select: none; margin-bottom: 12px; }
+        .apex-gender-option span { display: block; text-align: center; padding: 11px 4px; border-radius: 14px; border: 1px solid rgba(124, 58, 237, 0.18); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 13px; font-weight: 600; transition: all .15s ease; }
+        .apex-gender-option input:checked + span { border-color: #8B5CF6; background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(96, 165, 250, 0.15) 100%); color: #7C3AED; font-weight: 700; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.18); }
+        .apex-gender-tip { font-size: 12px; color: var(--apex-text-tertiary); margin-top: 8px; line-height: 1.5; }
+        .apex-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--apex-text-secondary); cursor: pointer; user-select: none; margin-bottom: 12px; margin-top: 2px; }
         .apex-terms input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; margin-top: 2px; flex-shrink: 0; }
-        .apex-terms a { color: #8B5CF6; text-decoration: none; }
+        .apex-terms a { color: #8B5CF6; text-decoration: none; font-weight: 600; }
         .apex-terms a:hover { text-decoration: underline; }
         .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-profile-modal.show { opacity: 1; pointer-events: auto; }

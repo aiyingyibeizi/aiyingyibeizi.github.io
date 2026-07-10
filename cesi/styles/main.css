@@ -32,11 +32,10 @@ html {
 /* 白色明亮主题由 variables.css 提供变量覆盖，这里不再使用 grayscale */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-body);
   background:
-    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
-    radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 50% 0%, rgba(204, 255, 0, 0.04) 0%, transparent 35%),
+    radial-gradient(circle at 80% 90%, rgba(0, 240, 255, 0.03) 0%, transparent 30%),
     var(--apex-bg);
   background-attachment: fixed;
   color: var(--apex-text);
@@ -49,6 +48,36 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+/* 实验室网格纹理 + 扫描线 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.6;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  opacity: 0.35;
 }
 
 input,
@@ -69,6 +98,18 @@ html[data-theme="light"] body,
 body.theme-light {
   background: var(--apex-bg) !important;
   background-attachment: scroll !important;
+}
+
+html[data-bw="true"] body::before,
+html[data-theme="light"] body::before,
+body.theme-light::before {
+  opacity: 0.25;
+}
+
+html[data-bw="true"] body::after,
+html[data-theme="light"] body::after,
+body.theme-light::after {
+  opacity: 0.08;
 }
 
 /* 移动端背景统一使用 scroll，避免 fixed 附件导致重绘异常 */
@@ -353,13 +394,11 @@ body.loaded .apexon-page {
   right: 0;
   height: var(--header-height);
   z-index: 1000;
-  background: rgba(5, 7, 13, 0.72);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-bottom: 1px solid rgba(34, 211, 238, 0.08);
+  background: rgba(8, 8, 8, 0.92);
+  border-bottom: 1px solid var(--apex-border-subtle);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 1px 0 rgba(204, 255, 0, 0.08),
+    0 12px 40px rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   padding: 0;
@@ -390,21 +429,26 @@ body.loaded .apexon-page {
 }
 
 .apexon-header-logo img {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
   object-fit: contain;
-  background: var(--apex-surface);
+  background: var(--apex-bg-elevated);
+  border: 1px solid var(--apex-border-subtle);
   box-shadow: var(--apex-shadow-sm);
-  transition: transform var(--apex-transition-fast);
+  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast);
 }
 
 .apexon-header-logo span {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .apexon-header-logo:hover img {
-  transform: scale(1.06);
+  transform: scale(1.05);
+  border-color: var(--apex-border);
 }
 
 .apexon-header-nav {
@@ -414,11 +458,9 @@ body.loaded .apexon-page {
   left: 0;
   right: 0;
   background: var(--apex-overlay);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
   flex-direction: column;
   padding: 12px;
-  gap: 6px;
+  gap: 4px;
   border-bottom: 1px solid var(--apex-border);
   box-shadow: var(--apex-shadow-md);
 }
@@ -432,25 +474,25 @@ body.loaded .apexon-page {
   align-items: center;
   justify-content: center;
   padding: 10px 18px;
-  border-radius: var(--apex-radius-full);
+  border-radius: var(--apex-radius-sm);
   color: var(--apex-text-secondary);
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
 }
 
 .apexon-header-nav a:hover {
-  background: var(--apex-border-subtle);
-  color: var(--apex-accent-cyan);
+  background: rgba(204, 255, 0, 0.08);
+  color: var(--apex-text);
 }
 
 .apexon-header-nav a.active {
   background: var(--apex-primary);
   color: var(--apex-text-inverse);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 16px var(--apex-glow-primary);
-  border: 1px solid var(--apex-border-strong);
+  box-shadow: none;
+  border: none;
 }
 
 .apexon-menu-btn {
@@ -462,9 +504,15 @@ body.loaded .apexon-page {
   border-radius: var(--apex-radius-sm);
   font-size: 1.25rem;
   color: var(--apex-text);
-  background: var(--apex-surface);
-  border: 1px solid var(--apex-border);
+  background: var(--apex-bg-elevated);
+  border: 1px solid var(--apex-border-subtle);
   flex-shrink: 0;
+  transition: border-color var(--apex-transition-fast), color var(--apex-transition-fast);
+}
+
+.apexon-menu-btn:hover {
+  border-color: var(--apex-border);
+  color: var(--apex-primary);
 }
 
 /* 桌面端：Logo 绝对定位贴最左，菜单栏居中，登录绝对定位贴最右 */
@@ -495,12 +543,12 @@ body.loaded .apexon-page {
     gap: 4px;
     padding: 6px;
     margin: 0;
-    background: var(--apex-surface);
+    background: rgba(12, 17, 32, 0.6);
     border: 1px solid var(--apex-border);
     border-radius: var(--apex-radius-full);
-    box-shadow: var(--apex-shadow-sm);
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: var(--apex-shadow-sm), var(--apex-shadow-inset-glow);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
   }
 
   .apexon-header-nav a {
@@ -509,15 +557,15 @@ body.loaded .apexon-page {
   }
 
   .apexon-header-nav a:hover {
-    background: var(--apex-primary-light);
-    color: var(--apex-text-inverse);
+    background: rgba(139, 92, 246, 0.14);
+    color: var(--apex-text);
   }
 
   .apexon-header-nav a.active {
-    background: var(--apex-primary);
+    background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
     color: var(--apex-text-inverse);
     border: none;
-    box-shadow: var(--apex-shadow-sm);
+    box-shadow: 0 4px 14px rgba(109, 93, 252, 0.32);
   }
 
   .header-actions {
@@ -836,7 +884,9 @@ body.loaded .apexon-page {
   inset: 0;
   border-radius: 9999px;
   background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(139, 92, 246, 0.25);
   transition: background-color 400ms ease, box-shadow 400ms ease;
 }
 
@@ -847,19 +897,19 @@ body.loaded .apexon-page {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track {
-  background: #e2e8f0;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
   transform: translateX(32px);
-  background: #f8fafc;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
 }
 
 .apex-bw-toggle__icon {
@@ -1021,71 +1071,108 @@ body.loaded .apexon-page {
 
 .hero-apexon {
   text-align: center;
-  padding: clamp(24px, 5vw, 48px) 0 clamp(16px, 3vw, 28px);
+  padding: clamp(28px, 6vw, 56px) 0 clamp(20px, 4vw, 32px);
   position: relative;
 }
 
+.hero-apexon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(140%, 900px);
+  height: min(140%, 900px);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(34, 211, 238, 0.06) 30%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(40px);
+}
+
 .hero-apexon .hero-logo-main {
-  width: clamp(96px, 24vw, var(--hero-logo));
-  height: clamp(96px, 24vw, var(--hero-logo));
-  border-radius: 28px;
+  width: clamp(88px, 22vw, var(--hero-logo));
+  height: clamp(88px, 22vw, var(--hero-logo));
+  border-radius: 32px;
   object-fit: contain;
-  background: var(--apex-surface);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(15, 23, 42, 0.08);
-  margin: 0 auto 20px;
-  animation: floatLogo 4s ease-in-out infinite;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 72, 0.7) 100%);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(139, 92, 246, 0.18),
+    0 0 40px rgba(139, 92, 246, 0.15);
+  margin: 0 auto 24px;
+  animation: floatLogo 5s ease-in-out infinite;
+  padding: 12px;
 }
 
 @keyframes floatLogo {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
 }
 
 .hero-apexon .hero-title-main {
-  font-size: clamp(2rem, 6vw, var(--hero-title));
-  font-weight: 800;
-  letter-spacing: 1px;
+  font-size: clamp(2.25rem, 7vw, var(--hero-title));
+  font-weight: 900;
+  letter-spacing: -0.02em;
   color: var(--apex-text);
-  text-shadow: 0 0 24px rgba(148, 163, 184, 0.22);
-  margin-bottom: 8px;
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(34, 211, 238, 0.12);
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 html[data-bw="true"] .hero-apexon .hero-title-main,
 html[data-theme="light"] .hero-apexon .hero-title-main {
-  text-shadow: 0 0 18px rgba(124, 107, 196, 0.18);
+  background: linear-gradient(135deg, #312e81 0%, #7c6bc4 50%, #0891b2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
 }
 
 .hero-apexon .hero-tagline {
-  font-size: clamp(0.8125rem, 2vw, var(--hero-subtitle));
+  font-size: clamp(0.875rem, 2.2vw, var(--hero-subtitle));
   color: var(--apex-text-secondary);
   font-weight: 400;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .hero-stats-bar {
   display: flex;
   justify-content: center;
-  gap: clamp(10px, 2vw, 16px);
-  margin-top: 20px;
+  gap: clamp(10px, 2vw, 18px);
+  margin-top: 24px;
   flex-wrap: wrap;
 }
 
 .hero-stat-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--apex-surface);
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-radius: var(--apex-radius-full);
   font-size: 0.8125rem;
   color: var(--apex-text-secondary);
   border: 1px solid var(--apex-border-subtle);
-  box-shadow: var(--apex-shadow-sm);
+  box-shadow: var(--apex-shadow-sm), var(--apex-shadow-inset-glow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), border-color var(--apex-transition-fast);
+}
+
+.hero-stat-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--apex-border-strong);
+  box-shadow: var(--apex-shadow-md), var(--apex-shadow-inset-glow);
 }
 
 .hero-stat-chip strong {
   color: var(--apex-text);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 /* ============================================================================
@@ -1095,22 +1182,37 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 .search-box {
   display: flex;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   background: var(--apex-surface);
-  padding: 6px;
-  border-radius: var(--apex-radius);
-  box-shadow: var(--apex-shadow-md);
+  padding: 8px;
+  border-radius: var(--apex-radius-full);
+  box-shadow: var(--apex-shadow-md), var(--apex-shadow-inset-glow);
   border: 1px solid var(--apex-border-subtle);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.search-box::before {
+  content: '🔍';
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9375rem;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .search-box input {
   flex: 1;
-  padding: 12px 16px;
-  border-radius: var(--apex-radius-sm);
+  padding: 14px 18px 14px 44px;
+  border-radius: var(--apex-radius-full);
   font-size: 0.9375rem;
   background: var(--apex-bg);
   color: var(--apex-text);
-  transition: background-color var(--apex-transition-fast);
+  border: 1px solid transparent;
+  transition: background-color var(--apex-transition-fast), border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
 }
 
 .search-box input::placeholder {
@@ -1119,25 +1221,26 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 
 .search-box input:focus {
   background: var(--apex-surface-elevated);
+  border-color: var(--apex-border-strong);
   box-shadow: var(--focus-ring);
 }
 
 .search-box button {
-  padding: 12px 24px;
-  background: var(--apex-primary);
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   color: var(--apex-text-inverse);
-  border-radius: var(--apex-radius-sm);
+  border-radius: var(--apex-radius-full);
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  box-shadow: 0 4px 16px rgba(109, 93, 252, 0.35);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
 }
 
 .search-box button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
-  background: var(--apex-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(109, 93, 252, 0.45);
+  filter: brightness(1.08);
 }
 
 .search-box button:active {
@@ -1160,7 +1263,7 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 24px;
+  padding: 26px 24px;
   border-radius: var(--apex-radius);
   text-decoration: none;
   font-size: 1.125rem;
@@ -1170,11 +1273,11 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   background: var(--game-card-bg);
   color: var(--apex-text);
   border: 1px solid var(--game-card-border);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 10px 36px rgba(0, 0, 0, 0.48),
+    var(--apex-shadow-inset-glow);
   transition: transform var(--apex-transition-base), box-shadow var(--apex-transition-base), border-color var(--apex-transition-base), background-color var(--apex-transition-base);
 }
 
@@ -1192,30 +1295,30 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   transition: opacity var(--apex-transition-base);
 }
 
-/* 右侧箭头 */
+/* 顶部高光条 */
 .item-card::after,
 .apex-card--game::after {
-  content: ">";
+  content: "";
   position: absolute;
-  right: 22px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1rem;
-  opacity: 0.4;
-  color: var(--apex-text-secondary);
-  transition: opacity var(--apex-transition-fast), transform var(--apex-transition-fast), color var(--apex-transition-fast);
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  opacity: 0.6;
+  transition: opacity var(--apex-transition-base), left var(--apex-transition-base), right var(--apex-transition-base);
   z-index: 1;
 }
 
 .item-card:hover,
 .apex-card--game:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
   border-color: var(--game-card-border-hover);
   box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(148, 163, 184, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  background: linear-gradient(135deg, rgba(20, 30, 55, 0.72) 0%, rgba(25, 36, 62, 0.66) 55%, rgba(35, 47, 80, 0.62) 100%);
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(139, 92, 246, 0.12),
+    var(--apex-shadow-inset-glow);
+  background: linear-gradient(135deg, rgba(22, 32, 58, 0.78) 0%, rgba(28, 40, 68, 0.72) 55%, rgba(38, 52, 88, 0.68) 100%);
 }
 
 .item-card:hover::before,
@@ -1225,24 +1328,25 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 
 .item-card:hover::after,
 .apex-card--game:hover::after {
-  opacity: 0.8;
-  transform: translateY(-50%) translateX(4px);
-  color: var(--apex-text);
+  opacity: 1;
+  left: 10%;
+  right: 10%;
 }
 
 .item-card:active,
 .apex-card--game:active {
-  transform: translateY(0) scale(0.99);
+  transform: translateY(-2px) scale(0.99);
 }
 
 .item-card strong,
 .apex-card--game strong {
   color: var(--game-card-title);
-  font-weight: 700;
-  margin-bottom: 6px;
+  font-weight: 800;
+  margin-bottom: 8px;
   font-size: 1.125rem;
   position: relative;
   z-index: 1;
+  letter-spacing: -0.01em;
 }
 
 .item-card .card-desc,
@@ -1250,7 +1354,7 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   font-size: 0.8125rem;
   color: var(--game-card-desc);
   font-weight: 400;
-  line-height: 1.55;
+  line-height: 1.6;
   margin-top: 4px;
   position: relative;
   z-index: 1;
@@ -1781,10 +1885,10 @@ html[data-theme="light"] .apex-card--game:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
-  border-radius: var(--apex-radius-sm);
+  padding: 13px 26px;
+  border-radius: var(--apex-radius-full);
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: 700;
   min-width: 120px;
   text-align: center;
   position: relative;
@@ -1792,20 +1896,20 @@ html[data-theme="light"] .apex-card--game:hover {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-  background: var(--apex-primary);
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   color: var(--apex-text-inverse);
-  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  box-shadow: 0 4px 16px rgba(109, 93, 252, 0.32);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
-  background: var(--apex-primary-dark);
+  box-shadow: 0 8px 24px rgba(109, 93, 252, 0.42);
+  filter: brightness(1.08);
 }
 
 .btn:active {
-  transform: scale(0.96) translateY(0);
+  transform: scale(0.97) translateY(0);
 }
 
 .btn:disabled,
@@ -2101,273 +2205,589 @@ html[data-theme="light"] .apex-card--game:hover {
    Section: Leaderboard
    ============================================================================ */
 
-.leaderboard {
+/* ============================================================================
+   Section: Shared Section Shells
+   ============================================================================ */
+
+.leaderboard,
+.personal-stats,
+.forum-section,
+.feedback-section {
   background: var(--apex-surface);
-  border-radius: var(--apex-radius);
-  padding: 20px;
+  border-radius: var(--apex-radius-lg);
+  padding: 28px;
   margin-bottom: var(--section-gap);
-  box-shadow: var(--apex-shadow-md);
+  box-shadow: var(--apex-shadow-md), var(--apex-shadow-inset-glow);
   border: 1px solid var(--apex-border-subtle);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.leaderboard::before,
+.personal-stats::before,
+.forum-section::before,
+.feedback-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 35%),
+    radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.08) 0%, transparent 35%);
+  opacity: 0.7;
 }
 
 .leaderboard-title,
 .personal-stats-title,
 .forum-title,
 .feedback-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 800;
   color: var(--apex-text);
-  margin-bottom: 14px;
+  margin-bottom: 22px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  position: relative;
+  letter-spacing: -0.01em;
+}
+
+.leaderboard-title::after,
+.personal-stats-title::after,
+.forum-title::after,
+.feedback-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--apex-border) 0%, transparent 100%);
+  margin-left: 4px;
 }
 
 .leaderboard-tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
+  position: relative;
+  padding: 6px;
+  background: var(--apex-bg);
+  border-radius: var(--apex-radius-full);
+  border: 1px solid var(--apex-border-subtle);
 }
 
 .leaderboard-tab {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 0.8125rem;
   border-radius: var(--apex-radius-full);
-  background: var(--apex-bg);
+  background: transparent;
   color: var(--apex-text-secondary);
-  font-weight: 500;
-  transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all var(--apex-transition-fast);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.leaderboard-tab:hover {
+  color: var(--apex-text);
+  background: rgba(139, 92, 246, 0.08);
 }
 
 .leaderboard-tab.active {
-  background: var(--apex-primary);
+  background: linear-gradient(135deg, var(--apex-primary) 0%, var(--apex-primary-dark) 100%);
   color: var(--apex-text-inverse);
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(109, 93, 252, 0.4);
+  font-weight: 700;
 }
 
 .leaderboard-row {
   display: flex;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--apex-border);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: var(--apex-radius-sm);
   font-size: 0.875rem;
+  background: var(--apex-bg);
+  border: 1px solid var(--apex-border-subtle);
+  transition: all var(--apex-transition-fast);
+  position: relative;
+  box-shadow: var(--apex-shadow-sm);
+}
+
+.leaderboard-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--apex-primary) 0%, var(--apex-accent-cyan) 100%);
+  border-radius: var(--apex-radius-sm) 0 0 var(--apex-radius-sm);
+  opacity: 0;
+  transition: opacity var(--apex-transition-fast);
+}
+
+.leaderboard-row:hover {
+  background: var(--apex-surface-elevated);
+  transform: translateX(4px);
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+}
+
+.leaderboard-row:hover::before {
+  opacity: 0.7;
 }
 
 .leaderboard-row:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .leaderboard-rank {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.75rem;
-  margin-right: 12px;
+  font-weight: 900;
+  font-size: 0.8125rem;
+  margin-right: 14px;
   flex-shrink: 0;
-  background: var(--apex-bg);
+  background: var(--apex-surface);
   color: var(--apex-text-secondary);
+  border: 1px solid var(--apex-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .leaderboard-rank.gold {
-  background: #ffd700;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
   color: #1f2937;
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.35);
 }
 
 .leaderboard-rank.silver {
-  background: #c0c0c0;
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
   color: #1f2937;
+  border-color: rgba(192, 192, 192, 0.6);
+  box-shadow: 0 0 14px rgba(192, 192, 192, 0.25);
 }
 
 .leaderboard-rank.bronze {
-  background: #cd7f32;
+  background: linear-gradient(135deg, #cd7f32 0%, #e8a15c 100%);
   color: #ffffff;
+  border-color: rgba(205, 127, 50, 0.6);
+  box-shadow: 0 0 14px rgba(205, 127, 50, 0.25);
+}
+
+.leaderboard-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 14px;
+  border: 2px solid var(--apex-border-strong);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+}
+
+.leaderboard-avatar:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.45);
+}
+
+.leaderboard-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.leaderboard-avatar svg {
+  width: 22px;
+  height: 22px;
 }
 
 .leaderboard-name {
   flex: 1;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--apex-text);
+  cursor: pointer;
+  transition: color var(--apex-transition-fast);
+}
+
+.leaderboard-name:hover {
+  color: var(--apex-primary-light);
 }
 
 .leaderboard-score {
-  font-weight: 700;
+  font-weight: 900;
   color: var(--apex-primary);
+  font-size: 0.9375rem;
+  background: rgba(139, 92, 246, 0.12);
+  padding: 6px 12px;
+  border-radius: var(--apex-radius-full);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 /* ============================================================================
    Section: Personal Stats
    ============================================================================ */
 
-.personal-stats {
-  background: var(--apex-surface);
-  border-radius: var(--apex-radius);
-  padding: 20px;
-  margin-bottom: var(--section-gap);
-  box-shadow: var(--apex-shadow-md);
+.personal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  position: relative;
+}
+
+.personal-card {
+  background: var(--apex-bg);
   border: 1px solid var(--apex-border-subtle);
+  border-radius: var(--apex-radius);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all var(--apex-transition-fast);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--apex-shadow-sm);
 }
 
-.personal-stats table td {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--apex-border);
-  font-size: 0.875rem;
+.personal-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--apex-primary) 0%, var(--apex-accent-cyan) 50%, var(--apex-primary) 100%);
+  background-size: 200% 100%;
+  opacity: 0.7;
+  transition: opacity var(--apex-transition-fast);
 }
 
-.personal-stats table tr:last-child td {
-  border-bottom: none;
+.personal-card:hover {
+  background: var(--apex-surface-elevated);
+  transform: translateY(-3px);
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.personal-card:hover::before {
+  opacity: 1;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.personal-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.personal-card-name {
+  font-size: 0.9375rem;
   font-weight: 700;
   color: var(--apex-text);
+}
+
+.personal-card-count {
+  font-size: 0.75rem;
+  color: var(--apex-text-tertiary);
+  font-weight: 500;
+}
+
+.personal-card-score {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--apex-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+.personal-card-unit {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--apex-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .personal-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================================
    Section: Forum & Feedback
    ============================================================================ */
 
-.forum-section,
-.feedback-section {
-  background: var(--apex-surface);
-  border-radius: var(--apex-radius);
-  padding: 22px;
-  margin-top: var(--section-gap);
-  box-shadow: var(--apex-shadow-md);
-  border: 1px solid var(--apex-border-subtle);
-}
-
 .forum-input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin-bottom: 22px;
+  position: relative;
+  background: var(--apex-bg);
+  border: 1px solid var(--apex-border-subtle);
+  border-radius: var(--apex-radius);
+  padding: 20px;
+  box-shadow: var(--apex-shadow-sm);
+}
+
+.forum-login-tip {
+  text-align: center;
+  color: var(--apex-text-tertiary);
+  font-size: 0.875rem;
+  padding: 16px;
+  margin-bottom: 18px;
+  background: var(--apex-bg);
+  border-radius: var(--apex-radius-sm);
+  border: 1px dashed var(--apex-border);
+  line-height: 1.6;
+}
+
+.forum-input-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .forum-category-select {
-  padding: 10px 12px;
-  border-radius: var(--apex-radius-sm);
+  padding: 10px 16px;
+  border-radius: var(--apex-radius-full);
   border: 1px solid var(--apex-border);
-  background: var(--apex-bg);
+  background: var(--apex-surface);
   color: var(--apex-text);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
   outline: none;
   cursor: pointer;
-  align-self: flex-start;
+  transition: all var(--apex-transition-fast);
+  box-shadow: var(--apex-shadow-sm);
 }
 
+.forum-category-select:hover,
 .forum-category-select:focus {
   border-color: var(--apex-primary);
   box-shadow: var(--focus-ring);
+}
+
+.forum-input-wrap textarea,
+.feedback-form textarea {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius-sm);
+  font-size: 0.9375rem;
+  resize: vertical;
+  min-height: 100px;
+  background: var(--apex-bg);
+  color: var(--apex-text);
+  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.forum-input-wrap textarea::placeholder,
+.feedback-form textarea::placeholder,
+.feedback-form input::placeholder {
+  color: var(--apex-text-tertiary);
+}
+
+.forum-input-wrap textarea:focus,
+.feedback-form textarea:focus {
+  border-color: var(--apex-primary);
+  background: var(--apex-surface-elevated);
+  box-shadow: var(--focus-ring);
+}
+
+.forum-btn,
+.feedback-submit {
+  padding: 12px 26px;
+  border-radius: var(--apex-radius-full);
+  background: linear-gradient(135deg, var(--apex-primary) 0%, var(--apex-primary-dark) 100%);
+  color: var(--apex-text-inverse);
+  font-size: 0.875rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(109, 93, 252, 0.35);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), filter var(--apex-transition-fast);
+}
+
+.forum-btn:hover,
+.feedback-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(109, 93, 252, 0.45);
+  filter: brightness(1.08);
 }
 
 .forum-filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  position: relative;
+  padding: 6px;
+  background: var(--apex-bg);
+  border-radius: var(--apex-radius-full);
+  border: 1px solid var(--apex-border-subtle);
 }
 
 .forum-filter-btn {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--apex-border);
-  background: var(--apex-bg);
+  padding: 8px 14px;
+  border-radius: var(--apex-radius-full);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--apex-text-secondary);
   font-size: 0.8125rem;
-  cursor: pointer;
-  transition: all .15s ease;
-}
-
-.forum-filter-btn.active,
-.forum-filter-btn:hover {
-  border-color: var(--apex-primary);
-  background: rgba(124, 58, 237, 0.1);
-  color: var(--apex-primary);
-}
-
-.forum-input-wrap textarea,
-.feedback-form textarea {
-  flex: 1;
-  padding: 12px 14px;
-  border: 1px solid var(--apex-border);
-  border-radius: var(--apex-radius-sm);
-  font-size: 0.9375rem;
-  resize: vertical;
-  min-height: 60px;
-  background: var(--apex-bg);
-  color: var(--apex-text);
-  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
-}
-
-.forum-input-wrap textarea:focus,
-.feedback-form textarea:focus {
-  border-color: var(--apex-primary);
-  box-shadow: var(--focus-ring);
-}
-
-.forum-btn,
-.feedback-submit {
-  padding: 10px 20px;
-  border-radius: var(--apex-radius-sm);
-  background: var(--apex-primary);
-  color: var(--apex-text-inverse);
-  font-size: 0.875rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
-  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
-  align-self: flex-start;
+  cursor: pointer;
+  transition: all var(--apex-transition-fast);
 }
 
-.forum-btn:hover,
-.feedback-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.38);
-  background: var(--apex-primary-dark);
+.forum-filter-btn:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--apex-text);
+}
+
+.forum-filter-btn.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--apex-primary) 0%, var(--apex-primary-dark) 100%);
+  color: var(--apex-text-inverse);
+  box-shadow: 0 4px 14px rgba(109, 93, 252, 0.35);
+  font-weight: 700;
 }
 
 .forum-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  position: relative;
 }
 
 .forum-item {
-  padding: 14px 16px;
+  padding: 18px;
   background: var(--apex-bg);
-  border-radius: var(--apex-radius-sm);
+  border-radius: var(--apex-radius);
   border: 1px solid var(--apex-border-subtle);
-  transition: background-color var(--apex-transition-fast), transform var(--apex-transition-fast);
+  transition: all var(--apex-transition-fast);
+  display: flex;
+  gap: 14px;
+  position: relative;
+  box-shadow: var(--apex-shadow-sm);
+}
+
+.forum-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--apex-primary) 0%, var(--apex-accent-cyan) 100%);
+  border-radius: var(--apex-radius) 0 0 var(--apex-radius);
+  opacity: 0;
+  transition: opacity var(--apex-transition-fast);
 }
 
 .forum-item:hover {
   background: var(--apex-surface-elevated);
-  transform: translateX(2px);
+  transform: translateX(4px);
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.25);
+}
+
+.forum-item:hover::before {
+  opacity: 0.7;
+}
+
+.forum-item-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 2px solid var(--apex-border-strong);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+}
+
+.forum-item-avatar:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.45);
+}
+
+.forum-item-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.forum-item-avatar svg {
+  width: 26px;
+  height: 26px;
+}
+
+.forum-item-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .forum-item-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.forum-item-meta {
+  display: flex;
   align-items: center;
-  margin-bottom: 6px;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .forum-item-user {
-  font-weight: 700;
-  font-size: 0.875rem;
+  font-weight: 800;
+  font-size: 0.9375rem;
   color: var(--apex-text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  cursor: pointer;
+  transition: color var(--apex-transition-fast);
+}
+
+.forum-item-user:hover {
+  color: var(--apex-primary-light);
 }
 
 .forum-item-user::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--apex-primary);
+  content: none;
 }
 
 .forum-item-time {
@@ -2375,55 +2795,71 @@ html[data-theme="light"] .apex-card--game:hover {
   color: var(--apex-text-tertiary);
   flex-shrink: 0;
   margin-left: auto;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .forum-item-category {
   font-size: 0.6875rem;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(124, 58, 237, 0.12);
+  padding: 4px 12px;
+  border-radius: var(--apex-radius-full);
+  background: rgba(124, 58, 237, 0.14);
   color: var(--apex-primary);
-  font-weight: 600;
+  font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
+  border: 1px solid rgba(124, 58, 237, 0.2);
 }
 
 .forum-item-content {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--apex-text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
   word-break: break-word;
 }
 
 .forum-empty {
   text-align: center;
   color: var(--apex-text-tertiary);
-  font-size: 0.875rem;
-  padding: 24px;
+  font-size: 0.9375rem;
+  padding: 40px 24px;
+  background: var(--apex-bg);
+  border-radius: var(--apex-radius);
+  border: 1px dashed var(--apex-border);
 }
 
 .feedback-email-box {
   background: var(--apex-bg);
-  border-radius: var(--apex-radius-sm);
-  padding: 16px 20px;
-  margin-bottom: 18px;
+  border-radius: var(--apex-radius);
+  padding: 20px 22px;
+  margin-bottom: 22px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   border: 1px solid var(--apex-border-subtle);
+  transition: all var(--apex-transition-fast);
+  position: relative;
+  box-shadow: var(--apex-shadow-sm);
+}
+
+.feedback-email-box:hover {
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+  transform: translateX(3px);
 }
 
 .feedback-email-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--apex-radius-sm);
-  background: var(--apex-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--apex-primary) 0%, var(--apex-primary-dark) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--apex-text-inverse);
-  font-size: 1.125rem;
+  font-size: 1.375rem;
   flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(109, 93, 252, 0.35);
 }
 
 .feedback-email-info {
@@ -2433,12 +2869,15 @@ html[data-theme="light"] .apex-card--game:hover {
 .feedback-email-label {
   font-size: 0.75rem;
   color: var(--apex-text-secondary);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .feedback-email-value {
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--apex-primary);
   font-family: var(--font-mono);
 }
@@ -2446,26 +2885,29 @@ html[data-theme="light"] .apex-card--game:hover {
 .feedback-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  position: relative;
 }
 
 .feedback-form input {
-  padding: 12px 14px;
+  padding: 15px 20px;
   border: 1px solid var(--apex-border);
-  border-radius: var(--apex-radius-sm);
+  border-radius: var(--apex-radius-full);
   font-size: 0.9375rem;
   background: var(--apex-bg);
   color: var(--apex-text);
-  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+  transition: border-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast), background-color var(--apex-transition-fast);
 }
 
 .feedback-form input:focus {
   border-color: var(--apex-primary);
+  background: var(--apex-surface-elevated);
   box-shadow: var(--focus-ring);
 }
 
 .feedback-form textarea {
-  min-height: 100px;
+  min-height: 140px;
+  border-radius: var(--apex-radius);
 }
 
 /* ============================================================================
@@ -2473,30 +2915,45 @@ html[data-theme="light"] .apex-card--game:hover {
    ============================================================================ */
 
 .apexon-footer {
-  margin-top: 40px;
-  padding: 24px 16px;
+  margin-top: 48px;
+  padding: 28px 16px;
   border-top: 1px solid var(--apex-border-subtle);
   text-align: center;
   font-size: 0.8125rem;
   color: var(--apex-text-secondary);
   background: var(--apex-surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.apexon-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--apex-primary) 50%, transparent 100%);
+  opacity: 0.4;
 }
 
 .apexon-footer-inner {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
 .apexon-footer a {
   color: var(--apex-primary);
+  font-weight: 600;
   transition: color var(--apex-transition-fast);
 }
 
 .apexon-footer a:hover {
-  color: var(--apex-primary-dark);
+  color: var(--apex-primary-light);
   text-decoration: underline;
 }
 
@@ -2506,15 +2963,15 @@ html[data-theme="light"] .apex-card--game:hover {
 
 .toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 28px;
   left: 50%;
   transform: translateX(-50%) translateY(120%);
-  background: var(--apex-text);
-  color: var(--apex-text-inverse);
-  padding: 12px 24px;
+  background: var(--apex-surface);
+  color: var(--apex-text);
+  padding: 14px 28px;
   border-radius: var(--apex-radius-full);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   z-index: 9999;
   opacity: 0;
   transition: transform var(--apex-transition-base), opacity var(--apex-transition-base);
@@ -2522,7 +2979,10 @@ html[data-theme="light"] .apex-card--game:hover {
   white-space: nowrap;
   max-width: 90vw;
   text-align: center;
-  box-shadow: var(--apex-shadow-lg);
+  box-shadow: var(--apex-shadow-lg), var(--apex-shadow-inset-glow);
+  border: 1px solid var(--apex-border-strong);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .toast.show {
