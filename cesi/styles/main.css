@@ -216,6 +216,45 @@ body.loaded .apexon-page {
   padding: calc(var(--header-height) + 20px) var(--container-padding) 40px;
 }
 
+.legal-content {
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border-subtle);
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 16px;
+  line-height: 1.7;
+  color: var(--apex-text);
+}
+
+.legal-content h2 {
+  font-size: 1.125rem;
+  margin: 24px 0 12px;
+  color: var(--apex-text);
+}
+
+.legal-content h2:first-child {
+  margin-top: 0;
+}
+
+.legal-content p {
+  margin: 8px 0;
+  color: var(--apex-text-secondary);
+}
+
+.legal-content ul {
+  margin: 8px 0 8px 20px;
+  color: var(--apex-text-secondary);
+}
+
+.legal-content li {
+  margin: 6px 0;
+}
+
+.legal-content strong {
+  color: var(--apex-text);
+  font-weight: 600;
+}
+
 .apex-section {
   margin-bottom: var(--section-gap);
 }

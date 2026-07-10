@@ -649,12 +649,16 @@
       if (!u || !password) {
         return { success: false, error: '请输入用户名和密码' };
       }
+      console.log('[login] start', u);
       const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
+      console.log('[login] account rows:', rows ? rows.length : null);
       if (!rows || !rows.length) {
         return { success: false, error: '用户名或密码错误' };
       }
       const account = rows[0];
+      console.log('[login] account found, has salt:', !!account.salt, 'has hash:', !!account.password_hash);
       const hash = await this._hashPassword(password, account.salt);
+      console.log('[login] computed hash length:', hash.length, 'stored length:', account.password_hash ? account.password_hash.length : 0);
       if (hash !== account.password_hash) {
         return { success: false, error: '用户名或密码错误' };
       }
@@ -668,6 +672,7 @@
         `username=eq.${encodeURIComponent(u)}`,
         { 'x-username': u }
       );
+      console.log('[login] session update result:', updateResult);
       if (!updateResult) return { success: false, error: '登录失败，请重试' };
 
       this._setSession(u, token, expiresAt);
@@ -1334,7 +1339,7 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="确认密码" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>我已阅读并同意 <a href="#" onclick="event.preventDefault();">服务条款</a> 和 <a href="#" onclick="event.preventDefault();">隐私政策</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="确认密码" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>我已阅读并同意 <a href="terms.html" target="_blank">服务条款</a> 和 <a href="privacy.html" target="_blank">隐私政策</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
       document.body.appendChild(modal);
 
       const tabs = modal.querySelectorAll('.apex-login-tab');

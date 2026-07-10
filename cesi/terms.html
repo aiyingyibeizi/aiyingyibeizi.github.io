@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>服务条款 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <a href="index.html" class="apexon-header-logo">
+                <img src="assets/favicon.png" alt="Logo">
+                <span>APEXON</span>
+            </a>
+            <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
+            <nav class="apexon-header-nav" id="headerNav">
+                <a href="index.html">首页</a>
+                <a href="reaction.html">反应测试</a>
+                <a href="type.html">打字测试</a>
+                <a href="stick.html">注意力测试</a>
+                <a href="number.html">数字记忆</a>
+                <a href="verbal.html">单词记忆</a>
+                <a href="visual.html">视觉记忆</a>
+                <a href="aim.html">瞄准训练</a>
+                <a href="sequence.html">序列记忆</a>
+            </nav>
+            <div class="header-actions">
+                <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>服务条款</h1>
+        <div class="legal-content">
+            <p>最后更新日期：2026 年 7 月 10 日</p>
+
+            <h2>1. 接受条款</h2>
+            <p>欢迎使用 APEXON（以下简称“本站”）。访问或使用本站即表示您同意接受本服务条款的约束。如果您不同意本条款，请停止使用本站。</p>
+
+            <h2>2. 服务说明</h2>
+            <p>本站提供在线认知能力测试、反应测试、记忆力测试、打字训练等服务。所有测试成绩仅供娱乐和自我提升参考，不构成任何医疗、心理或职业评估结论。</p>
+
+            <h2>3. 账号与数据</h2>
+            <p>您可以选择以游客身份使用本站，也可以注册账号。注册时需提供用户名和密码。您应对账号安全负责，妥善保管密码。本站会保存您的测试成绩、评论和基本资料，以便提供排行榜、历史记录等功能。</p>
+
+            <h2>4. 用户行为</h2>
+            <p>使用本站时，您不得发布违法、侵权、骚扰、歧视、虚假或恶意内容；不得利用漏洞、脚本或自动化工具干扰服务；不得尝试未经授权访问本站系统或数据。</p>
+
+            <h2>5. 知识产权</h2>
+            <p>本站界面、代码、标识、文本及测试设计归本站所有。未经授权，您不得复制、修改、传播或用于商业目的。</p>
+
+            <h2>6. 免责声明</h2>
+            <p>本站按“现状”提供服务，不保证服务始终 uninterrupted、无错误或绝对安全。因网络、设备、第三方服务或不可抗力导致的服务中断或数据丢失，本站不承担责任。</p>
+
+            <h2>7. 条款变更</h2>
+            <p>本站有权不时修改本条款。修改后的条款将在页面上公布，继续使用视为接受修改。</p>
+
+            <h2>8. 联系我们</h2>
+            <p>如有任何问题，请发送邮件至 luoyangmengjin2025@163.com。</p>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+    (function () {
+        window.toggleMenu = function () {
+            document.getElementById('headerNav').classList.toggle('open');
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
+        });
+        APEXON.Particles.init();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
