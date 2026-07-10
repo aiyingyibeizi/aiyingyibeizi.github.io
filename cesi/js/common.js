@@ -1038,10 +1038,10 @@
       if (!isLoggedIn) {
         if (forumTip) {
           forumTip.style.display = 'block';
-          forumTip.textContent = '游客模式：数据仅在当前设备保存，建议登录以保障安全';
+          forumTip.textContent = '游客模式可正常使用全部功能，登录后可修改用户名与资料';
         }
         if (forumInput) forumInput.style.display = 'flex';
-        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式：数据保存在本地浏览器，换设备或清除数据会丢失，建议登录/注册</div>';
+        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式：成绩、评论均会保存，登录后自动合并并解锁资料编辑</div>';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
