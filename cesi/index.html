@@ -205,13 +205,23 @@
                 document.getElementById('lbContent').innerHTML = '<div class="forum-empty">还没有人上榜，快来成为第一个！</div>';
                 return;
             }
+            const userIds = entries.map(e => e.user_id);
+            const profiles = await APEXON.DB.getProfilesForUsers(userIds);
+            const profileMap = new Map();
+            profiles.forEach(p => profileMap.set(p.user_id, p));
             const unit = LB_UNITS[type] || '分';
             document.getElementById('lbContent').innerHTML = entries.map((e, i) => {
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
                 const val = e.score_value || 0;
-                return '<div class="leaderboard-row"><div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div><div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
+                const profile = profileMap.get(e.user_id);
+                const avatar = '<div class="leaderboard-avatar" onclick="viewProfile(\'' + esc(e.user_id) + '\')">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
+                return '<div class="leaderboard-row">' + avatar + '<div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div><div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
             }).join('');
         }
+
+        window.viewProfile = function(userId) {
+            APEXON.UI.showProfileModal('view', userId);
+        };
 
         // ===== 个人成绩 =====
         async function loadPersonal() {

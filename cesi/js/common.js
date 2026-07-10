@@ -372,6 +372,46 @@
         console.error('Supabase avatar upload failed:', e);
         return null;
       }
+    },
+
+    async changeUsername(oldUsername, newUsername, token) {
+      const url = `${SUPABASE_URL}/rest/v1/rpc/change_username`;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ old_un: oldUsername, new_un: newUsername, token: token })
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('[changeUsername]', res.status, text);
+          return { success: false, error: '修改失败，请重试' };
+        }
+        const data = await res.json();
+        return data || { success: false, error: '未知错误' };
+      } catch (e) {
+        console.error('[changeUsername] failed:', e);
+        return { success: false, error: '网络错误' };
+      }
+    },
+
+    async getProfilesForUsers(userIds) {
+      if (!userIds || !userIds.length) return [];
+      const list = userIds.map(id => encodeURIComponent(String(id))).join(',');
+      const url = `${SUPABASE_URL}/rest/v1/profiles?user_id=in.(${list})`;
+      try {
+        const res = await fetch(url, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!res.ok) return [];
+        return await res.json();
+      } catch (e) {
+        return [];
+      }
     }
   };
   APEXON.DB = DB;
@@ -474,6 +514,27 @@
       const newAnonId = this._generateAnonId();
       localStorage.setItem('apexon-anon-id', newAnonId);
       this.anonId = newAnonId;
+    },
+
+    async changeUsername(newUsername, password) {
+      if (!this.isLoggedIn()) return { success: false, error: '请先登录' };
+      const oldUsername = this.currentUser.username;
+      const u = String(newUsername).trim().slice(0, 30);
+      const nameErr = this._validateUsername(u);
+      if (nameErr) return { success: false, error: nameErr };
+      if (u === oldUsername) return { success: false, error: '新用户名与当前相同' };
+
+      const loginResult = await this.login(oldUsername, password, true);
+      if (!loginResult.success) return { success: false, error: '密码错误' };
+
+      const token = this.currentUser.token;
+      const result = await DB.changeUsername(oldUsername, u, token);
+      if (!result || !result.success) {
+        return { success: false, error: result && result.error ? result.error : '修改失败' };
+      }
+
+      this._setSession(u, token, this.currentUser.expiresAt);
+      return { success: true };
     },
 
     _generateAnonId() {
@@ -825,23 +886,44 @@
       const style = document.createElement('style');
       style.id = 'apex-auth-styles';
       style.textContent = `
-        .apex-user-menu { display: flex; align-items: center; margin-left: 12px; }
+        .apex-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--apex-surface); color: var(--apex-text); padding: 10px 18px; border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid var(--apex-border-subtle); z-index: 2000; }
+        .apex-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .apex-user-menu { display: flex; align-items: center; margin-left: 12px; position: relative; }
         .apex-login-btn {
           border: none; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600;
           color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%);
           box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease;
         }
         .apex-login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
-        .apex-user-chip {
-          display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px;
-          border-radius: 20px; background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(124, 58, 237, 0.22);
+        .apex-user-bar {
+          display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 6px;
+          border-radius: 24px; background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2);
+          cursor: pointer; transition: background .15s ease, box-shadow .15s ease; user-select: none;
         }
+        .apex-user-bar:hover { background: rgba(124, 58, 237, 0.16); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15); }
+        .apex-avatar-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+        .apex-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; }
+        .apex-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .apex-avatar svg { width: 22px; height: 22px; }
+        .apex-mini-icon { width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .apex-mini-icon svg { width: 100%; height: 100%; }
         .apex-user-name { font-size: 13px; font-weight: 600; color: var(--apex-text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .apex-logout-btn {
-          width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(239, 68, 68, 0.15); color: #ef4444;
-          font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        .apex-user-caret { font-size: 10px; color: var(--apex-text-secondary); margin-left: 2px; }
+        .apex-user-dropdown {
+          position: absolute; top: calc(100% + 8px); right: 0; min-width: 150px;
+          background: var(--apex-surface); border: 1px solid var(--apex-border-subtle);
+          border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); padding: 6px;
+          opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .2s ease, transform .2s ease; z-index: 1001;
         }
-        .apex-logout-btn:hover { background: rgba(239, 68, 68, 0.25); }
+        .apex-user-dropdown.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .apex-user-dropdown button {
+          width: 100%; text-align: left; padding: 10px 14px; border: none; border-radius: 10px;
+          background: transparent; color: var(--apex-text); font-size: 13px; cursor: pointer;
+          transition: background .15s ease;
+        }
+        .apex-user-dropdown button:hover { background: rgba(124, 58, 237, 0.1); }
+        .apex-user-dropdown button.danger { color: #ef4444; }
+        .apex-user-dropdown button.danger:hover { background: rgba(239, 68, 68, 0.1); }
         .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-login-modal.show { opacity: 1; pointer-events: auto; }
         .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
@@ -880,7 +962,39 @@
         .apex-hint { font-size: 12px; color: var(--apex-text-tertiary); min-height: 16px; }
         .apex-hint.invalid { color: #ef4444; }
         .apex-hint.valid { color: #10b981; }
-        @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } }
+        .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+        .apex-profile-modal.show { opacity: 1; pointer-events: auto; }
+        .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
+        .apex-profile-card { position: relative; width: 92%; max-width: 400px; max-height: 86vh; overflow-y: auto; border-radius: 20px; padding: 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: translateY(12px); transition: transform .25s ease; }
+        .apex-profile-modal.show .apex-profile-card { transform: translateY(0); }
+        .apex-profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
+        .apex-profile-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
+        .apex-profile-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
+        .apex-profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .apex-profile-avatar { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .apex-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .apex-profile-avatar svg { width: 44px; height: 44px; }
+        .apex-profile-name { font-size: 18px; font-weight: 700; color: var(--apex-text); }
+        .apex-profile-section { margin-bottom: 16px; }
+        .apex-profile-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 4px; }
+        .apex-profile-value { font-size: 14px; color: var(--apex-text); word-break: break-word; }
+        .apex-profile-value a { color: #8B5CF6; text-decoration: none; }
+        .apex-profile-value a:hover { text-decoration: underline; }
+        .apex-profile-body input, .apex-profile-body textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; margin-bottom: 12px; }
+        .apex-profile-body input:focus, .apex-profile-body textarea:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
+        .apex-profile-body textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+        .apex-avatar-upload { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .apex-avatar-upload input { display: none; }
+        .apex-avatar-upload-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .apex-avatar-upload-text { font-size: 12px; color: var(--apex-text-secondary); }
+        .apex-profile-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
+        .apex-profile-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
+        .apex-profile-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .apex-profile-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; margin-top: -4px; margin-bottom: 8px; }
+        .leaderboard-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-right: 10px; }
+        .leaderboard-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .leaderboard-avatar svg { width: 18px; height: 18px; }
+        @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } .apex-profile-card { padding: 20px; } }
       `;
       document.head.appendChild(style);
     },
@@ -907,29 +1021,230 @@
       const personalContent = document.getElementById('personalContent');
 
       const isLoggedIn = APEXON.Auth.isLoggedIn();
-      if (!isLoggedIn) {
-        if (menu) {
-          menu.innerHTML = '<button class="apex-login-btn" id="apexLoginBtn">登录 / 注册</button>';
-          menu.querySelector('#apexLoginBtn').addEventListener('click', () => this.showLoginModal());
+      const name = APEXON.Auth.getUser() || '用户';
+      const userId = APEXON.Auth.getUserId();
+
+      if (menu) {
+        const miniIcon = '<svg viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(124,58,237,0.3));"><defs><linearGradient id="miniGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#60A5FA"/></linearGradient></defs><path d="M12 2l10 6-10 6L2 8l10-6z" fill="url(#miniGrad)"/></svg>';
+        if (!isLoggedIn) {
+          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="login">登录 / 注册</button></div>';
+        } else {
+          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar" id="apexHeaderAvatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="edit-profile">编辑资料</button><button data-action="change-username">修改用户名</button><button data-action="logout">退出账号</button><button data-action="delete-account" class="danger">注销账号</button></div>';
         }
+        this._loadHeaderAvatar(userId);
+        this._bindUserMenu();
+      }
+
+      if (!isLoggedIn) {
         if (forumTip) {
           forumTip.style.display = 'block';
-          forumTip.textContent = '当前为游客模式，登录/注册后可将数据合并到账号';
+          forumTip.textContent = '游客模式：数据仅在当前设备保存，建议登录以保障安全';
         }
         if (forumInput) forumInput.style.display = 'flex';
-        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式的成绩也会被保存，登录后自动合并</div>';
+        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式：数据保存在本地浏览器，换设备或清除数据会丢失，建议登录/注册</div>';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
 
-      const name = APEXON.Auth.getUser() || '用户';
-      if (menu) {
-        menu.innerHTML = '<div class="apex-user-chip"><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><button class="apex-logout-btn" id="apexLogoutBtn" title="退出">×</button></div>';
-        menu.querySelector('#apexLogoutBtn').addEventListener('click', () => APEXON.Auth.logout());
-      }
       if (forumTip) forumTip.style.display = 'none';
       if (forumInput) forumInput.style.display = 'flex';
       document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: name } }));
+    },
+
+    _renderAvatarHTML(avatarUrl) {
+      if (avatarUrl) {
+        return '<img src="' + Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')">';
+      }
+      return '<svg viewBox="0 0 64 64" style="width:62%;height:62%;"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg>';
+    },
+
+    async _loadHeaderAvatar(userId) {
+      if (!userId) return;
+      const profile = await DB.getProfile(userId);
+      if (!profile || !profile.avatar_url) return;
+      const avatarEl = document.getElementById('apexHeaderAvatar');
+      if (avatarEl) avatarEl.innerHTML = this._renderAvatarHTML(profile.avatar_url);
+    },
+
+    _bindUserMenu() {
+      const bar = document.getElementById('apexUserBar');
+      const dropdown = document.getElementById('apexUserDropdown');
+      if (!bar || !dropdown) return;
+      bar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+      });
+      dropdown.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.remove('show');
+          const action = btn.dataset.action;
+          if (action === 'login') this.showLoginModal();
+          if (action === 'edit-profile') this.showProfileModal('edit', APEXON.Auth.getUserId());
+          if (action === 'change-username') this.showChangeUsernameModal();
+          if (action === 'logout') APEXON.Auth.logout();
+          if (action === 'delete-account') APEXON.Auth.deleteAccount();
+        });
+      });
+      const closeDropdown = (e) => {
+        if (!e.target.closest('#apex-user-menu')) dropdown.classList.remove('show');
+      };
+      document.removeEventListener('click', this._dropdownCloser);
+      document.addEventListener('click', closeDropdown);
+      this._dropdownCloser = closeDropdown;
+    },
+
+    showProfileModal(mode, userId) {
+      if (!userId) return;
+      const isEdit = mode === 'edit' && userId === APEXON.Auth.getUserId();
+      let modal = document.getElementById('apex-profile-modal');
+      if (modal) modal.remove();
+
+      modal = document.createElement('div');
+      modal.id = 'apex-profile-modal';
+      modal.className = 'apex-profile-modal';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexProfileClose">×</button><div id="apexProfileBody"></div></div>';
+      document.body.appendChild(modal);
+
+      const close = () => modal.classList.remove('show');
+      modal.querySelector('#apexProfileClose').addEventListener('click', close);
+      modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
+
+      const load = async () => {
+        const profile = await DB.getProfile(userId);
+        const username = profile && profile.username ? profile.username : userId;
+        const body = modal.querySelector('#apexProfileBody');
+        if (isEdit) {
+          body.innerHTML = this._buildProfileEditHTML(profile, username);
+          this._bindProfileEdit(profile, username);
+        } else {
+          body.innerHTML = this._buildProfileViewHTML(profile, username);
+        }
+        requestAnimationFrame(() => modal.classList.add('show'));
+      };
+      load();
+    },
+
+    _buildProfileViewHTML(profile, username) {
+      const esc = Security.escapeHtml;
+      const p = profile || {};
+      const avatar = '<div class="apex-profile-avatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
+      const bio = p.bio || '这个人很懒，什么都没有写。';
+      const location = p.location || '未知';
+      const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : '未填写';
+      const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : '未填写';
+      return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">个人简介</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">所在地</div><div class="apex-profile-value">' + esc(location) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">个人网站</div><div class="apex-profile-value">' + website + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">社交链接</div><div class="apex-profile-value">' + social + '</div></div>';
+    },
+
+    _buildProfileEditHTML(profile, username) {
+      const esc = Security.escapeHtml;
+      const p = profile || {};
+      const avatar = '<div class="apex-profile-avatar" id="apexEditAvatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
+      return '<div class="apex-profile-header"><div class="apex-profile-name">' + esc(username) + '</div></div>' +
+        '<div class="apex-avatar-upload"><label class="apex-avatar-upload-label" for="apexAvatarInput">' + avatar + '<span class="apex-avatar-upload-text">点击更换头像</span></label><input type="file" id="apexAvatarInput" accept="image/*"></div>' +
+        '<div class="apex-profile-body">' +
+        '<textarea id="apexEditBio" placeholder="个人简介（最多 200 字）" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
+        '<input type="text" id="apexEditLocation" placeholder="所在地" maxlength="80" value="' + esc(p.location || '') + '">' +
+        '<input type="text" id="apexEditWebsite" placeholder="个人网站" maxlength="200" value="' + esc(p.website || '') + '">' +
+        '<input type="text" id="apexEditSocial" placeholder="社交链接" maxlength="200" value="' + esc(p.social_links || '') + '">' +
+        '<div class="apex-profile-error" id="apexProfileError"></div>' +
+        '<button class="apex-profile-submit" id="apexProfileSubmit">保存资料</button>' +
+        '</div>';
+    },
+
+    _bindProfileEdit(profile, username) {
+      const fileInput = document.getElementById('apexAvatarInput');
+      const avatarPreview = document.getElementById('apexEditAvatar');
+      let pendingFile = null;
+      if (fileInput && avatarPreview) {
+        fileInput.addEventListener('change', () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+          if (file.size > 2 * 1024 * 1024) { UI.toast('头像大小不能超过 2MB'); return; }
+          pendingFile = file;
+          const url = URL.createObjectURL(file);
+          avatarPreview.innerHTML = this._renderAvatarHTML(url);
+        });
+      }
+      const submit = document.getElementById('apexProfileSubmit');
+      if (submit) {
+        submit.addEventListener('click', async () => {
+          const errorEl = document.getElementById('apexProfileError');
+          errorEl.textContent = '';
+          submit.disabled = true;
+          const payload = {
+            bio: document.getElementById('apexEditBio').value,
+            location: document.getElementById('apexEditLocation').value,
+            website: document.getElementById('apexEditWebsite').value,
+            social: document.getElementById('apexEditSocial').value
+          };
+          if (pendingFile) {
+            const avatarUrl = await DB.uploadAvatarToSupabase(APEXON.Auth.getUserId(), pendingFile);
+            if (avatarUrl) payload.avatar_url = avatarUrl;
+            else { errorEl.textContent = '头像上传失败'; submit.disabled = false; return; }
+          }
+          const saved = await DB.saveProfile(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), payload);
+          submit.disabled = false;
+          if (saved) {
+            UI.toast('资料已保存');
+            this._loadHeaderAvatar(APEXON.Auth.getUserId());
+            document.getElementById('apex-profile-modal').classList.remove('show');
+          } else {
+            errorEl.textContent = '保存失败，请重试';
+          }
+        });
+      }
+    },
+
+    showChangeUsernameModal() {
+      if (!APEXON.Auth.isLoggedIn()) return;
+      let modal = document.getElementById('apex-username-modal');
+      if (modal) modal.remove();
+
+      modal = document.createElement('div');
+      modal.id = 'apex-username-modal';
+      modal.className = 'apex-profile-modal';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexUsernameClose">×</button><div class="apex-profile-header"><div class="apex-profile-name">修改用户名</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">当前用户名</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getUser()) + '</div></div><input type="text" id="apexNewUsername" placeholder="新用户名" maxlength="30"><div class="apex-hint" id="apexNewUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap" style="margin-top:12px;"><input type="password" id="apexUsernamePassword" placeholder="当前密码" maxlength="64"></div><div class="apex-profile-error" id="apexUsernameError"></div><button class="apex-profile-submit" id="apexUsernameSubmit">确认修改</button></div></div>';
+      document.body.appendChild(modal);
+
+      const close = () => modal.classList.remove('show');
+      modal.querySelector('#apexUsernameClose').addEventListener('click', close);
+      modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
+
+      const nameInput = modal.querySelector('#apexNewUsername');
+      const hint = modal.querySelector('#apexNewUsernameHint');
+      const submit = modal.querySelector('#apexUsernameSubmit');
+      const validate = () => {
+        const err = APEXON.Auth._validateUsername(nameInput.value.trim());
+        hint.textContent = err || (nameInput.value.trim() ? '格式正确' : '2-30 位，支持中英文、数字、下划线');
+        hint.className = 'apex-hint' + (err ? ' invalid' : (nameInput.value.trim() ? ' valid' : ''));
+        submit.disabled = !!err;
+      };
+      nameInput.addEventListener('input', validate);
+
+      submit.addEventListener('click', async () => {
+        const errorEl = document.getElementById('apexUsernameError');
+        errorEl.textContent = '';
+        submit.disabled = true;
+        const newName = document.getElementById('apexNewUsername').value.trim();
+        const password = document.getElementById('apexUsernamePassword').value;
+        const result = await APEXON.Auth.changeUsername(newName, password);
+        submit.disabled = false;
+        if (result.success) {
+          UI.toast('用户名已修改');
+          modal.classList.remove('show');
+          this.updateUserDisplay();
+        } else {
+          errorEl.textContent = result.error || '修改失败';
+        }
+      });
+
+      requestAnimationFrame(() => modal.classList.add('show'));
+      validate();
     },
 
     showLoginModal() {
