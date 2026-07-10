@@ -144,14 +144,59 @@
         if (!res.ok) {
           const text = await res.text();
           console.error('[getSiteStats]', res.status, text);
-          return null;
+          return this._fallbackSiteStats();
         }
         const data = await res.json();
-        return data || null;
+        if (data && (data.total_users > 0 || data.total_tests > 0)) return data;
+        return this._fallbackSiteStats();
       } catch (e) {
         console.error('[getSiteStats] failed:', e);
-        return null;
+        return this._fallbackSiteStats();
       }
+    },
+
+    async _countScores() {
+      const url = `${SUPABASE_URL}/rest/v1/scores?select=count()`;
+      try {
+        const res = await fetch(url, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!res.ok) return 0;
+        const data = await res.json();
+        return data[0] ? (parseInt(data[0].count, 10) || 0) : 0;
+      } catch (e) {
+        return 0;
+      }
+    },
+
+    async _getAllScoreUserIds() {
+      const url = `${SUPABASE_URL}/rest/v1/scores?select=user_id&limit=10000`;
+      try {
+        const res = await fetch(url, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!res.ok) return [];
+        const rows = await res.json();
+        const set = new Set();
+        for (const row of rows) set.add(row.user_id);
+        return Array.from(set);
+      } catch (e) {
+        return [];
+      }
+    },
+
+    async _fallbackSiteStats() {
+      const [totalTests, userIds] = await Promise.all([
+        this._countScores(),
+        this._getAllScoreUserIds()
+      ]);
+      return {
+        online: 0,
+        registered: 0,
+        anonymous: 0,
+        total_users: userIds.length,
+        total_tests: totalTests
+      };
     },
 
     async saveScore(userId, username, testType, data) {
