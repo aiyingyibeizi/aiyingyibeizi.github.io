@@ -120,6 +120,40 @@
       return !!result;
     },
 
+    async upsertOnline(userId) {
+      if (!userId) return false;
+      const result = await this.request('online_users', 'POST', {
+        user_id: String(userId),
+        last_seen: new Date().toISOString()
+      }, 'on_conflict=user_id');
+      return !!result;
+    },
+
+    async getSiteStats() {
+      const url = `${SUPABASE_URL}/rest/v1/rpc/get_site_stats`;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: '{}'
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('[getSiteStats]', res.status, text);
+          return null;
+        }
+        const data = await res.json();
+        return data || null;
+      } catch (e) {
+        console.error('[getSiteStats] failed:', e);
+        return null;
+      }
+    },
+
     async saveScore(userId, username, testType, data) {
       if (!userId) {
         console.error('saveScore rejected: missing userId');
@@ -666,7 +700,42 @@
   };
   APEXON.Visibility = VisibilityManager;
 
-  // ===== 5. 工具函数 =====
+  // ===== 5. 在线状态追踪 =====
+  const OnlineTracker = {
+    timer: null,
+    INTERVAL_MS: 30000,
+
+    init(userId) {
+      if (!userId) return;
+      this.stop();
+      this._boundUserId = userId;
+      this._beat(userId);
+      this.timer = setInterval(() => this._beat(userId), this.INTERVAL_MS);
+      this._visibilityHandler = () => {
+        if (!document.hidden) this._beat(userId);
+      };
+      document.addEventListener('visibilitychange', this._visibilityHandler);
+    },
+
+    stop() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+      if (this._visibilityHandler) {
+        document.removeEventListener('visibilitychange', this._visibilityHandler);
+        this._visibilityHandler = null;
+      }
+    },
+
+    async _beat(userId) {
+      if (document.hidden) return;
+      await DB.upsertOnline(userId);
+    }
+  };
+  APEXON.OnlineTracker = OnlineTracker;
+
+  // ===== 6. 工具函数 =====
   const Utils = {
     debounce(fn, ms) {
       let timer;
@@ -704,7 +773,7 @@
   };
   APEXON.Utils = Utils;
 
-  // ===== 6. UI 工具 =====
+  // ===== 7. UI 工具 =====
   const UI = {
     toast(msg, duration = 2500) {
       let el = document.getElementById('apex-toast');
@@ -830,6 +899,8 @@
     },
 
     updateUserDisplay() {
+      APEXON.OnlineTracker.init(APEXON.Auth.getUserId());
+
       const menu = document.getElementById('apex-user-menu');
       const forumTip = document.getElementById('forumLoginTip');
       const forumInput = document.getElementById('forumInputWrap');
@@ -955,7 +1026,7 @@
   };
   APEXON.UI = UI;
 
-  // ===== 7. 粒子背景系统 =====
+  // ===== 8. 粒子背景系统 =====
   const ParticleSystem = {
     defaults: {
       selector: 'particles',
@@ -1599,7 +1670,7 @@
   };
   APEXON.Particles = ParticleSystem;
 
-  // ===== 8. 测试引擎 =====
+  // ===== 9. 测试引擎 =====
   const Tests = {
     // ---------- 打字测试 ----------
     Type: {
@@ -2010,12 +2081,12 @@
   };
   APEXON.Tests = Tests;
 
-  // ===== 8. 全局接口 =====
+  // ===== 10. 全局接口 =====
   global.backHome = UI.backHome;
   global.APEXON.logout = Auth.logout.bind(Auth);
   global.APEXON.deleteAccount = Auth.deleteAccount.bind(Auth);
 
-  // ===== 9. 全局防复制/防选中（输入框除外）=====
+  // ===== 11. 全局防复制/防选中（输入框除外）=====
   function initTextProtection() {
     const isEditable = (target) => !!target && (
       target.tagName === 'INPUT' ||
@@ -2050,12 +2121,13 @@
     });
   }
 
-  // ===== 10. 初始化 =====
+  // ===== 12. 初始化 =====
   async function boot() {
     VisibilityManager.init();
     UI.initTheme();
     Auth.init();
     await Auth.validateSession();
+    OnlineTracker.init(Auth.getUserId());
     UI.mountUserButton();
     initTextProtection();
   }

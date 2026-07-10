@@ -50,9 +50,9 @@
             <div class="hero-title-main">APEXON</div>
             <div class="hero-tagline">全能能力测试系统 · 挑战人类极限</div>
             <div class="hero-stats-bar">
-                <div class="hero-stat-chip"><strong id="statUserCount">0</strong> 位玩家</div>
-                <div class="hero-stat-chip"><strong id="statTestCount">0</strong> 次测试</div>
-                <div class="hero-stat-chip"><strong id="statOnline">在线</strong></div>
+                <div class="hero-stat-chip"><strong id="statOnline">0</strong> 在线人数</div>
+                <div class="hero-stat-chip"><strong id="statTotalUsers">0</strong> 总玩家数量</div>
+                <div class="hero-stat-chip"><strong id="statTotalTests">0</strong> 总测试数</div>
             </div>
         </div>
 
@@ -158,6 +158,7 @@
             loadPersonal();
             loadComments();
             updateStats();
+            setInterval(updateStats, 5000);
             document.addEventListener('apexon:userchange', (e) => {
                 if (e.detail && e.detail.loggedIn) {
                     loadPersonal();
@@ -168,10 +169,18 @@
 
         async function updateStats() {
             try {
+                const stats = await APEXON.DB.getSiteStats();
+                if (stats) {
+                    document.getElementById('statOnline').textContent = stats.online || 0;
+                    document.getElementById('statTotalUsers').textContent = stats.total_users || 0;
+                    document.getElementById('statTotalTests').textContent = stats.total_tests || 0;
+                    return;
+                }
                 const scores = await APEXON.DB.getLeaderboard('reaction', 9999);
                 const uniqueUsers = new Set(scores.map(s => s.user_id)).size;
-                document.getElementById('statUserCount').textContent = uniqueUsers;
-                document.getElementById('statTestCount').textContent = scores.length;
+                document.getElementById('statTotalUsers').textContent = uniqueUsers;
+                document.getElementById('statTotalTests').textContent = scores.length;
+                document.getElementById('statOnline').textContent = '-';
             } catch (e) {}
         }
 
