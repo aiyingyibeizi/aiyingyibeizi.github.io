@@ -19,17 +19,6 @@ body {
     var(--apex-bg);
 }
 
-.apex-bg-image {
-  position: fixed;
-  inset: 0;
-  z-index: -3;
-  pointer-events: none;
-  background: url('../assets/hero-bg.jpg') center/cover no-repeat;
-  opacity: 0;
-  mix-blend-mode: screen;
-  display: none;
-}
-
 /* 更细密的数据网格 */
 body::before {
   background-image:
