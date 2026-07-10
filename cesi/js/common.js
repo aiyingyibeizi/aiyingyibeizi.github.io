@@ -330,6 +330,7 @@
       const website = Security.filterDangerous((payload && payload.website) || '').slice(0, 200);
       const social = Security.filterDangerous((payload && payload.social) || '').slice(0, 200);
       const avatarUrl = (payload && payload.avatar_url) || null;
+      const gender = (payload && payload.gender) || null;
 
       const body = {
         user_id: userId,
@@ -341,6 +342,7 @@
         updated_at: new Date().toISOString()
       };
       if (avatarUrl) body.avatar_url = avatarUrl;
+      if (gender) body.gender = gender;
 
       const result = await this.request('profiles', 'POST', body, 'on_conflict=user_id');
       return !!result;
@@ -557,7 +559,7 @@
       return null;
     },
 
-    async register(username, password, remember) {
+    async register(username, password, remember, gender) {
       const u = String(username).trim().slice(0, 30);
       const nameErr = this._validateUsername(u);
       if (nameErr) return { success: false, error: nameErr };
@@ -583,6 +585,14 @@
         updated_at: new Date().toISOString()
       });
       if (!result) return { success: false, error: '注册失败，请重试' };
+
+      await DB.saveProfile(u, u, {
+        bio: '',
+        location: '',
+        website: '',
+        social: '',
+        gender: ['male', 'female', 'secret'].includes(gender) ? gender : 'secret'
+      });
 
       this._setSession(u, token, expiresAt);
       await this.mergeAnonymousData();
@@ -962,6 +972,17 @@
         .apex-hint { font-size: 12px; color: var(--apex-text-tertiary); min-height: 16px; }
         .apex-hint.invalid { color: #ef4444; }
         .apex-hint.valid { color: #10b981; }
+        .apex-gender-group { margin-bottom: 12px; }
+        .apex-gender-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 6px; }
+        .apex-gender-options { display: flex; gap: 8px; }
+        .apex-gender-option { flex: 1; position: relative; cursor: pointer; }
+        .apex-gender-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .apex-gender-option span { display: block; text-align: center; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 13px; transition: all .15s ease; }
+        .apex-gender-option input:checked + span { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.18); color: #7C3AED; font-weight: 600; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15); }
+        .apex-terms { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--apex-text-secondary); cursor: pointer; user-select: none; margin-bottom: 12px; }
+        .apex-terms input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; margin-top: 2px; flex-shrink: 0; }
+        .apex-terms a { color: #8B5CF6; text-decoration: none; }
+        .apex-terms a:hover { text-decoration: underline; }
         .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-profile-modal.show { opacity: 1; pointer-events: auto; }
         .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
@@ -1124,6 +1145,12 @@
       load();
     },
 
+    _genderLabel(value) {
+      if (value === 'male') return '男';
+      if (value === 'female') return '女';
+      return '保密';
+    },
+
     _buildProfileViewHTML(profile, username) {
       const esc = Security.escapeHtml;
       const p = profile || {};
@@ -1133,6 +1160,7 @@
       const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : '未填写';
       const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : '未填写';
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">性别</div><div class="apex-profile-value">' + esc(this._genderLabel(p.gender)) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">个人简介</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">所在地</div><div class="apex-profile-value">' + esc(location) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">个人网站</div><div class="apex-profile-value">' + website + '</div></div>' +
@@ -1143,9 +1171,12 @@
       const esc = Security.escapeHtml;
       const p = profile || {};
       const avatar = '<div class="apex-profile-avatar" id="apexEditAvatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
+      const genderChecked = (value) => p.gender === value ? ' checked' : '';
+      const genderSelect = '<div class="apex-gender-group"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="male"' + genderChecked('male') + '><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="female"' + genderChecked('female') + '><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="secret"' + genderChecked('secret') + '><span>保密</span></label></div></div>';
       return '<div class="apex-profile-header"><div class="apex-profile-name">' + esc(username) + '</div></div>' +
         '<div class="apex-avatar-upload"><label class="apex-avatar-upload-label" for="apexAvatarInput">' + avatar + '<span class="apex-avatar-upload-text">点击更换头像</span></label><input type="file" id="apexAvatarInput" accept="image/*"></div>' +
         '<div class="apex-profile-body">' +
+        genderSelect +
         '<textarea id="apexEditBio" placeholder="个人简介（最多 200 字）" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
         '<input type="text" id="apexEditLocation" placeholder="所在地" maxlength="80" value="' + esc(p.location || '') + '">' +
         '<input type="text" id="apexEditWebsite" placeholder="个人网站" maxlength="200" value="' + esc(p.website || '') + '">' +
@@ -1175,11 +1206,13 @@
           const errorEl = document.getElementById('apexProfileError');
           errorEl.textContent = '';
           submit.disabled = true;
+          const genderEl = document.querySelector('input[name="apexEditGender"]:checked');
           const payload = {
             bio: document.getElementById('apexEditBio').value,
             location: document.getElementById('apexEditLocation').value,
             website: document.getElementById('apexEditWebsite').value,
-            social: document.getElementById('apexEditSocial').value
+            social: document.getElementById('apexEditSocial').value,
+            gender: genderEl ? genderEl.value : 'secret'
           };
           if (pendingFile) {
             const avatarUrl = await DB.uploadAvatarToSupabase(APEXON.Auth.getUserId(), pendingFile);
@@ -1255,7 +1288,7 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="确认密码" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label></div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>我已阅读并同意 <a href="#" onclick="event.preventDefault();">服务条款</a> 和 <a href="#" onclick="event.preventDefault();">隐私政策</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
       document.body.appendChild(modal);
 
       const tabs = modal.querySelectorAll('.apex-login-tab');
@@ -1267,6 +1300,12 @@
       const passwordHint = modal.querySelector('#apexPasswordHint');
       const rememberMe = modal.querySelector('#apexRememberMe');
       const toggleBtn = modal.querySelector('#apexPasswordToggle');
+      const confirmWrap = modal.querySelector('#apexConfirmWrap');
+      const confirmInput = modal.querySelector('#apexConfirmPassword');
+      const confirmHint = modal.querySelector('#apexConfirmHint');
+      const genderGroup = modal.querySelector('#apexGenderGroup');
+      const termsGroup = modal.querySelector('#apexTermsGroup');
+      const termsCheckbox = modal.querySelector('#apexTerms');
       let mode = 'login';
 
       const setMode = (m) => {
@@ -1274,7 +1313,21 @@
         tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === m));
         submitBtn.textContent = m === 'login' ? '登录' : '注册';
         errorEl.textContent = '';
+        const isRegister = m === 'register';
+        confirmWrap.style.display = isRegister ? 'block' : 'none';
+        confirmHint.style.display = isRegister ? 'block' : 'none';
+        genderGroup.style.display = isRegister ? 'block' : 'none';
+        termsGroup.style.display = isRegister ? 'flex' : 'none';
+        if (!isRegister) {
+          confirmInput.value = '';
+          termsCheckbox.checked = false;
+        }
         validate();
+      };
+
+      const getGender = () => {
+        const checked = modal.querySelector('input[name="apexGender"]:checked');
+        return checked ? checked.value : 'secret';
       };
 
       const validate = () => {
@@ -1286,7 +1339,18 @@
         usernameHint.className = 'apex-hint' + (nameErr ? ' invalid' : (u ? ' valid' : ''));
         passwordHint.textContent = passErr || (p ? '格式正确' : '至少 8 位，同时包含字母和数字');
         passwordHint.className = 'apex-hint' + (passErr ? ' invalid' : (p ? ' valid' : ''));
-        submitBtn.disabled = !!(nameErr || passErr);
+
+        let confirmErr = null;
+        let termsErr = null;
+        if (mode === 'register') {
+          if (confirmInput.value !== p) confirmErr = '两次输入的密码不一致';
+          if (!termsCheckbox.checked) termsErr = '请同意服务条款和隐私政策';
+        }
+        confirmHint.textContent = confirmErr || (mode === 'register' ? (confirmInput.value ? '密码一致' : '请再次输入密码') : '');
+        confirmHint.className = 'apex-hint' + (confirmErr ? ' invalid' : (mode === 'register' && confirmInput.value ? ' valid' : ''));
+        confirmHint.style.display = mode === 'register' ? 'block' : 'none';
+
+        submitBtn.disabled = !!(nameErr || passErr || confirmErr || termsErr);
       };
 
       const togglePassword = () => {
@@ -1312,7 +1376,7 @@
         errorEl.textContent = '';
         const result = mode === 'login'
           ? await APEXON.Auth.login(u, p, rememberMe.checked)
-          : await APEXON.Auth.register(u, p, rememberMe.checked);
+          : await APEXON.Auth.register(u, p, rememberMe.checked, getGender());
         submitBtn.disabled = false;
         if (result.success) {
           modal.classList.remove('show');
@@ -1326,7 +1390,14 @@
       };
 
       submitBtn.addEventListener('click', doSubmit);
-      passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
+      passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') {
+        if (mode === 'register') confirmInput.focus();
+        else doSubmit();
+      }});
+      confirmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
+      confirmInput.addEventListener('input', validate);
+      termsCheckbox.addEventListener('change', validate);
+      modal.querySelectorAll('input[name="apexGender"]').forEach(r => r.addEventListener('change', validate));
       usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
 
       validate();
