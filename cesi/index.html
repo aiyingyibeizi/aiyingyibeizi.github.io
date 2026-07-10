@@ -137,6 +137,7 @@
                 <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')">网站建议</button>
             </div>
             <div class="forum-list" id="forumList"></div>
+            <div class="forum-pagination" id="forumPagination"></div>
         </div>
 
         <div class="feedback-section" id="feedbackSection">
@@ -233,7 +234,10 @@
         async function loadPersonal() {
             const esc = APEXON.Security.escapeHtml;
             const userId = APEXON.Auth.getUserId();
-            if (!userId) return;
+            if (!userId) {
+                document.getElementById('personalContent').innerHTML = '<div class="forum-empty">登录或游客模式均可记录成绩</div>';
+                return;
+            }
 
             const types = [
                 { key: 'reaction', name: '反应', unit: 'ms' },
@@ -245,17 +249,25 @@
                 { key: 'aim', name: '瞄准训练', unit: '分' },
                 { key: 'sequence', name: '序列记忆', unit: '级' }
             ];
-            let html = '<table style="width:100%;border-collapse:collapse">';
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
+            let html = '<div class="personal-grid">';
             for (const t of types) {
                 const scores = await APEXON.DB.getLeaderboard(t.key, 9999);
                 const myScores = scores.filter(s => s.user_id === userId);
                 const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(t.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
                 const count = myScores.length;
-                html += '<tr><td style="padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)">' + esc(t.name) + '</td><td style="text-align:right;padding:10px 0;border-bottom:1px solid var(--apex-border-subtle)"><strong style="color:var(--apex-text)">' + esc(val) + '</strong> ' + esc(t.unit) + ' · ' + esc(count) + ' 次</td></tr>';
+                const rank = best ? scores.findIndex(s => s.user_id === userId) + 1 : 0;
+                html += '<div class="personal-card">' +
+                    '<div class="personal-card-top">' +
+                        '<span class="personal-card-name">' + esc(t.name) + '</span>' +
+                        '<span class="personal-card-count">' + esc(count) + ' 次</span>' +
+                    '</div>' +
+                    '<div class="personal-card-value">' + esc(val) + ' <span class="personal-card-unit">' + esc(t.unit) + '</span></div>' +
+                    '<div class="personal-card-rank">' + (rank ? '第 ' + rank + ' 名' : '暂无排名') + '</div>' +
+                '</div>';
             }
-            html += '</table>';
+            html += '</div>';
             document.getElementById('personalContent').innerHTML = html;
         }
 
@@ -267,14 +279,25 @@
             bug: 'Bug 反馈',
             suggestion: '网站建议'
         };
+        const COMMENTS_PER_PAGE = 5;
+        const MAX_COMMENT_PAGES = 8;
         let currentCommentFilter = 'all';
+        let allComments = [];
+        let currentCommentPage = 1;
 
         window.setCommentFilter = function(cat) {
             currentCommentFilter = cat;
+            currentCommentPage = 1;
             document.querySelectorAll('#forumFilterBar .forum-filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.cat === cat);
             });
             loadComments();
+        };
+
+        window.goCommentPage = function(page) {
+            if (page < 1 || page > Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES)) return;
+            currentCommentPage = page;
+            renderComments();
         };
 
         window.postComment = async function() {
@@ -289,16 +312,29 @@
                 return;
             }
             document.getElementById('forumText').value = '';
+            currentCommentPage = 1;
             setCommentFilter(category);
         };
+
         async function loadComments() {
+            allComments = await APEXON.DB.getComments(COMMENTS_PER_PAGE * MAX_COMMENT_PAGES, currentCommentFilter);
+            currentCommentPage = 1;
+            renderComments();
+        }
+
+        function renderComments() {
             const esc = APEXON.Security.escapeHtml;
-            const list = await APEXON.DB.getComments(50, currentCommentFilter);
-            if (!list.length) {
-                document.getElementById('forumList').innerHTML = '<div class="forum-empty">该分类下还没有讨论</div>';
+            const listEl = document.getElementById('forumList');
+            const pageEl = document.getElementById('forumPagination');
+            if (!allComments.length) {
+                listEl.innerHTML = '<div class="forum-empty">该分类下还没有讨论</div>';
+                pageEl.innerHTML = '';
                 return;
             }
-            document.getElementById('forumList').innerHTML = list.map(c =>
+            const totalPages = Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES);
+            const start = (currentCommentPage - 1) * COMMENTS_PER_PAGE;
+            const pageItems = allComments.slice(start, start + COMMENTS_PER_PAGE);
+            listEl.innerHTML = pageItems.map(c =>
                 '<div class="forum-item">' +
                     '<div class="forum-item-header">' +
                         '<div class="forum-item-user">' + esc(c.username) + '</div>' +
@@ -308,6 +344,17 @@
                     '<div class="forum-item-content">' + esc(c.content) + '</div>' +
                 '</div>'
             ).join('');
+
+            if (totalPages <= 1) {
+                pageEl.innerHTML = '';
+                return;
+            }
+            let pagesHtml = '<button class="forum-page-btn forum-page-prev" onclick="goCommentPage(' + (currentCommentPage - 1) + ')"' + (currentCommentPage === 1 ? ' disabled' : '') + '>上一页</button>';
+            for (let i = 1; i <= totalPages; i++) {
+                pagesHtml += '<button class="forum-page-btn ' + (i === currentCommentPage ? 'active' : '') + '" onclick="goCommentPage(' + i + ')">' + i + '</button>';
+            }
+            pagesHtml += '<button class="forum-page-btn forum-page-next" onclick="goCommentPage(' + (currentCommentPage + 1) + ')"' + (currentCommentPage === totalPages ? ' disabled' : '') + '>下一页</button>';
+            pageEl.innerHTML = pagesHtml;
         }
 
         // ===== 反馈 =====

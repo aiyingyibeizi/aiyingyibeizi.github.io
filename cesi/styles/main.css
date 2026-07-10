@@ -3312,6 +3312,231 @@ canvas#testBox,
 }
 
 /* ============================================================================
+   Section: Homepage Compact Layout & Pagination
+   ============================================================================ */
+
+/* 四大模块更紧凑 */
+.leaderboard,
+.personal-stats,
+.forum-section,
+.feedback-section {
+  padding: 16px;
+}
+
+.leaderboard-title,
+.personal-stats-title,
+.forum-title,
+.feedback-title {
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+/* 排行榜更紧凑 */
+.leaderboard-tabs {
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.leaderboard-tab {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+}
+
+.leaderboard-row {
+  padding: 8px 0;
+}
+
+/* 个人成绩：2x4 紧凑卡片网格 */
+.personal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.personal-card {
+  background: var(--apex-bg);
+  border: 1px solid var(--apex-border-subtle);
+  border-radius: var(--apex-radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform var(--apex-transition-fast),
+    background-color var(--apex-transition-fast),
+    border-color var(--apex-transition-fast);
+}
+
+.personal-card:hover {
+  background: var(--apex-surface-elevated);
+  border-color: var(--apex-border);
+  transform: translateY(-2px);
+}
+
+.personal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.personal-card-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--apex-text);
+}
+
+.personal-card-count {
+  font-size: 0.75rem;
+  color: var(--apex-text-tertiary);
+}
+
+.personal-card-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--apex-text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.personal-card-unit {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--apex-text-secondary);
+}
+
+.personal-card-rank {
+  font-size: 0.75rem;
+  color: var(--apex-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .personal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 讨论区更紧凑 */
+.forum-input-wrap {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.forum-input-wrap textarea {
+  min-height: 56px;
+}
+
+.forum-filter-bar {
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.forum-filter-btn {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+}
+
+.forum-item {
+  padding: 12px;
+}
+
+.forum-item-header {
+  margin-bottom: 4px;
+}
+
+.forum-item-category {
+  font-size: 0.6875rem;
+  padding: 1px 7px;
+}
+
+.forum-item-time {
+  font-size: 0.6875rem;
+}
+
+.forum-item-content {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* 分页：层叠页码 */
+.forum-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.forum-page-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-bg);
+  color: var(--apex-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform var(--apex-transition-fast),
+    background-color var(--apex-transition-fast),
+    border-color var(--apex-transition-fast),
+    color var(--apex-transition-fast),
+    box-shadow var(--apex-transition-fast);
+}
+
+.forum-page-btn:hover:not(:disabled) {
+  border-color: var(--apex-primary);
+  color: var(--apex-primary);
+  transform: translateY(-2px);
+}
+
+.forum-page-btn.active {
+  background: var(--apex-primary);
+  color: var(--apex-text-inverse);
+  border-color: var(--apex-primary);
+  transform: translateY(-5px) scale(1.06);
+  box-shadow:
+    0 6px 14px rgba(109, 93, 252, 0.28),
+    0 2px 0 rgba(255, 255, 255, 0.08) inset;
+  z-index: 2;
+}
+
+.forum-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.forum-page-prev,
+.forum-page-next {
+  padding: 0 12px;
+  font-size: 0.75rem;
+}
+
+/* 反馈区更紧凑 */
+.feedback-email-box {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.feedback-email-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+.feedback-form {
+  gap: 10px;
+}
+
+.feedback-form textarea {
+  min-height: 88px;
+}
+
+/* ============================================================================
    Section: Emergency Override Patch
    ============================================================================ */
 
