@@ -1041,7 +1041,6 @@
           forumTip.textContent = '游客模式可正常使用全部功能，登录后可修改用户名与资料';
         }
         if (forumInput) forumInput.style.display = 'flex';
-        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">游客模式：成绩、评论均会保存，登录后自动合并并解锁资料编辑</div>';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
