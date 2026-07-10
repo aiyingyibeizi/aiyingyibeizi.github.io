@@ -8,15 +8,6 @@
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
-    <!-- Clerk 登录系统（已临时禁用，取消注释即可恢复）
-    <script
-      async
-      crossorigin="anonymous"
-      data-clerk-publishable-key="pk_test_c3Rhci1zdG9yay00LmNsZXJrLmFjY291bnRzLmRldiQ"
-      src="https://star-stork-4.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-      type="text/javascript">
-    </script>
-    -->
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -49,19 +40,6 @@
                         </span>
                     </span>
                 </label>
-                <!-- Clerk 官方 UserButton 挂载点（已临时禁用，取消注释即可恢复）
-                <div class="header-user-wrap" id="headerUserWrap">
-                    <div id="user-menu-container"></div>
-                    <span class="header-user-login" id="headerUserLogin">
-                        <svg class="header-user-avatar header-user-avatar--guest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
-                        </svg>
-                        <span>登录</span>
-                    </span>
-                    <span class="header-user-name" id="headerUserName"></span>
-                </div>
-                -->
             </div>
         </div>
     </header>
@@ -140,7 +118,7 @@
 
         <div class="forum-section" id="forumSection">
             <div class="forum-title">💬 玩家讨论区</div>
-            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">讨论功能暂未开放</div>
+            <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">登录后可以发表评论</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
                 <textarea id="forumText" placeholder="分享你的测试心得..." maxlength="500"></textarea>
                 <button class="forum-btn" onclick="postComment()">发布</button>
@@ -314,90 +292,7 @@
             if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
         });
 
-        /* ===== 个人资料与 Clerk 登录相关代码已临时禁用，取消块注释即可恢复 =====
-        // ===== 个人资料（只读展示，编辑通过 Clerk UserButton > 管理账户） =====
-        function buildProfileMeta(profile, esc) {
-            const parts = [];
-            if (profile && profile.location) parts.push('📍 ' + esc(profile.location));
-            if (profile && profile.website) {
-                let url = profile.website;
-                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-                parts.push('<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--apex-primary);text-decoration:underline;">' + esc(profile.website) + '</a>');
-            }
-            if (profile && profile.social_links) parts.push('🔗 ' + esc(profile.social_links));
-            const createdAt = APEXON.Auth.getCreatedAt();
-            if (createdAt) parts.push('📅 加入于 ' + esc(createdAt));
-            return parts.length ? parts.join(' · ') : '';
-        }
-
-        async function loadProfile() {
-            const content = document.getElementById('profileContent');
-            if (!APEXON.Auth.isLoggedIn()) {
-                content.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">登录后查看个人资料</div>';
-                return;
-            }
-            const esc = APEXON.Security.escapeHtml;
-            const userId = APEXON.Auth.getUserId();
-            const name = APEXON.Auth.getUser() || '用户';
-            const avatarUrl = APEXON.Auth.getAvatarUrl();
-            let profile = null;
-            try {
-                profile = userId ? await APEXON.DB.getProfile(userId) : null;
-            } catch (e) {}
-            const bio = profile && profile.bio ? profile.bio : '';
-            const meta = buildProfileMeta(profile, esc);
-
-            const avatarHtml = avatarUrl
-                ? '<img src="' + esc(avatarUrl) + '" alt="" class="profile-card__avatar-img">'
-                : esc(name.charAt(0).toUpperCase());
-
-            content.innerHTML =
-                '<div class="profile-card">' +
-                    '<div class="profile-card__header">' +
-                        '<div class="profile-card__avatar">' + avatarHtml + '</div>' +
-                        '<div class="profile-card__info">' +
-                            '<div class="profile-card__name">' + esc(name) + '</div>' +
-                            '<div class="profile-card__id">' + esc(userId || '') + '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="profile-card__bio">' + (bio ? esc(bio) : '<span class="profile-card__bio-empty">暂无简介</span>') + '</div>' +
-                    (meta ? '<div class="profile-card__meta">' + meta + '</div>' : '') +
-                '</div>';
-        }
-
-        // 当 Clerk 登录状态变化时刷新主页资料与右上角名字
-        document.addEventListener('apexon:userchange', (e) => {
-            loadProfile();
-            const nameEl = document.getElementById('headerUserName');
-            if (!nameEl) return;
-            if (e.detail && e.detail.loggedIn && e.detail.user) {
-                nameEl.textContent = e.detail.user.username || e.detail.user.firstName || e.detail.user.lastName || '用户';
-                nameEl.style.display = '';
-            } else {
-                nameEl.textContent = '登录';
-                nameEl.style.display = '';
-            }
-        });
-
-        // 点击名字/头像胶囊任意位置都触发 Clerk UserButton
-        const headerUserWrap = document.getElementById('headerUserWrap');
-        if (headerUserWrap) {
-            headerUserWrap.addEventListener('click', e => {
-                const btn = document.querySelector('#user-menu-container button, #user-menu-container [role="button"]');
-                if (!btn) return;
-                if (e.target === btn || btn.contains(e.target)) return;
-                btn.click();
-            });
-        }
-
-        // 挂载 Clerk 官方 UserButton（纯 JS API）
-        APEXON.UI.mountUserButton('user-menu-container');
-        */
-
         await initApp();
-        /* 登录系统已临时禁用
-        await loadProfile();
-        */
         document.body.classList.add('loaded');
     })();
     </script>

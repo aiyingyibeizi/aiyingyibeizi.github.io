@@ -1,6 +1,6 @@
 /**
  * APEXON 核心模块 v4.1
- * 职责：安全、Clerk 认证、Supabase 数据、音频、主题、UserButton、测试引擎
+ * 职责：安全、认证、Supabase 数据、音频、主题、测试引擎
  */
 
 (function (global) {
@@ -340,231 +340,107 @@
   };
   APEXON.DB = DB;
 
-  // ===== 2. Clerk 认证 =====
-  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
-  const ClerkAuth = {
-    user: null,
-    isReady: false,
+  // ===== 2. 认证 =====
+  const Auth = {
+    currentUser: null,
 
-    async init() {
-      if (this.isReady) return;
-      await new Promise(resolve => {
-        const finish = () => {
-          this.isReady = true;
-          this.user = window.Clerk ? window.Clerk.user : null;
-          // 登录后立即同步到 SQL users 表
-          if (this.user && this.user.id) {
-            const email = this.user.primaryEmailAddress && this.user.primaryEmailAddress.emailAddress
-              ? this.user.primaryEmailAddress.emailAddress
-              : (this.user.emailAddresses && this.user.emailAddresses[0] ? this.user.emailAddresses[0].emailAddress : '');
-            DB.syncUser(this.user.id, this.getUser(), email).catch(e => console.error('users sync failed:', e));
-          }
-          resolve();
-        };
-
-        if (window.Clerk && window.Clerk.loaded) {
-          finish();
-          return;
+    init() {
+      const saved = localStorage.getItem('apexon-user');
+      if (saved) {
+        try {
+          this.currentUser = JSON.parse(saved);
+        } catch (e) {
+          this.currentUser = null;
         }
+      }
+    },
 
-        const check = setInterval(() => {
-          if (window.Clerk) {
-            clearInterval(check);
-            // Clerk 需要显式 load() 以完成初始化
-            window.Clerk.load()
-              .then(finish)
-              .catch(() => finish());
-          }
-        }, 100);
+    isLoggedIn() {
+      return !!this.currentUser && !!this.currentUser.username;
+    },
 
-        setTimeout(() => { clearInterval(check); finish(); }, 8000);
+    getUser() {
+      return this.currentUser ? this.currentUser.username : null;
+    },
+
+    getUserId() {
+      return this.currentUser ? this.currentUser.username : null;
+    },
+
+    async register(username, password) {
+      const u = String(username).trim().slice(0, 30);
+      if (!u || u.length < 2 || !/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(u)) {
+        return { success: false, error: '用户名需 2-30 位，支持中英文、数字、下划线' };
+      }
+      if (!password || password.length < 4) {
+        return { success: false, error: '密码至少 4 位' };
+      }
+      const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`);
+      if (exists && exists.length) {
+        return { success: false, error: '用户名已存在' };
+      }
+      const salt = this._generateSalt();
+      const hash = await this._hashPassword(password, salt);
+      const result = await DB.request('accounts', 'POST', {
+        username: u,
+        password_hash: hash,
+        salt: salt,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
+      if (!result) return { success: false, error: '注册失败，请重试' };
+      this.currentUser = { username: u };
+      localStorage.setItem('apexon-user', JSON.stringify(this.currentUser));
+      return { success: true };
     },
 
-    isLoggedIn() {
-      return !!this.user;
+    async login(username, password) {
+      const u = String(username).trim();
+      const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`);
+      if (!rows || !rows.length) {
+        return { success: false, error: '用户名或密码错误' };
+      }
+      const account = rows[0];
+      const hash = await this._hashPassword(password, account.salt);
+      if (hash !== account.password_hash) {
+        return { success: false, error: '用户名或密码错误' };
+      }
+      this.currentUser = { username: account.username };
+      localStorage.setItem('apexon-user', JSON.stringify(this.currentUser));
+      return { success: true };
     },
 
-    getUser() {
-      if (!this.user) return null;
-      return this.user.username || this.user.fullName || (this.user.firstName && this.user.lastName ? this.user.firstName + ' ' + this.user.lastName : this.user.firstName) || (this.user.emailAddresses && this.user.emailAddresses[0] && this.user.emailAddresses[0].emailAddress) || '用户';
-    },
-
-    getUserId() {
-      return this.user?.id || null;
-    },
-
-    async logout() {
-      if (window.Clerk) await window.Clerk.signOut();
-      this.user = null;
+    logout() {
+      this.currentUser = null;
+      localStorage.removeItem('apexon-user');
       location.reload();
     },
 
     async deleteAccount() {
-      if (!confirm('确定注销账号？本地数据将被清除，不可恢复。')) return;
-      await this.logout();
+      if (!this.isLoggedIn()) return;
+      if (!confirm('确定删除账号？本地记录将被清除，数据库中的成绩仍会保留。')) return;
+      this.logout();
     },
 
-    async updateUser(updates) {
-      if (!window.Clerk || !window.Clerk.user) throw new Error('未登录，无法更新资料');
-
-      const user = window.Clerk.user;
-      let updated = null;
-
-      // Clerk 不同版本兼容：优先使用直接 update，其次 setProfileImage 处理头像
-      if (updates.username != null) {
-        if (typeof user.update === 'function') {
-          updated = await user.update({ username: updates.username });
-        } else if (typeof user.updateUsername === 'function') {
-          updated = await user.updateUsername({ username: updates.username });
-        } else {
-          throw new Error('当前 Clerk 环境不支持修改用户名');
-        }
+    _generateSalt() {
+      const arr = new Uint8Array(16);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+      } else {
+        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
       }
-
-      if (updates.firstName != null || updates.lastName != null) {
-        const namePayload = {};
-        if (updates.firstName != null) namePayload.firstName = updates.firstName;
-        if (updates.lastName != null) namePayload.lastName = updates.lastName;
-        if (typeof user.update === 'function') {
-          updated = await user.update(namePayload);
-        } else {
-          throw new Error('当前 Clerk 环境不支持修改姓名');
-        }
-      }
-
-      this.user = updated || user;
-      UI.updateUserDisplay();
-      return this.user;
+      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
     },
 
-    async uploadAvatar(file) {
-      if (!window.Clerk || !window.Clerk.user) throw new Error('未登录，无法上传头像');
-      const user = window.Clerk.user;
-
-      // Clerk v5 官方 API：setProfileImage
-      if (typeof user.setProfileImage === 'function') {
-        const result = await user.setProfileImage({ file });
-        this.user = user;
-        UI.updateUserDisplay();
-        return result;
-      }
-
-      // 部分版本挂在 createProfileImage
-      if (typeof user.createProfileImage === 'function') {
-        const result = await user.createProfileImage({ file });
-        this.user = user;
-        UI.updateUserDisplay();
-        return result;
-      }
-
-      throw new Error('当前 Clerk 环境不支持头像上传');
-    },
-
-    getAvatarUrl() {
-      if (!this.user) return null;
-      return this.user.imageUrl || this.user.profileImageUrl || null;
-    },
-
-    getCreatedAt() {
-      if (!this.user || !this.user.createdAt) return null;
-      return new Date(this.user.createdAt).toLocaleDateString('zh-CN');
+    async _hashPassword(password, salt) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password + salt);
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      const arr = Array.from(new Uint8Array(buf));
+      return arr.map(b => b.toString(16).padStart(2, '0')).join('');
     }
   };
-  APEXON.Auth = ClerkAuth;
-  */
-
-  // 登录系统已临时禁用，改用匿名身份继续记录成绩到数据库
-  const AnonymousAuth = {
-    user: null,
-    isReady: true,
-
-    _ensureIdentity() {
-      if (this.user) return this.user;
-      let id = localStorage.getItem('apexon-anon-id');
-      let name = localStorage.getItem('apexon-anon-name');
-      let createdAt = localStorage.getItem('apexon-anon-created');
-      if (!id) {
-        id = this._generateId();
-        name = this._generateName();
-        createdAt = new Date().toISOString();
-        localStorage.setItem('apexon-anon-id', id);
-        localStorage.setItem('apexon-anon-name', name);
-        localStorage.setItem('apexon-anon-created', createdAt);
-      }
-      this.user = { id, name, createdAt };
-      return this.user;
-    },
-
-    _generateId() {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-      }
-      return 'anon_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-    },
-
-    _generateName() {
-      const adjectives = ['快乐', '勇敢', '安静', '聪明', '好奇', '机灵', '温柔', '调皮', '稳重', '活泼', '神秘', '幸运'];
-      const nouns = ['小猫', '熊猫', '海豚', '狐狸', '企鹅', '松鼠', '考拉', '兔子', '老虎', '狮子', '猫头鹰', '蝴蝶'];
-      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const noun = nouns[Math.floor(Math.random() * nouns.length)];
-      return adj + noun + Math.floor(Math.random() * 1000);
-    },
-
-    async init() {
-      this._ensureIdentity();
-    },
-
-    isLoggedIn() {
-      // 匿名模式下始终视为已登录，用于成绩记录和排行榜
-      return true;
-    },
-
-    getUser() {
-      return this._ensureIdentity().name;
-    },
-
-    getUserId() {
-      return this._ensureIdentity().id;
-    },
-
-    async logout() {
-      localStorage.removeItem('apexon-anon-id');
-      localStorage.removeItem('apexon-anon-name');
-      localStorage.removeItem('apexon-anon-created');
-      this.user = null;
-      location.reload();
-    },
-
-    async deleteAccount() {
-      if (!confirm('确定清除本地匿名记录？历史数据仍会保留在数据库中。')) return;
-      await this.logout();
-    },
-
-    async updateUser(updates) {
-      if (updates.username != null) {
-        const user = this._ensureIdentity();
-        user.name = String(updates.username).slice(0, 30);
-        localStorage.setItem('apexon-anon-name', user.name);
-        this.user = user;
-      }
-      return this.user;
-    },
-
-    async uploadAvatar() {
-      throw new Error('匿名模式不支持上传头像');
-    },
-
-    getAvatarUrl() {
-      return null;
-    },
-
-    getCreatedAt() {
-      const createdAt = this._ensureIdentity().createdAt;
-      return createdAt ? new Date(createdAt).toLocaleDateString('zh-CN') : null;
-    }
-  };
-  APEXON.Auth = AnonymousAuth;
+  APEXON.Auth = Auth;
 
   // ===== 3. 音频 =====
   const AudioManager = {
@@ -715,95 +591,155 @@
       }
     },
 
-    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
-    async mountUserButton(containerId = 'user-menu-container') {
-      await ClerkAuth.init();
-      let container = document.getElementById(containerId);
-      // 兼容旧页面仍使用 #user-button
-      if (!container) container = document.getElementById('user-button');
-      if (!container || !window.Clerk || !window.Clerk.mountUserButton) return;
-
-      const doMount = () => {
-        if (container.dataset.clerkMounted === 'true') return;
-        container.dataset.clerkMounted = 'true';
-        try {
-          window.Clerk.mountUserButton(container, {
-            afterSignOutUrl: window.location.href,
-            appearance: {
-              variables: {
-                colorPrimary: '#6d5dfc',
-                colorTextOnPrimaryBackground: '#ffffff',
-                colorText: 'var(--apex-text)',
-                colorBackground: 'var(--apex-surface)',
-                colorAlphaShade: 'var(--apex-text-tertiary)',
-                colorDanger: '#dc2626',
-                borderRadius: '12px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif'
-              },
-              elements: {
-                userButtonTrigger: 'apex-clerk-trigger',
-                userButtonAvatarBox: 'apex-clerk-avatar',
-                userButtonPopoverCard: 'apex-clerk-popover',
-                userButtonPopoverActionButton: 'apex-clerk-action',
-                userButtonPopoverActionButtonDanger: 'apex-clerk-action--danger'
-              }
-            }
-          });
-        } catch (e) {
-          console.error('Clerk UserButton mount failed:', e);
+    injectAuthStyles() {
+      if (document.getElementById('apex-auth-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'apex-auth-styles';
+      style.textContent = `
+        .apex-user-menu { display: flex; align-items: center; margin-left: 12px; }
+        .apex-login-btn {
+          border: none; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600;
+          color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%);
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease;
         }
-      };
-
-      doMount();
-
-      if (window.Clerk.addListener) {
-        window.Clerk.addListener(({ user }) => {
-          ClerkAuth.user = user || null;
-          // 登录态变化时同步 users 表
-          if (user && user.id) {
-            const email = user.primaryEmailAddress && user.primaryEmailAddress.emailAddress
-              ? user.primaryEmailAddress.emailAddress
-              : (user.emailAddresses && user.emailAddresses[0] ? user.emailAddresses[0].emailAddress : '');
-            const name = user.username || user.firstName || user.lastName || '';
-            DB.syncUser(user.id, name, email).catch(e => console.error('users sync failed:', e));
-          }
-          UI.updateUserDisplay();
-          doMount();
-        });
-      }
-
-      UI.updateUserDisplay();
+        .apex-login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
+        .apex-user-chip {
+          display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px;
+          border-radius: 20px; background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(124, 58, 237, 0.22);
+        }
+        .apex-user-name { font-size: 13px; font-weight: 600; color: var(--apex-text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .apex-logout-btn {
+          width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(239, 68, 68, 0.15); color: #ef4444;
+          font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .apex-logout-btn:hover { background: rgba(239, 68, 68, 0.25); }
+        .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+        .apex-login-modal.show { opacity: 1; pointer-events: auto; }
+        .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
+        .apex-login-card { position: relative; width: 92%; max-width: 360px; border-radius: 20px; padding: 28px 24px 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; transform: translateY(12px); transition: transform .25s ease; }
+        .apex-login-modal.show .apex-login-card { transform: translateY(0); }
+        .apex-login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
+        .apex-login-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
+        .apex-login-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
+        .apex-login-header { text-align: center; margin-bottom: 20px; }
+        .apex-login-logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .apex-login-subtitle { font-size: 13px; color: var(--apex-text-secondary); margin-top: 4px; }
+        .apex-login-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(124, 58, 237, 0.08); border-radius: 12px; padding: 4px; }
+        .apex-login-tab { flex: 1; border: none; border-radius: 10px; padding: 8px; font-size: 13px; font-weight: 600; color: var(--apex-text-secondary); background: transparent; cursor: pointer; }
+        .apex-login-tab.active { background: var(--apex-surface); color: #7C3AED; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .apex-login-body { display: flex; flex-direction: column; gap: 12px; }
+        .apex-login-body input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; }
+        .apex-login-body input:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
+        .apex-login-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; }
+        .apex-login-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
+        .apex-login-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
+        .apex-login-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } }
+      `;
+      document.head.appendChild(style);
     },
-    */
 
-    // 登录系统禁用期间的占位方法
-    async mountUserButton() { return; },
+    mountUserButton() {
+      this.injectAuthStyles();
+      const actions = document.querySelector('.header-actions');
+      if (!actions) return;
+      let menu = document.getElementById('apex-user-menu');
+      if (menu) return;
+      menu = document.createElement('div');
+      menu.id = 'apex-user-menu';
+      menu.className = 'apex-user-menu';
+      actions.appendChild(menu);
+      this.updateUserDisplay();
+    },
 
-    /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
     updateUserDisplay() {
-      const nameEl = document.getElementById('headerUserName');
-      const wrap = document.getElementById('headerUserWrap');
+      const menu = document.getElementById('apex-user-menu');
       const forumTip = document.getElementById('forumLoginTip');
       const forumInput = document.getElementById('forumInputWrap');
       const personalContent = document.getElementById('personalContent');
 
-      if (!ClerkAuth.isLoggedIn()) {
-        if (wrap) wrap.classList.add('is-guest');
-        if (nameEl) nameEl.textContent = '登录';
+      if (!APEXON.Auth.isLoggedIn()) {
+        if (menu) {
+          menu.innerHTML = '<button class="apex-login-btn" id="apexLoginBtn">登录</button>';
+          menu.querySelector('#apexLoginBtn').addEventListener('click', () => this.showLoginModal());
+        }
         if (forumTip) forumTip.style.display = 'block';
         if (forumInput) forumInput.style.display = 'none';
+        if (personalContent) personalContent.innerHTML = '';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
 
-      if (wrap) wrap.classList.remove('is-guest');
-      const name = ClerkAuth.getUser() || '用户';
-      if (nameEl) { nameEl.textContent = name; nameEl.style.cssText = ''; }
+      const name = APEXON.Auth.getUser() || '用户';
+      if (menu) {
+        menu.innerHTML = '<div class="apex-user-chip"><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><button class="apex-logout-btn" id="apexLogoutBtn" title="退出">×</button></div>';
+        menu.querySelector('#apexLogoutBtn').addEventListener('click', () => APEXON.Auth.logout());
+      }
       if (forumTip) forumTip.style.display = 'none';
       if (forumInput) forumInput.style.display = 'flex';
-      document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: ClerkAuth.user } }));
+      document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: name } }));
     },
-    */
+
+    showLoginModal() {
+      let modal = document.getElementById('apex-login-modal');
+      if (modal) {
+        modal.classList.add('show');
+        return;
+      }
+      modal = document.createElement('div');
+      modal.id = 'apex-login-modal';
+      modal.className = 'apex-login-modal';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">登录或注册以保存成绩</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
+      document.body.appendChild(modal);
+
+      const tabs = modal.querySelectorAll('.apex-login-tab');
+      const submitBtn = modal.querySelector('#apexLoginSubmit');
+      const errorEl = modal.querySelector('#apexLoginError');
+      const usernameInput = modal.querySelector('#apexLoginUsername');
+      const passwordInput = modal.querySelector('#apexLoginPassword');
+      let mode = 'login';
+
+      const setMode = (m) => {
+        mode = m;
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === m));
+        submitBtn.textContent = m === 'login' ? '登录' : '注册';
+        errorEl.textContent = '';
+      };
+
+      tabs.forEach(t => t.addEventListener('click', () => setMode(t.dataset.tab)));
+      modal.querySelector('#apexLoginClose').addEventListener('click', () => modal.classList.remove('show'));
+      modal.querySelector('.apex-login-backdrop').addEventListener('click', () => modal.classList.remove('show'));
+
+      const doSubmit = async () => {
+        const u = usernameInput.value.trim();
+        const p = passwordInput.value;
+        if (!u || !p) {
+          errorEl.textContent = '请输入用户名和密码';
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = '处理中...';
+        const result = mode === 'login'
+          ? await APEXON.Auth.login(u, p)
+          : await APEXON.Auth.register(u, p);
+        submitBtn.disabled = false;
+        if (result.success) {
+          modal.classList.remove('show');
+          this.updateUserDisplay();
+          this.toast(mode === 'login' ? '登录成功' : '注册成功');
+          document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
+        } else {
+          submitBtn.textContent = mode === 'login' ? '登录' : '注册';
+          errorEl.textContent = result.error || '操作失败';
+        }
+      };
+
+      submitBtn.addEventListener('click', doSubmit);
+      passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
+      usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
+
+      requestAnimationFrame(() => modal.classList.add('show'));
+    },
 
     backHome() {
       document.body.style.opacity = '0';
@@ -1881,10 +1817,8 @@
 
   // ===== 8. 全局接口 =====
   global.backHome = UI.backHome;
-  /* ===== 登录系统已临时禁用，取消下方块注释即可恢复 =====
-  global.APEXON.logout = ClerkAuth.logout.bind(ClerkAuth);
-  global.APEXON.deleteAccount = ClerkAuth.deleteAccount.bind(ClerkAuth);
-  */
+  global.APEXON.logout = Auth.logout.bind(Auth);
+  global.APEXON.deleteAccount = Auth.deleteAccount.bind(Auth);
 
   // ===== 9. 全局防复制/防选中（输入框除外）=====
   function initTextProtection() {
@@ -1925,10 +1859,9 @@
   function boot() {
     VisibilityManager.init();
     UI.initTheme();
+    Auth.init();
+    UI.mountUserButton();
     initTextProtection();
-
-    // 注意：Clerk user-button 与测试引擎由各页面显式初始化，
-    // 不在此处自动挂载/启动，避免重复绑定导致事件/状态错乱。
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
