@@ -303,10 +303,11 @@
       }
     },
 
-    async addComment(userId, username, content) {
+    async addComment(userId, username, content, category) {
       const raw = String(content || '').trim();
       const filtered = Security.filterDangerous(raw);
-      console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length);
+      const cat = ['bug', 'score', 'chat', 'suggestion'].includes(category) ? category : 'chat';
+      console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length, 'category:', cat);
       if (!filtered) {
         console.warn('[addComment] rejected: empty content');
         return { success: false, error: '评论内容不能为空' };
@@ -318,7 +319,8 @@
       const result = await this.request('comments', 'POST', {
         user_id: userId,
         username: username,
-        content: filtered
+        content: filtered,
+        category: cat
       });
       console.log('[addComment] result:', result);
       if (!result) {
@@ -327,8 +329,11 @@
       return { success: true };
     },
 
-    async getComments(limit = 50) {
-      const url = `${SUPABASE_URL}/rest/v1/comments?order=created_at.desc&limit=${limit}`;
+    async getComments(limit = 50, category = 'all') {
+      let url = `${SUPABASE_URL}/rest/v1/comments?order=created_at.desc&limit=${limit}`;
+      if (category && category !== 'all') {
+        url += `&category=eq.${encodeURIComponent(category)}`;
+      }
       try {
         const res = await fetch(url, {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -606,12 +611,14 @@
 
     async register(username, password, remember, gender) {
       const u = String(username).trim().slice(0, 30);
+      console.log('[register] start', u);
       const nameErr = this._validateUsername(u);
       if (nameErr) return { success: false, error: nameErr };
       const passErr = this._validatePassword(password);
       if (passErr) return { success: false, error: passErr };
 
       const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
+      console.log('[register] exists check:', exists ? exists.length : null);
       if (exists && exists.length) {
         return { success: false, error: '用户名已存在' };
       }
@@ -629,15 +636,17 @@
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
+      console.log('[register] account insert result:', result);
       if (!result) return { success: false, error: '注册失败，请重试' };
 
-      await DB.saveProfile(u, u, {
+      const profileResult = await DB.saveProfile(u, u, {
         bio: '',
         location: '',
         website: '',
         social: '',
         gender: ['male', 'female', 'secret'].includes(gender) ? gender : 'secret'
       });
+      console.log('[register] profile insert result:', profileResult);
 
       this._setSession(u, token, expiresAt);
       await this.mergeAnonymousData();

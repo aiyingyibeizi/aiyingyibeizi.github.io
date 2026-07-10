@@ -2239,8 +2239,51 @@ html[data-theme="light"] .apex-card--game:hover {
 
 .forum-input-wrap {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 16px;
+}
+
+.forum-category-select {
+  padding: 10px 12px;
+  border-radius: var(--apex-radius-sm);
+  border: 1px solid var(--apex-border);
+  background: var(--apex-bg);
+  color: var(--apex-text);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.forum-category-select:focus {
+  border-color: var(--apex-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.forum-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.forum-filter-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-bg);
+  color: var(--apex-text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.forum-filter-btn.active,
+.forum-filter-btn:hover {
+  border-color: var(--apex-primary);
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--apex-primary);
 }
 
 .forum-input-wrap textarea,
@@ -2330,6 +2373,18 @@ html[data-theme="light"] .apex-card--game:hover {
 .forum-item-time {
   font-size: 0.75rem;
   color: var(--apex-text-tertiary);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.forum-item-category {
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--apex-primary);
+  font-weight: 600;
+  white-space: nowrap;
   flex-shrink: 0;
 }
 

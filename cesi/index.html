@@ -120,8 +120,21 @@
             <div class="forum-title">💬 玩家讨论区</div>
             <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
+                <select id="forumCategory" class="forum-category-select">
+                    <option value="chat">闲聊</option>
+                    <option value="score">分数讨论</option>
+                    <option value="bug">Bug 反馈</option>
+                    <option value="suggestion">网站建议</option>
+                </select>
                 <textarea id="forumText" placeholder="分享你的测试心得..." maxlength="500"></textarea>
                 <button class="forum-btn" onclick="postComment()">发布</button>
+            </div>
+            <div class="forum-filter-bar" id="forumFilterBar">
+                <button class="forum-filter-btn active" data-cat="all" onclick="setCommentFilter('all')">全部</button>
+                <button class="forum-filter-btn" data-cat="chat" onclick="setCommentFilter('chat')">闲聊</button>
+                <button class="forum-filter-btn" data-cat="score" onclick="setCommentFilter('score')">分数讨论</button>
+                <button class="forum-filter-btn" data-cat="bug" onclick="setCommentFilter('bug')">Bug 反馈</button>
+                <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')">网站建议</button>
             </div>
             <div class="forum-list" id="forumList"></div>
         </div>
@@ -208,7 +221,7 @@
                 const val = e.score_value || 0;
                 const profile = profileMap.get(e.user_id);
                 const avatar = '<div class="leaderboard-avatar" onclick="viewProfile(\'' + esc(e.user_id) + '\')">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
-                return '<div class="leaderboard-row">' + avatar + '<div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div><div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
+                return '<div class="leaderboard-row"><div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div>' + avatar + '<div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
             }).join('');
         }
 
@@ -247,30 +260,49 @@
         }
 
         // ===== 讨论区 =====
+        const COMMENT_CATEGORIES = {
+            all: '全部',
+            chat: '闲聊',
+            score: '分数讨论',
+            bug: 'Bug 反馈',
+            suggestion: '网站建议'
+        };
+        let currentCommentFilter = 'all';
+
+        window.setCommentFilter = function(cat) {
+            currentCommentFilter = cat;
+            document.querySelectorAll('#forumFilterBar .forum-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === cat);
+            });
+            loadComments();
+        };
+
         window.postComment = async function() {
             const text = document.getElementById('forumText').value;
+            const category = document.getElementById('forumCategory').value;
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast('身份初始化中，请刷新重试'); return; }
-            const res = await APEXON.DB.addComment(userId, username, text);
+            const res = await APEXON.DB.addComment(userId, username, text, category);
             if (!res || !res.success) {
                 APEXON.UI.toast(res && res.error ? res.error : '发布失败');
                 return;
             }
             document.getElementById('forumText').value = '';
-            loadComments();
+            setCommentFilter(category);
         };
         async function loadComments() {
             const esc = APEXON.Security.escapeHtml;
-            const list = await APEXON.DB.getComments(20);
+            const list = await APEXON.DB.getComments(50, currentCommentFilter);
             if (!list.length) {
-                document.getElementById('forumList').innerHTML = '<div class="forum-empty">还没有讨论，来做第一个发言的人吧</div>';
+                document.getElementById('forumList').innerHTML = '<div class="forum-empty">该分类下还没有讨论</div>';
                 return;
             }
             document.getElementById('forumList').innerHTML = list.map(c =>
                 '<div class="forum-item">' +
                     '<div class="forum-item-header">' +
                         '<div class="forum-item-user">' + esc(c.username) + '</div>' +
+                        '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
                         '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
                     '</div>' +
                     '<div class="forum-item-content">' + esc(c.content) + '</div>' +
