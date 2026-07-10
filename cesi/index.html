@@ -154,14 +154,16 @@
         // ===== 应用初始化 =====
         async function initApp() {
             await APEXON.Auth.init();
-            const isLoggedIn = APEXON.Auth.isLoggedIn && APEXON.Auth.isLoggedIn();
-            // 讨论区对匿名用户也开放
-            document.getElementById('forumLoginTip').style.display = isLoggedIn ? 'none' : 'block';
-            document.getElementById('forumInputWrap').style.display = isLoggedIn ? 'flex' : 'none';
             loadLeaderboard('reaction');
             loadPersonal();
             loadComments();
             updateStats();
+            document.addEventListener('apexon:userchange', (e) => {
+                if (e.detail && e.detail.loggedIn) {
+                    loadPersonal();
+                    loadComments();
+                }
+            });
         }
 
         async function updateStats() {

@@ -79,7 +79,7 @@
 
   // ===== 1. Supabase 数据库 =====
   const DB = {
-    async request(table, method, body, query) {
+    async request(table, method, body, query, extraHeaders) {
       let url = `${SUPABASE_URL}/rest/v1/${table}`;
       if (query) url += '?' + query;
       const isMergeUpsert = method === 'POST' && query && query.includes('on_conflict');
@@ -89,6 +89,7 @@
         'Content-Type': 'application/json',
         'Prefer': isMergeUpsert ? 'return=representation,resolution=merge-duplicates' : 'return=representation'
       };
+      if (extraHeaders) Object.assign(headers, extraHeaders);
       const options = { method, headers };
       if (body) options.body = JSON.stringify(body);
       try {
@@ -343,20 +344,49 @@
   // ===== 2. 认证 =====
   const Auth = {
     currentUser: null,
+    SESSION_DAYS: 7,
 
     init() {
-      const saved = localStorage.getItem('apexon-user');
-      if (saved) {
-        try {
-          this.currentUser = JSON.parse(saved);
-        } catch (e) {
-          this.currentUser = null;
+      const saved = localStorage.getItem('apexon-session');
+      if (!saved) return;
+      try {
+        const session = JSON.parse(saved);
+        if (!session || !session.username || !session.token || !session.expiresAt) {
+          this._clearSession();
+          return;
         }
+        if (Date.now() > session.expiresAt) {
+          this._clearSession();
+          return;
+        }
+        this.currentUser = { username: session.username, token: session.token, expiresAt: session.expiresAt };
+      } catch (e) {
+        this._clearSession();
       }
     },
 
+    async validateSession() {
+      if (!this.currentUser) return false;
+      const username = this.currentUser.username;
+      const token = this.currentUser.token;
+      const nowIso = new Date().toISOString();
+      const rows = await DB.request(
+        'accounts',
+        'GET',
+        null,
+        `username=eq.${encodeURIComponent(username)}&session_token=eq.${encodeURIComponent(token)}&session_expires_at=gte.${encodeURIComponent(nowIso)}&limit=1`,
+        { 'x-username': username, 'x-token': token }
+      );
+      if (rows && rows.length) {
+        this._extendSession();
+        return true;
+      }
+      this._clearSession();
+      return false;
+    },
+
     isLoggedIn() {
-      return !!this.currentUser && !!this.currentUser.username;
+      return !!this.currentUser && !!this.currentUser.username && Date.now() < (this.currentUser.expiresAt || 0);
     },
 
     getUser() {
@@ -367,36 +397,60 @@
       return this.currentUser ? this.currentUser.username : null;
     },
 
-    async register(username, password) {
+    getToken() {
+      return this.currentUser ? this.currentUser.token : null;
+    },
+
+    _validateUsername(u) {
+      if (!u || u.length < 2 || u.length > 30) return '用户名需 2-30 位';
+      if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(u)) return '用户名支持中英文、数字、下划线';
+      return null;
+    },
+
+    _validatePassword(p) {
+      if (!p || p.length < 8) return '密码至少 8 位';
+      if (!/[a-zA-Z]/.test(p) || !/[0-9]/.test(p)) return '密码需同时包含字母和数字';
+      if (/\s/.test(p)) return '密码不能包含空格';
+      return null;
+    },
+
+    async register(username, password, remember) {
       const u = String(username).trim().slice(0, 30);
-      if (!u || u.length < 2 || !/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(u)) {
-        return { success: false, error: '用户名需 2-30 位，支持中英文、数字、下划线' };
-      }
-      if (!password || password.length < 4) {
-        return { success: false, error: '密码至少 4 位' };
-      }
-      const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`);
+      const nameErr = this._validateUsername(u);
+      if (nameErr) return { success: false, error: nameErr };
+      const passErr = this._validatePassword(password);
+      if (passErr) return { success: false, error: passErr };
+
+      const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
       if (exists && exists.length) {
         return { success: false, error: '用户名已存在' };
       }
+
       const salt = this._generateSalt();
       const hash = await this._hashPassword(password, salt);
+      const token = this._generateToken();
+      const expiresAt = this._computeExpires(remember);
       const result = await DB.request('accounts', 'POST', {
         username: u,
         password_hash: hash,
         salt: salt,
+        session_token: token,
+        session_expires_at: new Date(expiresAt).toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
       if (!result) return { success: false, error: '注册失败，请重试' };
-      this.currentUser = { username: u };
-      localStorage.setItem('apexon-user', JSON.stringify(this.currentUser));
+
+      this._setSession(u, token, expiresAt);
       return { success: true };
     },
 
-    async login(username, password) {
+    async login(username, password, remember) {
       const u = String(username).trim();
-      const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`);
+      if (!u || !password) {
+        return { success: false, error: '请输入用户名和密码' };
+      }
+      const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
       if (!rows || !rows.length) {
         return { success: false, error: '用户名或密码错误' };
       }
@@ -405,25 +459,78 @@
       if (hash !== account.password_hash) {
         return { success: false, error: '用户名或密码错误' };
       }
-      this.currentUser = { username: account.username };
-      localStorage.setItem('apexon-user', JSON.stringify(this.currentUser));
+
+      const token = this._generateToken();
+      const expiresAt = this._computeExpires(remember);
+      const updateResult = await DB.request(
+        'accounts',
+        'PATCH',
+        { session_token: token, session_expires_at: new Date(expiresAt).toISOString(), updated_at: new Date().toISOString() },
+        `username=eq.${encodeURIComponent(u)}`,
+        { 'x-username': u }
+      );
+      if (!updateResult) return { success: false, error: '登录失败，请重试' };
+
+      this._setSession(u, token, expiresAt);
       return { success: true };
     },
 
-    logout() {
-      this.currentUser = null;
-      localStorage.removeItem('apexon-user');
+    async logout() {
+      const username = this.getUser();
+      const token = this.getToken();
+      if (username && token) {
+        await DB.request(
+          'accounts',
+          'PATCH',
+          { session_token: null, session_expires_at: null, updated_at: new Date().toISOString() },
+          `username=eq.${encodeURIComponent(username)}`,
+          { 'x-username': username, 'x-token': token }
+        ).catch(() => {});
+      }
+      this._clearSession();
       location.reload();
     },
 
     async deleteAccount() {
       if (!this.isLoggedIn()) return;
-      if (!confirm('确定删除账号？本地记录将被清除，数据库中的成绩仍会保留。')) return;
-      this.logout();
+      if (!confirm('确定删除本地登录状态？数据库中的成绩仍会保留。')) return;
+      await this.logout();
+    },
+
+    _setSession(username, token, expiresAt) {
+      this.currentUser = { username, token, expiresAt };
+      localStorage.setItem('apexon-session', JSON.stringify(this.currentUser));
+    },
+
+    _clearSession() {
+      this.currentUser = null;
+      localStorage.removeItem('apexon-session');
+    },
+
+    _extendSession() {
+      if (!this.currentUser) return;
+      const days = this.SESSION_DAYS;
+      this.currentUser.expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
+      localStorage.setItem('apexon-session', JSON.stringify(this.currentUser));
+    },
+
+    _computeExpires(remember) {
+      const days = remember ? 30 : this.SESSION_DAYS;
+      return Date.now() + days * 24 * 60 * 60 * 1000;
     },
 
     _generateSalt() {
-      const arr = new Uint8Array(16);
+      const arr = new Uint8Array(32);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+      } else {
+        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+      }
+      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+    },
+
+    _generateToken() {
+      const arr = new Uint8Array(32);
       if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
         crypto.getRandomValues(arr);
       } else {
@@ -433,11 +540,14 @@
     },
 
     async _hashPassword(password, salt) {
+      if (typeof crypto === 'undefined' || !crypto.subtle) {
+        throw new Error('当前环境不支持安全密码哈希');
+      }
       const encoder = new TextEncoder();
-      const data = encoder.encode(password + salt);
-      const buf = await crypto.subtle.digest('SHA-256', data);
-      const arr = Array.from(new Uint8Array(buf));
-      return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+      const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
+      const params = { name: 'PBKDF2', salt: encoder.encode(salt), iterations: 100000, hash: 'SHA-256' };
+      const derived = await crypto.subtle.deriveBits(params, keyMaterial, 256);
+      return Array.from(new Uint8Array(derived)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
   };
   APEXON.Auth = Auth;
@@ -634,6 +744,23 @@
         .apex-login-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
         .apex-login-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
         .apex-login-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .apex-password-wrap { position: relative; }
+        .apex-password-wrap input { padding-right: 40px; }
+        .apex-password-toggle {
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+          width: 28px; height: 28px; border: none; border-radius: 8px; background: transparent;
+          color: var(--apex-text-secondary); font-size: 13px; cursor: pointer; display: flex;
+          align-items: center; justify-content: center;
+        }
+        .apex-password-toggle:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
+        .apex-remember {
+          display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--apex-text-secondary);
+          cursor: pointer; user-select: none;
+        }
+        .apex-remember input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; }
+        .apex-hint { font-size: 12px; color: var(--apex-text-tertiary); min-height: 16px; }
+        .apex-hint.invalid { color: #ef4444; }
+        .apex-hint.valid { color: #10b981; }
         @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } }
       `;
       document.head.appendChild(style);
@@ -665,7 +792,7 @@
         }
         if (forumTip) forumTip.style.display = 'block';
         if (forumInput) forumInput.style.display = 'none';
-        if (personalContent) personalContent.innerHTML = '';
+        if (personalContent) personalContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px;text-align:center;padding:12px;">登录后查看个人成绩</div>';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
         return;
       }
@@ -689,7 +816,7 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">登录或注册以保存成绩</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">登录或注册以保存成绩</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
       document.body.appendChild(modal);
 
       const tabs = modal.querySelectorAll('.apex-login-tab');
@@ -697,6 +824,10 @@
       const errorEl = modal.querySelector('#apexLoginError');
       const usernameInput = modal.querySelector('#apexLoginUsername');
       const passwordInput = modal.querySelector('#apexLoginPassword');
+      const usernameHint = modal.querySelector('#apexUsernameHint');
+      const passwordHint = modal.querySelector('#apexPasswordHint');
+      const rememberMe = modal.querySelector('#apexRememberMe');
+      const toggleBtn = modal.querySelector('#apexPasswordToggle');
       let mode = 'login';
 
       const setMode = (m) => {
@@ -704,24 +835,45 @@
         tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === m));
         submitBtn.textContent = m === 'login' ? '登录' : '注册';
         errorEl.textContent = '';
+        validate();
+      };
+
+      const validate = () => {
+        const u = usernameInput.value.trim();
+        const p = passwordInput.value;
+        const nameErr = APEXON.Auth._validateUsername(u);
+        const passErr = APEXON.Auth._validatePassword(p);
+        usernameHint.textContent = nameErr || (u ? '格式正确' : '2-30 位，支持中英文、数字、下划线');
+        usernameHint.className = 'apex-hint' + (nameErr ? ' invalid' : (u ? ' valid' : ''));
+        passwordHint.textContent = passErr || (p ? '格式正确' : '至少 8 位，同时包含字母和数字');
+        passwordHint.className = 'apex-hint' + (passErr ? ' invalid' : (p ? ' valid' : ''));
+        submitBtn.disabled = !!(nameErr || passErr);
+      };
+
+      const togglePassword = () => {
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        toggleBtn.textContent = isHidden ? '隐藏' : '显示';
+        toggleBtn.title = isHidden ? '隐藏密码' : '显示密码';
       };
 
       tabs.forEach(t => t.addEventListener('click', () => setMode(t.dataset.tab)));
       modal.querySelector('#apexLoginClose').addEventListener('click', () => modal.classList.remove('show'));
       modal.querySelector('.apex-login-backdrop').addEventListener('click', () => modal.classList.remove('show'));
+      usernameInput.addEventListener('input', validate);
+      passwordInput.addEventListener('input', validate);
+      toggleBtn.addEventListener('click', togglePassword);
 
       const doSubmit = async () => {
         const u = usernameInput.value.trim();
         const p = passwordInput.value;
-        if (!u || !p) {
-          errorEl.textContent = '请输入用户名和密码';
-          return;
-        }
+        if (submitBtn.disabled) return;
         submitBtn.disabled = true;
         submitBtn.textContent = '处理中...';
+        errorEl.textContent = '';
         const result = mode === 'login'
-          ? await APEXON.Auth.login(u, p)
-          : await APEXON.Auth.register(u, p);
+          ? await APEXON.Auth.login(u, p, rememberMe.checked)
+          : await APEXON.Auth.register(u, p, rememberMe.checked);
         submitBtn.disabled = false;
         if (result.success) {
           modal.classList.remove('show');
@@ -738,6 +890,7 @@
       passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
       usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
 
+      validate();
       requestAnimationFrame(() => modal.classList.add('show'));
     },
 
@@ -1856,10 +2009,11 @@
   }
 
   // ===== 10. 初始化 =====
-  function boot() {
+  async function boot() {
     VisibilityManager.init();
     UI.initTheme();
     Auth.init();
+    await Auth.validateSession();
     UI.mountUserButton();
     initTextProtection();
   }
