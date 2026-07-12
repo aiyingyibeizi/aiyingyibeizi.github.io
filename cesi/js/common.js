@@ -11,6 +11,43 @@
   const SUPABASE_URL = 'https://kpmsijgonualekjyrkzs.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u';
 
+  // ===== 预设头像（30 张，风格多样、明亮正经）=====
+  const PRESET_AVATARS = [
+    'Minimal flat portrait of a smiling young man with short black hair, clean pastel blue background, soft shadows, modern illustration, professional avatar',
+    'Flat portrait of a friendly young woman with long dark hair, warm pastel pink background, soft lighting, modern vector illustration, professional avatar',
+    'Cute 3D cartoon avatar of a cheerful boy with hoodie, bright gradient blue-purple background, glossy render, professional avatar',
+    '3D cartoon avatar of a confident girl with glasses, pastel mint background, soft studio lighting, cute stylized render',
+    'Watercolor portrait of a calm young man with sweater, light beige background, gentle brush strokes, artistic professional avatar',
+    'Watercolor portrait of a gentle young woman with ponytail, soft lavender background, delicate texture, artistic avatar',
+    'Abstract geometric portrait of a professional man, bold bright orange and white shapes, flat design, modern corporate avatar',
+    'Abstract geometric portrait of a professional woman, bold teal and white shapes, flat design, modern corporate avatar',
+    'Anime style portrait of a friendly male student in school uniform, bright sky background, clean line art, colorful professional avatar',
+    'Anime style portrait of a cheerful female student with bob hair, soft pink sky background, clean line art, colorful avatar',
+    'Minimal line art portrait of a bearded man, white background with subtle yellow accent, elegant contour drawing, professional avatar',
+    'Minimal line art portrait of a woman with earrings, white background with subtle green accent, elegant contour drawing, avatar',
+    'Vibrant pop art portrait of a smiling man, bright yellow background, bold colors, stylish modern avatar',
+    'Vibrant pop art portrait of a smiling woman, bright magenta background, bold colors, stylish modern avatar',
+    'Realistic pastel digital painting of a young professional man in blazer, soft cream background, warm lighting, high quality avatar',
+    'Realistic pastel digital painting of a young professional woman in blazer, soft cream background, warm lighting, high quality avatar',
+    'Cute kawaii avatar of a friendly character with big eyes, pastel rainbow background, soft shading, playful professional avatar',
+    'Cute kawaii avatar of a friendly female character with big eyes, pastel peach background, soft shading, playful avatar',
+    'Modern isometric avatar of a man with laptop, bright blue and white workspace, clean minimal 3D, tech professional avatar',
+    'Modern isometric avatar of a woman with coffee, bright coral and white workspace, clean minimal 3D, tech professional avatar',
+    'Minimalist silhouette portrait of a man, warm sunrise gradient background, clean vector, elegant avatar',
+    'Minimalist silhouette portrait of a woman, cool aurora gradient background, clean vector, elegant avatar',
+    'Hand drawn sketch portrait of a young man, paper texture background, pencil strokes, creative professional avatar',
+    'Hand drawn sketch portrait of a young woman, paper texture background, pencil strokes, creative avatar',
+    'Futuristic neon portrait of a friendly robot with glowing eyes, bright cyan background, clean sci-fi avatar',
+    'Futuristic neon portrait of a friendly female robot with glowing eyes, bright purple background, clean sci-fi avatar',
+    'Minimalist botanical portrait of a man with small plant, soft sage green background, nature inspired, calm professional avatar',
+    'Minimalist botanical portrait of a woman with flower, soft blush pink background, nature inspired, calm avatar',
+    'Sporty dynamic avatar of a man with basketball, bright orange and white, energetic flat illustration, professional avatar',
+    'Sporty dynamic avatar of a woman with tennis racket, bright green and white, energetic flat illustration, professional avatar'
+  ].map((prompt, index) => ({
+    id: index,
+    url: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=' + encodeURIComponent(prompt) + '&image_size=square'
+  }));
+
   // ===== 0. 安全层 =====
   const Security = {
     escapeHtml(text) {
@@ -396,34 +433,6 @@
 
       const result = await this.request('profiles', 'POST', body, 'on_conflict=user_id');
       return !!result;
-    },
-
-    async uploadAvatarToSupabase(userId, file) {
-      if (!userId || !file) throw new Error('缺少用户或文件');
-      const ext = (file.name && file.name.split('.').pop()) || 'png';
-      const path = `avatars/${userId}/${Date.now()}.${ext}`;
-      const url = `${SUPABASE_URL}/storage/v1/object/avatars/${path}`;
-      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/avatars/${path}`;
-
-      try {
-        const res = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'x-upsert': 'true'
-          },
-          body: file
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error('头像上传失败 ' + res.status + ': ' + text);
-        }
-        return url;
-      } catch (e) {
-        console.error('Supabase avatar upload failed:', e);
-        return null;
-      }
     },
 
     async changeUsername(oldUsername, newUsername, token) {
@@ -1064,10 +1073,13 @@
         .apex-profile-body input, .apex-profile-body textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; margin-bottom: 12px; }
         .apex-profile-body input:focus, .apex-profile-body textarea:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
         .apex-profile-body textarea { resize: vertical; min-height: 80px; font-family: inherit; }
-        .apex-avatar-upload { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .apex-avatar-upload input { display: none; }
-        .apex-avatar-upload-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-        .apex-avatar-upload-text { font-size: 12px; color: var(--apex-text-secondary); }
+        .apex-avatar-select { margin-bottom: 16px; }
+        .apex-avatar-select-label { font-size: 12px; color: var(--apex-text-secondary); margin-bottom: 10px; }
+        .apex-avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-height: 240px; overflow-y: auto; padding: 4px; }
+        .apex-avatar-preset { width: 100%; aspect-ratio: 1; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid transparent; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        .apex-avatar-preset:hover { transform: scale(1.06); }
+        .apex-avatar-preset.selected { border-color: #8B5CF6; box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
+        @media (max-width: 480px) { .apex-avatar-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
         .apex-profile-submit { width: 100%; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35); transition: transform .15s ease, box-shadow .15s ease; }
         .apex-profile-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45); }
         .apex-profile-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
@@ -1230,11 +1242,16 @@
     _buildProfileEditHTML(profile, username) {
       const esc = Security.escapeHtml;
       const p = profile || {};
-      const avatar = '<div class="apex-profile-avatar" id="apexEditAvatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
+      const currentUrl = p.avatar_url || '';
+      const avatar = '<div class="apex-profile-avatar" id="apexEditAvatar">' + this._renderAvatarHTML(currentUrl) + '</div>';
       const genderChecked = (value) => p.gender === value ? ' checked' : '';
       const genderSelect = '<div class="apex-gender-group"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="male"' + genderChecked('male') + '><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="female"' + genderChecked('female') + '><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="secret"' + genderChecked('secret') + '><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div>';
-      return '<div class="apex-profile-header"><div class="apex-profile-name">' + esc(username) + '</div></div>' +
-        '<div class="apex-avatar-upload"><label class="apex-avatar-upload-label" for="apexAvatarInput">' + avatar + '<span class="apex-avatar-upload-text">点击更换头像</span></label><input type="file" id="apexAvatarInput" accept="image/*"></div>' +
+      const avatarGrid = PRESET_AVATARS.map(a => {
+        const selectedClass = a.url === currentUrl ? ' selected' : '';
+        return '<img src="' + esc(a.url) + '" alt="头像' + a.id + '" class="apex-avatar-preset' + selectedClass + '" data-url="' + esc(a.url) + '" loading="lazy">';
+      }).join('');
+      return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
+        '<div class="apex-avatar-select"><div class="apex-avatar-select-label">选择头像</div><div class="apex-avatar-grid" id="apexAvatarGrid">' + avatarGrid + '</div></div>' +
         '<div class="apex-profile-body">' +
         genderSelect +
         '<textarea id="apexEditBio" placeholder="个人简介（最多 200 字）" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
@@ -1247,17 +1264,16 @@
     },
 
     _bindProfileEdit(profile, username) {
-      const fileInput = document.getElementById('apexAvatarInput');
       const avatarPreview = document.getElementById('apexEditAvatar');
-      let pendingFile = null;
-      if (fileInput && avatarPreview) {
-        fileInput.addEventListener('change', () => {
-          const file = fileInput.files[0];
-          if (!file) return;
-          if (file.size > 2 * 1024 * 1024) { UI.toast('头像大小不能超过 2MB'); return; }
-          pendingFile = file;
-          const url = URL.createObjectURL(file);
-          avatarPreview.innerHTML = this._renderAvatarHTML(url);
+      const avatarGrid = document.getElementById('apexAvatarGrid');
+      let selectedAvatarUrl = (profile && profile.avatar_url) || '';
+      if (avatarGrid && avatarPreview) {
+        avatarGrid.addEventListener('click', (e) => {
+          const item = e.target.closest('.apex-avatar-preset');
+          if (!item) return;
+          selectedAvatarUrl = item.dataset.url || '';
+          avatarGrid.querySelectorAll('.apex-avatar-preset').forEach(img => img.classList.toggle('selected', img.dataset.url === selectedAvatarUrl));
+          avatarPreview.innerHTML = this._renderAvatarHTML(selectedAvatarUrl);
         });
       }
       const submit = document.getElementById('apexProfileSubmit');
@@ -1274,11 +1290,7 @@
             social: document.getElementById('apexEditSocial').value,
             gender: genderEl ? genderEl.value : 'secret'
           };
-          if (pendingFile) {
-            const avatarUrl = await DB.uploadAvatarToSupabase(APEXON.Auth.getUserId(), pendingFile);
-            if (avatarUrl) payload.avatar_url = avatarUrl;
-            else { errorEl.textContent = '头像上传失败'; submit.disabled = false; return; }
-          }
+          if (selectedAvatarUrl) payload.avatar_url = selectedAvatarUrl;
           const saved = await DB.saveProfile(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), payload);
           submit.disabled = false;
           if (saved) {
