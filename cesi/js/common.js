@@ -1055,7 +1055,7 @@
         .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-profile-modal.show { opacity: 1; pointer-events: auto; }
         .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
-        .apex-profile-card { position: relative; width: 92%; max-width: 400px; max-height: 86vh; overflow-y: auto; border-radius: 20px; padding: 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: translateY(12px); transition: transform .25s ease; }
+        .apex-profile-card { position: relative; width: 92%; max-width: 400px; max-height: 86vh; overflow-y: auto; border-radius: 20px; padding: 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); transform: translateY(12px); transition: transform .25s ease; overscroll-behavior: contain; }
         .apex-profile-modal.show .apex-profile-card { transform: translateY(0); }
         .apex-profile-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
         .apex-profile-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
@@ -1198,9 +1198,14 @@
       modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexProfileClose">×</button><div id="apexProfileBody"></div></div>';
       document.body.appendChild(modal);
 
-      const close = () => modal.classList.remove('show');
-      modal.querySelector('#apexProfileClose').addEventListener('click', close);
+      const close = () => {
+        modal.classList.remove('show');
+        setTimeout(() => { if (modal && modal.parentNode) modal.remove(); }, 300);
+      };
+      modal.querySelector('#apexProfileClose').addEventListener('click', (e) => { e.stopPropagation(); close(); });
       modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
+      const onKey = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); close(); } };
+      document.addEventListener('keydown', onKey);
 
       const load = async () => {
         const profile = await DB.getProfile(userId);
