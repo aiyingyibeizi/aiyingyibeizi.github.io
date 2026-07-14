@@ -369,51 +369,38 @@ body.loaded .apexon-page {
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
   position: relative;
   padding: 0 var(--container-padding);
 }
 
 .apexon-header-logo {
-  display: flex;
+  display: none;
+}
+
+/* 顶部核心导航居中：[☰] [首页] [Music] */
+.apexon-header-center {
+  grid-column: 2;
+  justify-self: center;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: var(--apex-text);
-  font-weight: 700;
-  font-size: 1.125rem;
-  flex-shrink: 0;
-  margin-right: auto;
-}
-
-.apexon-header-logo img {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  object-fit: contain;
-  background: var(--apex-surface);
-  box-shadow: var(--apex-shadow-sm);
-  transition: transform var(--apex-transition-fast);
-}
-
-.apexon-header-logo span {
-  font-size: 1.375rem;
-}
-
-.apexon-header-logo:hover img {
-  transform: scale(1.06);
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
 }
 
 .apexon-header-nav {
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 5px;
+  margin: 0;
   background: var(--apex-surface);
   border: 1px solid var(--apex-border);
   border-radius: var(--apex-radius-full);
@@ -442,34 +429,22 @@ body.loaded .apexon-page {
 
 .apexon-header-nav a.active {
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  color: #ffffff;
+  color: var(--apex-text-inverse);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
     0 4px 14px rgba(109, 93, 252, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.apexon-header-nav a[href="music.html"] {
-  background: linear-gradient(135deg, rgba(109, 93, 252, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
-  color: var(--apex-primary);
-  border: 1px solid rgba(109, 93, 252, 0.22);
-}
-
-.apexon-header-nav a[href="music.html"]:hover {
-  background: linear-gradient(135deg, rgba(109, 93, 252, 0.22) 0%, rgba(139, 92, 246, 0.22) 100%);
-  color: #ffffff;
-  border-color: rgba(109, 93, 252, 0.45);
-}
-
 .apexon-header-nav a.nav-more {
   display: none;
 }
 
+/* 下拉菜单定位在居中导航下方左侧 */
 .apexon-header-nav.open {
   position: absolute;
   top: calc(var(--header-height) + 8px);
-  right: var(--container-padding);
-  left: auto;
+  left: 0;
   width: 200px;
   flex-direction: column;
   align-items: stretch;
@@ -502,13 +477,14 @@ body.loaded .apexon-page {
   height: 36px;
   border-radius: 10px;
   font-size: 0;
-  color: #ffffff;
+  color: var(--apex-text-inverse);
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
     0 4px 12px rgba(109, 93, 252, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
   flex-shrink: 0;
+  order: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
@@ -517,11 +493,11 @@ body.loaded .apexon-page {
   display: block;
   width: 18px;
   height: 2px;
-  background: #ffffff;
+  background: var(--apex-text-inverse);
   border-radius: 2px;
   box-shadow:
-    0 -5.5px 0 0 #ffffff,
-    0 5.5px 0 0 #ffffff;
+    0 -5.5px 0 0 var(--apex-text-inverse),
+    0 5.5px 0 0 var(--apex-text-inverse);
 }
 
 .apexon-menu-btn:hover {
@@ -530,27 +506,6 @@ body.loaded .apexon-page {
   box-shadow:
     0 6px 16px rgba(109, 93, 252, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-
-html[data-theme="light"] .apexon-menu-btn,
-html[data-bw="true"] .apexon-menu-btn {
-  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
-}
-
-html[data-theme="light"] .apexon-menu-btn::before,
-html[data-bw="true"] .apexon-menu-btn::before {
-  background: #ffffff;
-  box-shadow:
-    0 -5.5px 0 0 #ffffff,
-    0 5.5px 0 0 #ffffff;
-}
-
-html[data-theme="light"] .apexon-menu-btn:hover,
-html[data-bw="true"] .apexon-menu-btn:hover {
-  filter: brightness(1.1);
 }
 
 /* 顶部 Music 入口（独立渐变按钮） */
@@ -564,7 +519,7 @@ html[data-bw="true"] .apexon-menu-btn:hover {
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
-  color: #ffffff;
+  color: var(--apex-text-inverse);
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
@@ -593,12 +548,21 @@ html[data-bw="true"] .apexon-menu-btn:hover {
     0 4px 14px rgba(109, 93, 252, 0.35);
 }
 
+html[data-theme="light"] .apexon-menu-btn,
+html[data-bw="true"] .apexon-menu-btn,
 html[data-theme="light"] .apex-music-btn,
 html[data-bw="true"] .apex-music-btn {
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  color: #ffffff;
   border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.26);
+  color: var(--apex-text-inverse);
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
+}
+
+html[data-theme="light"] .apexon-menu-btn:hover,
+html[data-bw="true"] .apexon-menu-btn:hover,
+html[data-theme="light"] .apex-music-btn:hover,
+html[data-bw="true"] .apex-music-btn:hover {
+  filter: brightness(1.1);
 }
 
 @media (max-width: 480px) {
@@ -622,95 +586,76 @@ html[data-bw="true"] .apexon-header-nav.open {
     0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* 桌面端：三条杠绝对左侧，首页居中，Music + 操作区绝对右侧 */
+/* 右侧功能区：主题切换 + 用户菜单 */
+.header-actions {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 3;
+}
+
+/* 桌面端 */
 @media (min-width: 1024px) {
   .apexon-header__inner {
-    justify-content: center;
-    position: static;
     gap: 16px;
   }
 
-  .apexon-header-logo {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
+  .apexon-menu-btn {
+    width: 38px;
+    height: 38px;
   }
 
-  .apexon-menu-btn {
-    position: absolute;
-    left: 168px;
-    top: 50%;
-    margin-top: -18px;
-    margin-right: 0;
+  .apexon-header-nav {
+    gap: 8px;
+    padding: 5px;
   }
 
   .apexon-header-nav a {
-    padding: 7px 14px;
-    font-size: 0.875rem;
+    padding: 8px 18px;
+    font-size: 0.9rem;
+  }
+
+  .apexon-header-nav a.active {
+    padding: 8px 18px;
   }
 
   .header-actions {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
     gap: 10px;
   }
 }
 
-/* 移动端：Logo 贴最左，菜单按钮与登录靠最右 */
+/* 移动端 */
 @media (max-width: 1023px) {
   .apexon-header__inner {
-    justify-content: space-between;
-    position: static;
     gap: 6px;
     padding: 0 var(--container-padding);
   }
 
-  .apexon-header-logo {
-    position: absolute;
-    left: var(--container-padding);
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0;
-    z-index: 2;
-    gap: 8px;
-  }
-
-  .apexon-header-logo img {
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-  }
-
-  .apexon-header-logo span {
-    display: none;
+  .apexon-header-center {
+    gap: 6px;
   }
 
   .apexon-menu-btn {
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    margin-right: 0;
-    order: -1;
   }
 
   .apexon-menu-btn::before {
     width: 16px;
     height: 2px;
     box-shadow:
-      0 -5px 0 0 #ffffff,
-      0 5px 0 0 #ffffff;
+      0 -5px 0 0 var(--apex-text-inverse),
+      0 5px 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav {
-    flex: 1;
+    flex: 0 0 auto;
     justify-content: center;
     min-width: 0;
-    margin: 0 auto;
     padding: 3px;
     gap: 3px;
     flex-wrap: nowrap;
@@ -728,17 +673,19 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .header-actions {
-    display: inline-flex;
-    align-items: center;
     gap: 6px;
-    margin-left: 0;
-    margin-right: 0;
-    flex-shrink: 0;
+  }
+
+  .apex-music-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .apex-music-btn::before {
+    font-size: 0.8rem;
   }
 
   .apexon-header-nav.open {
-    right: auto;
-    left: var(--container-padding);
     top: calc(var(--header-height) + 6px);
     width: min(200px, calc(100vw - var(--container-padding) * 2));
   }
@@ -749,10 +696,8 @@ html[data-bw="true"] .apexon-header-nav.open {
     gap: 4px;
   }
 
-  .apexon-header-logo img {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+  .apexon-header-center {
+    gap: 4px;
   }
 
   .apexon-menu-btn {
@@ -764,21 +709,18 @@ html[data-bw="true"] .apexon-header-nav.open {
   .apexon-menu-btn::before {
     width: 15px;
     box-shadow:
-      0 -4.5px 0 0 #ffffff,
-      0 4.5px 0 0 #ffffff;
+      0 -4.5px 0 0 var(--apex-text-inverse),
+      0 4.5px 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav {
     padding: 2px;
     gap: 2px;
-    flex-wrap: nowrap;
-    overflow: hidden;
   }
 
   .apexon-header-nav a {
     padding: 4px 7px;
     font-size: 0.6875rem;
-    flex-shrink: 0;
   }
 
   .apexon-header-nav a.active {
@@ -806,13 +748,79 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 }
 
+@media (max-width: 480px) {
+  .apexon-header__inner {
+    gap: 4px;
+  }
+
+  .apexon-menu-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .apexon-menu-btn::before {
+    width: 15px;
+    box-shadow:
+      0 -4.5px 0 0 var(--apex-text-inverse),
+      0 4.5px 0 0 var(--apex-text-inverse);
+  }
+
+  .apexon-header-nav {
+    padding: 2px;
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .apexon-header-nav a {
+    padding: 4px 7px;
+    font-size: 0.6875rem;
+    flex-shrink: 0;
+  }
+
+  .apexon-header-nav a.active {
+    padding: 4px 7px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .apex-music-btn {
+    padding: 4px 7px;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .apex-music-btn::before {
+    font-size: 0.85rem;
+  }
+
+  .apex-bw-toggle {
+    width: 48px;
+    height: 24px;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 18px;
+    height: 18px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(24px);
+  }
+}
+
 /* 右侧用户区：头像 + 名字胶囊（整体触发 Clerk UserButton） */
 .header-user-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  margin-left: 0;
   padding: 4px;
   min-width: 86px;
   min-height: 40px;
@@ -901,8 +909,8 @@ html[data-bw="true"] .apexon-header-nav.open {
   width: auto;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #e0f2fe;
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+  color: var(--apex-text);
+  text-shadow: 0 0 10px var(--apex-glow-primary);
   white-space: nowrap;
 }
 
@@ -910,7 +918,7 @@ html[data-bw="true"] .apexon-header-nav.open {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  color: #a5f3fc;
+  color: var(--apex-primary-light);
   flex-shrink: 0;
   background: rgba(34, 211, 238, 0.12);
   padding: 3px;
@@ -937,8 +945,8 @@ html[data-bw="true"] .apexon-header-nav.open {
   margin-right: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #e0f2fe;
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+  color: var(--apex-text);
+  text-shadow: 0 0 10px var(--apex-glow-primary);
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1097,7 +1105,7 @@ html[data-bw="true"] .apexon-header-nav.open {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  margin-left: auto;
+  margin-left: 0;
   flex-shrink: 0;
 }
 
@@ -1629,8 +1637,8 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   gap: 32px;
   padding: 26px 32px;
   min-height: auto;
-  background: linear-gradient(135deg, rgba(109, 93, 252, 0.18) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(29, 185, 84, 0.08) 100%);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--game-card-bg);
+  border-color: var(--game-card-border);
 }
 
 .item-card--wide::after {
@@ -1639,11 +1647,12 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   transform: none;
   margin-left: auto;
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--apex-bg);
+  border: 1px solid var(--apex-border);
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--apex-text);
   opacity: 1;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -1651,12 +1660,15 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 
 .item-card--wide:hover::after {
   transform: none;
-  background: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  background: var(--apex-surface-elevated);
+  border-color: var(--apex-primary);
+  color: var(--apex-primary);
+  box-shadow: var(--apex-shadow-md);
 }
 
 .item-card--wide:hover {
-  background: linear-gradient(135deg, rgba(109, 93, 252, 0.28) 0%, rgba(139, 92, 246, 0.2) 50%, rgba(29, 185, 84, 0.12) 100%);
+  background: var(--game-card-bg);
+  border-color: var(--game-card-border-hover);
 }
 
 .item-card__visual {
@@ -1665,7 +1677,7 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   height: 110px;
   border-radius: var(--apex-radius-sm);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--apex-bg);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   position: relative;
   z-index: 1;
@@ -1676,7 +1688,7 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   height: 100%;
   object-fit: contain;
   padding: 8px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--apex-bg);
 }
 
 .item-card__body {
@@ -1694,7 +1706,8 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   line-height: 1.7;
   max-width: none;
   margin-top: 0;
-  opacity: 0.95;
+  opacity: 1;
+  color: var(--game-card-desc);
 }
 
 .item-card__features {
@@ -1710,12 +1723,12 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   align-items: center;
   gap: 5px;
   padding: 5px 11px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--apex-bg);
+  border: 1px solid var(--apex-border);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--apex-text-secondary);
 }
 
 @media (max-width: 767px) {
@@ -2740,17 +2753,17 @@ html[data-theme="light"] .apex-card--game:hover {
 
 .leaderboard-rank.gold {
   background: #ffd700;
-  color: #1f2937;
+  color: var(--apex-text-inverse);
 }
 
 .leaderboard-rank.silver {
   background: #c0c0c0;
-  color: #1f2937;
+  color: var(--apex-text-inverse);
 }
 
 .leaderboard-rank.bronze {
   background: #cd7f32;
-  color: #ffffff;
+  color: var(--apex-text-inverse);
 }
 
 .leaderboard-name {
@@ -2897,7 +2910,7 @@ html[data-theme="light"] .apex-card--game:hover {
 .forum-filter-btn.active,
 .forum-category-tab.active {
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  color: #ffffff;
+  color: var(--apex-text-inverse);
   border-color: transparent;
   box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
 }
@@ -2963,7 +2976,7 @@ html[data-theme="light"] .apex-card--game:hover {
   padding: 10px 24px;
   border-radius: 999px;
   background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  color: #ffffff;
+  color: var(--apex-text-inverse);
   font-size: 0.875rem;
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(109, 93, 252, 0.32);
@@ -3234,6 +3247,175 @@ html[data-theme="light"] .apex-card--game:hover {
   transition: background-color var(--apex-transition-base), color var(--apex-transition-base), border-color var(--apex-transition-base), transform var(--apex-transition-fast);
 }
 
+/* ============================================================================
+   Section: Unified Start Screen（统一点击开始界面）
+   ============================================================================ */
+
+.apex-start-screen {
+  width: 100%;
+  min-height: 320px;
+  border-radius: var(--apex-radius);
+  background: #ffffff;
+  border: 1px solid rgba(124, 107, 196, 0.12);
+  box-shadow:
+    0 8px 32px rgba(124, 107, 196, 0.10),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 44px 28px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+
+.apex-start-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(109, 93, 252, 0.06) 0%, transparent 35%),
+    radial-gradient(circle at 80% 80%, rgba(29, 185, 84, 0.04) 0%, transparent 35%);
+  pointer-events: none;
+}
+
+.apex-start-screen:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 16px 48px rgba(124, 107, 196, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.apex-start-screen__icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 10px 28px rgba(109, 93, 252, 0.30);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.apex-start-screen__icon::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(109, 93, 252, 0.18), rgba(29, 185, 84, 0.12), rgba(109, 93, 252, 0.18));
+  z-index: -1;
+  opacity: 0.7;
+}
+
+.apex-start-screen__title {
+  font-size: clamp(1.5rem, 4.5vw, 1.875rem);
+  font-weight: 800;
+  color: var(--apex-start-title, #1e1b4b);
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  position: relative;
+  z-index: 1;
+}
+
+.apex-start-screen__desc {
+  font-size: clamp(0.9375rem, 2.5vw, 1rem);
+  color: var(--apex-start-desc, #5b56a6);
+  max-width: 440px;
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+}
+
+.apex-start-screen__btn {
+  margin-top: 8px;
+  padding: 14px 36px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(109, 93, 252, 0.32);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  position: relative;
+  z-index: 1;
+}
+
+.apex-start-screen__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(109, 93, 252, 0.42);
+}
+
+/* 开始界面强制保持纯白卡片与深色文字，确保所有主题下视觉统一 */
+html[data-theme="dark"] .apex-start-screen,
+html[data-theme="dark"] #testBox .apex-start-screen,
+html[data-bw="true"] .apex-start-screen,
+html[data-bw="true"] #testBox .apex-start-screen,
+html[data-theme="light"] .apex-start-screen,
+html[data-theme="light"] #testBox .apex-start-screen {
+  background: #ffffff;
+  border-color: rgba(124, 107, 196, 0.12);
+}
+
+html[data-theme="dark"] .apex-start-screen__title,
+html[data-theme="dark"] #testBox .apex-start-screen__title,
+html[data-bw="true"] .apex-start-screen__title,
+html[data-bw="true"] #testBox .apex-start-screen__title,
+html[data-theme="light"] .apex-start-screen__title,
+html[data-theme="light"] #testBox .apex-start-screen__title {
+  color: var(--apex-start-title, #1e1b4b);
+}
+
+html[data-theme="dark"] .apex-start-screen__desc,
+html[data-theme="dark"] #testBox .apex-start-screen__desc,
+html[data-bw="true"] .apex-start-screen__desc,
+html[data-bw="true"] #testBox .apex-start-screen__desc,
+html[data-theme="light"] .apex-start-screen__desc,
+html[data-theme="light"] #testBox .apex-start-screen__desc {
+  color: var(--apex-start-desc, #5b56a6);
+}
+
+@media (max-width: 767px) {
+  .apex-start-screen {
+    min-height: 280px;
+    padding: 32px 20px;
+    gap: 14px;
+  }
+
+  .apex-start-screen__icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.625rem;
+  }
+
+  .apex-start-screen__btn {
+    padding: 12px 28px;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .apex-start-screen {
+    min-height: 260px;
+    padding: 28px 16px;
+  }
+
+  .apex-start-screen__icon {
+    width: 54px;
+    height: 54px;
+    font-size: 1.5rem;
+  }
+}
+
 #testBox.waiting {
   background: var(--apex-warning);
   color: var(--apex-text-inverse);
@@ -3294,13 +3476,13 @@ html[data-theme="light"] .apex-card--game:hover {
 }
 
 .wrong {
-  color: #fef08a;
+  color: var(--apex-warning);
   font-weight: 700;
   text-decoration: underline;
 }
 
 .right {
-  color: #ffffff;
+  color: var(--apex-text-inverse);
 }
 
 .pending {
@@ -5090,13 +5272,13 @@ canvas#testBox,
 
 #testBox.type-test-area .right,
 .type-test-area .right {
-  color: #ffffff !important;
+  color: var(--apex-text-inverse) !important;
   font-weight: 700 !important;
 }
 
 #testBox.type-test-area .wrong,
 .type-test-area .wrong {
-  color: #fef08a !important;
+  color: var(--apex-warning) !important;
   font-weight: 700 !important;
   text-decoration: underline !important;
 }
@@ -5122,7 +5304,7 @@ canvas#testBox,
 .type-test-area .type-start-title {
   font-size: clamp(1.5rem, 5vw, 2rem) !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
+  color: var(--apex-text-inverse) !important;
 }
 
 #testBox.type-test-area .type-start-desc,
@@ -5200,7 +5382,7 @@ canvas#testBox,
   flex-direction: column !important;
   padding: 24px !important;
   background: var(--apex-danger) !important;
-  color: #ffffff !important;
+  color: var(--apex-text-inverse) !important;
   border: none !important;
   border-radius: var(--apex-radius) !important;
   box-shadow: var(--apex-shadow-md) !important;
@@ -5224,13 +5406,13 @@ canvas#testBox,
 #testBox.reaction-click-area.green,
 .reaction-click-area.green {
   background: var(--apex-success) !important;
-  color: #ffffff !important;
+  color: var(--apex-text-inverse) !important;
 }
 
 #testBox.reaction-click-area.blue,
 .reaction-click-area.blue {
   background: var(--apex-primary) !important;
-  color: #ffffff !important;
+  color: var(--apex-text-inverse) !important;
 }
 
 #testBox.reaction-click-area.foul,

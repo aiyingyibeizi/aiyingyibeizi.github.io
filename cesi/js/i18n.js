@@ -38,7 +38,7 @@
   const TRANSLATIONS = {
     zh: {
       siteTitle: 'APEXON — 全能能力测试',
-      navHome: '首页', navReaction: '反应测试', navType: '打字测试', navStick: '注意力测试',
+      navHome: '首页', navMusic: 'APEXON Music', navReaction: '反应测试', navType: '打字测试', navStick: '注意力测试',
       navNumber: '数字记忆', navVerbal: '单词记忆', navVisual: '视觉记忆', navAim: '瞄准训练', navSequence: '序列记忆',
       menuOpen: '打开菜单', themeToggle: '切换主题', langSelector: '选择语言',
       heroTitle: 'APEXON', heroTagline: '全能能力测试系统 · 挑战人类极限',
@@ -130,7 +130,7 @@
     },
     en: {
       siteTitle: 'APEXON — Cognitive Ability Tests',
-      navHome: 'Home', navReaction: 'Reaction', navType: 'Typing', navStick: 'Attention',
+      navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reaction', navType: 'Typing', navStick: 'Attention',
       navNumber: 'Number Memory', navVerbal: 'Verbal Memory', navVisual: 'Visual Memory', navAim: 'Aim Training', navSequence: 'Sequence Memory',
       menuOpen: 'Open menu', themeToggle: 'Toggle theme', langSelector: 'Select language',
       heroTitle: 'APEXON', heroTagline: 'All-in-One Cognitive Ability Testing System',
@@ -222,7 +222,7 @@
     },
     ja: {
       siteTitle: 'APEXON — 総合能力テスト',
-      navHome: 'ホーム', navReaction: '反応速度', navType: 'タイピング', navStick: '注意力',
+      navHome: 'ホーム', navMusic: 'APEXON Music', navReaction: '反応速度', navType: 'タイピング', navStick: '注意力',
       navNumber: '数字記憶', navVerbal: '単語記憶', navVisual: '視覚記憶', navAim: 'エイム練習', navSequence: '順序記憶',
       menuOpen: 'メニューを開く', themeToggle: 'テーマ切替', langSelector: '言語を選択',
       heroTitle: 'APEXON', heroTagline: '総合能力テストシステム · 人間の限界に挑戦',
@@ -313,7 +313,7 @@
     },
     ko: {
       siteTitle: 'APEXON — 종합 능력 테스트',
-      navHome: '홈', navReaction: '반응 속도', navType: '타이핑', navStick: '주의력',
+      navHome: '홈', navMusic: 'APEXON Music', navReaction: '반응 속도', navType: '타이핑', navStick: '주의력',
       navNumber: '숫자 기억', navVerbal: '단어 기억', navVisual: '시각 기억', navAim: '조준 연습', navSequence: '순서 기억',
       menuOpen: '메뉴 열기', themeToggle: '테마 전환', langSelector: '언어 선택',
       heroTitle: 'APEXON', heroTagline: '종합 능력 테스트 시스템 · 인간의 한계에 도전',
@@ -404,7 +404,7 @@
     },
     fr: {
       siteTitle: 'APEXON — Tests de capacités',
-      navHome: 'Accueil', navReaction: 'Réaction', navType: 'Dactylo', navStick: 'Attention',
+      navHome: 'Accueil', navMusic: 'APEXON Music', navReaction: 'Réaction', navType: 'Dactylo', navStick: 'Attention',
       navNumber: 'Mémoire numérique', navVerbal: 'Mémoire verbale', navVisual: 'Mémoire visuelle', navAim: 'Visée', navSequence: 'Mémoire séquentielle',
       menuOpen: 'Ouvrir le menu', themeToggle: 'Changer de thème', langSelector: 'Choisir la langue',
       heroTitle: 'APEXON', heroTagline: 'Système de tests complets des capacités cognitives',
@@ -495,7 +495,7 @@
     },
     de: {
       siteTitle: 'APEXON — Fähigkeitstests',
-      navHome: 'Startseite', navReaction: 'Reaktion', navType: 'Tippen', navStick: 'Aufmerksamkeit',
+      navHome: 'Startseite', navMusic: 'APEXON Music', navReaction: 'Reaktion', navType: 'Tippen', navStick: 'Aufmerksamkeit',
       navNumber: 'Zahlengedächtnis', navVerbal: 'Wortgedächtnis', navVisual: 'Visuelles Gedächtnis', navAim: 'Zielübung', navSequence: 'Sequenzgedächtnis',
       menuOpen: 'Menü öffnen', themeToggle: 'Thema wechseln', langSelector: 'Sprache wählen',
       heroTitle: 'APEXON', heroTagline: 'All-in-One-System für kognitive Fähigkeitstests',
@@ -586,7 +586,7 @@
     },
     es: {
       siteTitle: 'APEXON — Tests de habilidades',
-      navHome: 'Inicio', navReaction: 'Reacción', navType: 'Mecanografía', navStick: 'Atención',
+      navHome: 'Inicio', navMusic: 'APEXON Music', navReaction: 'Reacción', navType: 'Mecanografía', navStick: 'Atención',
       navNumber: 'Memoria numérica', navVerbal: 'Memoria verbal', navVisual: 'Memoria visual', navAim: 'Puntería', navSequence: 'Memoria secuencial',
       menuOpen: 'Abrir menú', themeToggle: 'Cambiar tema', langSelector: 'Seleccionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema integral de tests de habilidades cognitivas',
@@ -677,7 +677,7 @@
     },
     ru: {
       siteTitle: 'APEXON — Тесты способностей',
-      navHome: 'Главная', navReaction: 'Реакция', navType: 'Печать', navStick: 'Внимание',
+      navHome: 'Главная', navMusic: 'APEXON Music', navReaction: 'Реакция', navType: 'Печать', navStick: 'Внимание',
       navNumber: 'Числовая память', navVerbal: 'Словесная память', navVisual: 'Зрительная память', navAim: 'Прицел', navSequence: 'Память последовательностей',
       menuOpen: 'Открыть меню', themeToggle: 'Сменить тему', langSelector: 'Выбрать язык',
       heroTitle: 'APEXON', heroTagline: 'Система комплексного тестирования когнитивных способностей',
@@ -768,7 +768,7 @@
     },
     pt: {
       siteTitle: 'APEXON — Testes de habilidades',
-      navHome: 'Início', navReaction: 'Reação', navType: 'Digitação', navStick: 'Atenção',
+      navHome: 'Início', navMusic: 'APEXON Music', navReaction: 'Reação', navType: 'Digitação', navStick: 'Atenção',
       navNumber: 'Memória numérica', navVerbal: 'Memória verbal', navVisual: 'Memória visual', navAim: 'Mira', navSequence: 'Memória sequencial',
       menuOpen: 'Abrir menu', themeToggle: 'Alternar tema', langSelector: 'Selecionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo de testes de habilidades cognitivas',
@@ -859,7 +859,7 @@
     },
     it: {
       siteTitle: 'APEXON — Test di abilità',
-      navHome: 'Home', navReaction: 'Reazione', navType: 'Battitura', navStick: 'Attenzione',
+      navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reazione', navType: 'Battitura', navStick: 'Attenzione',
       navNumber: 'Memoria numerica', navVerbal: 'Memoria verbale', navVisual: 'Memoria visiva', navAim: 'Mira', navSequence: 'Memoria sequenziale',
       menuOpen: 'Apri menu', themeToggle: 'Cambia tema', langSelector: 'Seleziona lingua',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo di test delle abilità cognitive',

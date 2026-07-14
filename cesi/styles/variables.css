@@ -98,6 +98,10 @@
   --game-card-title: #f1f5f9;
   --game-card-desc: #94a3b8;
 
+  /* 统一点击开始界面：纯白卡片上的深色文字，所有主题保持一致 */
+  --apex-start-title: #1e1b4b;
+  --apex-start-desc: #5b56a6;
+
   --game-canvas-bg: rgba(10, 14, 28, 0.55);
 
   /* Clerk UserButton */

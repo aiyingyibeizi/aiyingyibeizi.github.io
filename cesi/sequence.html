@@ -80,17 +80,9 @@
             <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
             <nav class="apexon-header-nav" id="headerNav">
                 <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
-                <a href="reaction.html" class="nav-more" data-i18n="navReaction">反应测试</a>
-                <a href="type.html" class="nav-more" data-i18n="navType">打字测试</a>
-                <a href="stick.html" class="nav-more" data-i18n="navStick">注意力测试</a>
-                <a href="number.html" class="nav-more" data-i18n="navNumber">数字记忆</a>
-                <a href="verbal.html" class="nav-more" data-i18n="navVerbal">单词记忆</a>
-                <a href="visual.html" class="nav-more" data-i18n="navVisual">视觉记忆</a>
-                <a href="aim.html" class="nav-more" data-i18n="navAim">瞄准训练</a>
-                <a href="sequence.html" class="active nav-more" data-i18n="navSequence">序列记忆</a>
-                            <a href="music.html" class="nav-main">APEXON Music</a>
-</nav>
+            </nav>
             <div class="header-actions">
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">APEXON Music</a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
@@ -108,9 +100,7 @@
 
         <div class="info-row"><span data-i18n="currentLevel">当前关卡</span>：<span id="levelDisplay">1</span></div>
 
-        <div id="testBox" data-test-type="sequence">
-            <div class="seq-hint" data-i18n="readyStart">点击开始测试</div>
-        </div>
+        <div id="testBox" data-test-type="sequence"></div>
 
         <div class="result" id="result"></div>
 
@@ -150,11 +140,21 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=3"></script>
-    <script src="js/common.js?v=11"></script>
+    <script src="js/i18n.js?v=4"></script>
+    <script src="js/common.js?v=12"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🎨</div>' +
+                '<div class="apex-start-screen__title">' + t('sequenceStartTitle', '序列记忆挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('sequenceStartDesc', '彩色方块按特定顺序闪烁，演示结束后按顺序点击复现。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
         window.toggleMenu = function () {
             document.getElementById('headerNav').classList.toggle('open');
         };
@@ -308,7 +308,7 @@
             level = 1;
             levelDisplay.textContent = level;
             result.innerHTML = '';
-            testBox.innerHTML = '<div class="seq-hint">' + t('readyStart', '点击开始测试') + '</div>';
+            renderStartScreen();
             testBox.style.gridTemplateColumns = '';
             renderHistory();
         };
@@ -324,6 +324,7 @@
             if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
         });
 
+        renderStartScreen();
         renderHistory();
         document.body.classList.add('loaded');
     })();

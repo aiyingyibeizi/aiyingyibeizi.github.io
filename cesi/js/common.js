@@ -1667,17 +1667,10 @@
       passwordInput.addEventListener('input', validate);
       toggleBtn.addEventListener('click', togglePassword);
 
-      let failCount = 0;
-      let lockUntil = 0;
       const doSubmit = async () => {
         const u = usernameInput.value.trim();
         const p = passwordInput.value;
         if (submitBtn.disabled) return;
-        if (Date.now() < lockUntil) {
-          const remain = Math.ceil((lockUntil - Date.now()) / 1000);
-          errorEl.textContent = t('tooManyAttempts', '失败次数过多，请 {seconds} 秒后再试').replace('{seconds}', remain);
-          return;
-        }
         submitBtn.disabled = true;
         submitBtn.textContent = t('processing', '处理中...');
         errorEl.textContent = '';
@@ -1686,26 +1679,13 @@
           : await APEXON.Auth.register(u, p, rememberMe.checked, getGender());
         submitBtn.disabled = false;
         if (result.success) {
-          failCount = 0;
-          lockUntil = 0;
           modal.classList.remove('show');
           this.updateUserDisplay();
           this.toast(mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功'));
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
         } else {
-          failCount += 1;
-          if (mode === 'login' && failCount >= 5) {
-            lockUntil = Date.now() + 30000;
-            errorEl.textContent = t('tooManyAttempts', '失败次数过多，请 30 秒后再试');
-            submitBtn.disabled = true;
-            setTimeout(() => {
-              submitBtn.disabled = false;
-              errorEl.textContent = '';
-            }, 30000);
-          } else {
-            submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
-            errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
-          }
+          submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
+          errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
         }
       };
 

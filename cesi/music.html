@@ -16,8 +16,8 @@
     <meta name="twitter:description" content="发现无版权独立音乐，支持搜索、收藏、最近播放。">
     <title>APEXON Music - 在线音乐播放器</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="stylesheet" href="styles/variables.css?v=2">
-    <link rel="stylesheet" href="styles/main.css?v=2">
+    <link rel="stylesheet" href="styles/variables.css?v=3">
+    <link rel="stylesheet" href="styles/main.css?v=3">
     <style>
         :root {
             --music-sidebar-width: 240px;
@@ -1369,48 +1369,6 @@
                 radial-gradient(circle at 50% 100%, rgba(29, 185, 84, 0.06) 0%, transparent 50%);
         }
 
-        html[data-theme="light"] .apexon-header,
-        html[data-bw="true"] .apexon-header {
-            background: rgba(255, 255, 255, 0.88);
-            border-bottom-color: rgba(124, 107, 196, 0.12);
-        }
-
-        html[data-theme="light"] .apexon-header-logo span,
-        html[data-bw="true"] .apexon-header-logo span {
-            color: #1e1b4b;
-        }
-
-        html[data-theme="light"] .apexon-menu-btn,
-        html[data-bw="true"] .apexon-menu-btn {
-            background: #ffffff;
-            border-color: rgba(124, 107, 196, 0.25);
-            color: #1e1b4b;
-            box-shadow: 0 2px 8px rgba(124, 107, 196, 0.12);
-        }
-
-        html[data-theme="light"] .apexon-header-nav,
-        html[data-bw="true"] .apexon-header-nav {
-            background: #ffffff;
-            border-color: rgba(124, 107, 196, 0.18);
-        }
-
-        html[data-theme="light"] .apexon-header-nav a,
-        html[data-bw="true"] .apexon-header-nav a {
-            color: #5b56a6;
-        }
-
-        html[data-theme="light"] .apexon-header-nav a:hover,
-        html[data-bw="true"] .apexon-header-nav a:hover {
-            background: rgba(124, 107, 196, 0.12);
-            color: #1e1b4b;
-        }
-
-        html[data-theme="light"] .apexon-header-nav.open,
-        html[data-bw="true"] .apexon-header-nav.open {
-            background: rgba(255, 255, 255, 0.98);
-            border-bottom-color: rgba(124, 107, 196, 0.14);
-        }
-
         html[data-theme="light"] .music-sidebar,
         html[data-bw="true"] .music-sidebar {
             background: rgba(255, 255, 255, 0.86);
@@ -1837,18 +1795,10 @@
             </a>
             <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
             <nav class="apexon-header-nav" id="headerNav">
-                <a href="index.html" data-i18n="navHome" class="nav-main">首页</a>
-                <a href="reaction.html" data-i18n="navReaction" class="nav-more">反应测试</a>
-                <a href="type.html" data-i18n="navType" class="nav-more">打字测试</a>
-                <a href="stick.html" data-i18n="navStick" class="nav-more">注意力测试</a>
-                <a href="number.html" data-i18n="navNumber" class="nav-more">数字记忆</a>
-                <a href="verbal.html" data-i18n="navVerbal" class="nav-more">单词记忆</a>
-                <a href="visual.html" data-i18n="navVisual" class="nav-more">视觉记忆</a>
-                <a href="aim.html" data-i18n="navAim" class="nav-more">瞄准训练</a>
-                <a href="sequence.html" data-i18n="navSequence" class="nav-more">序列记忆</a>
-                <a href="music.html" class="active nav-main">APEXON Music</a>
+                <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
             </nav>
             <div class="header-actions">
+                <a href="music.html" class="apex-music-btn active" data-i18n="navMusic">APEXON Music</a>
                 <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
@@ -2063,8 +2013,8 @@
 
     <audio id="musicAudio"></audio>
 
-    <script src="js/i18n.js?v=3"></script>
-    <script src="js/common.js?v=11"></script>
+    <script src="js/i18n.js?v=4"></script>
+    <script src="js/common.js?v=12"></script>
     <script src="js/music.js?v=3"></script>
     <script>
         window.toggleMenu = function () {
