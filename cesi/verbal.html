@@ -56,20 +56,20 @@
                 <img src="assets/favicon.png" alt="Logo">
                 <span>APEXON</span>
             </a>
-            <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
+            <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
             <nav class="apexon-header-nav" id="headerNav">
-                <a href="index.html">首页</a>
-                <a href="reaction.html">反应测试</a>
-                <a href="type.html">打字测试</a>
-                <a href="stick.html">注意力测试</a>
-                <a href="number.html">数字记忆</a>
-                <a href="verbal.html" class="active">单词记忆</a>
-                <a href="visual.html">视觉记忆</a>
-                <a href="aim.html">瞄准训练</a>
-                <a href="sequence.html">序列记忆</a>
+                <a href="index.html" class="" data-i18n="navHome">首页</a>
+                <a href="reaction.html" class="" data-i18n="navReaction">反应测试</a>
+                <a href="type.html" class="" data-i18n="navType">打字测试</a>
+                <a href="stick.html" class="" data-i18n="navStick">注意力测试</a>
+                <a href="number.html" class="" data-i18n="navNumber">数字记忆</a>
+                <a href="verbal.html" class="active" data-i18n="navVerbal">单词记忆</a>
+                <a href="visual.html" class="" data-i18n="navVisual">视觉记忆</a>
+                <a href="aim.html" class="" data-i18n="navAim">瞄准训练</a>
+                <a href="sequence.html" class="" data-i18n="navSequence">序列记忆</a>
             </nav>
             <div class="header-actions">
-                <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
@@ -103,7 +103,8 @@
         </div>
     </div>
 
-    <script src="js/common.js?v=9"></script>
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/common.js?v=10"></script>
     <script>
     (function () {
         window.toggleMenu = function () {

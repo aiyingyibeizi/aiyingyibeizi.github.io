@@ -3729,3 +3729,102 @@ html[data-bw="true"] canvas#testBox,
 html[data-bw="true"] .game-canvas {
   background: linear-gradient(135deg, #7c6bc4 0%, #9b8fd4 100%) !important;
 }
+
+/* ============================================================================
+   Section: Language Selector
+   ============================================================================ */
+
+.apexon-lang-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.75rem;
+}
+
+.apexon-lang-selector__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--apex-text);
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.apexon-lang-selector__btn:hover {
+  background: var(--apex-surface-hover, rgba(255,255,255,0.06));
+  border-color: var(--apex-primary, #8b5cf6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.apexon-lang-selector__flag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.apexon-lang-selector__name {
+  white-space: nowrap;
+}
+
+.apexon-lang-selector__arrow {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-left: 0.1rem;
+}
+
+.apexon-lang-selector__dropdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  min-width: 8rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem;
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  border-radius: 0.7rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+}
+
+.apexon-lang-selector__dropdown.is-open {
+  display: flex;
+}
+
+.apexon-lang-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--apex-text);
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+.apexon-lang-selector__item:hover {
+  background: var(--apex-surface-hover, rgba(255,255,255,0.06));
+}
+
+@media (max-width: 767px) {
+  .apexon-lang-selector {
+    margin-left: 0.4rem;
+  }
+  .apexon-lang-selector__name {
+    display: none;
+  }
+  .apexon-lang-selector__btn {
+    padding: 0.35rem;
+  }
+}

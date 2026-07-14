@@ -358,7 +358,7 @@
       });
       console.log('[addComment] result:', result);
       if (!result) {
-        return { success: false, error: '发布失败，请检查网络或稍后重试（详细错误请查看控制台）' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
       }
       return { success: true };
     },
@@ -575,7 +575,7 @@
     },
 
     async changeUsername(newUsername, password) {
-      if (!this.isLoggedIn()) return { success: false, error: '请先登录' };
+      if (!this.isLoggedIn()) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('pleaseLogin') : '请先登录') };
       const oldUsername = this.currentUser.username;
       const u = String(newUsername).trim().slice(0, 30);
       const nameErr = this._validateUsername(u);
@@ -643,7 +643,7 @@
         updated_at: new Date().toISOString()
       });
       console.log('[register] account insert result:', result);
-      if (!result) return { success: false, error: '注册失败，请重试' };
+      if (!result) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerFailed') : '注册失败，请重试') };
 
       const profileResult = await DB.saveProfile(u, u, {
         bio: '',
@@ -688,7 +688,7 @@
         { 'x-username': u }
       );
       console.log('[login] session update result:', updateResult);
-      if (!updateResult) return { success: false, error: '登录失败，请重试' };
+      if (!updateResult) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed') : '登录失败，请重试') };
 
       this._setSession(u, token, expiresAt);
       await this.mergeAnonymousData();
@@ -713,7 +713,7 @@
 
     async deleteAccount() {
       if (!this.isLoggedIn()) return;
-      if (!confirm('确定删除本地登录状态？数据库中的成绩仍会保留。')) return;
+      if (!confirm(window.APEXON && APEXON.i18n ? APEXON.i18n.t('confirmLogout') : '确定删除本地登录状态？数据库中的成绩仍会保留。')) return;
       await this.logout();
     },
 
@@ -1117,9 +1117,10 @@
       if (menu) {
         const miniIcon = '<svg viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(124,58,237,0.3));"><defs><linearGradient id="miniGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#60A5FA"/></linearGradient></defs><path d="M12 2l10 6-10 6L2 8l10-6z" fill="url(#miniGrad)"/></svg>';
         if (!isLoggedIn) {
-          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="login">登录 / 注册</button></div>';
+          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="login">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginRegister') : '登录 / 注册') + '</button></div>';
         } else {
-          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar" id="apexHeaderAvatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="edit-profile">编辑资料</button><button data-action="change-username">修改用户名</button><button data-action="logout">退出账号</button><button data-action="delete-account" class="danger">注销账号</button></div>';
+          const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k) { return k; };
+          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar" id="apexHeaderAvatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="edit-profile">' + t('editProfile') + '</button><button data-action="change-username">' + t('editUsername') + '</button><button data-action="logout">' + t('logoutAccount') + '</button><button data-action="delete-account" class="danger">' + t('deleteAccount') + '</button></div>';
         }
         this._loadHeaderAvatar(userId);
         this._bindUserMenu();
@@ -1128,7 +1129,7 @@
       if (!isLoggedIn) {
         if (forumTip) {
           forumTip.style.display = 'block';
-          forumTip.textContent = '游客模式可正常使用全部功能，登录后可修改用户名与资料';
+          forumTip.textContent = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestModeTip') : '游客模式可正常使用全部功能，登录后可修改用户名与资料');
         }
         if (forumInput) forumInput.style.display = 'flex';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
@@ -1253,7 +1254,7 @@
         return '<img src="' + esc(a.url) + '" alt="头像' + a.id + '" class="apex-avatar-preset' + selectedClass + '" data-url="' + esc(a.url) + '" loading="lazy">';
       }).join('');
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
-        '<div class="apex-avatar-select"><div class="apex-avatar-select-label">选择头像</div><div class="apex-avatar-grid" id="apexAvatarGrid">' + avatarGrid + '</div></div>' +
+        '<div class="apex-avatar-select"><div class="apex-avatar-select-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('selectAvatar') : '选择头像') + '</div><div class="apex-avatar-grid" id="apexAvatarGrid">' + avatarGrid + '</div></div>' +
         '<div class="apex-profile-body">' +
         genderSelect +
         '<textarea id="apexEditBio" placeholder="个人简介（最多 200 字）" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
@@ -1261,7 +1262,7 @@
         '<input type="text" id="apexEditWebsite" placeholder="个人网站" maxlength="200" value="' + esc(p.website || '') + '">' +
         '<input type="text" id="apexEditSocial" placeholder="社交链接" maxlength="200" value="' + esc(p.social_links || '') + '">' +
         '<div class="apex-profile-error" id="apexProfileError"></div>' +
-        '<button class="apex-profile-submit" id="apexProfileSubmit">保存资料</button>' +
+        '<button class="apex-profile-submit" id="apexProfileSubmit">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveProfile') : '保存资料') + '</button>' +
         '</div>';
     },
 
@@ -1296,11 +1297,11 @@
           const saved = await DB.saveProfile(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), payload);
           submit.disabled = false;
           if (saved) {
-            UI.toast('资料已保存');
+            UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('profileSaved') : '资料已保存');
             this._loadHeaderAvatar(APEXON.Auth.getUserId());
             document.getElementById('apex-profile-modal').classList.remove('show');
           } else {
-            errorEl.textContent = '保存失败，请重试';
+            errorEl.textContent = window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveFailed') : '保存失败，请重试';
           }
         });
       }
@@ -1385,7 +1386,7 @@
       const setMode = (m) => {
         mode = m;
         tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === m));
-        submitBtn.textContent = m === 'login' ? '登录' : '注册';
+        submitBtn.textContent = m === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
         errorEl.textContent = '';
         const isRegister = m === 'register';
         confirmWrap.style.display = isRegister ? 'block' : 'none';
@@ -1455,11 +1456,11 @@
         if (result.success) {
           modal.classList.remove('show');
           this.updateUserDisplay();
-          this.toast(mode === 'login' ? '登录成功' : '注册成功');
+          this.toast(mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功'));
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
         } else {
-          submitBtn.textContent = mode === 'login' ? '登录' : '注册';
-          errorEl.textContent = result.error || '操作失败';
+          submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
+          errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
         }
       };
 
@@ -2282,7 +2283,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
-          if (!saved) UI.toast('数据保存失败，请重试');
+          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -2433,7 +2434,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
-          if (!saved) UI.toast('数据保存失败，请重试');
+          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
 
           AudioManager.playSuccess();
           Utils.vibrate(30);

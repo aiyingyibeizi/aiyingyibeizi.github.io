@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>APEXON — 全能能力测试</title>
+    <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -25,21 +25,21 @@
                 <img src="assets/favicon.png" alt="Logo">
                 <span>APEXON</span>
             </a>
-            <button class="apexon-menu-btn" onclick="toggleMenu()" aria-label="打开菜单">☰</button>
+            <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
             <nav class="apexon-header-nav" id="headerNav">
-                <a href="index.html" class="active">首页</a>
-                <a href="reaction.html">反应测试</a>
-                <a href="type.html">打字测试</a>
-                <a href="stick.html">注意力测试</a>
-                <a href="number.html">数字记忆</a>
-                <a href="verbal.html">单词记忆</a>
-                <a href="visual.html">视觉记忆</a>
-                <a href="aim.html">瞄准训练</a>
-                <a href="sequence.html">序列记忆</a>
+                <a href="index.html" class="active" data-i18n="navHome">首页</a>
+                <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                <a href="type.html" data-i18n="navType">打字测试</a>
+                <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
             </nav>
             <div class="header-actions">
                 <!-- 黑白 / 彩色全局切换 -->
-                <label class="apex-bw-toggle" id="bwToggle" title="切换深色/明亮主题">
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
@@ -54,77 +54,77 @@
     <div class="container">
         <div class="hero-apexon">
             <img src="assets/favicon.png" alt="Logo" class="hero-logo-main">
-            <div class="hero-title-main">APEXON</div>
-            <div class="hero-tagline">全能能力测试系统 · 挑战人类极限</div>
+            <div class="hero-title-main" data-i18n="heroTitle">APEXON</div>
+            <div class="hero-tagline" data-i18n="heroTagline">全能能力测试系统 · 挑战人类极限</div>
             <div class="hero-stats-bar">
-                <div class="hero-stat-chip"><strong id="statOnline">0</strong> 在线人数</div>
-                <div class="hero-stat-chip"><strong id="statTotalUsers">0</strong> 总玩家数量</div>
-                <div class="hero-stat-chip"><strong id="statTotalTests">0</strong> 总测试数</div>
+                <div class="hero-stat-chip"><strong id="statOnline">0</strong> <span data-i18n="statOnline">在线人数</span></div>
+                <div class="hero-stat-chip"><strong id="statTotalUsers">0</strong> <span data-i18n="statTotalUsers">总玩家数量</span></div>
+                <div class="hero-stat-chip"><strong id="statTotalTests">0</strong> <span data-i18n="statTotalTests">总测试数</span></div>
             </div>
         </div>
 
         <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
-            <input name="q" placeholder="输入关键词，搜索全世界" required>
-            <button type="submit">搜索</button>
+            <input name="q" data-i18n-placeholder="searchPlaceholder" placeholder="输入关键词，搜索全世界" required>
+            <button type="submit" data-i18n="searchButton">搜索</button>
         </form>
 
         <div class="cards-grid">
             <a href="reaction.html" class="item-card">
-                <strong>反应时间测试</strong>
-                <div class="card-desc">测试你的神经反应速度，毫秒级精准测量</div>
+                <strong data-i18n="cardReactionTitle">反应时间测试</strong>
+                <div class="card-desc" data-i18n="cardReactionDesc">测试你的神经反应速度，毫秒级精准测量</div>
             </a>
             <a href="type.html" class="item-card">
-                <strong>打字训练测试</strong>
-                <div class="card-desc">提升打字速度与准确度，挑战中文输入极限</div>
+                <strong data-i18n="cardTypeTitle">打字训练测试</strong>
+                <div class="card-desc" data-i18n="cardTypeDesc">提升打字速度与准确度，挑战中文输入极限</div>
             </a>
             <a href="stick.html" class="item-card">
-                <strong>持续注意力测试</strong>
-                <div class="card-desc">60秒专注力挑战，追踪你的注意力曲线</div>
+                <strong data-i18n="cardStickTitle">持续注意力测试</strong>
+                <div class="card-desc" data-i18n="cardStickDesc">60秒专注力挑战，追踪你的注意力曲线</div>
             </a>
             <a href="number.html" class="item-card">
-                <strong>数字记忆测试</strong>
-                <div class="card-desc">挑战数字记忆广度，逐级突破记忆极限</div>
+                <strong data-i18n="cardNumberTitle">数字记忆测试</strong>
+                <div class="card-desc" data-i18n="cardNumberDesc">挑战数字记忆广度，逐级突破记忆极限</div>
             </a>
             <a href="verbal.html" class="item-card">
-                <strong>单词记忆测试</strong>
-                <div class="card-desc">辨别新旧词汇，评估言语工作记忆能力</div>
+                <strong data-i18n="cardVerbalTitle">单词记忆测试</strong>
+                <div class="card-desc" data-i18n="cardVerbalDesc">辨别新旧词汇，评估言语工作记忆能力</div>
             </a>
             <a href="visual.html" class="item-card">
-                <strong>视觉记忆测试</strong>
-                <div class="card-desc">记住闪烁方块位置，锻炼空间视觉记忆</div>
+                <strong data-i18n="cardVisualTitle">视觉记忆测试</strong>
+                <div class="card-desc" data-i18n="cardVisualDesc">记住闪烁方块位置，锻炼空间视觉记忆</div>
             </a>
             <a href="aim.html" class="item-card">
-                <strong>瞄准训练</strong>
-                <div class="card-desc">快速精准点击目标，提升手眼协调</div>
+                <strong data-i18n="cardAimTitle">瞄准训练</strong>
+                <div class="card-desc" data-i18n="cardAimDesc">快速精准点击目标，提升手眼协调</div>
             </a>
             <a href="sequence.html" class="item-card">
-                <strong>序列记忆测试</strong>
-                <div class="card-desc">复现闪烁顺序，训练短时序列记忆</div>
+                <strong data-i18n="cardSequenceTitle">序列记忆测试</strong>
+                <div class="card-desc" data-i18n="cardSequenceDesc">复现闪烁顺序，训练短时序列记忆</div>
             </a>
         </div>
 
         <div class="leaderboard" id="leaderboard">
-            <div class="leaderboard-title">🏆 排行榜</div>
+            <div class="leaderboard-title" data-i18n="leaderboardTitle">🏆 排行榜</div>
             <div class="leaderboard-tabs">
-                <button class="leaderboard-tab active" onclick="showLb('reaction')">反应</button>
-                <button class="leaderboard-tab" onclick="showLb('type')">打字</button>
-                <button class="leaderboard-tab" onclick="showLb('stick')">注意力</button>
-                <button class="leaderboard-tab" onclick="showLb('number')">数字</button>
-                <button class="leaderboard-tab" onclick="showLb('verbal')">单词</button>
-                <button class="leaderboard-tab" onclick="showLb('visual')">视觉</button>
-                <button class="leaderboard-tab" onclick="showLb('aim')">瞄准</button>
-                <button class="leaderboard-tab" onclick="showLb('sequence')">序列</button>
+                <button class="leaderboard-tab active" onclick="showLb('reaction')" data-i18n="lbReaction">反应</button>
+                <button class="leaderboard-tab" onclick="showLb('type')" data-i18n="lbType">打字</button>
+                <button class="leaderboard-tab" onclick="showLb('stick')" data-i18n="lbStick">注意力</button>
+                <button class="leaderboard-tab" onclick="showLb('number')" data-i18n="lbNumber">数字</button>
+                <button class="leaderboard-tab" onclick="showLb('verbal')" data-i18n="lbVerbal">单词</button>
+                <button class="leaderboard-tab" onclick="showLb('visual')" data-i18n="lbVisual">视觉</button>
+                <button class="leaderboard-tab" onclick="showLb('aim')" data-i18n="lbAim">瞄准</button>
+                <button class="leaderboard-tab" onclick="showLb('sequence')" data-i18n="lbSequence">序列</button>
             </div>
-            <div id="lbContent">还没有人上榜</div>
+            <div id="lbContent" data-i18n="lbEmpty">还没有人上榜</div>
         </div>
 
         <div class="personal-stats" id="personalStats">
-            <div class="personal-stats-title">📊 我的成绩</div>
-            <div id="personalContent">加载中...</div>
+            <div class="personal-stats-title" data-i18n="myScoresTitle">📊 我的成绩</div>
+            <div id="personalContent" data-i18n="loading">加载中...</div>
         </div>
 
         <div class="forum-section" id="forumSection">
-            <div class="forum-title">💬 玩家讨论区</div>
+            <div class="forum-title" data-i18n="discussionTitle">💬 玩家讨论区</div>
             <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
                 <select id="forumCategory" class="forum-category-select">
@@ -166,7 +166,8 @@
         </div>
     </div>
 
-    <script src="js/common.js?v=9"></script>
+    <script src="js/i18n.js?v=1"></script>
+    <script src="js/common.js?v=10"></script>
     <script>
     (async function() {
         // ===== 粒子背景 =====
