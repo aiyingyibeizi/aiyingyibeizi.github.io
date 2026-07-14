@@ -1464,16 +1464,39 @@
 
         html[data-theme="light"] .music-progress__bar,
         html[data-bw="true"] .music-progress__bar {
-            background: rgba(124, 107, 196, 0.18);
+            background: rgba(124, 107, 196, 0.22);
         }
 
-        html[data-theme="light"] .music-progress__current,
-        html[data-bw="true"] .music-progress__current {
+        html[data-theme="light"] .music-progress__fill,
+        html[data-bw="true"] .music-progress__fill {
             background: #1e1b4b;
         }
 
-        html[data-theme="light"] .music-time,
-        html[data-bw="true"] .music-time {
+        html[data-theme="light"] .music-progress__handle,
+        html[data-bw="true"] .music-progress__handle {
+            background: #1e1b4b;
+            box-shadow: 0 2px 8px rgba(124, 107, 196, 0.35);
+        }
+
+        html[data-theme="light"] .music-progress__time,
+        html[data-bw="true"] .music-progress__time {
+            color: #5b56a6;
+        }
+
+        html[data-theme="light"] .music-volume__bar,
+        html[data-bw="true"] .music-volume__bar {
+            background: rgba(124, 107, 196, 0.22);
+        }
+
+        html[data-theme="light"] .music-volume__fill,
+        html[data-bw="true"] .music-volume__fill {
+            background: #1e1b4b;
+        }
+
+        html[data-theme="light"] .music-volume__icon,
+        html[data-bw="true"] .music-volume__icon,
+        html[data-theme="light"] #volumeIcon,
+        html[data-bw="true"] #volumeIcon {
             color: #5b56a6;
         }
 

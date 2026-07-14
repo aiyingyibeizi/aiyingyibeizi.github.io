@@ -478,41 +478,59 @@ body.loaded .apexon-page {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
+  position: relative;
   width: 44px;
   height: 44px;
   border-radius: var(--apex-radius-sm);
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--apex-text);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  font-size: 0;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    0 2px 10px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.apexon-menu-btn::before {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 2.5px;
+  background: currentColor;
+  border-radius: 2px;
+  box-shadow:
+    0 -7px 0 0 currentColor,
+    0 7px 0 0 currentColor;
 }
 
 .apexon-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-1px);
 }
 
 html[data-theme="light"] .apexon-menu-btn,
 html[data-bw="true"] .apexon-menu-btn {
   background: #ffffff;
-  border-color: rgba(124, 107, 196, 0.4);
+  border-color: rgba(124, 107, 196, 0.5);
   color: #1e1b4b;
-  text-shadow: none;
-  box-shadow: 0 2px 12px rgba(124, 107, 196, 0.22);
+  box-shadow: 0 2px 14px rgba(124, 107, 196, 0.28);
+}
+
+html[data-theme="light"] .apexon-menu-btn::before,
+html[data-bw="true"] .apexon-menu-btn::before {
+  background: #1e1b4b;
+  box-shadow:
+    0 -7px 0 0 #1e1b4b,
+    0 7px 0 0 #1e1b4b;
 }
 
 html[data-theme="light"] .apexon-menu-btn:hover,
 html[data-bw="true"] .apexon-menu-btn:hover {
-  background: rgba(124, 107, 196, 0.12);
-  border-color: rgba(124, 107, 196, 0.6);
+  background: rgba(124, 107, 196, 0.14);
+  border-color: rgba(124, 107, 196, 0.7);
 }
 
 /* 桌面端：Logo 绝对定位贴最左，菜单栏居中，登录绝对定位贴最右 */
