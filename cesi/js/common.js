@@ -267,6 +267,9 @@
         created_at: new Date().toISOString()
       });
       console.log('[saveScore]', testType, scoreValue, 'result:', result);
+      if (result) {
+        document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
+      }
       return !!result;
     },
 
@@ -360,6 +363,7 @@
       if (!result) {
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
       }
+      document.dispatchEvent(new CustomEvent('apexon:commentPosted', { detail: { category: cat } }));
       return { success: true };
     },
 
@@ -925,7 +929,7 @@
   // ===== 5. 在线状态追踪 =====
   const OnlineTracker = {
     timer: null,
-    INTERVAL_MS: 30000,
+    INTERVAL_MS: 5000,
 
     init(userId) {
       if (!userId) return;
@@ -957,7 +961,101 @@
   };
   APEXON.OnlineTracker = OnlineTracker;
 
-  // ===== 6. 工具函数 =====
+  // ===== 6. 站点统计 =====
+  const Stats = {
+    timer: null,
+    INTERVAL_MS: 5000,
+    ONLINE_WINDOW_MS: 2 * 60 * 1000,
+    els: {},
+    prev: { online: 0, total_users: 0, total_tests: 0 },
+
+    init() {
+      this.els.online = document.getElementById('statOnline');
+      this.els.totalUsers = document.getElementById('statTotalUsers');
+      this.els.totalTests = document.getElementById('statTotalTests');
+      if (!this.els.online && !this.els.totalUsers && !this.els.totalTests) return;
+
+      this.refresh();
+      this.timer = setInterval(() => this.refresh(), this.INTERVAL_MS);
+      VisibilityManager.onChange((visible) => {
+        if (visible) this.refresh();
+      });
+      document.addEventListener('apexon:scoreSaved', () => this.refresh());
+      document.addEventListener('apexon:commentPosted', () => this.refresh());
+    },
+
+    stop() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+
+    async refresh() {
+      const stats = await this.fetchStats();
+      if (!stats) return;
+      const next = {
+        online: Math.max(0, Number(stats.online) || 0),
+        total_users: Math.max(0, Number(stats.total_users) || 0),
+        total_tests: Math.max(0, Number(stats.total_tests) || 0)
+      };
+      this._apply(next);
+    },
+
+    async fetchStats() {
+      const stats = await DB.getSiteStats();
+      if (!stats) return null;
+
+      // 用 online_users 表最近活跃心跳计算在线人数，避免 RPC 缓存导致数字僵硬
+      try {
+        const since = new Date(Date.now() - this.ONLINE_WINDOW_MS).toISOString();
+        const url = `${SUPABASE_URL}/rest/v1/online_users?select=count&last_seen=gt.${encodeURIComponent(since)}`;
+        const res = await fetch(url, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const onlineCount = data && data[0] ? parseInt(data[0].count, 10) : 0;
+          stats.online = Math.max(onlineCount, Number(stats.online) || 0);
+        }
+      } catch (e) {
+        // 静默回退到 RPC 返回的 online
+      }
+      return stats;
+    },
+
+    _apply(next) {
+      const map = [
+        { key: 'online', el: this.els.online },
+        { key: 'total_users', el: this.els.totalUsers },
+        { key: 'total_tests', el: this.els.totalTests }
+      ];
+      let changed = false;
+      for (const item of map) {
+        const el = item.el;
+        if (!el) continue;
+        const oldVal = this.prev[item.key] || 0;
+        const newVal = next[item.key];
+        if (newVal !== oldVal) {
+          el.textContent = newVal;
+          changed = true;
+          if (newVal > oldVal) this._animate(el);
+        }
+      }
+      this.prev = next;
+      return changed;
+    },
+
+    _animate(el) {
+      el.classList.remove('stat-grow');
+      void el.offsetWidth;
+      el.classList.add('stat-grow');
+      setTimeout(() => el.classList.remove('stat-grow'), 650);
+    }
+  };
+  APEXON.Stats = Stats;
+
+  // ===== 7. 工具函数 =====
   const Utils = {
     debounce(fn, ms) {
       let timer;
@@ -1186,6 +1284,19 @@
       menu.className = 'apex-user-menu';
       actions.appendChild(menu);
       this.updateUserDisplay();
+    },
+
+    relayoutHeader() {
+      const nav = document.getElementById('headerNav');
+      const actions = document.querySelector('.header-actions');
+      if (!nav || !actions) return;
+      const music = nav.querySelector('a[href="music.html"]');
+      if (music) {
+        music.classList.add('apex-music-btn');
+        music.textContent = 'Music';
+        if (location.pathname.endsWith('music.html')) music.classList.add('active');
+        actions.insertBefore(music, actions.firstChild);
+      }
     },
 
     updateUserDisplay() {
@@ -2697,6 +2808,8 @@
     await Auth.validateSession();
     OnlineTracker.init(Auth.getUserId());
     UI.mountUserButton();
+    UI.relayoutHeader();
+    Stats.init();
     initTextProtection();
     document.addEventListener('apexon:langchange', () => {
       UI.updateUserDisplay();
