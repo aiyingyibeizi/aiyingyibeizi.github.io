@@ -3,6 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。APEXON 免费在线视觉记忆测试。">
+    <meta name="keywords" content="视觉记忆,空间记忆,记忆力测试,认知训练,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="视觉记忆测试 - APEXON">
+    <meta property="og:description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/visual.html">
+    <meta property="og:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="视觉记忆测试 - APEXON">
+    <meta name="twitter:description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/preview-final-hero.png">
     <title data-i18n="visualTitle">视觉记忆测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
@@ -108,6 +122,23 @@
         <div class="history-list" style="margin-top:24px">
             <div class="history-title" data-i18n="recentRecords">最近记录</div>
             <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>关于视觉记忆测试</h2>
+            <p>视觉记忆是指个体对视觉信息进行编码、存储和再现的能力，它在导航、识别面孔、学习图表和空间推理中发挥着重要作用。APEXON 视觉记忆测试通过闪烁方块的顺序记忆任务，帮助玩家训练和提升空间视觉记忆能力。</p>
+            <p>与语言记忆不同，视觉记忆更依赖于大脑右侧顶叶和枕叶区域的协同工作。良好的视觉记忆不仅能帮助我们在复杂环境中快速定位，还能提升绘画、设计和运动表现。对于经常需要处理图像、视频或空间信息的用户来说，这项测试尤为有价值。</p>
+            <h3>测试原理</h3>
+            <p>系统会在网格中依次点亮若干方块，玩家需要在动画结束后按相同顺序点击对应位置。随着关卡提升，网格规模和需要记忆的方块数量都会增加，难度逐渐加大。</p>
+            <h3>提升视觉记忆的方法</h3>
+            <ul>
+                <li><strong>构建心理地图</strong>：将方块位置想象成房间里的家具或路线上的地标。</li>
+                <li><strong>分步记忆</strong>：把长序列拆成两三步，逐步回忆。</li>
+                <li><strong>关注起点和终点</strong>：记住序列的首尾位置，可以降低出错概率。</li>
+                <li><strong>减少眨眼干扰</strong>：在观察阶段保持稳定注视，避免错过关键闪烁。</li>
+            </ul>
+            <h3>适用人群</h3>
+            <p>本测试适合设计师、艺术家、运动员、驾驶员以及任何希望提升空间记忆和观察力的用户。长期坚持训练可以帮助你在需要视觉信息处理的场景中表现更佳。</p>
         </div>
     </div>
 
@@ -240,7 +271,7 @@
             state = 'ended';
             clearTimers();
             const grade = APEXON.Utils.getGrade(score, 'visual');
-            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('passLevel', '通过第 {level} 关').replace('{level}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('levelLabel', '关卡') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div></div>';
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('passLevel', '通过第 {level} 关').replace('{level}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('levelLabel', '关卡') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('visual', score, grade.grade) + '</div>';
 
             APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'visual', { score: score }).then(saved => {
                 if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));

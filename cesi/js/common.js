@@ -830,6 +830,84 @@
   };
   APEXON.Audio = AudioManager;
 
+  // ===== 分享模块 =====
+  const Share = {
+    getUrl(testType) {
+      return 'https://apexon.qzz.io/' + (testType || 'index') + '.html';
+    },
+
+    getText(testType, score, grade, extra) {
+      const i18n = window.APEXON && APEXON.i18n;
+      const t = i18n ? i18n.t.bind(i18n) : function(k, fb){ return fb; };
+      const templates = {
+        reaction: t('shareReaction', '我在 APEXON 反应速度测试中平均反应 {score}ms，评级 {grade}。来挑战我：'),
+        type: t('shareType', '我在 APEXON 打字速度测试中达到 {score} WPM，评级 {grade}。来挑战我：'),
+        stick: t('shareStick', '我在 APEXON 注意力测试中获得 {score} 分，评级 {grade}。来挑战我：'),
+        number: t('shareNumber', '我在 APEXON 数字记忆测试中记住 {score} 位数字，评级 {grade}。来挑战我：'),
+        verbal: t('shareVerbal', '我在 APEXON 单词记忆测试中记住 {score} 个单词，评级 {grade}。来挑战我：'),
+        visual: t('shareVisual', '我在 APEXON 视觉记忆测试中通过第 {score} 关，评级 {grade}。来挑战我：'),
+        aim: t('shareAim', '我在 APEXON 瞄准训练中平均点击耗时 {score}ms，评级 {grade}。来挑战我：'),
+        sequence: t('shareSequence', '我在 APEXON 序列记忆测试中通过第 {score} 关，评级 {grade}。来挑战我：')
+      };
+      let text = templates[testType] || t('shareDefault', '我在 APEXON 完成了一项能力测试，评级 {grade}。来挑战我：');
+      text = text.replace('{score}', score).replace('{grade}', grade);
+      if (extra) text = text.replace('{extra}', extra);
+      return text;
+    },
+
+    async copy(testType, score, grade, extra) {
+      const text = this.getText(testType, score, grade, extra);
+      const url = this.getUrl(testType);
+      const full = text + ' ' + url;
+      const i18n = window.APEXON && APEXON.i18n;
+      const t = i18n ? i18n.t.bind(i18n) : function(k, fb){ return fb; };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(full);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = full;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        if (APEXON.UI) APEXON.UI.toast(t('copySuccess', '分享文案已复制'));
+      } catch (e) {
+        if (APEXON.UI) APEXON.UI.toast(t('copyFailed', '复制失败，请手动复制'));
+      }
+    },
+
+    native(testType, score, grade, extra) {
+      const text = this.getText(testType, score, grade, extra);
+      const url = this.getUrl(testType);
+      const i18n = window.APEXON && APEXON.i18n;
+      const t = i18n ? i18n.t.bind(i18n) : function(k, fb){ return fb; };
+      if (navigator.share) {
+        navigator.share({ title: 'APEXON', text: text, url: url }).catch(() => {});
+      } else {
+        const full = encodeURIComponent(text + ' ' + url);
+        window.open('https://twitter.com/intent/tweet?text=' + full, '_blank');
+      }
+    },
+
+    buttonsHTML(testType, score, grade, extra) {
+      const i18n = window.APEXON && APEXON.i18n;
+      const t = i18n ? i18n.t.bind(i18n) : function(k, fb){ return fb; };
+      const copyLabel = t('copyShare', '复制文案');
+      const shareLabel = t('shareNow', '分享');
+      const copyIcon = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
+      const shareIcon = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>';
+      return '<div class="score-share">' +
+        '<button class="score-share__btn" onclick="APEXON.Share.copy(\'' + testType + '\', ' + score + ', \'' + grade + '\', ' + (extra ? '\'' + extra + '\'' : 'null') + ')" type="button">' + copyIcon + '<span>' + copyLabel + '</span></button>' +
+        '<button class="score-share__btn" onclick="APEXON.Share.native(\'' + testType + '\', ' + score + ', \'' + grade + '\', ' + (extra ? '\'' + extra + '\'' : 'null') + ')" type="button">' + shareIcon + '<span>' + shareLabel + '</span></button>' +
+      '</div>';
+    }
+  };
+  APEXON.Share = Share;
+
   // ===== 4. 页面可见性 =====
   const VisibilityManager = {
     callbacks: [],
@@ -2293,7 +2371,7 @@
           }
 
           if (resDom) {
-            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('avgTimeLabel', '平均用时') + ' ' + avgTime + ' ' + t('timeUnitSecond', '秒') + ' · ' + t('accuracyLabel', '正确率') + ' ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">' + t('wpmLabel', 'WPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">' + t('cpmLabel', 'CPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">' + t('avgTimeLabel', '平均用时') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">' + t('accuracyLabel', '正确率') + '</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
+            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('avgTimeLabel', '平均用时') + ' ' + avgTime + ' ' + t('timeUnitSecond', '秒') + ' · ' + t('accuracyLabel', '正确率') + ' ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">' + t('wpmLabel', 'WPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">' + t('cpmLabel', 'CPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">' + t('avgTimeLabel', '平均用时') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">' + t('accuracyLabel', '正确率') + '</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('type', avgWpm, grade.grade) + '</div>';
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
@@ -2445,7 +2523,7 @@
           const foulTag = foulCount > 0 ? '<div class="score-foul">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('foulCountLabel', '违规 {count} 次').replace('{count}', foulCount) : '违规 ' + foulCount + ' 次') + '</div>' : '';
 
           if (resDom) {
-            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
+            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('reaction', avg.toFixed(2), grade.grade) + '</div>';
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });

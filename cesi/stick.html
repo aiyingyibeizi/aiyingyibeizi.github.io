@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title data-i18n="stickTitle">持续注意力测试 - APEXON</title>
+    <meta name="description" content="持续注意力测试，在变化的干扰中保持专注，挑战你的专注时长。APEXON 免费在线注意力测试。">
+    <meta name="keywords" content="注意力测试,专注力测试,注意力训练,认知测试,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="注意力测试 - APEXON">
+    <meta property="og:description" content="持续注意力测试，在变化的干扰中保持专注，挑战你的专注时长。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/stick.html">
+    <meta property="og:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="注意力测试 - APEXON">
+    <meta name="twitter:description" content="持续注意力测试，在变化的干扰中保持专注，挑战你的专注时长。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <title data-i18n="stickTitle">注意力测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -99,6 +113,23 @@
         <div class="history-list" style="margin-top:24px">
             <div class="history-title" data-i18n="recentRecords">最近记录</div>
             <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>关于持续注意力测试</h2>
+            <p>注意力是认知能力中非常关键的一环，它决定了我们能否在长时间内保持专注、抑制干扰并快速响应目标。APEXON 持续注意力测试通过一个动态移动的目标，模拟真实场景中的持续追踪任务，考察玩家在 60 秒内维持专注、手眼协调和快速反应的综合能力。</p>
+            <p>现代生活中，手机通知、社交媒体和多任务处理不断分散我们的注意力。研究表明，成年人的持续注意力通常在 10 到 20 分钟后开始下降，而通过有针对性的训练可以有效延长专注时间。本测试不仅是一场分数挑战，更是一次对自己专注状态的快速体检。</p>
+            <h3>测试原理</h3>
+            <p>屏幕上会出现一个绿色小球并持续随机移动，玩家需要将鼠标或手指悬停在球上以获得分数。随着时间的推移，小球移动速度会逐渐加快，对玩家的追踪精度和反应速度提出更高要求。测试结束后，根据总得分评定等级。</p>
+            <h3>提升注意力的建议</h3>
+            <ul>
+                <li><strong>减少环境干扰</strong>：测试时关闭通知，选择一个安静的环境。</li>
+                <li><strong>保持舒适姿势</strong>：眼睛与屏幕保持适当距离，避免身体疲劳。</li>
+                <li><strong>分段训练</strong>：采用番茄工作法等专注训练方法，逐步延长专注时间。</li>
+                <li><strong>保证睡眠</strong>：充足的睡眠是注意力稳定的基础。</li>
+            </ul>
+            <h3>适用人群</h3>
+            <p>本测试适合学生、职场人士、驾驶员、运动员以及任何希望提升专注力的用户。如果你经常感到分心或难以长时间集中注意力，可以通过这个测试了解自己的基线水平。</p>
         </div>
     </div>
 
@@ -297,7 +328,7 @@
                 { min: 0, grade: 'D', color: '#aaa' }
             ];
             const grade = grades.find(g => score >= g.min) || grades[grades.length - 1];
-            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('finalScore', '最终得分') + ' ' + score + ' ' + t('points', '分') + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('totalScore', '总得分') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">' + t('duration', '时长') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div></div>';
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('finalScore', '最终得分') + ' ' + score + ' ' + t('points', '分') + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('totalScore', '总得分') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">' + t('duration', '时长') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('stick', score, grade.grade) + '</div>';
 
             const saved = await APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'stick', { score: score });
             if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));

@@ -1534,6 +1534,143 @@
     if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], EXTRA_TRANSLATIONS[lang]);
   });
 
+  // 分享文案翻译
+  const SHARE_TRANSLATIONS = {
+    zh: {
+      shareReaction: '我在 APEXON 反应速度测试中平均反应 {score}ms，评级 {grade}。来挑战我：',
+      shareType: '我在 APEXON 打字速度测试中达到 {score} WPM，评级 {grade}。来挑战我：',
+      shareStick: '我在 APEXON 注意力测试中获得 {score} 分，评级 {grade}。来挑战我：',
+      shareNumber: '我在 APEXON 数字记忆测试中记住 {score} 位数字，评级 {grade}。来挑战我：',
+      shareVerbal: '我在 APEXON 单词记忆测试中记住 {score} 个单词，评级 {grade}。来挑战我：',
+      shareVisual: '我在 APEXON 视觉记忆测试中通过第 {score} 关，评级 {grade}。来挑战我：',
+      shareAim: '我在 APEXON 瞄准训练中平均点击耗时 {score}ms，评级 {grade}。来挑战我：',
+      shareSequence: '我在 APEXON 序列记忆测试中通过第 {score} 关，评级 {grade}。来挑战我：',
+      shareDefault: '我在 APEXON 完成了一项能力测试，评级 {grade}。来挑战我：',
+      copyShare: '复制文案', shareNow: '分享',
+      copySuccess: '分享文案已复制', copyFailed: '复制失败，请手动复制'
+    },
+    en: {
+      shareReaction: 'I scored {score}ms avg reaction time on APEXON, grade {grade}. Challenge me:',
+      shareType: 'I reached {score} WPM on APEXON typing test, grade {grade}. Challenge me:',
+      shareStick: 'I scored {score} points on APEXON attention test, grade {grade}. Challenge me:',
+      shareNumber: 'I remembered {score} digits on APEXON number memory, grade {grade}. Challenge me:',
+      shareVerbal: 'I remembered {score} words on APEXON verbal memory, grade {grade}. Challenge me:',
+      shareVisual: 'I passed level {score} on APEXON visual memory, grade {grade}. Challenge me:',
+      shareAim: 'I averaged {score}ms per target on APEXON aim trainer, grade {grade}. Challenge me:',
+      shareSequence: 'I passed level {score} on APEXON sequence memory, grade {grade}. Challenge me:',
+      shareDefault: 'I completed a test on APEXON with grade {grade}. Challenge me:',
+      copyShare: 'Copy text', shareNow: 'Share',
+      copySuccess: 'Share text copied', copyFailed: 'Copy failed, please copy manually'
+    },
+    ja: {
+      shareReaction: 'APEXON 反応速度テストで平均 {score}ms、評価 {grade} を達成しました。挑戦してください：',
+      shareType: 'APEXON タイピングテストで {score} WPM、評価 {grade} を達成しました。挑戦してください：',
+      shareStick: 'APEXON 注意力テストで {score} 点、評価 {grade} を達成しました。挑戦してください：',
+      shareNumber: 'APEXON 数字記憶テストで {score} 桁、評価 {grade} を達成しました。挑戦してください：',
+      shareVerbal: 'APEXON 単語記憶テストで {score} 語、評価 {grade} を達成しました。挑戦してください：',
+      shareVisual: 'APEXON 視覚記憶テストでレベル {score}、評価 {grade} を達成しました。挑戦してください：',
+      shareAim: 'APEXON エイム練習で平均 {score}ms、評価 {grade} を達成しました。挑戦してください：',
+      shareSequence: 'APEXON シーケンス記憶テストでレベル {score}、評価 {grade} を達成しました。挑戦してください：',
+      shareDefault: 'APEXON で能力テストを完了し、評価 {grade} を達成しました。挑戦してください：',
+      copyShare: '文案をコピー', shareNow: 'シェア',
+      copySuccess: 'シェア用テキストをコピーしました', copyFailed: 'コピーに失敗しました'
+    },
+    ko: {
+      shareReaction: 'APEXON 반응 속도 테스트에서 평균 {score}ms, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareType: 'APEXON 타자 속도 테스트에서 {score} WPM, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareStick: 'APEXON 주의력 테스트에서 {score}점, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareNumber: 'APEXON 숫자 기억 테스트에서 {score}자리, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareVerbal: 'APEXON 단어 기억 테스트에서 {score}개 단어, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareVisual: 'APEXON 시각 기억 테스트에서 레벨 {score}, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareAim: 'APEXON 조준 훈련에서 평균 {score}ms, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareSequence: 'APEXON 시퀀스 기억 테스트에서 레벨 {score}, 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      shareDefault: 'APEXON 능력 테스트를 완료하여 등급 {grade}을 달성했습니다. 도전해 보세요:',
+      copyShare: '문구 복사', shareNow: '공유',
+      copySuccess: '공유 문구가 복사되었습니다', copyFailed: '복사에 실패했습니다'
+    },
+    fr: {
+      shareReaction: 'J\'ai obtenu {score}ms en moyenne au test de réaction APEXON, grade {grade}. Me defiez-vous :',
+      shareType: 'J\'ai atteint {score} MPM au test de dactylographie APEXON, grade {grade}. Me defiez-vous :',
+      shareStick: 'J\'ai marqué {score} points au test d\'attention APEXON, grade {grade}. Me defiez-vous :',
+      shareNumber: 'J\'ai mémorisé {score} chiffres au test de mémoire numérique APEXON, grade {grade}. Me defiez-vous :',
+      shareVerbal: 'J\'ai mémorisé {score} mots au test de mémoire verbale APEXON, grade {grade}. Me defiez-vous :',
+      shareVisual: 'J\'ai atteint le niveau {score} au test de mémoire visuelle APEXON, grade {grade}. Me defiez-vous :',
+      shareAim: 'J\'ai obtenu {score}ms par cible à l\'entraînement de visée APEXON, grade {grade}. Me defiez-vous :',
+      shareSequence: 'J\'ai atteint le niveau {score} au test de mémoire séquentielle APEXON, grade {grade}. Me defiez-vous :',
+      shareDefault: 'J\'ai terminé un test APEXON avec le grade {grade}. Me defiez-vous :',
+      copyShare: 'Copier le texte', shareNow: 'Partager',
+      copySuccess: 'Texte de partage copié', copyFailed: 'Échec de la copie'
+    },
+    de: {
+      shareReaction: 'Ich habe im APEXON Reaktionstest durchschnittlich {score}ms erreicht, Note {grade}. Fordere mich heraus:',
+      shareType: 'Ich habe im APEXON Tipptest {score} WPM erreicht, Note {grade}. Fordere mich heraus:',
+      shareStick: 'Ich habe im APEXON Aufmerksamkeitstest {score} Punkte erreicht, Note {grade}. Fordere mich heraus:',
+      shareNumber: 'Ich habe im APEXON Zahlengedächtnistest {score} Ziffern gemerkt, Note {grade}. Fordere mich heraus:',
+      shareVerbal: 'Ich habe im APEXON Wortgedächtnistest {score} Wörter gemerkt, Note {grade}. Fordere mich heraus:',
+      shareVisual: 'Ich habe im APEXON visuellen Gedächtnistest Level {score} erreicht, Note {grade}. Fordere mich heraus:',
+      shareAim: 'Ich habe im APEXON Zieltraining durchschnittlich {score}ms pro Ziel erreicht, Note {grade}. Fordere mich heraus:',
+      shareSequence: 'Ich habe im APEXON Sequenzgedächtnistest Level {score} erreicht, Note {grade}. Fordere mich heraus:',
+      shareDefault: 'Ich habe einen APEXON Test mit Note {grade} abgeschlossen. Fordere mich heraus:',
+      copyShare: 'Text kopieren', shareNow: 'Teilen',
+      copySuccess: 'Teiltext kopiert', copyFailed: 'Kopieren fehlgeschlagen'
+    },
+    es: {
+      shareReaction: 'Obtuve {score}ms de reacción promedio en APEXON, calificación {grade}. ¿Me retas?',
+      shareType: 'Alcancé {score} PPM en la prueba de mecanografía APEXON, calificación {grade}. ¿Me retas?',
+      shareStick: 'Obtuve {score} puntos en la prueba de atención APEXON, calificación {grade}. ¿Me retas?',
+      shareNumber: 'Recordé {score} dígitos en la prueba de memoria numérica APEXON, calificación {grade}. ¿Me retas?',
+      shareVerbal: 'Recordé {score} palabras en la prueba de memoria verbal APEXON, calificación {grade}. ¿Me retas?',
+      shareVisual: 'Pasé el nivel {score} en la prueba de memoria visual APEXON, calificación {grade}. ¿Me retas?',
+      shareAim: 'Promedié {score}ms por objetivo en el entrenamiento de puntería APEXON, calificación {grade}. ¿Me retas?',
+      shareSequence: 'Pasé el nivel {score} en la prueba de memoria secuencial APEXON, calificación {grade}. ¿Me retas?',
+      shareDefault: 'Completé una prueba en APEXON con calificación {grade}. ¿Me retas?',
+      copyShare: 'Copiar texto', shareNow: 'Compartir',
+      copySuccess: 'Texto de compartir copiado', copyFailed: 'Error al copiar'
+    },
+    ru: {
+      shareReaction: 'Я набрал {score}мс в тесте на скорость реакции APEXON, оценка {grade}. Брось мне вызов:',
+      shareType: 'Я набрал {score} WPM в тесте на скорость печати APEXON, оценка {grade}. Брось мне вызов:',
+      shareStick: 'Я набрал {score} очков в тесте на внимание APEXON, оценка {grade}. Брось мне вызов:',
+      shareNumber: 'Я запомнил {score} цифр в тесте на числовую память APEXON, оценка {grade}. Брось мне вызов:',
+      shareVerbal: 'Я запомнил {score} слов в тесте на словесную память APEXON, оценка {grade}. Брось мне вызов:',
+      shareVisual: 'Я прошел уровень {score} в тесте на зрительную память APEXON, оценка {grade}. Брось мне вызов:',
+      shareAim: 'Я набрал {score}мс на цель в тренировке прицеливания APEXON, оценка {grade}. Брось мне вызов:',
+      shareSequence: 'Я прошел уровень {score} в тесте на последовательности APEXON, оценка {grade}. Брось мне вызов:',
+      shareDefault: 'Я завершил тест в APEXON с оценкой {grade}. Брось мне вызов:',
+      copyShare: 'Копировать текст', shareNow: 'Поделиться',
+      copySuccess: 'Текст для публикации скопирован', copyFailed: 'Не удалось скопировать'
+    },
+    pt: {
+      shareReaction: 'Eu fiz {score}ms de média no teste de reação APEXON, nota {grade}. Me desafia?',
+      shareType: 'Eu alcancei {score} PPM no teste de digitação APEXON, nota {grade}. Me desafia?',
+      shareStick: 'Eu fiz {score} pontos no teste de atenção APEXON, nota {grade}. Me desafia?',
+      shareNumber: 'Eu memorizei {score} dígitos no teste de memória numérica APEXON, nota {grade}. Me desafia?',
+      shareVerbal: 'Eu memorizei {score} palavras no teste de memória verbal APEXON, nota {grade}. Me desafia?',
+      shareVisual: 'Eu passei o nível {score} no teste de memória visual APEXON, nota {grade}. Me desafia?',
+      shareAim: 'Eu fiz média de {score}ms por alvo no treino de mira APEXON, nota {grade}. Me desafia?',
+      shareSequence: 'Eu passei o nível {score} no teste de memória sequencial APEXON, nota {grade}. Me desafia?',
+      shareDefault: 'Eu completei um teste no APEXON com nota {grade}. Me desafia?',
+      copyShare: 'Copiar texto', shareNow: 'Compartilhar',
+      copySuccess: 'Texto de compartilhamento copiado', copyFailed: 'Falha ao copiar'
+    },
+    it: {
+      shareReaction: 'Ho ottenuto {score}ms medi nel test di reazione APEXON, voto {grade}. Mi sfidi?',
+      shareType: 'Ho raggiunto {score} PPM nel test di digitazione APEXON, voto {grade}. Mi sfidi?',
+      shareStick: 'Ho ottenuto {score} punti nel test di attenzione APEXON, voto {grade}. Mi sfidi?',
+      shareNumber: 'Ho memorizzato {score} cifre nel test di memoria numerica APEXON, voto {grade}. Mi sfidi?',
+      shareVerbal: 'Ho memorizzato {score} parole nel test di memoria verbale APEXON, voto {grade}. Mi sfidi?',
+      shareVisual: 'Ho superato il livello {score} nel test di memoria visiva APEXON, voto {grade}. Mi sfidi?',
+      shareAim: 'Ho fatto {score}ms medi per bersaglio nell\'allenamento di mira APEXON, voto {grade}. Mi sfidi?',
+      shareSequence: 'Ho superato il livello {score} nel test di memoria sequenziale APEXON, voto {grade}. Mi sfidi?',
+      shareDefault: 'Ho completato un test su APEXON con voto {grade}. Mi sfidi?',
+      copyShare: 'Copia testo', shareNow: 'Condividi',
+      copySuccess: 'Testo di condivisione copiato', copyFailed: 'Copia non riuscita'
+    }
+  };
+  Object.keys(SHARE_TRANSLATIONS).forEach(lang => {
+    if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], SHARE_TRANSLATIONS[lang]);
+  });
+
   global.APEXON = global.APEXON || {};
   global.APEXON.i18n = i18n;
 

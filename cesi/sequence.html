@@ -3,6 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="序列记忆测试，观察并复现闪烁顺序，锻炼工作记忆与模式识别。APEXON 免费在线序列记忆测试。">
+    <meta name="keywords" content="序列记忆,工作记忆,模式识别,记忆力测试,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="序列记忆测试 - APEXON">
+    <meta property="og:description" content="序列记忆测试，观察并复现闪烁顺序，锻炼工作记忆与模式识别。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/sequence.html">
+    <meta property="og:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="序列记忆测试 - APEXON">
+    <meta name="twitter:description" content="序列记忆测试，观察并复现闪烁顺序，锻炼工作记忆与模式识别。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/preview-final-hero.png">
     <title data-i18n="sequenceTitle">序列记忆测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
@@ -107,6 +121,23 @@
         <div class="history-list" style="margin-top:24px">
             <div class="history-title" data-i18n="recentRecords">最近记录</div>
             <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>关于序列记忆测试</h2>
+            <p>序列记忆是指按照特定顺序记住并复现信息的能力，它是工作记忆的重要组成部分，与语言学习、音乐演奏、运动技能习得和日常任务规划密切相关。APEXON 序列记忆测试通过闪烁方块的顺序复现任务，帮助玩家训练短时序列记忆和模式识别能力。</p>
+            <p>与单纯的视觉记忆不同，序列记忆不仅要求记住"哪些"位置亮起，还要记住"以什么顺序"亮起。这意味着大脑需要同时处理空间信息和时序信息，对前额叶皮层和顶叶皮层的协作提出了更高要求。通过本测试，你可以了解自己的序列记忆极限，并通过训练逐步提升。</p>
+            <h3>测试原理</h3>
+            <p>系统会按照固定顺序依次点亮彩色方块，玩家需要在演示结束后按相同顺序点击。每通过一关，序列长度和网格规模都会增加，测试难度逐步升级。</p>
+            <h3>提升序列记忆的方法</h3>
+            <ul>
+                <li><strong>编故事法</strong>：将方块顺序想象成一个连续动作或故事情节。</li>
+                <li><strong>节奏记忆</strong>：注意闪烁之间的节奏，把序列当作一段旋律来记。</li>
+                <li><strong>分组策略</strong>：把长序列分成 2 到 3 个小组块分别记忆。</li>
+                <li><strong>保持冷静</strong>：慌乱时更容易遗忘，深呼吸有助于信息保持。</li>
+            </ul>
+            <h3>适用人群</h3>
+            <p>本测试适合音乐学习者、舞蹈演员、运动员、程序员以及任何需要记忆步骤和顺序的用户。规律的序列记忆训练可以帮助你在学习和工作中更高效地掌握复杂流程。</p>
         </div>
     </div>
 
@@ -244,7 +275,7 @@
             state = 'ended';
             clearTimers();
             const grade = APEXON.Utils.getGrade(score, 'sequence');
-            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('passLevel', '通过第 {level} 关').replace('{level}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('levelLabel', '关卡') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div></div>';
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('passLevel', '通过第 {level} 关').replace('{level}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('levelLabel', '关卡') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('sequence', score, grade.grade) + '</div>';
 
             APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'sequence', { score: score }).then(saved => {
                 if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));

@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title data-i18n="reactionTitle">反应时间测试 - APEXON</title>
+    <meta name="description" content="测试你的反应速度，点击变绿区域，获取毫秒级成绩与全球排名。APEXON 免费在线反应测试。">
+    <meta name="keywords" content="反应测试,反应速度,反应时间,认知测试,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="反应速度测试 - APEXON">
+    <meta property="og:description" content="测试你的反应速度，点击变绿区域，获取毫秒级成绩与全球排名。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/reaction.html">
+    <meta property="og:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="反应速度测试 - APEXON">
+    <meta name="twitter:description" content="测试你的反应速度，点击变绿区域，获取毫秒级成绩与全球排名。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/preview-final-hero.png">
+    <title data-i18n="reactionTitle">反应速度测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -75,6 +89,23 @@
         <div class="measurement-notice">
             <strong data-i18n="measurementTitle">测量原理</strong>
             <p data-i18n="measurementDesc">通过浏览器高精度计时（performance.now）捕捉你的点击时刻，并扣除输入设备的固有延迟（触摸屏约 30ms / 鼠标约 10ms）。首次测试可能因浏览器热身而偏高，多测几次会更接近你的真实水平。</p>
+        </div>
+
+        <div class="long-article">
+            <h2>关于反应速度测试</h2>
+            <p>反应速度是人体神经系统对外界刺激做出响应所需的时间，通常以毫秒（ms）为单位计量。APEXON 反应速度测试通过浏览器高精度计时 API，在你看到屏幕变绿的瞬间捕捉点击动作，从而给出一个接近真实的反应时间。这项测试不仅适合普通用户了解自己的基础神经反应能力，也常被电竞选手、运动员和驾驶人员用来评估手眼协调与应激水平。</p>
+            <p>人类的平均反应时间通常在 200 毫秒到 250 毫秒之间，其中视觉刺激的反应速度略慢于听觉刺激。年龄、疲劳程度、注意力集中度、咖啡因摄入以及使用的输入设备都会对结果产生影响。例如，鼠标的输入延迟通常低于触摸屏，因此在电脑上测试往往会比手机上更快一些。为了获得更稳定的成绩，建议在状态良好、注意力集中的时候连续测试 3 到 5 次，并取平均值作为参考。</p>
+            <h3>测试原理</h3>
+            <p>页面会在随机延迟后将红色等待区域切换为绿色，玩家需要在颜色变化的瞬间尽快点击。系统使用 performance.now() 记录颜色变化与点击之间的时间差，并扣除设备固有延迟，最终输出 5 轮测试的平均反应时间。</p>
+            <h3>提高反应速度的方法</h3>
+            <ul>
+                <li><strong>保持充足睡眠</strong>：疲劳会显著延长神经反应时间。</li>
+                <li><strong>集中注意力</strong>：提前预判但避免过早点击，防止被判犯规。</li>
+                <li><strong>使用低延迟设备</strong>：高刷新率显示器和有线鼠标有助于减少输入延迟。</li>
+                <li><strong>适度热身</strong>：正式测试前先进行 1 到 2 轮热身，让大脑进入状态。</li>
+            </ul>
+            <h3>适用人群</h3>
+            <p>本测试适合所有希望了解自己反应能力的用户，包括游戏玩家、体育爱好者、驾驶员以及需要进行认知能力评估的人群。测试结果仅供参考，不能替代专业的医学或心理学诊断。</p>
         </div>
     </div>
 
