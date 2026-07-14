@@ -975,6 +975,7 @@
       this.updateSelector();
       const loginModal = document.getElementById('apex-login-modal');
       if (loginModal) loginModal.remove();
+      document.dispatchEvent(new CustomEvent('apexon:langchange', { detail: { lang } }));
     },
 
     t(key, fallback) {
@@ -1073,6 +1074,7 @@
       const btn = wrapper.querySelector('.apexon-lang-selector__btn');
       btn.querySelector('.apexon-lang-selector__flag').innerHTML = FLAGS[current.flagKey] || '';
       btn.querySelector('.apexon-lang-selector__name').textContent = current.name;
+      btn.setAttribute('aria-label', this.t('langSelector'));
       const dropdown = wrapper.querySelector('.apexon-lang-selector__dropdown');
       dropdown.classList.remove('is-open');
       btn.setAttribute('aria-expanded', 'false');
@@ -1179,7 +1181,7 @@
       confirmChange: '確認', usernameChanged: 'ユーザー名を変更しました', changeFailed: '変更に失敗しました',
       loginSubtitle: 'ゲストモードでも全機能利用可能です。ログインするとユーザー名とプロフィールを編集できます。',
       usernamePlaceholder: 'ユーザー名', passwordPlaceholder: 'パスワード', confirmPasswordPlaceholder: 'パスワード確認',
-      rememberMe: '30日間记住我',
+      rememberMe: '30日間保持する',
       termsAgree: '同意します', termsLink: '利用規約', privacyLink: 'プライバシーポリシー', termsAnd: 'と',
       showPassword: '表示', hidePassword: '非表示', showPasswordTitle: 'パスワードを表示', hidePasswordTitle: 'パスワードを非表示',
       processing: '処理中...',
