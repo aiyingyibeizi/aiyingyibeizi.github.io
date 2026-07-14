@@ -166,8 +166,8 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=2"></script>
-    <script src="js/common.js?v=10"></script>
+    <script src="js/i18n.js?v=3"></script>
+    <script src="js/common.js?v=11"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -188,6 +188,11 @@
                     loadPersonal();
                     loadComments();
                 }
+            });
+            document.addEventListener('apexon:langchange', () => {
+                loadLeaderboard(currentLb);
+                loadPersonal();
+                loadComments();
             });
         }
 
@@ -262,19 +267,19 @@
             ];
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
             let html = '<div class="personal-grid">';
-            for (const t of types) {
-                const scores = await APEXON.DB.getLeaderboard(t.key, 9999);
+            for (const type of types) {
+                const scores = await APEXON.DB.getLeaderboard(type.key, 9999);
                 const myScores = scores.filter(s => s.user_id === userId);
-                const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(t.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
+                const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(type.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
                 const count = myScores.length;
                 const rank = best ? scores.findIndex(s => s.user_id === userId) + 1 : 0;
                 html += '<div class="personal-card">' +
                     '<div class="personal-card-top">' +
-                        '<span class="personal-card-name">' + esc(t.name) + '</span>' +
+                        '<span class="personal-card-name">' + esc(type.name) + '</span>' +
                         '<span class="personal-card-count">' + esc(count) + ' ' + t('times', '次') + '</span>' +
                     '</div>' +
-                    '<div class="personal-card-value">' + esc(val) + ' <span class="personal-card-unit">' + esc(t.unit) + '</span></div>' +
+                    '<div class="personal-card-value">' + esc(val) + ' <span class="personal-card-unit">' + esc(type.unit) + '</span></div>' +
                     '<div class="personal-card-rank">' + (rank ? t('rankLabel', '第 {rank} 名').replace('{rank}', rank) : t('noRank', '暂无排名')) + '</div>' +
                 '</div>';
             }
@@ -350,7 +355,7 @@
                     '<div class="forum-item-header">' +
                         '<div class="forum-item-user">' + esc(c.username) + '</div>' +
                         '<span class="forum-item-category">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
-                        '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString('zh-CN')) + '</div>' +
+                        '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</div>' +
                     '</div>' +
                     '<div class="forum-item-content">' + esc(c.content) + '</div>' +
                 '</div>'

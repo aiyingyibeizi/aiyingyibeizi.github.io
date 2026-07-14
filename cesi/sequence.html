@@ -110,8 +110,8 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=2"></script>
-    <script src="js/common.js?v=10"></script>
+    <script src="js/i18n.js?v=3"></script>
+    <script src="js/common.js?v=11"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -167,7 +167,7 @@
                     historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
                     return;
                 }
-                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + t('levelHistoryLabel', '第 {level} 关').replace('{level}', esc(h.score)) + '</span></div>').join('');
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + t('levelHistoryLabel', '第 {level} 关').replace('{level}', esc(h.score)) + '</span></div>').join('');
             }).catch(() => {
                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
             });
@@ -203,7 +203,7 @@
             testBox.appendChild(hint);
 
             sequence.forEach((idx, i) => {
-                const t = setTimeout(() => {
+                const timer = setTimeout(() => {
                     const cell = testBox.querySelector('.seq-cell[data-index="' + idx + '"]');
                     if (cell) flashCell(cell);
                     if (i === sequence.length - 1) {
@@ -213,7 +213,7 @@
                         }, 650));
                     }
                 }, 700 * i + 400);
-                timers.push(t);
+                timers.push(timer);
             });
         }
 

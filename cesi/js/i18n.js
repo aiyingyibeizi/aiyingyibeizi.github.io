@@ -983,6 +983,11 @@
       return value !== undefined ? value : (fallback !== undefined ? fallback : key);
     },
 
+    getDateLocale() {
+      const map = { zh: 'zh-CN', en: 'en-US', ja: 'ja-JP', ko: 'ko-KR', fr: 'fr-FR', de: 'de-DE', es: 'es-ES', ru: 'ru-RU', pt: 'pt-BR', it: 'it-IT' };
+      return map[this.current] || 'en-US';
+    },
+
     apply() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');

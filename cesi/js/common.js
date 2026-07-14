@@ -330,7 +330,7 @@
           wpm: r.wpm,
           cpm: r.cpm,
           timestamp: r.created_at,
-          date: new Date(r.created_at).toLocaleDateString('zh-CN')
+          date: new Date(r.created_at).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')
         }));
       } catch (e) {
         return [];
@@ -2605,6 +2605,9 @@
     OnlineTracker.init(Auth.getUserId());
     UI.mountUserButton();
     initTextProtection();
+    document.addEventListener('apexon:langchange', () => {
+      UI.updateUserDisplay();
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
