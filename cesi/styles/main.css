@@ -601,6 +601,18 @@ html[data-bw="true"] .apex-music-btn {
   box-shadow: 0 4px 12px rgba(109, 93, 252, 0.26);
 }
 
+@media (max-width: 480px) {
+  .apex-music-btn {
+    padding: 6px 8px;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .apex-music-btn::before {
+    font-size: 0.85rem;
+  }
+}
+
 html[data-theme="light"] .apexon-header-nav.open,
 html[data-bw="true"] .apexon-header-nav.open {
   background: #ffffff;
@@ -654,22 +666,24 @@ html[data-bw="true"] .apexon-header-nav.open {
   .apexon-header__inner {
     justify-content: space-between;
     position: static;
-    gap: 8px;
+    gap: 6px;
+    padding: 0 var(--container-padding);
   }
 
   .apexon-header-logo {
     position: absolute;
-    left: 0;
+    left: var(--container-padding);
     top: 50%;
     transform: translateY(-50%);
     margin: 0;
     z-index: 2;
+    gap: 8px;
   }
 
   .apexon-header-logo img {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
   }
 
   .apexon-header-logo span {
@@ -677,8 +691,19 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apexon-menu-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     margin-right: 0;
     order: -1;
+  }
+
+  .apexon-menu-btn::before {
+    width: 16px;
+    height: 2px;
+    box-shadow:
+      0 -5px 0 0 #ffffff,
+      0 5px 0 0 #ffffff;
   }
 
   .apexon-header-nav {
@@ -686,23 +711,98 @@ html[data-bw="true"] .apexon-header-nav.open {
     justify-content: center;
     min-width: 0;
     margin: 0 auto;
-    padding: 4px;
+    padding: 3px;
+    gap: 3px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
 
   .apexon-header-nav a {
-    padding: 6px 12px;
-    font-size: 0.8125rem;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .apexon-header-nav a.active {
+    padding: 5px 10px;
   }
 
   .header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     margin-left: 0;
-    margin-right: calc(-1 * var(--container-padding));
+    margin-right: 0;
+    flex-shrink: 0;
   }
 
   .apexon-header-nav.open {
     right: auto;
     left: var(--container-padding);
     top: calc(var(--header-height) + 6px);
+    width: min(200px, calc(100vw - var(--container-padding) * 2));
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-header__inner {
+    gap: 4px;
+  }
+
+  .apexon-header-logo img {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .apexon-menu-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .apexon-menu-btn::before {
+    width: 15px;
+    box-shadow:
+      0 -4.5px 0 0 #ffffff,
+      0 4.5px 0 0 #ffffff;
+  }
+
+  .apexon-header-nav {
+    padding: 2px;
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .apexon-header-nav a {
+    padding: 4px 7px;
+    font-size: 0.6875rem;
+    flex-shrink: 0;
+  }
+
+  .apexon-header-nav a.active {
+    padding: 4px 7px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .apex-bw-toggle {
+    width: 48px;
+    height: 24px;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 18px;
+    height: 18px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(24px);
   }
 }
 
@@ -849,30 +949,58 @@ html[data-bw="true"] .apexon-header-nav.open {
 
 @media (max-width: 767px) {
   .header-user-wrap {
-    margin-left: 8px;
-    padding: 3px;
-    gap: 6px;
-    min-width: 74px;
-    min-height: 36px;
+    margin-left: 0;
+    padding: 2px;
+    gap: 4px;
+    min-width: 64px;
+    min-height: 30px;
   }
 
   .header-user-wrap:not(.is-guest) {
-    padding: 3px 10px 3px 3px;
+    padding: 2px 8px 2px 2px;
   }
 
   .header-user-login .header-user-name {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
   }
 
   .header-user-avatar {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     padding: 2px;
   }
 
   .header-user-wrap:not(.is-guest) .header-user-name {
-    max-width: 90px;
-    font-size: 0.8125rem;
+    max-width: 64px;
+    margin-left: 30px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-user-wrap {
+    min-width: 52px;
+    min-height: 28px;
+  }
+
+  .header-user-wrap:not(.is-guest) {
+    padding: 2px 6px 2px 2px;
+  }
+
+  .header-user-login .header-user-name {
+    font-size: 0.6875rem;
+  }
+
+  .header-user-avatar {
+    width: 16px;
+    height: 16px;
+    padding: 1px;
+  }
+
+  .header-user-wrap:not(.is-guest) .header-user-name {
+    max-width: 48px;
+    margin-left: 26px;
+    font-size: 0.6875rem;
   }
 }
 
@@ -913,6 +1041,24 @@ html[data-bw="true"] .apexon-header-nav.open {
   border-radius: 50% !important;
   background: var(--clerk-avatar-bg) !important;
   box-shadow: 0 2px 8px rgba(34, 211, 238, 0.25) !important;
+}
+
+@media (max-width: 767px) {
+  .apex-clerk-avatar {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .apex-clerk-action {
+    font-size: 0.8125rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .apex-clerk-avatar {
+    width: 22px !important;
+    height: 22px !important;
+  }
 }
 
 .apex-clerk-popover {
@@ -3600,54 +3746,627 @@ canvas#testBox,
    ============================================================================ */
 
 @media (max-width: 767px) {
+  .apex-container,
+  .container {
+    padding-top: calc(var(--header-height) + 12px);
+    padding-bottom: 24px;
+  }
+
+  .legal-content {
+    padding: 16px;
+    margin-top: 12px;
+  }
+
+  .legal-content h2 {
+    font-size: 1rem;
+    margin: 16px 0 8px;
+  }
+
+  .legal-content p,
+  .legal-content ul {
+    font-size: 0.8125rem;
+  }
+
+  .apex-section {
+    margin-bottom: var(--section-gap);
+  }
+
+  .apex-title {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+  }
+
+  .apex-subtitle {
+    font-size: 0.8125rem;
+    margin-bottom: 16px;
+  }
+
+  /* Hero */
+  .hero-apexon {
+    padding: 16px 0 12px;
+  }
+
+  .hero-apexon .hero-logo-main {
+    width: var(--hero-logo);
+    height: var(--hero-logo);
+    border-radius: 18px;
+    margin-bottom: 12px;
+  }
+
+  .hero-apexon .hero-title-main {
+    font-size: clamp(1.5rem, 7vw, var(--hero-title));
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .hero-apexon .hero-tagline {
+    font-size: clamp(0.75rem, 2.5vw, var(--hero-subtitle));
+  }
+
+  .hero-stats-bar {
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 2px;
+    scrollbar-width: none;
+  }
+
+  .hero-stats-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-stat-chip {
+    padding: 6px 10px;
+    gap: 5px;
+    font-size: 0.6875rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .hero-stat-chip::before {
+    width: 5px;
+    height: 5px;
+  }
+
+  .hero-stat-chip strong {
+    font-size: 0.8125rem;
+  }
+
+  /* Search */
   .search-box {
     flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding: 5px;
+  }
+
+  .search-box input {
+    padding: 10px 12px;
+    font-size: 0.875rem;
   }
 
   .search-box button {
     width: 100%;
+    padding: 10px 18px;
+    font-size: 0.875rem;
   }
 
+  /* Cards */
   .cards-grid {
     grid-template-columns: 1fr;
+    gap: var(--grid-gap);
   }
 
+  .item-card,
+  .apex-card--game {
+    padding: 16px;
+    border-radius: var(--apex-radius);
+  }
+
+  .item-card strong,
+  .apex-card--game strong {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .item-card .card-desc,
+  .apex-card--game .card-desc {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .item-card::after,
+  .apex-card--game::after {
+    right: 16px;
+    font-size: 0.875rem;
+  }
+
+  .item-card--wide {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .item-card__visual {
+    width: 96px;
+    height: 68px;
+  }
+
+  .item-card--wide .card-desc {
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+
+  .apex-card__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.125rem;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+
+  /* Buttons */
   .btn-group {
     flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
   }
 
   .btn-group .btn {
     width: 100%;
+    padding: 10px 18px;
+    font-size: 0.875rem;
+    min-width: auto;
   }
 
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.875rem;
+    min-width: auto;
+  }
+
+  /* Info & Score */
+  .info-row {
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    margin-bottom: 12px;
+  }
+
+  .info-panel {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .info-panel-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .info-panel-value {
+    font-size: 1rem;
+  }
+
+  .score-card {
+    padding: 16px;
+    margin: 12px 0;
+  }
+
+  .score-grade {
+    font-size: clamp(2.25rem, 10vw, 3rem);
+  }
+
+  .score-label {
+    font-size: 0.8125rem;
+    margin-bottom: 12px;
+  }
+
+  .score-details {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .score-detail-item {
+    padding: 10px;
+  }
+
+  .score-detail-value {
+    font-size: 1rem;
+  }
+
+  .score-detail-label {
+    font-size: 0.625rem;
+  }
+
+  .measurement-notice {
+    margin-top: 18px;
+    padding: 14px;
+    font-size: 0.8125rem;
+  }
+
+  .long-article {
+    margin-top: 18px;
+    padding: 16px;
+    font-size: 0.875rem;
+  }
+
+  .long-article h2 {
+    font-size: 1.0625rem;
+    margin-bottom: 12px;
+  }
+
+  .long-article h3 {
+    font-size: 0.9375rem;
+    margin: 16px 0 8px;
+  }
+
+  /* Live stats */
+  .live-stats {
+    gap: 14px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+
+  .live-stat-value {
+    font-size: 1.125rem;
+  }
+
+  .live-stat-label {
+    font-size: 0.625rem;
+    margin-top: 3px;
+  }
+
+  /* History */
+  .history-list {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    max-height: 260px;
+  }
+
+  .history-title {
+    font-size: 0.8125rem;
+    margin-bottom: 8px;
+  }
+
+  .history-item {
+    padding: 8px 0;
+    font-size: 0.8125rem;
+  }
+
+  /* Leaderboard */
+  .leaderboard,
+  .personal-stats,
+  .forum-section,
+  .feedback-section {
+    padding: 14px;
+    margin-bottom: var(--section-gap);
+  }
+
+  .leaderboard-title,
+  .personal-stats-title,
+  .forum-title,
+  .feedback-title {
+    font-size: 0.9375rem;
+    margin-bottom: 10px;
+  }
+
+  .leaderboard-tabs {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .leaderboard-tab {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .leaderboard-row {
+    padding: 8px 0;
+    font-size: 0.8125rem;
+  }
+
+  .leaderboard-rank {
+    width: 22px;
+    height: 22px;
+    font-size: 0.6875rem;
+    margin-right: 8px;
+  }
+
+  /* Personal stats */
+  .personal-grid {
+    gap: 8px;
+  }
+
+  .personal-card {
+    padding: 12px;
+    border-radius: var(--apex-radius-sm);
+  }
+
+  .personal-card-name {
+    font-size: 0.875rem;
+  }
+
+  .personal-card-value {
+    font-size: 1.125rem;
+  }
+
+  .personal-card-unit,
+  .personal-card-count,
+  .personal-card-rank {
+    font-size: 0.75rem;
+  }
+
+  .personal-stats table td {
+    padding: 8px 0;
+    font-size: 0.8125rem;
+  }
+
+  /* Forum */
   .forum-input-wrap {
     flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+
+  .forum-input-wrap textarea,
+  .feedback-form textarea {
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    min-height: 64px;
   }
 
   .forum-btn,
   .feedback-submit {
     width: 100%;
+    padding: 9px 18px;
+    font-size: 0.8125rem;
   }
 
+  .forum-filter-bar,
+  .forum-category-tabs {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .forum-filter-btn,
+  .forum-category-tab {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .forum-list {
+    gap: 8px;
+  }
+
+  .forum-item {
+    padding: 12px;
+    border-radius: var(--apex-radius-sm);
+  }
+
+  .forum-item-header {
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+
+  .forum-item-user {
+    font-size: 0.8125rem;
+    gap: 6px;
+  }
+
+  .forum-item-user::before {
+    width: 24px;
+    height: 24px;
+  }
+
+  .forum-item-category {
+    font-size: 0.625rem;
+    padding: 2px 7px;
+  }
+
+  .forum-item-time {
+    font-size: 0.6875rem;
+  }
+
+  .forum-item-content {
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+
+  .forum-empty {
+    padding: 20px;
+    font-size: 0.8125rem;
+  }
+
+  .forum-category-select {
+    padding: 7px 28px 7px 12px;
+    font-size: 0.75rem;
+    min-width: 100px;
+  }
+
+  /* Pagination */
+  .forum-pagination {
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .forum-page-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .forum-page-prev,
+  .forum-page-next {
+    padding: 0 10px;
+    font-size: 0.6875rem;
+  }
+
+  /* Feedback */
+  .feedback-email-box {
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+
+  .feedback-email-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9375rem;
+  }
+
+  .feedback-email-value {
+    font-size: 0.8125rem;
+  }
+
+  .feedback-form {
+    gap: 8px;
+  }
+
+  .feedback-form input {
+    padding: 10px 12px;
+    font-size: 0.875rem;
+  }
+
+  .feedback-form textarea {
+    min-height: 72px;
+  }
+
+  /* Result */
+  .result {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+    margin: 12px 0;
+  }
+
+  .result strong {
+    font-size: 0.9375rem;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    margin-bottom: 12px;
+  }
+
+  .progress-label {
+    font-size: 0.75rem;
+  }
+
+  /* Stats box */
+  .stats-box {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .stats-title {
+    font-size: 0.9375rem;
+    margin-bottom: 10px;
+  }
+
+  .stats-box td {
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+
+  /* Game stage / test areas */
+  .game-stage {
+    min-height: 240px;
+    border-radius: var(--apex-radius);
+  }
+
+  .game-stage__overlay {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .game-stage__hint {
+    font-size: 0.8125rem;
+  }
+
+  .game-stage__value {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  #testBox {
+    min-height: 220px;
+    border-radius: var(--apex-radius);
+    font-size: clamp(1rem, 4vw, 1.375rem);
+  }
+
+  canvas#testBox,
+  .game-canvas {
+    height: 280px;
+    border-radius: var(--apex-radius);
+  }
+
+  .type-hint-bar {
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+  }
+
+  #inputArea {
+    min-height: 90px;
+    padding: 10px 12px;
+    font-size: clamp(0.9375rem, 3.8vw, 1.125rem);
+  }
+
+  .countdown-wrap {
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .countdown-number {
+    font-size: 1.375rem;
+  }
+
+  .score-live {
+    font-size: 1rem;
+  }
+
+  /* Aim trainer */
   .aim-trainer__stats {
     grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
-  .info-panel-grid {
-    grid-template-columns: 1fr;
+  .aim-trainer__stat {
+    padding: 10px;
   }
 
-  .score-details {
-    grid-template-columns: repeat(2, 1fr);
+  .aim-trainer__stat-value {
+    font-size: 1.0625rem;
   }
 
-  .live-stats {
-    gap: 18px;
-    flex-wrap: wrap;
+  .aim-trainer__stat-label {
+    font-size: 0.625rem;
+  }
+
+  .aim-trainer__canvas {
+    height: 320px;
+    border-radius: var(--apex-radius);
+  }
+
+  /* Memory grids */
+  .sequence-memory__grid {
+    gap: 8px;
+  }
+
+  .sequence-memory__cell,
+  .visual-memory__cell,
+  .chimp-cell {
+    border-radius: 8px;
+  }
+
+  .chimp-cell {
+    font-size: 1.25rem;
   }
 
   .chimp-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 
   .sequence-memory__grid--5 {
@@ -3658,27 +4377,292 @@ canvas#testBox,
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .profile-box--wide {
-    padding: 24px 20px;
-    margin: 12px;
+  /* Number memory */
+  .number-memory__display {
+    font-size: clamp(2rem, 12vw, 4rem);
+    letter-spacing: 4px;
+  }
+
+  .number-memory__input {
+    max-width: 280px;
+    padding: 10px;
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+  }
+
+  /* Focus */
+  .focus__stage {
+    min-height: 280px;
+  }
+
+  .focus__target {
+    font-size: clamp(2.5rem, 14vw, 5rem);
+  }
+
+  .focus__button {
+    padding: 14px 32px;
+    font-size: 1rem;
+  }
+
+  /* Profile */
+  .profile-box,
+  .profile-box--wide,
+  .auth-box,
+  .login-box {
+    padding: 18px 16px 16px;
+    margin: 10px;
+    border-radius: var(--apex-radius-lg);
+  }
+
+  .auth-logo {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+  }
+
+  .auth-box h2,
+  .profile-box h2,
+  .login-box h2 {
+    font-size: 1.125rem;
+  }
+
+  .auth-sub,
+  .profile-sub,
+  .login-sub {
+    font-size: 0.8125rem;
+    margin-bottom: 16px;
+  }
+
+  .auth-tabs {
+    margin-bottom: 16px;
+  }
+
+  .auth-tab {
+    padding: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .auth-input,
+  .profile-input,
+  .profile-textarea,
+  .login-box input {
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    margin-bottom: 10px;
+  }
+
+  .auth-btn,
+  .profile-btn,
+  .login-box button {
+    padding: 11px;
+    font-size: 0.875rem;
   }
 
   .profile-form-row {
     grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .profile-card__header {
     align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
   }
 
   .profile-card__avatar {
-    width: 56px;
-    height: 56px;
-    font-size: 1.375rem;
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
   }
 
   .profile-card__name {
-    font-size: 1.0625rem;
+    font-size: 1rem;
+  }
+
+  .profile-card__bio {
+    font-size: 0.8125rem;
+    margin-bottom: 10px;
+  }
+
+  .profile-card__meta {
+    font-size: 0.75rem;
+  }
+
+  .profile-avatar-preview {
+    width: 72px;
+    height: 72px;
+    font-size: 1.5rem;
+  }
+
+  .profile-live-card {
+    padding: 12px;
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .profile-live-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 1.125rem;
+  }
+
+  .profile-live-name {
+    font-size: 0.875rem;
+  }
+
+  .profile-live-bio,
+  .profile-live-meta {
+    font-size: 0.75rem;
+  }
+
+  /* Footer & Toast */
+  .apexon-footer {
+    margin-top: 24px;
+    padding: 16px 12px;
+    font-size: 0.75rem;
+  }
+
+  .toast {
+    padding: 10px 16px;
+    font-size: 0.8125rem;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-apexon .hero-title-main {
+    font-size: clamp(1.375rem, 7vw, var(--hero-title));
+  }
+
+  .hero-stats-bar {
+    gap: 6px;
+  }
+
+  .hero-stat-chip {
+    padding: 5px 8px;
+    font-size: 0.625rem;
+  }
+
+  .hero-stat-chip strong {
+    font-size: 0.75rem;
+  }
+
+  .item-card,
+  .apex-card--game {
+    padding: 14px;
+  }
+
+  .item-card strong,
+  .apex-card--game strong {
+    font-size: 0.9375rem;
+  }
+
+  .item-card--wide {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .item-card__visual {
+    width: 80px;
+    height: 58px;
+  }
+
+  .leaderboard,
+  .personal-stats,
+  .forum-section,
+  .feedback-section {
+    padding: 12px;
+  }
+
+  .leaderboard-tab,
+  .forum-filter-btn,
+  .forum-category-tab {
+    padding: 4px 8px;
+    font-size: 0.6875rem;
+  }
+
+  .forum-item {
+    padding: 10px;
+  }
+
+  .forum-item-user {
+    font-size: 0.75rem;
+  }
+
+  .forum-item-content {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .forum-page-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.6875rem;
+  }
+
+  .forum-page-prev,
+  .forum-page-next {
+    padding: 0 8px;
+  }
+
+  .score-details {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .score-detail-item {
+    padding: 8px;
+  }
+
+  .personal-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .personal-card {
+    padding: 10px;
+  }
+
+  .personal-card-value {
+    font-size: 1rem;
+  }
+
+  .game-stage {
+    min-height: 220px;
+  }
+
+  #testBox {
+    min-height: 200px;
+  }
+
+  canvas#testBox,
+  .game-canvas {
+    height: 240px;
+  }
+
+  .aim-trainer__canvas {
+    height: 280px;
+  }
+
+  .focus__stage {
+    min-height: 240px;
+  }
+
+  .focus__button {
+    padding: 12px 26px;
+    font-size: 0.9375rem;
+  }
+
+  .chimp-cell {
+    font-size: 1.125rem;
+  }
+
+  .number-memory__display {
+    font-size: clamp(1.75rem, 12vw, 3rem);
+  }
+
+  .number-memory__input {
+    max-width: 240px;
+    font-size: 1.125rem;
   }
 }
 
@@ -4260,19 +5244,60 @@ canvas#testBox,
 @media (max-width: 767px) {
   #testBox.reaction-click-area,
   .reaction-click-area {
-    min-height: 280px !important;
-    font-size: clamp(1.25rem, 6vw, 1.75rem) !important;
+    min-height: 260px !important;
+    font-size: clamp(1.125rem, 5.5vw, 1.5rem) !important;
+    padding: 18px 16px !important;
   }
 
   #testBox.type-test-area,
   .type-test-area {
-    min-height: 160px !important;
-    padding: 20px 16px !important;
-    font-size: clamp(1rem, 4.2vw, 1.25rem) !important;
+    min-height: 150px !important;
+    padding: 18px 14px !important;
+    font-size: clamp(0.9375rem, 4vw, 1.125rem) !important;
   }
 
   #inputArea {
-    min-height: 90px !important;
+    min-height: 80px !important;
+    padding: 12px 14px !important;
+    font-size: clamp(0.9375rem, 3.8vw, 1.0625rem) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #testBox.reaction-click-area,
+  .reaction-click-area {
+    min-height: 220px !important;
+    font-size: clamp(1rem, 5.5vw, 1.25rem) !important;
+    padding: 14px 12px !important;
+  }
+
+  #testBox.type-test-area,
+  .type-test-area {
+    min-height: 130px !important;
+    padding: 14px 12px !important;
+    font-size: clamp(0.875rem, 4vw, 1rem) !important;
+  }
+
+  #testBox.type-test-area .type-start-title,
+  .type-test-area .type-start-title {
+    font-size: clamp(1.125rem, 5vw, 1.5rem) !important;
+  }
+
+  #testBox.type-test-area .type-start-desc,
+  .type-test-area .type-start-desc {
+    font-size: clamp(0.8125rem, 3vw, 0.9375rem) !important;
+  }
+
+  #testBox.type-test-area .type-start-btn,
+  .type-test-area .type-start-btn {
+    padding: 10px 22px !important;
+    font-size: 0.875rem !important;
+  }
+
+  #inputArea {
+    min-height: 72px !important;
+    padding: 10px 12px !important;
+    font-size: clamp(0.875rem, 3.8vw, 1rem) !important;
   }
 }
 
@@ -4425,12 +5450,27 @@ html[data-bw="true"] .game-canvas {
 
 @media (max-width: 767px) {
   .apexon-lang-selector {
-    margin-left: 0.4rem;
+    margin-left: 0.25rem;
   }
   .apexon-lang-selector__name {
     display: none;
   }
   .apexon-lang-selector__btn {
-    padding: 0.35rem;
+    padding: 0.3rem;
+  }
+  .apexon-lang-selector__flag {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-lang-selector__btn {
+    padding: 0.25rem;
+    border-radius: 0.45rem;
+  }
+  .apexon-lang-selector__flag {
+    width: 1rem;
+    height: 1rem;
   }
 }

@@ -82,10 +82,12 @@
 
     loadStorage() {
       try {
-        this.liked = new Set(JSON.parse(localStorage.getItem(LS_KEYS.liked) || '[]'));
+        const likedRaw = JSON.parse(localStorage.getItem(LS_KEYS.liked) || '[]');
+        this.liked = Array.isArray(likedRaw) ? new Set(likedRaw.filter(id => typeof id === 'string' || typeof id === 'number')) : new Set();
       } catch (e) { this.liked = new Set(); }
       try {
-        this.history = JSON.parse(localStorage.getItem(LS_KEYS.history) || '[]');
+        const historyRaw = JSON.parse(localStorage.getItem(LS_KEYS.history) || '[]');
+        this.history = Array.isArray(historyRaw) ? historyRaw.filter(t => t && typeof t === 'object' && t.id) : [];
       } catch (e) { this.history = []; }
     },
 
@@ -593,11 +595,12 @@
     },
 
     async handleSearch() {
-      const q = this.dom.searchInput.value.trim();
+      let q = this.dom.searchInput.value.trim();
       if (!q) {
         this.switchView('home');
         return;
       }
+      if (q.length > 100) q = q.slice(0, 100);
       this.switchView('search');
       this.dom.searchTitle.textContent = '搜索：' + q;
       this.dom.searchContent.innerHTML = '<div class="music-loading"><div class="music-loading__spinner"></div><div>正在搜索...</div></div>';
@@ -728,7 +731,7 @@
     trackCardHTML(t, i) {
       const title = escapeHtml(t.name);
       const artist = escapeHtml(t.artist_name);
-      const img = t.image || 'assets/favicon.png';
+      const img = escapeAttr(t.image || 'assets/favicon.png');
       const isPlaying = this.currentTrack && String(this.currentTrack.id) === String(t.id) && !this.audio.paused;
       return '<div class="music-card" data-track-id="' + String(t.id) + '">' +
         '<div class="music-card__cover"><img src="' + img + '" alt="' + title + '" loading="lazy">' +
@@ -750,7 +753,7 @@
       html += tracks.map((t, i) => {
         const title = escapeHtml(t.name);
         const artist = escapeHtml(t.artist_name);
-        const img = t.image || 'assets/favicon.png';
+        const img = escapeAttr(t.image || 'assets/favicon.png');
         const liked = this.isLiked(t.id);
         return '<div class="music-list__row" data-track-id="' + String(t.id) + '">' +
           '<div class="music-list__index">' + (showIndex ? (i + 1) : '🎵') + '</div>' +
@@ -860,6 +863,11 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
 
   window.APEXON = window.APEXON || {};

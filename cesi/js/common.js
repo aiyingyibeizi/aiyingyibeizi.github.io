@@ -904,10 +904,33 @@
       const shareLabel = t('shareNow', '分享');
       const copyIcon = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>';
       const shareIcon = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>';
-      return '<div class="score-share">' +
-        '<button class="score-share__btn" onclick="APEXON.Share.copy(\'' + testType + '\', ' + score + ', \'' + grade + '\', ' + (extra ? '\'' + extra + '\'' : 'null') + ')" type="button">' + copyIcon + '<span>' + copyLabel + '</span></button>' +
-        '<button class="score-share__btn" onclick="APEXON.Share.native(\'' + testType + '\', ' + score + ', \'' + grade + '\', ' + (extra ? '\'' + extra + '\'' : 'null') + ')" type="button">' + shareIcon + '<span>' + shareLabel + '</span></button>' +
+      const payload = encodeURIComponent(JSON.stringify({ testType: testType, score: score, grade: grade, extra: extra }));
+      return '<div class="score-share" data-share="' + payload + '">' +
+        '<button class="score-share__btn score-share__copy" type="button">' + copyIcon + '<span>' + copyLabel + '</span></button>' +
+        '<button class="score-share__btn score-share__native" type="button">' + shareIcon + '<span>' + shareLabel + '</span></button>' +
       '</div>';
+    },
+
+    bindShareEvents(container) {
+      if (!container) return;
+      const shares = container.querySelectorAll('.score-share');
+      for (let i = 0; i < shares.length; i++) {
+        const el = shares[i];
+        if (el.dataset.bound === '1') continue;
+        let data;
+        try {
+          data = JSON.parse(decodeURIComponent(el.dataset.share || '{}'));
+        } catch (e) { continue; }
+        const copyBtn = el.querySelector('.score-share__copy');
+        const nativeBtn = el.querySelector('.score-share__native');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', () => this.copy(data.testType, data.score, data.grade, data.extra));
+        }
+        if (nativeBtn) {
+          nativeBtn.addEventListener('click', () => this.native(data.testType, data.score, data.grade, data.extra));
+        }
+        el.dataset.bound = '1';
+      }
     }
   };
   APEXON.Share = Share;
@@ -1644,10 +1667,17 @@
       passwordInput.addEventListener('input', validate);
       toggleBtn.addEventListener('click', togglePassword);
 
+      let failCount = 0;
+      let lockUntil = 0;
       const doSubmit = async () => {
         const u = usernameInput.value.trim();
         const p = passwordInput.value;
         if (submitBtn.disabled) return;
+        if (Date.now() < lockUntil) {
+          const remain = Math.ceil((lockUntil - Date.now()) / 1000);
+          errorEl.textContent = t('tooManyAttempts', '失败次数过多，请 {seconds} 秒后再试').replace('{seconds}', remain);
+          return;
+        }
         submitBtn.disabled = true;
         submitBtn.textContent = t('processing', '处理中...');
         errorEl.textContent = '';
@@ -1656,13 +1686,26 @@
           : await APEXON.Auth.register(u, p, rememberMe.checked, getGender());
         submitBtn.disabled = false;
         if (result.success) {
+          failCount = 0;
+          lockUntil = 0;
           modal.classList.remove('show');
           this.updateUserDisplay();
           this.toast(mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功'));
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
         } else {
-          submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
-          errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
+          failCount += 1;
+          if (mode === 'login' && failCount >= 5) {
+            lockUntil = Date.now() + 30000;
+            errorEl.textContent = t('tooManyAttempts', '失败次数过多，请 30 秒后再试');
+            submitBtn.disabled = true;
+            setTimeout(() => {
+              submitBtn.disabled = false;
+              errorEl.textContent = '';
+            }, 30000);
+          } else {
+            submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
+            errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
+          }
         }
       };
 
@@ -2498,6 +2541,7 @@
 
           if (resDom) {
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('avgTimeLabel', '平均用时') + ' ' + avgTime + ' ' + t('timeUnitSecond', '秒') + ' · ' + t('accuracyLabel', '正确率') + ' ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">' + t('wpmLabel', 'WPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">' + t('cpmLabel', 'CPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">' + t('avgTimeLabel', '平均用时') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">' + t('accuracyLabel', '正确率') + '</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('type', avgWpm, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(resDom);
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
@@ -2650,6 +2694,7 @@
 
           if (resDom) {
             resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('reaction', avg.toFixed(2), grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(resDom);
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
