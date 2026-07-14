@@ -1313,7 +1313,9 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
 .item-card__visual img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .item-card__body {
