@@ -7,7 +7,7 @@
   // 去 https://developer.jamendo.com 注册应用获取 client_id
   // =========================================
 
-  const JAMENDO_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+  const JAMENDO_CLIENT_ID = '1ff4ae9b';
 
   // 演示曲库：使用 SoundHelix 提供的 16 首示例曲目（稳定可播放）
   // 如需接入数万首全网曲库，请在 JAMENDO_CLIENT_ID 填入 Jamendo 开发者 client_id
