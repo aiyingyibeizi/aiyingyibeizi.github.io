@@ -1256,6 +1256,136 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   z-index: 1;
 }
 
+/* ============================================================================
+   Wide Feature Card (e.g. APEXON Music)
+   ============================================================================ */
+
+.item-card--wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 28px;
+  padding: 28px 32px;
+  min-height: 160px;
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.18) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(29, 185, 84, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.item-card--wide::after {
+  content: "▶ 立即收听";
+  position: static;
+  transform: none;
+  margin-left: auto;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  opacity: 1;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.item-card--wide:hover::after {
+  transform: none;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.item-card--wide:hover {
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.28) 0%, rgba(139, 92, 246, 0.2) 50%, rgba(29, 185, 84, 0.12) 100%);
+}
+
+.item-card__visual {
+  flex-shrink: 0;
+  width: 110px;
+  height: 110px;
+  border-radius: var(--apex-radius-sm);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 1;
+}
+
+.item-card__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.item-card--wide strong {
+  font-size: 1.5rem;
+  margin-bottom: 0;
+}
+
+.item-card--wide .card-desc {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  max-width: 640px;
+  margin-top: 0;
+  opacity: 0.92;
+}
+
+.item-card__features {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.item-card__feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 767px) {
+  .item-card--wide {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 22px;
+  }
+
+  .item-card--wide::after {
+    display: none;
+  }
+
+  .item-card__visual {
+    width: 88px;
+    height: 88px;
+  }
+
+  .item-card--wide strong {
+    font-size: 1.25rem;
+  }
+
+  .item-card--wide .card-desc {
+    font-size: 0.875rem;
+  }
+}
+
 /* 白色明亮主题下卡片 hover 不再切回深色，保持淡紫浅色风格 */
 html[data-bw="true"] .item-card,
 html[data-bw="true"] .apex-card--game,
