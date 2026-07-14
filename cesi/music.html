@@ -547,8 +547,8 @@
             width: 46px;
             height: 46px;
             border-radius: 50%;
-            background: var(--music-highlight);
-            color: #000;
+            background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -556,13 +556,25 @@
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 20px rgba(109, 93, 252, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .music-card:hover .music-card__play,
         .music-card.playing .music-card__play {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        .music-card.playing .music-card__play {
+            background: linear-gradient(135deg, #1ed760 0%, #1fdf64 100%);
+            box-shadow: 0 0 0 4px rgba(30, 215, 96, 0.25), 0 8px 24px rgba(30, 215, 96, 0.4);
+            animation: music-play-pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes music-play-pulse {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(0) scale(1.08); }
         }
 
         .music-card__equalizer {
@@ -740,15 +752,25 @@
             width: 52px;
             height: 52px;
             border-radius: 50%;
-            background: #fff;
-            color: #000;
+            background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+            color: #fff;
             font-size: 1.3rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 8px 24px rgba(109, 93, 252, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.15s ease;
         }
 
         .music-player__btn.play-pause:hover {
-            transform: scale(1.06);
-            background: #f0f0f0;
+            transform: scale(1.08);
+            filter: brightness(1.1);
+            box-shadow: 0 10px 28px rgba(109, 93, 252, 0.55);
+        }
+
+        .music-player__btn.play-pause.playing {
+            background: linear-gradient(135deg, #1ed760 0%, #1fdf64 100%);
+            color: #000;
+            box-shadow: 0 0 0 5px rgba(30, 215, 96, 0.2), 0 8px 24px rgba(30, 215, 96, 0.45);
+            animation: music-play-pulse 1.6s ease-in-out infinite;
         }
 
         .music-progress {
@@ -1542,8 +1564,16 @@
 
         html[data-theme="light"] .music-player__btn.play-pause,
         html[data-bw="true"] .music-player__btn.play-pause {
-            background: #1e1b4b;
+            background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
             color: #fff;
+            box-shadow: 0 8px 24px rgba(109, 93, 252, 0.45);
+        }
+
+        html[data-theme="light"] .music-player__btn.play-pause.playing,
+        html[data-bw="true"] .music-player__btn.play-pause.playing {
+            background: linear-gradient(135deg, #1ed760 0%, #1fdf64 100%);
+            color: #000;
+            box-shadow: 0 0 0 5px rgba(30, 215, 96, 0.2), 0 8px 24px rgba(30, 215, 96, 0.45);
         }
 
         html[data-theme="light"] .music-progress__bar,
@@ -1725,15 +1755,21 @@
 
         html[data-theme="light"] .music-card__play,
         html[data-bw="true"] .music-card__play {
-            background: #1e1b4b;
+            background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
             color: #fff;
-            box-shadow: 0 4px 14px rgba(124, 107, 196, 0.35);
+            box-shadow: 0 8px 20px rgba(109, 93, 252, 0.45);
+        }
+
+        html[data-theme="light"] .music-card.playing .music-card__play,
+        html[data-bw="true"] .music-card.playing .music-card__play {
+            background: linear-gradient(135deg, #1ed760 0%, #1fdf64 100%);
+            box-shadow: 0 0 0 4px rgba(30, 215, 96, 0.25), 0 8px 24px rgba(30, 215, 96, 0.4);
         }
 
         html[data-theme="light"] .music-hero__play,
         html[data-bw="true"] .music-hero__play {
-            background: #1e1b4b;
-            color: #fff;
+            background: linear-gradient(135deg, #1ed760 0%, #1fdf64 100%);
+            color: #000;
         }
 
         html[data-theme="light"] .music-list__artist-name,

@@ -333,11 +333,13 @@
 
       this.audio.addEventListener('play', () => {
         this.dom.playPauseBtn.textContent = '⏸';
+        this.dom.playPauseBtn.classList.add('playing');
         this.highlightPlaying();
       });
 
       this.audio.addEventListener('pause', () => {
         this.dom.playPauseBtn.textContent = '▶';
+        this.dom.playPauseBtn.classList.remove('playing');
         this.highlightPlaying();
       });
 
@@ -506,20 +508,40 @@
       this.currentLyrics = null;
       body.innerHTML = '<div class="music-lyrics-panel__empty">正在搜索歌词...</div>';
       try {
+        // 1. 优先尝试 LRCLIB（支持同步歌词）
         const q = encodeURIComponent(track.name + ' ' + track.artist_name);
         const res = await fetch('https://lrclib.net/api/search?q=' + q);
-        if (!res.ok) throw new Error('search failed');
-        const data = await res.json();
-        const item = (data && Array.isArray(data) && data.length) ? data[0] : null;
-        if (item && (item.plainLyrics || item.syncedLyrics)) {
-          this.currentLyrics = this.parseLyrics(item.syncedLyrics || item.plainLyrics);
-          this.renderLyrics();
-        } else {
-          body.innerHTML = '<div class="music-lyrics-panel__empty">未找到该歌曲的歌词</div>';
+        if (res.ok) {
+          const data = await res.json();
+          const item = (data && Array.isArray(data) && data.length) ? data[0] : null;
+          if (item && (item.plainLyrics || item.syncedLyrics)) {
+            this.currentLyrics = this.parseLyrics(item.syncedLyrics || item.plainLyrics);
+            this.renderLyrics();
+            return;
+          }
         }
       } catch (e) {
-        body.innerHTML = '<div class="music-lyrics-panel__empty">歌词加载失败，请稍后重试</div>';
+        // 静默继续尝试下一个源
       }
+
+      try {
+        // 2. 回退到 Lyrics.ovh（纯文本歌词）
+        const artist = encodeURIComponent(track.artist_name || 'Unknown');
+        const title = encodeURIComponent(track.name);
+        const res = await fetch('https://api.lyrics.ovh/v1/' + artist + '/' + title);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.lyrics) {
+            this.currentLyrics = this.parseLyrics(data.lyrics);
+            this.renderLyrics();
+            return;
+          }
+        }
+      } catch (e) {
+        // 静默失败
+      }
+
+      body.innerHTML = '<div class="music-lyrics-panel__empty">未找到该歌曲的歌词</div>';
     },
 
     parseLyrics(text) {
