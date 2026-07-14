@@ -64,7 +64,7 @@
       const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/gi;
       const eventHandler = /on\w+\s*=/gi;
       if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input)) {
-        return '[内容已过滤]';
+        return (window.APEXON && APEXON.i18n ? APEXON.i18n.t('contentFiltered', '[内容已过滤]') : '[内容已过滤]');
       }
       return input.replace(/<[^>]*>/g, '');
     },
@@ -344,11 +344,11 @@
       console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length, 'category:', cat);
       if (!filtered) {
         console.warn('[addComment] rejected: empty content');
-        return { success: false, error: '评论内容不能为空' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空') };
       }
       if (filtered.length > 500) {
         console.warn('[addComment] rejected: too long', filtered.length);
-        return { success: false, error: '评论内容超过 500 字限制' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制') };
       }
       const result = await this.request('comments', 'POST', {
         user_id: userId,
@@ -447,13 +447,13 @@
         if (!res.ok) {
           const text = await res.text();
           console.error('[changeUsername]', res.status, text);
-          return { success: false, error: '修改失败，请重试' };
+          return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('changeFailed') : '修改失败，请重试') };
         }
         const data = await res.json();
-        return data || { success: false, error: '未知错误' };
+        return data || { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('unknownError') : '未知错误') };
       } catch (e) {
         console.error('[changeUsername] failed:', e);
-        return { success: false, error: '网络错误' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('networkError') : '网络错误') };
       }
     },
 
@@ -536,7 +536,13 @@
 
     getUser() {
       if (this.currentUser) return this.currentUser.username;
-      return '游客 ' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
+      return 'guest_' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
+    },
+
+    getDisplayUser() {
+      if (this.currentUser) return this.currentUser.username;
+      const prefix = window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestPrefix', '游客') : '游客';
+      return prefix + ' ' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
     },
 
     getUserId() {
@@ -580,15 +586,15 @@
       const u = String(newUsername).trim().slice(0, 30);
       const nameErr = this._validateUsername(u);
       if (nameErr) return { success: false, error: nameErr };
-      if (u === oldUsername) return { success: false, error: '新用户名与当前相同' };
+      if (u === oldUsername) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('usernameSame') : '新用户名与当前相同') };
 
       const loginResult = await this.login(oldUsername, password, true);
-      if (!loginResult.success) return { success: false, error: '密码错误' };
+      if (!loginResult.success) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('wrongPassword') : '密码错误') };
 
       const token = this.currentUser.token;
       const result = await DB.changeUsername(oldUsername, u, token);
       if (!result || !result.success) {
-        return { success: false, error: result && result.error ? result.error : '修改失败' };
+        return { success: false, error: result && result.error ? result.error : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('changeFailed') : '修改失败') };
       }
 
       this._setSession(u, token, this.currentUser.expiresAt);
@@ -603,15 +609,17 @@
     },
 
     _validateUsername(u) {
-      if (!u || u.length < 2 || u.length > 30) return '用户名需 2-30 位';
-      if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(u)) return '用户名支持中英文、数字、下划线';
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
+      if (!u || u.length < 2 || u.length > 30) return t('usernameRuleShort', '用户名需 2-30 位');
+      if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(u)) return t('usernameRuleFormat', '用户名支持中英文、数字、下划线');
       return null;
     },
 
     _validatePassword(p) {
-      if (!p || p.length < 8) return '密码至少 8 位';
-      if (!/[a-zA-Z]/.test(p) || !/[0-9]/.test(p)) return '密码需同时包含字母和数字';
-      if (/\s/.test(p)) return '密码不能包含空格';
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
+      if (!p || p.length < 8) return t('passwordRuleShort', '密码至少 8 位');
+      if (!/[a-zA-Z]/.test(p) || !/[0-9]/.test(p)) return t('passwordRuleFormat', '密码需同时包含字母和数字');
+      if (/\s/.test(p)) return t('passwordRuleSpace', '密码不能包含空格');
       return null;
     },
 
@@ -626,7 +634,7 @@
       const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
       console.log('[register] exists check:', exists ? exists.length : null);
       if (exists && exists.length) {
-        return { success: false, error: '用户名已存在' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('usernameExists') : '用户名已存在') };
       }
 
       const salt = this._generateSalt();
@@ -662,20 +670,20 @@
     async login(username, password, remember) {
       const u = String(username).trim();
       if (!u || !password) {
-        return { success: false, error: '请输入用户名和密码' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('enterCredentials') : '请输入用户名和密码') };
       }
       console.log('[login] start', u);
       const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
       console.log('[login] account rows:', rows ? rows.length : null);
       if (!rows || !rows.length) {
-        return { success: false, error: '用户名或密码错误' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
       }
       const account = rows[0];
       console.log('[login] account found, has salt:', !!account.salt, 'has hash:', !!account.password_hash);
       const hash = await this._hashPassword(password, account.salt);
       console.log('[login] computed hash length:', hash.length, 'stored length:', account.password_hash ? account.password_hash.length : 0);
       if (hash !== account.password_hash) {
-        return { success: false, error: '用户名或密码错误' };
+        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
       }
 
       const token = this._generateToken();
@@ -761,7 +769,7 @@
 
     async _hashPassword(password, salt) {
       if (typeof crypto === 'undefined' || !crypto.subtle) {
-        throw new Error('当前环境不支持安全密码哈希');
+        throw new Error((window.APEXON && APEXON.i18n ? APEXON.i18n.t('notSupportedHash') : '当前环境不支持安全密码哈希'));
       }
       const encoder = new TextEncoder();
       const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
@@ -1111,7 +1119,7 @@
       const personalContent = document.getElementById('personalContent');
 
       const isLoggedIn = APEXON.Auth.isLoggedIn();
-      const name = APEXON.Auth.getUser() || '用户';
+      const name = APEXON.Auth.getDisplayUser() || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('user') : '用户');
       const userId = APEXON.Auth.getUserId();
 
       if (menu) {
@@ -1221,48 +1229,51 @@
     },
 
     _genderLabel(value) {
-      if (value === 'male') return '男';
-      if (value === 'female') return '女';
-      return '保密';
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
+      if (value === 'male') return t('genderMale', '男');
+      if (value === 'female') return t('genderFemale', '女');
+      return t('genderSecret', '保密');
     },
 
     _buildProfileViewHTML(profile, username) {
       const esc = Security.escapeHtml;
       const p = profile || {};
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       const avatar = '<div class="apex-profile-avatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
-      const bio = p.bio || '这个人很懒，什么都没有写。';
-      const location = p.location || '未知';
-      const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : '未填写';
-      const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : '未填写';
+      const bio = p.bio || t('bioEmpty', '这个人很懒，什么都没有写。');
+      const location = p.location || t('unknown', '未知');
+      const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : t('notFilled', '未填写');
+      const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : t('notFilled', '未填写');
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
-        '<div class="apex-profile-section"><div class="apex-profile-label">性别</div><div class="apex-profile-value">' + esc(this._genderLabel(p.gender)) + '</div></div>' +
-        '<div class="apex-profile-section"><div class="apex-profile-label">个人简介</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +
-        '<div class="apex-profile-section"><div class="apex-profile-label">所在地</div><div class="apex-profile-value">' + esc(location) + '</div></div>' +
-        '<div class="apex-profile-section"><div class="apex-profile-label">个人网站</div><div class="apex-profile-value">' + website + '</div></div>' +
-        '<div class="apex-profile-section"><div class="apex-profile-label">社交链接</div><div class="apex-profile-value">' + social + '</div></div>';
+        '<div class="apex-profile-section"><div class="apex-profile-label">' + t('genderLabel', '性别') + '</div><div class="apex-profile-value">' + esc(this._genderLabel(p.gender)) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">' + t('bioPlaceholder', '个人简介') + '</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">' + t('locationPlaceholder', '所在地') + '</div><div class="apex-profile-value">' + esc(location) + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">' + t('websitePlaceholder', '个人网站') + '</div><div class="apex-profile-value">' + website + '</div></div>' +
+        '<div class="apex-profile-section"><div class="apex-profile-label">' + t('socialPlaceholder', '社交链接') + '</div><div class="apex-profile-value">' + social + '</div></div>';
     },
 
     _buildProfileEditHTML(profile, username) {
       const esc = Security.escapeHtml;
       const p = profile || {};
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       const currentUrl = p.avatar_url || '';
       const avatar = '<div class="apex-profile-avatar" id="apexEditAvatar">' + this._renderAvatarHTML(currentUrl) + '</div>';
       const genderChecked = (value) => p.gender === value ? ' checked' : '';
-      const genderSelect = '<div class="apex-gender-group"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="male"' + genderChecked('male') + '><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="female"' + genderChecked('female') + '><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="secret"' + genderChecked('secret') + '><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div>';
+      const genderSelect = '<div class="apex-gender-group"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="male"' + genderChecked('male') + '><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="female"' + genderChecked('female') + '><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexEditGender" value="secret"' + genderChecked('secret') + '><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div>';
       const avatarGrid = PRESET_AVATARS.map(a => {
         const selectedClass = a.url === currentUrl ? ' selected' : '';
-        return '<img src="' + esc(a.url) + '" alt="头像' + a.id + '" class="apex-avatar-preset' + selectedClass + '" data-url="' + esc(a.url) + '" loading="lazy">';
+        return '<img src="' + esc(a.url) + '" alt="' + t('selectAvatar', '头像') + a.id + '" class="apex-avatar-preset' + selectedClass + '" data-url="' + esc(a.url) + '" loading="lazy">';
       }).join('');
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
-        '<div class="apex-avatar-select"><div class="apex-avatar-select-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('selectAvatar') : '选择头像') + '</div><div class="apex-avatar-grid" id="apexAvatarGrid">' + avatarGrid + '</div></div>' +
+        '<div class="apex-avatar-select"><div class="apex-avatar-select-label">' + t('selectAvatar', '选择头像') + '</div><div class="apex-avatar-grid" id="apexAvatarGrid">' + avatarGrid + '</div></div>' +
         '<div class="apex-profile-body">' +
         genderSelect +
-        '<textarea id="apexEditBio" placeholder="个人简介（最多 200 字）" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
-        '<input type="text" id="apexEditLocation" placeholder="所在地" maxlength="80" value="' + esc(p.location || '') + '">' +
-        '<input type="text" id="apexEditWebsite" placeholder="个人网站" maxlength="200" value="' + esc(p.website || '') + '">' +
-        '<input type="text" id="apexEditSocial" placeholder="社交链接" maxlength="200" value="' + esc(p.social_links || '') + '">' +
+        '<textarea id="apexEditBio" placeholder="' + t('bioPlaceholder', '个人简介（最多 200 字）') + '" maxlength="200">' + esc(p.bio || '') + '</textarea>' +
+        '<input type="text" id="apexEditLocation" placeholder="' + t('locationPlaceholder', '所在地') + '" maxlength="80" value="' + esc(p.location || '') + '">' +
+        '<input type="text" id="apexEditWebsite" placeholder="' + t('websitePlaceholder', '个人网站') + '" maxlength="200" value="' + esc(p.website || '') + '">' +
+        '<input type="text" id="apexEditSocial" placeholder="' + t('socialPlaceholder', '社交链接') + '" maxlength="200" value="' + esc(p.social_links || '') + '">' +
         '<div class="apex-profile-error" id="apexProfileError"></div>' +
-        '<button class="apex-profile-submit" id="apexProfileSubmit">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveProfile') : '保存资料') + '</button>' +
+        '<button class="apex-profile-submit" id="apexProfileSubmit">' + t('saveProfile', '保存资料') + '</button>' +
         '</div>';
     },
 
@@ -1312,10 +1323,11 @@
       let modal = document.getElementById('apex-username-modal');
       if (modal) modal.remove();
 
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       modal = document.createElement('div');
       modal.id = 'apex-username-modal';
       modal.className = 'apex-profile-modal';
-      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexUsernameClose">×</button><div class="apex-profile-header"><div class="apex-profile-name">修改用户名</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">当前用户名</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getUser()) + '</div></div><input type="text" id="apexNewUsername" placeholder="新用户名" maxlength="30"><div class="apex-hint" id="apexNewUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap" style="margin-top:12px;"><input type="password" id="apexUsernamePassword" placeholder="当前密码" maxlength="64"></div><div class="apex-profile-error" id="apexUsernameError"></div><button class="apex-profile-submit" id="apexUsernameSubmit">确认修改</button></div></div>';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexUsernameClose">×</button><div class="apex-profile-header"><div class="apex-profile-name">' + t('changeUsernameTitle', '修改用户名') + '</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">' + t('currentUsername', '当前用户名') + '</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getUser()) + '</div></div><input type="text" id="apexNewUsername" placeholder="' + t('newUsernamePlaceholder', '新用户名') + '" maxlength="30"><div class="apex-hint" id="apexNewUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap" style="margin-top:12px;"><input type="password" id="apexUsernamePassword" placeholder="' + t('currentPasswordPlaceholder', '当前密码') + '" maxlength="64"></div><div class="apex-profile-error" id="apexUsernameError"></div><button class="apex-profile-submit" id="apexUsernameSubmit">' + t('confirmChange', '确认修改') + '</button></div></div>';
       document.body.appendChild(modal);
 
       const close = () => modal.classList.remove('show');
@@ -1327,7 +1339,7 @@
       const submit = modal.querySelector('#apexUsernameSubmit');
       const validate = () => {
         const err = APEXON.Auth._validateUsername(nameInput.value.trim());
-        hint.textContent = err || (nameInput.value.trim() ? '格式正确' : '2-30 位，支持中英文、数字、下划线');
+        hint.textContent = err || (nameInput.value.trim() ? t('validFormat', '格式正确') : t('usernameRule', '2-30 位，支持中英文、数字、下划线'));
         hint.className = 'apex-hint' + (err ? ' invalid' : (nameInput.value.trim() ? ' valid' : ''));
         submit.disabled = !!err;
       };
@@ -1342,11 +1354,11 @@
         const result = await APEXON.Auth.changeUsername(newName, password);
         submit.disabled = false;
         if (result.success) {
-          UI.toast('用户名已修改');
+          UI.toast(t('usernameChanged', '用户名已修改'));
           modal.classList.remove('show');
           this.updateUserDisplay();
         } else {
-          errorEl.textContent = result.error || '修改失败';
+          errorEl.textContent = result.error || t('changeFailed', '修改失败');
         }
       });
 
@@ -1360,10 +1372,11 @@
         modal.classList.add('show');
         return;
       }
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">游客模式可正常使用，登录后可修改用户名与资料</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">登录</button><button class="apex-login-tab" data-tab="register">注册</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="用户名" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">2-30 位，支持中英文、数字、下划线</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="密码" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="显示密码">显示</button></div><div class="apex-hint" id="apexPasswordHint">至少 8 位，同时包含字母和数字</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="确认密码" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">请再次输入密码</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">性别</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>男</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>女</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>保密</span></label></div><div class="apex-gender-tip">建议选择真实性别，以便更准确地为各测试项目评级。</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>我已阅读并同意 <a href="terms.html" target="_blank">服务条款</a> 和 <a href="privacy.html" target="_blank">隐私政策</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>记住我（30 天）</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">登录</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
       document.body.appendChild(modal);
 
       const tabs = modal.querySelectorAll('.apex-login-tab');
@@ -1410,18 +1423,18 @@
         const p = passwordInput.value;
         const nameErr = APEXON.Auth._validateUsername(u);
         const passErr = APEXON.Auth._validatePassword(p);
-        usernameHint.textContent = nameErr || (u ? '格式正确' : '2-30 位，支持中英文、数字、下划线');
+        usernameHint.textContent = nameErr || (u ? t('validFormat', '格式正确') : t('usernameRule', '2-30 位，支持中英文、数字、下划线'));
         usernameHint.className = 'apex-hint' + (nameErr ? ' invalid' : (u ? ' valid' : ''));
-        passwordHint.textContent = passErr || (p ? '格式正确' : '至少 8 位，同时包含字母和数字');
+        passwordHint.textContent = passErr || (p ? t('validFormat', '格式正确') : t('passwordRule', '至少 8 位，同时包含字母和数字'));
         passwordHint.className = 'apex-hint' + (passErr ? ' invalid' : (p ? ' valid' : ''));
 
         let confirmErr = null;
         let termsErr = null;
         if (mode === 'register') {
-          if (confirmInput.value !== p) confirmErr = '两次输入的密码不一致';
-          if (!termsCheckbox.checked) termsErr = '请同意服务条款和隐私政策';
+          if (confirmInput.value !== p) confirmErr = t('passwordMismatch', '两次输入的密码不一致');
+          if (!termsCheckbox.checked) termsErr = t('agreeTermsRequired', '请同意服务条款和隐私政策');
         }
-        confirmHint.textContent = confirmErr || (mode === 'register' ? (confirmInput.value ? '密码一致' : '请再次输入密码') : '');
+        confirmHint.textContent = confirmErr || (mode === 'register' ? (confirmInput.value ? t('passwordMatch', '密码一致') : t('reenterPassword', '请再次输入密码')) : '');
         confirmHint.className = 'apex-hint' + (confirmErr ? ' invalid' : (mode === 'register' && confirmInput.value ? ' valid' : ''));
         confirmHint.style.display = mode === 'register' ? 'block' : 'none';
 
@@ -1431,8 +1444,8 @@
       const togglePassword = () => {
         const isHidden = passwordInput.type === 'password';
         passwordInput.type = isHidden ? 'text' : 'password';
-        toggleBtn.textContent = isHidden ? '隐藏' : '显示';
-        toggleBtn.title = isHidden ? '隐藏密码' : '显示密码';
+        toggleBtn.textContent = isHidden ? t('hidePassword', '隐藏') : t('showPassword', '显示');
+        toggleBtn.title = isHidden ? t('hidePasswordTitle', '隐藏密码') : t('showPasswordTitle', '显示密码');
       };
 
       tabs.forEach(t => t.addEventListener('click', () => setMode(t.dataset.tab)));
@@ -1447,7 +1460,7 @@
         const p = passwordInput.value;
         if (submitBtn.disabled) return;
         submitBtn.disabled = true;
-        submitBtn.textContent = '处理中...';
+        submitBtn.textContent = t('processing', '处理中...');
         errorEl.textContent = '';
         const result = mode === 'login'
           ? await APEXON.Auth.login(u, p, rememberMe.checked)
@@ -2184,6 +2197,7 @@
       },
 
       init() {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
         const box = document.getElementById('testBox');
         const input = document.getElementById('inputArea');
         if (!box || !input || box.dataset.apexInitialized === 'type') return;
@@ -2232,14 +2246,14 @@
           try {
             const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'type', 5);
             if (!history.length) {
-              historyContent.innerHTML = '<div class="forum-empty">还没有记录</div>';
+              historyContent.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('noRecords') : '还没有记录') + '</div>';
               return;
             }
             historyContent.innerHTML = history.map(h =>
               '<div class="history-item"><span class="history-date">' + Security.escapeHtml(h.date) + '</span><span class="history-score">' + Security.escapeHtml(h.avg) + ' s / ' + Security.escapeHtml(h.accuracy) + '%</span></div>'
             ).join('');
           } catch (e) {
-            historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
+            historyContent.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loadRecordsFailed') : '加载记录失败') + '</div>';
           }
         };
 
@@ -2248,7 +2262,7 @@
           input.value = '';
           nowText = this.getRandomText();
           if (currentRound === 0) { timeList = []; accList = []; cpmList = []; wpmList = []; }
-          if (typeHint) typeHint.innerHTML = '<strong>第' + (currentRound + 1) + '/' + this.TOTAL_ROUNDS + '轮</strong>输入这段文字';
+          if (typeHint) typeHint.innerHTML = '<strong>' + t('roundLabel', '第{round}/{total}轮').replace('{round}', currentRound + 1).replace('{total}', this.TOTAL_ROUNDS) + '</strong>' + t('inputThisText', '输入这段文字');
           box.innerHTML = '<span class="pending">' + Security.escapeHtml(nowText) + '</span>';
           if (resDom) resDom.textContent = '';
           input.disabled = false;
@@ -2275,11 +2289,11 @@
 
           const rows = [];
           for (let i = 0; i < this.TOTAL_ROUNDS; i++) {
-            rows.push('<div class="score-detail-item"><div class="score-detail-value">' + Security.escapeHtml(timeList[i]) + 's</div><div class="score-detail-label">第' + (i + 1) + '轮 ' + Security.escapeHtml(accList[i]) + '%</div></div>');
+            rows.push('<div class="score-detail-item"><div class="score-detail-value">' + Security.escapeHtml(timeList[i]) + 's</div><div class="score-detail-label">' + t('roundShortLabel', '第 {round} 轮').replace('{round}', i + 1) + ' ' + Security.escapeHtml(accList[i]) + '%</div></div>');
           }
 
           if (resDom) {
-            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均用时 ' + avgTime + ' 秒 · 正确率 ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">WPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">CPM</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">平均用时</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">正确率</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
+            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('avgTimeLabel', '平均用时') + ' ' + avgTime + ' ' + t('timeUnitSecond', '秒') + ' · ' + t('accuracyLabel', '正确率') + ' ' + avgAcc + '%</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgWpm + '</div><div class="score-detail-label">' + t('wpmLabel', 'WPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgCpm + '</div><div class="score-detail-label">' + t('cpmLabel', 'CPM') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgTime + 's</div><div class="score-detail-label">' + t('avgTimeLabel', '平均用时') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgAcc + '%</div><div class="score-detail-label">' + t('accuracyLabel', '正确率') + '</div></div></div><div class="score-details" style="margin-top:12px">' + rows.join('') + '</div></div>';
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
@@ -2300,7 +2314,7 @@
           input.disabled = true;
           if (currentRound >= this.TOTAL_ROUNDS) showAllResult();
           else {
-            if (resDom) resDom.innerHTML = '<strong>本轮用时：' + timeS + ' 秒</strong> &nbsp;&nbsp; 正确率：' + accuracy + '% &nbsp;&nbsp; WPM：' + wpm;
+            if (resDom) resDom.innerHTML = '<strong>' + t('thisRoundTime', '本轮用时') + '：' + timeS + ' ' + t('timeUnitSecond', '秒') + '</strong> &nbsp;&nbsp; ' + t('accuracyLabel', '正确率') + '：' + accuracy + '% &nbsp;&nbsp; ' + t('wpmLabel', 'WPM') + '：' + wpm;
             timer = setTimeout(() => { input.disabled = false; initText(); }, this.ROUND_DELAY_MS);
           }
         };
@@ -2343,7 +2357,7 @@
         input.addEventListener('paste', (e) => { e.preventDefault(); return false; });
 
         VisibilityManager.onChange((visible) => {
-          if (!visible && isStart && currentRound < this.TOTAL_ROUNDS) { input.disabled = true; if (resDom) resDom.textContent = '测试已暂停'; }
+          if (!visible && isStart && currentRound < this.TOTAL_ROUNDS) { input.disabled = true; if (resDom) resDom.textContent = window.APEXON && APEXON.i18n ? APEXON.i18n.t('testPaused') : '测试已暂停'; }
         });
 
         initText();
@@ -2361,6 +2375,7 @@
       MAX_WAIT_MS: 5000,
 
       init() {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
         const box = document.getElementById('testBox');
         if (!box || box.dataset.apexInitialized === 'reaction') return;
         box.dataset.apexInitialized = 'reaction';
@@ -2391,14 +2406,14 @@
           try {
             const history = await DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'reaction', 5);
             if (!history.length) {
-              historyContent.innerHTML = '<div class="forum-empty">还没有记录</div>';
+              historyContent.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('noRecords') : '还没有记录') + '</div>';
               return;
             }
             historyContent.innerHTML = history.map(h =>
               '<div class="history-item"><span class="history-date">' + Security.escapeHtml(h.date) + '</span><span class="history-score">' + Security.escapeHtml(h.avg) + ' ms</span></div>'
             ).join('');
           } catch (e) {
-            historyContent.innerHTML = '<div class="forum-empty">加载记录失败</div>';
+            historyContent.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loadRecordsFailed') : '加载记录失败') + '</div>';
           }
         };
 
@@ -2410,7 +2425,7 @@
 
         const initRound = () => {
           resetAll();
-          box.textContent = `第${currentRound + 1}/${this.TOTAL_ROUNDS}轮\n点击开始`;
+          box.textContent = t('roundLabel', '第{round}/{total}轮').replace('{round}', currentRound + 1).replace('{total}', this.TOTAL_ROUNDS) + '\n' + t('clickStart', '点击开始');
           if (resDom) resDom.textContent = '';
           updateProgress();
         };
@@ -2420,17 +2435,17 @@
           const validTimes = timeList.filter(t => t !== null);
           const sum = validTimes.reduce((a, b) => a + parseFloat(b), 0);
           const avg = validTimes.length ? (sum / validTimes.length) : 0;
-          const grade = validTimes.length ? Utils.getGrade(avg, 'reaction') : { grade: '违规', color: 'var(--apex-danger)' };
+          const grade = validTimes.length ? Utils.getGrade(avg, 'reaction') : { grade: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('foulGrade') : '违规'), color: 'var(--apex-danger)' };
 
           const rows = timeList.map((t, i) => {
-            const value = t === null ? '<span style="color:var(--apex-danger)">提前点击</span>' : Security.escapeHtml(t) + ' ms';
+            const value = t === null ? '<span style="color:var(--apex-danger)">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('earlyClick') : '提前点击') + '</span>' : Security.escapeHtml(t) + ' ms';
             return '<div class="score-detail-item"><div class="score-detail-value">' + value + '</div><div class="score-detail-label">第' + (i + 1) + '轮</div></div>';
           });
 
-          const foulTag = foulCount > 0 ? '<div class="score-foul">违规 ' + foulCount + ' 次</div>' : '';
+          const foulTag = foulCount > 0 ? '<div class="score-foul">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('foulCountLabel', '违规 {count} 次').replace('{count}', foulCount) : '违规 ' + foulCount + ' 次') + '</div>' : '';
 
           if (resDom) {
-            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">平均反应时间 ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
+            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div></div>';
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
@@ -2467,7 +2482,7 @@
 
           switch (state) {
             case this.STATE_IDLE: {
-              box.textContent = `第${currentRound + 1}/${this.TOTAL_ROUNDS}轮\n等待变绿`;
+              box.textContent = t('roundLabel', '第{round}/{total}轮').replace('{round}', currentRound + 1).replace('{total}', this.TOTAL_ROUNDS) + '\n' + t('waitGreen', '等待变绿');
               state = this.STATE_WAITING;
               box.className = 'reaction-click-area waiting';
               const wait = Math.floor(Math.random() * (this.MAX_WAIT_MS - this.MIN_WAIT_MS + 1)) + this.MIN_WAIT_MS;
@@ -2476,7 +2491,7 @@
                 requestAnimationFrame(() => {
                   frameStartTime = performance.now();
                   box.className = 'reaction-click-area green';
-                  box.textContent = '立刻点击！';
+                  box.textContent = t('clickNow', '立刻点击！');
                   state = this.STATE_CLICK;
                   AudioManager.playTick();
                 });
@@ -2489,7 +2504,7 @@
               foulCount++;
               timeList.push(null); // 记录本轮为违规跳过
               box.className = 'reaction-click-area foul';
-              box.textContent = '提前点击，本轮跳过';
+              box.textContent = t('clickedEarly', '提前点击，本轮跳过');
               AudioManager.playFail();
               timer = setTimeout(() => { isProcessing = false; advanceRound(); }, 900);
               break;
@@ -2524,7 +2539,7 @@
         VisibilityManager.onChange((visible) => {
           if (!visible && state === this.STATE_WAITING) {
             resetAll();
-            box.textContent = '测试已暂停，点击重新开始';
+            box.textContent = t('testPaused', '测试已暂停，点击重新开始');
           }
         });
 

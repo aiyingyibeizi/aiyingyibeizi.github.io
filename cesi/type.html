@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>打字训练测试 - APEXON</title>
+    <title data-i18n="typeTitle">打字训练测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -38,7 +38,7 @@
             </nav>
             <div class="header-actions">
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
-                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
                             <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
@@ -50,41 +50,43 @@
     </header>
 
     <div class="container">
-        <h1>打字训练测试</h1>
+        <h1 data-i18n="typeTitle">打字训练测试</h1>
 
         <div class="progress-wrap">
-            <div class="progress-label"><span>进度</span><span id="progressText">0 / 5</span></div>
+            <div class="progress-label"><span data-i18n="progressLabel">进度</span><span id="progressText">0 / 5</span></div>
             <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
         </div>
 
         <div class="live-stats" id="liveStats">
-            <div class="live-stat-item"><div class="live-stat-value" id="liveWpm">0</div><div class="live-stat-label">WPM</div></div>
-            <div class="live-stat-item"><div class="live-stat-value" id="liveCpm">0</div><div class="live-stat-label">CPM</div></div>
-            <div class="live-stat-item"><div class="live-stat-value" id="liveAcc">0%</div><div class="live-stat-label">正确率</div></div>
-            <div class="live-stat-item"><div class="live-stat-value" id="liveTime">0.0s</div><div class="live-stat-label">用时</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveWpm">0</div><div class="live-stat-label" data-i18n="wpmLabel">WPM</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveCpm">0</div><div class="live-stat-label" data-i18n="cpmLabel">CPM</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveAcc">0%</div><div class="live-stat-label" data-i18n="accuracyLabel">正确率</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveTime">0.0s</div><div class="live-stat-label" data-i18n="timeLabel">用时</div></div>
         </div>
 
-        <div class="type-hint-bar" id="typeHint">准备开始</div>
+        <div class="type-hint-bar" id="typeHint" data-i18n="readyStart">准备开始</div>
         <div id="testBox" class="type-test-area"></div>
-        <textarea id="inputArea" placeholder="在这里打字..."></textarea>
+        <textarea id="inputArea" data-i18n-placeholder="typeHerePlaceholder" placeholder="在这里打字..."></textarea>
 
         <div class="result" id="result"></div>
 
         <div class="btn-group">
-            <button class="btn" onclick="restartTest()">重新开始</button>
-            <button class="btn" onclick="backHome()">返回主界面</button>
+            <button class="btn" onclick="restartTest()" data-i18n="restart">重新开始</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
         </div>
 
         <div class="history-list" style="margin-top:24px">
-            <div class="history-title">最近记录</div>
-            <div id="historyContent">还没有记录</div>
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
         </div>
     </div>
 
-    <script src="js/i18n.js?v=1"></script>
+    <script src="js/i18n.js?v=2"></script>
     <script src="js/common.js?v=10"></script>
     <script>
     (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
         window.toggleMenu = function () {
             document.getElementById('headerNav').classList.toggle('open');
         };
@@ -99,7 +101,7 @@
         if (APEXON.Tests && APEXON.Tests.Type && typeof APEXON.Tests.Type.init === 'function') {
             APEXON.Tests.Type.init();
         } else {
-            document.getElementById('result').textContent = '测试引擎加载失败，请刷新页面重试。';
+            document.getElementById('result').textContent = t('engineLoadFailed', '测试引擎加载失败，请刷新页面重试。');
         }
 
         document.body.classList.add('loaded');

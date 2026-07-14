@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>持续注意力测试 - APEXON</title>
+    <title data-i18n="stickTitle">持续注意力测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -68,7 +68,7 @@
             </nav>
             <div class="header-actions">
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
-                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
                             <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
@@ -80,11 +80,11 @@
     </header>
 
     <div class="container">
-        <h1>持续注意力测试</h1>
+        <h1 data-i18n="stickTitle">持续注意力测试</h1>
 
         <div class="countdown-wrap">
             <div class="countdown-number" id="countdownNum">60</div>
-            <div class="score-live">得分: <span id="scoreLive">0</span></div>
+            <div class="score-live"><span data-i18n="scoreLabel">得分:</span> <span id="scoreLive">0</span></div>
         </div>
 
         <canvas id="testBox"></canvas>
@@ -92,20 +92,22 @@
         <div class="result" id="result"></div>
 
         <div class="btn-group">
-            <button class="btn" onclick="restartTest()">再来一次</button>
-            <button class="btn" onclick="backHome()">返回主界面</button>
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
         </div>
 
         <div class="history-list" style="margin-top:24px">
-            <div class="history-title">最近记录</div>
-            <div id="historyContent">还没有记录</div>
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
         </div>
     </div>
 
-    <script src="js/i18n.js?v=1"></script>
+    <script src="js/i18n.js?v=2"></script>
     <script src="js/common.js?v=10"></script>
     <script>
     (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
         window.toggleMenu = function () {
             document.getElementById('headerNav').classList.toggle('open');
         };
@@ -202,12 +204,12 @@
             try {
                 const history = await APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'stick', 5);
                 if (!history.length) {
-                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">还没有记录</div>';
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
                     return;
                 }
-                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' 分</span></div>').join('');
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ' + t('points', '分') + '</span></div>').join('');
             } catch(e) {
-                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
+                 historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
             }
         }
 
@@ -244,9 +246,9 @@
 
             if (!started) {
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText('点击开始测试', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.fillText(t('clickStartTest', '点击开始测试'), canvas.width / 2, canvas.height / 2 - 10);
                 ctx.font = '16px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillText('鼠标悬停在球上即可得分', canvas.width / 2, canvas.height / 2 + 24);
+                ctx.fillText(t('hoverToScore', '鼠标悬停在球上即可得分'), canvas.width / 2, canvas.height / 2 + 24);
             }
 
             if (running) {
@@ -295,10 +297,10 @@
                 { min: 0, grade: 'D', color: '#aaa' }
             ];
             const grade = grades.find(g => score >= g.min) || grades[grades.length - 1];
-            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">最终得分 ' + score + ' 分</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">总得分</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">时长</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('finalScore', '最终得分') + ' ' + score + ' ' + t('points', '分') + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('totalScore', '总得分') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + GAME_DURATION + 's</div><div class="score-detail-label">' + t('duration', '时长') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div></div>';
 
             const saved = await APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'stick', { score: score });
-            if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+            if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
 
             if (APEXON.Audio) APEXON.Audio.playSuccess();
             if (navigator.vibrate) navigator.vibrate(50);

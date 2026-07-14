@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>数字记忆测试 - APEXON</title>
+    <title data-i18n="numberTitle">数字记忆测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -73,7 +73,7 @@
             </nav>
             <div class="header-actions">
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
-                    <input type="checkbox" id="bwToggleInput" aria-label="切换黑白模式">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
                         <span class="apex-bw-toggle__thumb">
                             <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
@@ -85,29 +85,31 @@
     </header>
 
     <div class="container">
-        <h1>数字记忆测试</h1>
+        <h1 data-i18n="numberTitle">数字记忆测试</h1>
 
-        <div class="info-row" id="statusLine">当前位数：<span id="levelDisplay">3</span></div>
+        <div class="info-row" id="statusLine"><span data-i18n="currentDigits">当前位数：</span><span id="levelDisplay">3</span></div>
 
-        <div id="testBox" data-test-type="number">准备开始</div>
+        <div id="testBox" data-test-type="number" data-i18n="readyStart">准备开始</div>
 
         <div class="result" id="result"></div>
 
         <div class="btn-group">
-            <button class="btn" onclick="restartTest()">再来一次</button>
-            <button class="btn" onclick="backHome()">返回主界面</button>
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
         </div>
 
         <div class="history-list" style="margin-top:24px">
-            <div class="history-title">最近记录</div>
-            <div id="historyContent">还没有记录</div>
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
         </div>
     </div>
 
-    <script src="js/i18n.js?v=1"></script>
+    <script src="js/i18n.js?v=2"></script>
     <script src="js/common.js?v=10"></script>
     <script>
     (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
         window.toggleMenu = function () {
             document.getElementById('headerNav').classList.toggle('open');
         };
@@ -142,12 +144,12 @@
             APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'number', 5).then(history => {
                 const esc = APEXON.Security.escapeHtml;
                 if (!history.length) {
-                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">还没有记录</div>';
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
                     return;
                 }
-                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' 位</span></div>').join('');
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString('zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ' + t('digitUnit', '位') + '</span></div>').join('');
             }).catch(() => {
-                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">加载记录失败</div>';
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
             });
         }
 
@@ -155,11 +157,11 @@
             state = 'showing';
             currentNumber = generateNumber(level);
             levelDisplay.textContent = level;
-            testBox.innerHTML = '<div class="number-hint">请记住这些数字</div><div class="number-display">' + currentNumber + '</div>';
+            testBox.innerHTML = '<div class="number-hint">' + t('numberHintRemember', '请记住这些数字') + '</div><div class="number-display">' + currentNumber + '</div>';
             result.innerHTML = '';
             showTimer = setTimeout(() => {
                 state = 'input';
-                testBox.innerHTML = '<div class="number-hint">请输入刚才的数字</div><input type="tel" inputmode="numeric" class="number-input" id="numberInput" maxlength="' + level + '" autocomplete="off"><button class="btn" id="submitBtn" style="margin-top:6px">确认</button>';
+                testBox.innerHTML = '<div class="number-hint">' + t('numberHintInput', '请输入刚才的数字') + '</div><input type="tel" inputmode="numeric" class="number-input" id="numberInput" maxlength="' + level + '" autocomplete="off"><button class="btn" id="submitBtn" style="margin-top:6px">' + t('confirm', '确认') + '</button>';
                 const input = document.getElementById('numberInput');
                 const submitBtn = document.getElementById('submitBtn');
                 input.focus();
@@ -170,7 +172,7 @@
                         playSuccess();
                         level++;
                         levelDisplay.textContent = level;
-                        testBox.innerHTML = '<div class="number-hint">回答正确！</div>';
+                        testBox.innerHTML = '<div class="number-hint">' + t('numberCorrect', '回答正确！') + '</div>';
                         setTimeout(startRound, 800);
                     } else {
                         playFail();
@@ -190,10 +192,10 @@
             state = 'ended';
             clearTimeout(showTimer);
             const grade = APEXON.Utils.getGrade(score, 'number');
-            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">最高记忆 ' + score + ' 位数字</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">位数</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">等级</div></div></div></div>';
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('highestMemory', '最高记忆 {count} 位数字').replace('{count}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('digitCount', '位数') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div></div>';
 
             APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'number', { score: score }).then(saved => {
-                if (!saved) APEXON.UI.toast('数据保存失败，请重试');
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
             });
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
@@ -213,7 +215,7 @@
             level = 3;
             levelDisplay.textContent = level;
             result.innerHTML = '';
-            testBox.innerHTML = '准备开始';
+            testBox.innerHTML = t('readyStart', '准备开始');
             renderHistory();
         };
 
