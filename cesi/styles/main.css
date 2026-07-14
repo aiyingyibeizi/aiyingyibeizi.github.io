@@ -425,10 +425,10 @@ body.loaded .apexon-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: var(--apex-radius-full);
   color: var(--apex-text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   white-space: nowrap;
   transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
@@ -454,24 +454,30 @@ body.loaded .apexon-page {
 
 .apexon-header-nav.open {
   position: absolute;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
+  top: calc(var(--header-height) + 8px);
+  right: var(--container-padding);
+  left: auto;
+  width: 200px;
   flex-direction: column;
   align-items: stretch;
-  padding: 12px;
+  padding: 8px;
   margin: 0;
-  border-radius: 0 0 var(--apex-radius) var(--apex-radius);
-  border-top: none;
-  background: var(--apex-overlay);
-  box-shadow: var(--apex-shadow-md);
+  border-radius: 16px;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-surface);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.2);
   z-index: 999;
+  gap: 2px;
 }
 
 .apexon-header-nav.open a {
-  display: inline-flex;
-  justify-content: center;
-  padding: 10px 18px;
+  display: flex;
+  justify-content: flex-start;
+  padding: 9px 14px;
+  font-size: 0.875rem;
+  border-radius: 10px;
 }
 
 .apexon-menu-btn {
@@ -479,16 +485,16 @@ body.loaded .apexon-page {
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--apex-radius-sm);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   font-size: 0;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
@@ -496,41 +502,50 @@ body.loaded .apexon-page {
 .apexon-menu-btn::before {
   content: '';
   display: block;
-  width: 22px;
-  height: 2.5px;
+  width: 18px;
+  height: 2px;
   background: currentColor;
   border-radius: 2px;
   box-shadow:
-    0 -7px 0 0 currentColor,
-    0 7px 0 0 currentColor;
+    0 -5.5px 0 0 currentColor,
+    0 5.5px 0 0 currentColor;
 }
 
 .apexon-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.34);
   transform: translateY(-1px);
 }
 
 html[data-theme="light"] .apexon-menu-btn,
 html[data-bw="true"] .apexon-menu-btn {
   background: #ffffff;
-  border-color: rgba(124, 107, 196, 0.5);
+  border-color: rgba(124, 107, 196, 0.42);
   color: #1e1b4b;
-  box-shadow: 0 2px 14px rgba(124, 107, 196, 0.28);
+  box-shadow: 0 2px 10px rgba(124, 107, 196, 0.22);
 }
 
 html[data-theme="light"] .apexon-menu-btn::before,
 html[data-bw="true"] .apexon-menu-btn::before {
   background: #1e1b4b;
   box-shadow:
-    0 -7px 0 0 #1e1b4b,
-    0 7px 0 0 #1e1b4b;
+    0 -5.5px 0 0 #1e1b4b,
+    0 5.5px 0 0 #1e1b4b;
 }
 
 html[data-theme="light"] .apexon-menu-btn:hover,
 html[data-bw="true"] .apexon-menu-btn:hover {
-  background: rgba(124, 107, 196, 0.14);
-  border-color: rgba(124, 107, 196, 0.7);
+  background: rgba(124, 107, 196, 0.1);
+  border-color: rgba(124, 107, 196, 0.6);
+}
+
+html[data-theme="light"] .apexon-header-nav.open,
+html[data-bw="true"] .apexon-header-nav.open {
+  background: #ffffff;
+  border-color: rgba(124, 107, 196, 0.16);
+  box-shadow:
+    0 20px 50px rgba(124, 107, 196, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* 桌面端：Logo 绝对定位贴最左，菜单栏居中，登录绝对定位贴最右 */
@@ -550,8 +565,8 @@ html[data-bw="true"] .apexon-menu-btn:hover {
   }
 
   .apexon-header-nav a {
-    padding: 8px 16px;
-    font-size: 0.9375rem;
+    padding: 7px 14px;
+    font-size: 0.875rem;
   }
 
   .header-actions {
@@ -594,8 +609,8 @@ html[data-bw="true"] .apexon-menu-btn:hover {
   }
 
   .apexon-header-nav a {
-    padding: 7px 12px;
-    font-size: 0.85rem;
+    padding: 6px 10px;
+    font-size: 0.8125rem;
   }
 
   .header-actions {
