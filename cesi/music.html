@@ -1677,6 +1677,69 @@
             color: #1e1b4b;
         }
 
+        html[data-theme="light"] .music-list,
+        html[data-bw="true"] .music-list {
+            background: rgba(124, 107, 196, 0.05);
+            border-color: rgba(124, 107, 196, 0.10);
+        }
+
+        html[data-theme="light"] .music-list__row,
+        html[data-bw="true"] .music-list__row {
+            border-bottom-color: rgba(124, 107, 196, 0.08);
+        }
+
+        html[data-theme="light"] .music-list__row:hover,
+        html[data-bw="true"] .music-list__row:hover {
+            background: rgba(124, 107, 196, 0.08);
+        }
+
+        html[data-theme="light"] .music-list__row.playing,
+        html[data-bw="true"] .music-list__row.playing {
+            background: rgba(109, 93, 252, 0.10);
+        }
+
+        html[data-theme="light"] .music-list__index,
+        html[data-bw="true"] .music-list__index {
+            color: #8b87c9;
+        }
+
+        html[data-theme="light"] .music-list__name,
+        html[data-bw="true"] .music-list__name {
+            color: #1e1b4b;
+        }
+
+        html[data-theme="light"] .music-list__artist,
+        html[data-bw="true"] .music-list__artist,
+        html[data-theme="light"] .music-list__duration,
+        html[data-bw="true"] .music-list__duration {
+            color: #5b56a6;
+        }
+
+        html[data-theme="light"] .music-list__action,
+        html[data-bw="true"] .music-list__action {
+            color: #8b87c9;
+        }
+
+        html[data-theme="light"] .music-list__action:hover,
+        html[data-bw="true"] .music-list__action:hover {
+            color: #1e1b4b;
+            background: rgba(124, 107, 196, 0.12);
+        }
+
+        html[data-theme="light"] .music-list__action.disabled,
+        html[data-bw="true"] .music-list__action.disabled,
+        html[data-theme="light"] .music-list__action.disabled:hover,
+        html[data-bw="true"] .music-list__action.disabled:hover {
+            color: #b4b1e0;
+        }
+
+        html[data-theme="light"] .music-list__row.playing .music-list__index,
+        html[data-bw="true"] .music-list__row.playing .music-list__index,
+        html[data-theme="light"] .music-list__row.playing .music-list__name,
+        html[data-bw="true"] .music-list__row.playing .music-list__name {
+            color: #1e1b4b;
+        }
+
         html[data-theme="light"] .music-toast,
         html[data-bw="true"] .music-toast {
             background: rgba(255, 255, 255, 0.96);
@@ -1700,6 +1763,51 @@
         html[data-theme="light"] .music-empty__desc,
         html[data-bw="true"] .music-empty__desc {
             color: #5b56a6;
+        }
+
+        html[data-theme="light"] .music-card__play,
+        html[data-bw="true"] .music-card__play {
+            background: #1e1b4b;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(124, 107, 196, 0.35);
+        }
+
+        html[data-theme="light"] .music-hero__play,
+        html[data-bw="true"] .music-hero__play {
+            background: #1e1b4b;
+            color: #fff;
+        }
+
+        html[data-theme="light"] .music-list__artist-name,
+        html[data-bw="true"] .music-list__artist-name {
+            color: #5b56a6;
+        }
+
+        /* 兜底：强制音乐页所有文字在白色主题下使用深色，避免遗漏 */
+        html[data-theme="light"] .music-app,
+        html[data-bw="true"] .music-app,
+        html[data-theme="light"] .music-player-bar,
+        html[data-bw="true"] .music-player-bar,
+        html[data-theme="light"] .music-lyrics-panel,
+        html[data-bw="true"] .music-lyrics-panel {
+            color: #1e1b4b;
+        }
+
+        html[data-theme="light"] .music-app h1,
+        html[data-bw="true"] .music-app h1,
+        html[data-theme="light"] .music-app h2,
+        html[data-bw="true"] .music-app h2,
+        html[data-theme="light"] .music-app h3,
+        html[data-bw="true"] .music-app h3,
+        html[data-theme="light"] .music-app p,
+        html[data-bw="true"] .music-app p,
+        html[data-theme="light"] .music-app span,
+        html[data-bw="true"] .music-app span,
+        html[data-theme="light"] .music-app div,
+        html[data-bw="true"] .music-app div,
+        html[data-theme="light"] .music-app button,
+        html[data-bw="true"] .music-app button {
+            color: inherit;
         }
 
         @media (max-width: 1023px) {
