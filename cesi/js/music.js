@@ -127,6 +127,10 @@
         volumeBar: $('volumeBar'),
         volumeFill: $('volumeFill'),
         volumeIcon: $('volumeIcon'),
+        lyricsBtn: $('lyricsBtn'),
+        lyricsPanel: $('lyricsPanel'),
+        lyricsClose: $('lyricsClose'),
+        lyricsBody: $('lyricsBody'),
         toast: $('musicToast'),
         chips: document.querySelectorAll('.music-chip'),
         views: {
@@ -176,6 +180,15 @@
       d.modeBtn.addEventListener('click', () => this.switchMode());
       d.playerLike.addEventListener('click', () => {
         if (this.currentTrack) this.toggleLike(this.currentTrack.id);
+      });
+
+      if (d.lyricsBtn) d.lyricsBtn.addEventListener('click', () => this.toggleLyricsPanel());
+      if (d.lyricsClose) d.lyricsClose.addEventListener('click', () => this.toggleLyricsPanel(false));
+      document.addEventListener('click', (e) => {
+        if (d.lyricsPanel && d.lyricsPanel.classList.contains('open') &&
+            !e.target.closest('.music-lyrics-panel') && !e.target.closest('.music-lyrics-toggle')) {
+          this.toggleLyricsPanel(false);
+        }
       });
 
       this.bindProgressEvents();
@@ -300,6 +313,7 @@
         if (!this.isDraggingProgress) {
           this.updateProgressUI(this.audio.currentTime, this.audio.duration || 0);
         }
+        this.syncLyrics(this.audio.currentTime);
       });
 
       this.audio.addEventListener('loadedmetadata', () => {
@@ -378,6 +392,10 @@
       this.addToHistory(track);
       this.highlightPlaying();
       this.applyGlow(track.image);
+      this.currentLyrics = null;
+      if (this.dom.lyricsPanel && this.dom.lyricsPanel.classList.contains('open')) {
+        this.loadLyrics(track);
+      }
     },
 
     updatePlayerUI() {
@@ -467,6 +485,95 @@
 
     isLiked(id) {
       return this.liked.has(String(id));
+    },
+
+    toggleLyricsPanel(force) {
+      const panel = this.dom.lyricsPanel;
+      if (!panel) return;
+      const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+      panel.classList.toggle('open', open);
+      if (open && this.currentTrack && !this.currentLyrics) {
+        this.loadLyrics(this.currentTrack);
+      }
+    },
+
+    async loadLyrics(track) {
+      if (!track) return;
+      const body = this.dom.lyricsBody;
+      if (!body) return;
+      this.currentLyrics = null;
+      body.innerHTML = '<div class="music-lyrics-panel__empty">正在搜索歌词...</div>';
+      try {
+        const q = encodeURIComponent(track.name + ' ' + track.artist_name);
+        const res = await fetch('https://lrclib.net/api/search?q=' + q);
+        if (!res.ok) throw new Error('search failed');
+        const data = await res.json();
+        const item = (data && Array.isArray(data) && data.length) ? data[0] : null;
+        if (item && (item.plainLyrics || item.syncedLyrics)) {
+          this.currentLyrics = this.parseLyrics(item.syncedLyrics || item.plainLyrics);
+          this.renderLyrics();
+        } else {
+          body.innerHTML = '<div class="music-lyrics-panel__empty">未找到该歌曲的歌词</div>';
+        }
+      } catch (e) {
+        body.innerHTML = '<div class="music-lyrics-panel__empty">歌词加载失败，请稍后重试</div>';
+      }
+    },
+
+    parseLyrics(text) {
+      if (!text) return [];
+      const lines = text.trim().split(/\r?\n/);
+      const result = [];
+      const timeRe = /^\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)$/;
+      lines.forEach(line => {
+        const m = line.match(timeRe);
+        if (m) {
+          const min = parseInt(m[1], 10);
+          const sec = parseInt(m[2], 10);
+          const ms = parseInt((m[3] || '0').padEnd(3, '0').slice(0, 3), 10);
+          const time = min * 60 + sec + ms / 1000;
+          result.push({ time, text: m[4].trim() });
+        } else if (line.trim()) {
+          result.push({ time: -1, text: line.trim() });
+        }
+      });
+      return result.sort((a, b) => a.time - b.time);
+    },
+
+    renderLyrics() {
+      const body = this.dom.lyricsBody;
+      if (!body || !this.currentLyrics) return;
+      if (!this.currentLyrics.length) {
+        body.innerHTML = '<div class="music-lyrics-panel__empty">暂无歌词</div>';
+        return;
+      }
+      body.innerHTML = this.currentLyrics.map((line, i) =>
+        '<div class="music-lyrics-panel__line" data-index="' + i + '" data-time="' + line.time + '">' +
+        this.escapeHtml(line.text || '♪') + '</div>'
+      ).join('');
+    },
+
+    syncLyrics(currentTime) {
+      if (!this.currentLyrics || !this.currentLyrics.length) return;
+      const lines = this.dom.lyricsBody.querySelectorAll('.music-lyrics-panel__line');
+      let activeIndex = -1;
+      for (let i = 0; i < this.currentLyrics.length; i++) {
+        if (this.currentLyrics[i].time >= 0 && this.currentLyrics[i].time <= currentTime) {
+          activeIndex = i;
+        }
+      }
+      lines.forEach((line, i) => {
+        line.classList.toggle('active', i === activeIndex);
+      });
+      if (activeIndex >= 0 && lines[activeIndex]) {
+        lines[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+
+    escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
     },
 
     switchView(view) {
