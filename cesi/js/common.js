@@ -2352,10 +2352,25 @@
           if (liveTime) liveTime.textContent = '0.0s';
         };
 
+        const showStartScreen = () => {
+          isStart = false;
+          input.value = '';
+          input.disabled = true;
+          if (typeHint) typeHint.textContent = t('readyStart', '准备开始');
+          box.innerHTML = '<div class="type-start-screen"><div class="type-start-title">' + t('startTest', '开始测试') + '</div><div class="type-start-desc">' + t('clickStartType', '点击下方按钮，输入框出现文字后开始计时') + '</div><button class="btn type-start-btn">' + t('startTest', '开始测试') + '</button></div>';
+          const startBtn = box.querySelector('.type-start-btn');
+          if (startBtn) startBtn.addEventListener('click', () => { initText(); });
+          updateProgress();
+          if (liveWpm) liveWpm.textContent = '0';
+          if (liveCpm) liveCpm.textContent = '0';
+          if (liveAcc) liveAcc.textContent = '0%';
+          if (liveTime) liveTime.textContent = '0.0s';
+        };
+
         global.restartTest = () => {
           currentRound = 0;
           if (timer) clearTimeout(timer);
-          initText();
+          showStartScreen();
         };
 
         const showAllResult = async () => {
@@ -2438,7 +2453,7 @@
           if (!visible && isStart && currentRound < this.TOTAL_ROUNDS) { input.disabled = true; if (resDom) resDom.textContent = window.APEXON && APEXON.i18n ? APEXON.i18n.t('testPaused') : '测试已暂停'; }
         });
 
-        initText();
+        showStartScreen();
         renderHistory();
       }
     },

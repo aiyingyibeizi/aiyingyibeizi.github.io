@@ -3663,6 +3663,60 @@ canvas#testBox,
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
+#testBox.type-test-area .type-start-screen,
+.type-test-area .type-start-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  min-height: inherit !important;
+  padding: 20px !important;
+  text-align: center !important;
+}
+
+#testBox.type-test-area .type-start-title,
+.type-test-area .type-start-title {
+  font-size: clamp(1.5rem, 5vw, 2rem) !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+#testBox.type-test-area .type-start-desc,
+.type-test-area .type-start-desc {
+  font-size: clamp(0.9375rem, 3vw, 1.125rem) !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  max-width: 480px !important;
+  line-height: 1.6 !important;
+}
+
+#testBox.type-test-area .type-start-btn,
+.type-test-area .type-start-btn {
+  margin-top: 8px !important;
+  padding: 12px 28px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  background: #ffffff !important;
+  color: var(--apex-accent-green, #10b981) !important;
+  border: none !important;
+  border-radius: var(--apex-radius-sm) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#testBox.type-test-area .type-start-btn:hover,
+.type-test-area .type-start-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18) !important;
+}
+
+#testBox.type-test-area .type-start-btn:active,
+.type-test-area .type-start-btn:active {
+  transform: translateY(0) !important;
+}
+
 /* 打字输入框强制覆盖 */
 #inputArea {
   width: 100% !important;
