@@ -9,95 +9,25 @@
 
   const JAMENDO_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
 
+  // 演示曲库：使用 SoundHelix 提供的 16 首示例曲目（稳定可播放）
+  // 如需接入数万首全网曲库，请在 JAMENDO_CLIENT_ID 填入 Jamendo 开发者 client_id
   const DEMO_TRACKS = [
-    {
-      id: 'demo-1',
-      name: 'Spirit of Fire',
-      artist_name: 'Pierre Langer',
-      album_name: 'Dynamedion',
-      duration: 186,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Tri-Tachyon/Tri-Tachyon_-_01_-_The-Antique-Shop.mp3',
-      image: 'https://picsum.photos/seed/music1/400/400',
-      tags: ['electronic', 'rock'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-2',
-      name: 'The Antique Shop',
-      artist_name: 'Tri-Tachyon',
-      album_name: 'The Antique Shop',
-      duration: 214,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Tri-Tachyon/Tri-Tachyon_-_The_Antique_Shop/Tri-Tachyon_-_The_Antique_Shop.mp3',
-      image: 'https://picsum.photos/seed/music2/400/400',
-      tags: ['electronic', 'ambient'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-3',
-      name: 'Reaching for the Clouds',
-      artist_name: 'Chad Crouch',
-      album_name: 'Arps',
-      duration: 152,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Chad_Crouch/Arps/Chad_Crouch_-_Algorithms.mp3',
-      image: 'https://picsum.photos/seed/music3/400/400',
-      tags: ['ambient', 'classical'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-4',
-      name: 'Night Owl',
-      artist_name: 'Broke For Free',
-      album_name: 'Directionless EP',
-      duration: 204,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Broke_For_Free/Directionless_EP/Broke_For_Free_-_01_-_Night_Owl.mp3',
-      image: 'https://picsum.photos/seed/music4/400/400',
-      tags: ['electronic', 'pop'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-5',
-      name: 'Inspiration',
-      artist_name: 'Benjamin Tissot',
-      album_name: 'Bensound',
-      duration: 136,
-      audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-      image: 'https://picsum.photos/seed/music5/400/400',
-      tags: ['pop', 'rock'],
-      url: 'https://www.soundhelix.com/'
-    },
-    {
-      id: 'demo-6',
-      name: 'Elevator Ride',
-      artist_name: 'Broke For Free',
-      album_name: 'Petal',
-      duration: 178,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Broke_For_Free/Petal/Broke_For_Free_-_01_-_Petal.mp3',
-      image: 'https://picsum.photos/seed/music6/400/400',
-      tags: ['jazz', 'ambient'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-7',
-      name: 'Siesta',
-      artist_name: 'Jahzzar',
-      album_name: 'Travellers Guide',
-      duration: 165,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Jahzzar/Travellers_Guide/Jahzzar_-_01_-_Siesta.mp3',
-      image: 'https://picsum.photos/seed/music7/400/400',
-      tags: ['jazz', 'classical'],
-      url: 'https://freemusicarchive.org/'
-    },
-    {
-      id: 'demo-8',
-      name: 'Concrete',
-      artist_name: 'IA',
-      album_name: 'Single',
-      duration: 192,
-      audio: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/IA/Concrete/IA_-_01_-_Concrete.mp3',
-      image: 'https://picsum.photos/seed/music8/400/400',
-      tags: ['rock', 'electronic'],
-      url: 'https://freemusicarchive.org/'
-    }
+    { id: 'demo-1', name: 'Neon Horizon', artist_name: 'SoundHelix', album_name: 'Electronic Dreams', duration: 186, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', image: 'https://picsum.photos/seed/neonhorizon/400/400', tags: ['electronic', 'pop'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-2', name: 'Midnight Drive', artist_name: 'SoundHelix', album_name: 'Night Sessions', duration: 205, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', image: 'https://picsum.photos/seed/midnightdrive/400/400', tags: ['electronic', 'rock'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-3', name: 'Solar Flare', artist_name: 'SoundHelix', album_name: 'Cosmic Beats', duration: 192, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', image: 'https://picsum.photos/seed/solarflare/400/400', tags: ['rock', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-4', name: 'Deep Ocean', artist_name: 'SoundHelix', album_name: 'Ambient Works', duration: 218, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', image: 'https://picsum.photos/seed/deepocean/400/400', tags: ['ambient', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-5', name: 'Urban Pulse', artist_name: 'SoundHelix', album_name: 'City Lights', duration: 176, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', image: 'https://picsum.photos/seed/urbanpulse/400/400', tags: ['pop', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-6', name: 'Golden Hour', artist_name: 'SoundHelix', album_name: 'Acoustic Moods', duration: 201, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3', image: 'https://picsum.photos/seed/goldenhour/400/400', tags: ['pop', 'classical'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-7', name: 'Cyber Funk', artist_name: 'SoundHelix', album_name: 'Retro Future', duration: 184, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3', image: 'https://picsum.photos/seed/cyberfunk/400/400', tags: ['funk', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-8', name: 'Silent Rain', artist_name: 'SoundHelix', album_name: 'Soft Piano', duration: 223, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', image: 'https://picsum.photos/seed/silentrain/400/400', tags: ['classical', 'ambient'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-9', name: 'Velocity', artist_name: 'SoundHelix', album_name: 'Sports Energy', duration: 167, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3', image: 'https://picsum.photos/seed/velocity/400/400', tags: ['rock', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-10', name: 'Lunar Lounge', artist_name: 'SoundHelix', album_name: 'Chill Out', duration: 209, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3', image: 'https://picsum.photos/seed/lunarlounge/400/400', tags: ['jazz', 'ambient'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-11', name: 'Electric Heart', artist_name: 'SoundHelix', album_name: 'Dance Floor', duration: 195, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3', image: 'https://picsum.photos/seed/electricheart/400/400', tags: ['electronic', 'pop'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-12', name: 'Mountain Echo', artist_name: 'SoundHelix', album_name: 'Nature Sounds', duration: 232, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3', image: 'https://picsum.photos/seed/mountainecho/400/400', tags: ['classical', 'ambient'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-13', name: 'Street Beat', artist_name: 'SoundHelix', album_name: 'Hip Hop Instrumentals', duration: 188, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3', image: 'https://picsum.photos/seed/streetbeat/400/400', tags: ['hiphop', 'electronic'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-14', name: 'Starlight Waltz', artist_name: 'SoundHelix', album_name: 'Orchestral', duration: 216, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3', image: 'https://picsum.photos/seed/starlightwaltz/400/400', tags: ['classical', 'ambient'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-15', name: 'Digital Dawn', artist_name: 'SoundHelix', album_name: 'Morning Motivation', duration: 179, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3', image: 'https://picsum.photos/seed/digitaldawn/400/400', tags: ['electronic', 'pop'], url: 'https://www.soundhelix.com/' },
+    { id: 'demo-16', name: 'Echoes of Time', artist_name: 'SoundHelix', album_name: 'Cinematic', duration: 243, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3', image: 'https://picsum.photos/seed/echoesoftime/400/400', tags: ['classical', 'electronic'], url: 'https://www.soundhelix.com/' }
   ];
 
   const LS_KEYS = {
@@ -139,6 +69,15 @@
       this.loadHotTracks();
       this.renderHistoryPreview();
       this.renderLiked();
+      this.hideNoticeIfConfigured();
+    },
+
+    hideNoticeIfConfigured() {
+      const notice = $('musicNotice');
+      if (!notice) return;
+      if (JAMENDO_CLIENT_ID && JAMENDO_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE') {
+        notice.style.display = 'none';
+      }
     },
 
     loadStorage() {

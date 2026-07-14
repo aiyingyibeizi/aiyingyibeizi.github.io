@@ -408,40 +408,35 @@ body.loaded .apexon-page {
 }
 
 .apexon-header-nav {
-  display: none;
-  position: absolute;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  background: var(--apex-overlay);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  flex-direction: column;
-  padding: 12px;
-  gap: 6px;
-  border-bottom: 1px solid var(--apex-border);
-  box-shadow: var(--apex-shadow-md);
-}
-
-.apexon-header-nav.open {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius-full);
+  box-shadow: var(--apex-shadow-sm);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
 .apexon-header-nav a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: var(--apex-radius-full);
   color: var(--apex-text-secondary);
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  white-space: nowrap;
   transition: color var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
 }
 
 .apexon-header-nav a:hover {
-  background: var(--apex-border-subtle);
-  color: var(--apex-accent-cyan);
+  background: var(--apex-primary-light);
+  color: var(--apex-text-inverse);
 }
 
 .apexon-header-nav a.active {
@@ -451,6 +446,32 @@ body.loaded .apexon-page {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 0 16px var(--apex-glow-primary);
   border: 1px solid var(--apex-border-strong);
+}
+
+.apexon-header-nav a.nav-more {
+  display: none;
+}
+
+.apexon-header-nav.open {
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px;
+  margin: 0;
+  border-radius: 0 0 var(--apex-radius) var(--apex-radius);
+  border-top: none;
+  background: var(--apex-overlay);
+  box-shadow: var(--apex-shadow-md);
+  z-index: 999;
+}
+
+.apexon-header-nav.open a {
+  display: inline-flex;
+  justify-content: center;
+  padding: 10px 18px;
 }
 
 .apexon-menu-btn {
@@ -483,41 +504,9 @@ body.loaded .apexon-page {
     margin: 0;
   }
 
-  .apexon-menu-btn {
-    display: none;
-  }
-
-  .apexon-header-nav {
-    position: static;
-    display: flex !important;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-    padding: 6px;
-    margin: 0;
-    background: var(--apex-surface);
-    border: 1px solid var(--apex-border);
-    border-radius: var(--apex-radius-full);
-    box-shadow: var(--apex-shadow-sm);
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-  }
-
   .apexon-header-nav a {
     padding: 8px 16px;
-    white-space: nowrap;
-  }
-
-  .apexon-header-nav a:hover {
-    background: var(--apex-primary-light);
-    color: var(--apex-text-inverse);
-  }
-
-  .apexon-header-nav a.active {
-    background: var(--apex-primary);
-    color: var(--apex-text-inverse);
-    border: none;
-    box-shadow: var(--apex-shadow-sm);
+    font-size: 0.9375rem;
   }
 
   .header-actions {
@@ -534,6 +523,7 @@ body.loaded .apexon-page {
   .apexon-header__inner {
     justify-content: flex-end;
     position: static;
+    gap: 10px;
   }
 
   .apexon-header-logo {
@@ -555,7 +545,12 @@ body.loaded .apexon-page {
   }
 
   .apexon-menu-btn {
-    margin-right: 8px;
+    margin-right: 0;
+  }
+
+  .apexon-header-nav a {
+    padding: 7px 12px;
+    font-size: 0.85rem;
   }
 
   .header-actions {
@@ -4040,12 +4035,16 @@ html[data-bw="true"] .game-canvas {
 
 .apexon-lang-selector__name {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 5.2rem;
 }
 
 .apexon-lang-selector__arrow {
   font-size: 0.65rem;
   opacity: 0.7;
   margin-left: 0.1rem;
+  flex-shrink: 0;
 }
 
 .apexon-lang-selector__dropdown {
