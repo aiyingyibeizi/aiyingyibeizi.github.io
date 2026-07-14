@@ -369,9 +369,9 @@ body.loaded .apexon-page {
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   position: relative;
   padding: 0 var(--container-padding);
@@ -381,14 +381,11 @@ body.loaded .apexon-page {
   display: none;
 }
 
-/* 顶部核心导航居中：[☰] [首页] [Music] */
+/* 顶部核心导航紧凑排列：[☰] [首页] [Music] 贴在一起作为一组 */
 .apexon-header-center {
-  grid-column: 2;
-  justify-self: center;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   z-index: 2;
 }
@@ -399,7 +396,7 @@ body.loaded .apexon-page {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 5px;
+  padding: 4px;
   margin: 0;
   background: var(--apex-surface);
   border: 1px solid var(--apex-border);
@@ -413,34 +410,41 @@ body.loaded .apexon-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 12px;
+  padding: 7px 14px;
   border-radius: var(--apex-radius-full);
-  color: var(--apex-text-secondary);
+  color: var(--apex-text-inverse);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 3px 10px rgba(109, 93, 252, 0.25);
   transition: all var(--apex-transition-fast);
 }
 
 .apexon-header-nav a:hover {
-  background: var(--apex-primary-light);
-  color: var(--apex-text-inverse);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 5px 14px rgba(109, 93, 252, 0.35);
 }
 
 .apexon-header-nav a.active {
-  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
-  color: var(--apex-text-inverse);
+  filter: brightness(1.15);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 2px rgba(139, 92, 246, 0.3),
     0 4px 14px rgba(109, 93, 252, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .apexon-header-nav a.nav-more {
   display: none;
 }
 
-/* 下拉菜单定位在居中导航下方左侧 */
+/* 下拉菜单定位在导航下方左侧 */
 .apexon-header-nav.open {
   position: absolute;
   top: calc(var(--header-height) + 8px);
@@ -466,6 +470,15 @@ body.loaded .apexon-page {
   padding: 9px 14px;
   font-size: 0.875rem;
   border-radius: 10px;
+  color: var(--apex-text);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.apexon-header-nav.open a:hover {
+  background: var(--apex-primary-light);
+  color: var(--apex-text-inverse);
 }
 
 .apexon-menu-btn {
@@ -478,7 +491,7 @@ body.loaded .apexon-page {
   border-radius: 10px;
   font-size: 0;
   color: var(--apex-text-inverse);
-  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
     0 4px 12px rgba(109, 93, 252, 0.32),
@@ -520,7 +533,7 @@ body.loaded .apexon-page {
   font-weight: 600;
   white-space: nowrap;
   color: var(--apex-text-inverse);
-  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow:
     0 4px 14px rgba(109, 93, 252, 0.32),
@@ -551,8 +564,10 @@ body.loaded .apexon-page {
 html[data-theme="light"] .apexon-menu-btn,
 html[data-bw="true"] .apexon-menu-btn,
 html[data-theme="light"] .apex-music-btn,
-html[data-bw="true"] .apex-music-btn {
-  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+html[data-bw="true"] .apex-music-btn,
+html[data-theme="light"] .apexon-header-nav a,
+html[data-bw="true"] .apexon-header-nav a {
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   border-color: rgba(255, 255, 255, 0.25);
   color: var(--apex-text-inverse);
   box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
@@ -561,7 +576,9 @@ html[data-bw="true"] .apex-music-btn {
 html[data-theme="light"] .apexon-menu-btn:hover,
 html[data-bw="true"] .apexon-menu-btn:hover,
 html[data-theme="light"] .apex-music-btn:hover,
-html[data-bw="true"] .apex-music-btn:hover {
+html[data-bw="true"] .apex-music-btn:hover,
+html[data-theme="light"] .apexon-header-nav a:hover,
+html[data-bw="true"] .apexon-header-nav a:hover {
   filter: brightness(1.1);
 }
 
@@ -579,8 +596,8 @@ html[data-bw="true"] .apex-music-btn:hover {
 
 html[data-theme="light"] .apexon-header-nav.open,
 html[data-bw="true"] .apexon-header-nav.open {
-  background: #ffffff;
-  border-color: rgba(124, 107, 196, 0.16);
+  background: var(--apex-surface);
+  border-color: var(--apex-border);
   box-shadow:
     0 20px 50px rgba(124, 107, 196, 0.18),
     0 8px 24px rgba(0, 0, 0, 0.08);
@@ -588,13 +605,12 @@ html[data-bw="true"] .apexon-header-nav.open {
 
 /* 右侧功能区：主题切换 + 用户菜单 */
 .header-actions {
-  grid-column: 3;
-  justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   position: relative;
   z-index: 3;
+  margin-left: auto;
 }
 
 /* 桌面端 */
@@ -610,16 +626,12 @@ html[data-bw="true"] .apexon-header-nav.open {
 
   .apexon-header-nav {
     gap: 8px;
-    padding: 5px;
+    padding: 4px;
   }
 
   .apexon-header-nav a {
     padding: 8px 18px;
     font-size: 0.9rem;
-  }
-
-  .apexon-header-nav a.active {
-    padding: 8px 18px;
   }
 
   .header-actions {
@@ -663,13 +675,9 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apexon-header-nav a {
-    padding: 5px 10px;
+    padding: 5px 12px;
     font-size: 0.75rem;
     flex-shrink: 0;
-  }
-
-  .apexon-header-nav a.active {
-    padding: 5px 10px;
   }
 
   .header-actions {
@@ -677,7 +685,7 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apex-music-btn {
-    padding: 5px 10px;
+    padding: 5px 12px;
     font-size: 0.75rem;
   }
 
@@ -719,12 +727,8 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apexon-header-nav a {
-    padding: 4px 7px;
+    padding: 4px 10px;
     font-size: 0.6875rem;
-  }
-
-  .apexon-header-nav a.active {
-    padding: 4px 7px;
   }
 
   .header-actions {
@@ -746,71 +750,15 @@ html[data-bw="true"] .apexon-header-nav.open {
   .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
     transform: translateX(24px);
   }
-}
-
-@media (max-width: 480px) {
-  .apexon-header__inner {
-    gap: 4px;
-  }
-
-  .apexon-menu-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-  }
-
-  .apexon-menu-btn::before {
-    width: 15px;
-    box-shadow:
-      0 -4.5px 0 0 var(--apex-text-inverse),
-      0 4.5px 0 0 var(--apex-text-inverse);
-  }
-
-  .apexon-header-nav {
-    padding: 2px;
-    gap: 2px;
-    flex-wrap: nowrap;
-    overflow: hidden;
-  }
-
-  .apexon-header-nav a {
-    padding: 4px 7px;
-    font-size: 0.6875rem;
-    flex-shrink: 0;
-  }
-
-  .apexon-header-nav a.active {
-    padding: 4px 7px;
-  }
-
-  .header-actions {
-    gap: 4px;
-  }
 
   .apex-music-btn {
-    padding: 4px 7px;
+    padding: 4px 8px;
     font-size: 0;
     gap: 0;
   }
 
   .apex-music-btn::before {
     font-size: 0.85rem;
-  }
-
-  .apex-bw-toggle {
-    width: 48px;
-    height: 24px;
-  }
-
-  .apex-bw-toggle__thumb {
-    width: 18px;
-    height: 18px;
-    top: 3px;
-    left: 3px;
-  }
-
-  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(24px);
   }
 }
 
@@ -1375,12 +1323,21 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   border-radius: var(--apex-radius-full);
   font-size: 0.875rem;
   color: var(--apex-text-secondary);
-  background: linear-gradient(135deg, rgba(10, 14, 28, 0.8) 0%, rgba(14, 20, 38, 0.8) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.12);
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.22) 0%, rgba(139, 92, 246, 0.16) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.22);
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 4px 14px rgba(109, 93, 252, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+html[data-theme="light"] .hero-stat-chip,
+html[data-bw="true"] .hero-stat-chip {
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.14) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(124, 107, 196, 0.22);
+  box-shadow:
+    0 4px 14px rgba(124, 107, 196, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .hero-stat-chip:hover {
@@ -1723,12 +1680,21 @@ html[data-theme="light"] .hero-apexon .hero-title-main {
   align-items: center;
   gap: 5px;
   padding: 5px 11px;
-  background: var(--apex-bg);
+  background: var(--apex-surface);
   border: 1px solid var(--apex-border);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--apex-text-secondary);
+  color: var(--apex-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+html[data-theme="light"] .item-card__feature,
+html[data-bw="true"] .item-card__feature {
+  background: var(--apex-surface);
+  border-color: var(--apex-border-strong);
+  color: var(--apex-text);
+  box-shadow: 0 1px 3px rgba(124, 107, 196, 0.1);
 }
 
 @media (max-width: 767px) {

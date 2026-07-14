@@ -952,7 +952,7 @@
   // ===== 5. 在线状态追踪 =====
   const OnlineTracker = {
     timer: null,
-    INTERVAL_MS: 5000,
+    INTERVAL_MS: 3000,
 
     init(userId) {
       if (!userId) return;
@@ -987,8 +987,7 @@
   // ===== 6. 站点统计 =====
   const Stats = {
     timer: null,
-    INTERVAL_MS: 5000,
-    ONLINE_WINDOW_MS: 2 * 60 * 1000,
+    INTERVAL_MS: 3000,
     els: {},
     prev: { online: 0, total_users: 0, total_tests: 0 },
 
@@ -1026,25 +1025,7 @@
     },
 
     async fetchStats() {
-      const stats = await DB.getSiteStats();
-      if (!stats) return null;
-
-      // 用 online_users 表最近活跃心跳计算在线人数，避免 RPC 缓存导致数字僵硬
-      try {
-        const since = new Date(Date.now() - this.ONLINE_WINDOW_MS).toISOString();
-        const url = `${SUPABASE_URL}/rest/v1/online_users?select=count&last_seen=gt.${encodeURIComponent(since)}`;
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const onlineCount = data && data[0] ? parseInt(data[0].count, 10) : 0;
-          stats.online = Math.max(onlineCount, Number(stats.online) || 0);
-        }
-      } catch (e) {
-        // 静默回退到 RPC 返回的 online
-      }
-      return stats;
+      return await DB.getSiteStats();
     },
 
     _apply(next) {
@@ -1310,15 +1291,10 @@
     },
 
     relayoutHeader() {
-      const nav = document.getElementById('headerNav');
-      const actions = document.querySelector('.header-actions');
-      if (!nav || !actions) return;
-      const music = nav.querySelector('a[href="music.html"]');
-      if (music) {
-        music.classList.add('apex-music-btn');
-        music.textContent = 'Music';
-        if (location.pathname.endsWith('music.html')) music.classList.add('active');
-        actions.insertBefore(music, actions.firstChild);
+      // 所有页面已在 HTML 中显式放置 [☰] [首页] [Music]，此处仅做兜底高亮
+      const music = document.querySelector('.apex-music-btn');
+      if (music && location.pathname.endsWith('music.html')) {
+        music.classList.add('active');
       }
     },
 

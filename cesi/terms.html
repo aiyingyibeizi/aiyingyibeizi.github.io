@@ -33,18 +33,16 @@
 <body>
     <canvas id="particles"></canvas>
 
-    <header class="apexon-header">
+        <header class="apexon-header">
         <div class="apexon-header__inner">
-            <a href="index.html" class="apexon-header-logo nav-main">
-                <img src="assets/favicon.png" alt="Logo">
-                <span>APEXON</span>
-            </a>
-            <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
-            <nav class="apexon-header-nav" id="headerNav">
-                <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
-            </nav>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerNav">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+            </div>
             <div class="header-actions">
-                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">APEXON Music</a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
