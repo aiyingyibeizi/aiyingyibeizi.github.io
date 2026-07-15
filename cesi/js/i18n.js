@@ -1066,8 +1066,11 @@
         });
       });
 
+      const left = document.querySelector('.apexon-header-left');
       const actions = document.querySelector('.header-actions');
-      if (actions) {
+      if (left) {
+        left.appendChild(wrapper);
+      } else if (actions) {
         actions.appendChild(wrapper);
       } else {
         document.body.insertBefore(wrapper, document.body.firstChild);

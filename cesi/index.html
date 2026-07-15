@@ -20,7 +20,7 @@
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=6">
-    <link rel="stylesheet" href="styles/main.css?v=7">
+    <link rel="stylesheet" href="styles/main.css?v=8">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -35,10 +35,12 @@
 
             <header class="apexon-header">
         <div class="apexon-header__inner">
-            <a href="index.html" class="apexon-header-logo nav-main">
-                <img src="assets/favicon.png" alt="Logo">
-                <span>APEXON</span>
-            </a>
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main">
+                    <img src="assets/favicon.png" alt="Logo">
+                    <span>APEXON</span>
+                </a>
+            </div>
             <div class="apexon-header-center">
                 <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
                 <nav class="apexon-header-nav" id="headerNav">
@@ -51,7 +53,6 @@
                     <a href="visual.html" class="nav-more" data-i18n="navVisual">视觉记忆</a>
                     <a href="sequence.html" class="nav-more" data-i18n="navSequence">序列记忆</a>
                     <a href="aim.html" class="nav-more" data-i18n="navAim">瞄准训练</a>
-                    <a href="music.html" class="nav-more" data-i18n="navMusic">Music</a>
                 </nav>
                 <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
             </div>
@@ -160,12 +161,12 @@
             <div class="forum-title" data-i18n="discussionTitle">💬 玩家讨论区</div>
             <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;" data-i18n="guestCanComment">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
-                <select class="forum-category-select" id="forumCategorySelect" onchange="document.getElementById('forumCategory').value = this.value">
-                    <option value="chat" data-i18n="forumChat">闲聊</option>
-                    <option value="score" data-i18n="forumScore">分数讨论</option>
-                    <option value="bug" data-i18n="forumBug">Bug 反馈</option>
-                    <option value="suggestion" data-i18n="forumSuggestion">网站建议</option>
-                </select>
+                <div class="forum-category-tabs" id="forumCategoryTabs">
+                    <button class="forum-category-tab active" type="button" data-cat="chat" onclick="setPostCategory('chat')" data-i18n="forumChat">闲聊</button>
+                    <button class="forum-category-tab" type="button" data-cat="score" onclick="setPostCategory('score')" data-i18n="forumScore">分数讨论</button>
+                    <button class="forum-category-tab" type="button" data-cat="bug" onclick="setPostCategory('bug')" data-i18n="forumBug">Bug 反馈</button>
+                    <button class="forum-category-tab" type="button" data-cat="suggestion" onclick="setPostCategory('suggestion')" data-i18n="forumSuggestion">网站建议</button>
+                </div>
                 <input type="hidden" id="forumCategory" value="chat">
                 <textarea id="forumText" data-i18n-placeholder="forumPlaceholder" placeholder="分享你的测试心得..." maxlength="500"></textarea>
                 <button class="forum-btn" onclick="postComment()" data-i18n="forumPublish">发布</button>
@@ -200,8 +201,8 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=6"></script>
-    <script src="js/common.js?v=14"></script>
+    <script src="js/i18n.js?v=7"></script>
+    <script src="js/common.js?v=15"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -322,6 +323,13 @@
         let currentCommentFilter = 'all';
         let allComments = [];
         let currentCommentPage = 1;
+
+        window.setPostCategory = function(cat) {
+            document.getElementById('forumCategory').value = cat;
+            document.querySelectorAll('#forumCategoryTabs .forum-category-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === cat);
+            });
+        };
 
         window.setCommentFilter = function(cat) {
             currentCommentFilter = cat;
