@@ -757,6 +757,15 @@ html[data-bw="true"] .apexon-header-dropdown.open {
 
 /* 桌面端 */
 @media (min-width: 1024px) {
+  .apexon-header__inner {
+    padding: 0;
+    gap: 16px;
+  }
+
+  .apexon-header-left {
+    gap: 14px;
+  }
+
   .apexon-header-logo {
     font-size: 1.65rem;
     gap: 12px;
@@ -772,6 +781,28 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     font-weight: 1000;
     letter-spacing: 1.6px;
     filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.65)) drop-shadow(0 0 28px rgba(34, 211, 238, 0.45));
+  }
+
+  .apexon-header-left .apex-bw-toggle {
+    width: 52px;
+    height: 28px;
+    padding: 4px;
+    margin: -4px 0;
+  }
+
+  .apexon-header-left .apex-bw-toggle__track {
+    inset: 4px;
+  }
+
+  .apexon-header-left .apex-bw-toggle__thumb {
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    left: 5px;
+  }
+
+  .apexon-header-left .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(24px);
   }
 
   .apexon-menu-btn {
@@ -5535,8 +5566,9 @@ canvas#testBox,
     padding-top: calc(var(--header-height) + 36px);
   }
 
+  /* 菜单栏必须顶满屏幕宽度，LOGO 贴左、右侧贴右 */
   .apexon-header__inner {
-    max-width: var(--container-max);
+    max-width: none;
   }
 }
 
