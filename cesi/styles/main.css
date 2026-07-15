@@ -369,20 +369,35 @@ body.loaded .apexon-page {
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   position: relative;
   padding: 0 var(--container-padding);
 }
 
 .apexon-header-logo {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--apex-text);
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.apexon-header-logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
 }
 
 /* 顶部核心导航紧凑排列：[☰] [首页] [Music] 贴在一起作为一组 */
 .apexon-header-center {
+  justify-self: center;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -603,14 +618,14 @@ html[data-bw="true"] .apexon-header-nav.open {
     0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* 右侧功能区：主题切换 + 用户菜单 */
+/* 右侧功能区：主题切换 + 语言 + 用户菜单 */
 .header-actions {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   position: relative;
   z-index: 3;
-  margin-left: auto;
 }
 
 /* 桌面端 */

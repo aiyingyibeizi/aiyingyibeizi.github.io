@@ -223,37 +223,37 @@
    ------------------------------------------------------------------ */
 @media (max-width: 767px) {
   :root {
-    --header-height: 54px;
-    --container-padding: 12px;
-    --grid-columns: 1;
-    --grid-gap: 10px;
-    --section-gap: 12px;
-    --hero-title: 26px;
-    --hero-logo: 76px;
-    --hero-subtitle: 13px;
-    --font-base: 15px;
-    --font-scale: 0.9375;
-    --apex-radius-sm: 8px;
-    --apex-radius: 14px;
-    --apex-radius-lg: 18px;
-    --apex-radius-xl: 22px;
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --header-height: 48px;
+    --header-height: 50px;
     --container-padding: 10px;
+    --grid-columns: 1;
     --grid-gap: 8px;
     --section-gap: 10px;
-    --hero-title: 22px;
-    --hero-logo: 64px;
+    --hero-title: 24px;
+    --hero-logo: 68px;
     --hero-subtitle: 12px;
     --font-base: 14px;
     --font-scale: 0.875;
     --apex-radius-sm: 8px;
     --apex-radius: 12px;
     --apex-radius-lg: 16px;
+    --apex-radius-xl: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --header-height: 44px;
+    --container-padding: 8px;
+    --grid-gap: 6px;
+    --section-gap: 8px;
+    --hero-title: 20px;
+    --hero-logo: 56px;
+    --hero-subtitle: 11px;
+    --font-base: 13px;
+    --font-scale: 0.8125;
+    --apex-radius-sm: 6px;
+    --apex-radius: 10px;
+    --apex-radius-lg: 14px;
     --apex-radius-xl: 20px;
   }
 }
