@@ -1066,17 +1066,17 @@
         });
       });
 
-      const left = document.querySelector('.apexon-header-left');
       const actions = document.querySelector('.header-actions');
-      if (left) {
+      const left = document.querySelector('.apexon-header-left');
+      if (actions) {
+        actions.appendChild(wrapper);
+      } else if (left) {
         const logo = left.querySelector('.apexon-header-logo');
         if (logo && logo.nextSibling) {
           left.insertBefore(wrapper, logo.nextSibling);
         } else {
           left.appendChild(wrapper);
         }
-      } else if (actions) {
-        actions.appendChild(wrapper);
       } else {
         document.body.insertBefore(wrapper, document.body.firstChild);
       }
