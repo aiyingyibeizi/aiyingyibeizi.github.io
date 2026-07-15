@@ -623,9 +623,11 @@ html[data-bw="true"] .apexon-header-nav.open {
   justify-self: end;
   display: inline-flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 10px;
   position: relative;
   z-index: 3;
+  white-space: nowrap;
 }
 
 /* 桌面端 */
@@ -661,66 +663,19 @@ html[data-bw="true"] .apexon-header-nav.open {
     padding: 0 var(--container-padding);
   }
 
-  .apexon-header-center {
+  .apexon-header-logo {
+    font-size: 0.9375rem;
     gap: 6px;
   }
 
-  .apexon-menu-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-  }
-
-  .apexon-menu-btn::before {
-    width: 16px;
-    height: 2px;
-    box-shadow:
-      0 -5px 0 0 var(--apex-text-inverse),
-      0 5px 0 0 var(--apex-text-inverse);
-  }
-
-  .apexon-header-nav {
-    flex: 0 0 auto;
-    justify-content: center;
-    min-width: 0;
-    padding: 3px;
-    gap: 3px;
-    flex-wrap: nowrap;
-    overflow: hidden;
-  }
-
-  .apexon-header-nav a {
-    padding: 5px 12px;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .header-actions {
-    gap: 6px;
-  }
-
-  .apex-music-btn {
-    padding: 5px 12px;
-    font-size: 0.75rem;
-  }
-
-  .apex-music-btn::before {
-    font-size: 0.8rem;
-  }
-
-  .apexon-header-nav.open {
-    top: calc(var(--header-height) + 6px);
-    width: min(200px, calc(100vw - var(--container-padding) * 2));
-  }
-}
-
-@media (max-width: 480px) {
-  .apexon-header__inner {
-    gap: 4px;
+  .apexon-header-logo img {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
   }
 
   .apexon-header-center {
-    gap: 4px;
+    gap: 5px;
   }
 
   .apexon-menu-btn {
@@ -731,9 +686,85 @@ html[data-bw="true"] .apexon-header-nav.open {
 
   .apexon-menu-btn::before {
     width: 15px;
+    height: 2px;
     box-shadow:
       0 -4.5px 0 0 var(--apex-text-inverse),
       0 4.5px 0 0 var(--apex-text-inverse);
+  }
+
+  .apexon-header-nav {
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 0;
+    padding: 2px;
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .apexon-header-nav a {
+    padding: 4px 10px;
+    font-size: 0.6875rem;
+    flex-shrink: 0;
+  }
+
+  .header-actions {
+    gap: 5px;
+  }
+
+  .apex-music-btn {
+    padding: 4px 10px;
+    font-size: 0.6875rem;
+  }
+
+  .apex-music-btn::before {
+    font-size: 0.75rem;
+  }
+
+  .apexon-header-nav.open {
+    top: calc(var(--header-height) + 6px);
+    width: min(180px, calc(100vw - var(--container-padding) * 2));
+  }
+
+  .apexon-header-nav.open a {
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-header__inner {
+    gap: 3px;
+    padding: 0 var(--container-padding);
+  }
+
+  .apexon-header-logo {
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+
+  .apexon-header-logo img {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  .apexon-header-center {
+    gap: 3px;
+  }
+
+  .apexon-menu-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  .apexon-menu-btn::before {
+    width: 13px;
+    height: 2px;
+    box-shadow:
+      0 -3.5px 0 0 var(--apex-text-inverse),
+      0 3.5px 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav {
@@ -742,38 +773,108 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apexon-header-nav a {
-    padding: 4px 10px;
-    font-size: 0.6875rem;
+    padding: 2px 7px;
+    font-size: 0.5625rem;
   }
 
   .header-actions {
-    gap: 4px;
+    gap: 3px;
   }
 
   .apex-bw-toggle {
-    width: 48px;
-    height: 24px;
+    width: 38px;
+    height: 20px;
   }
 
   .apex-bw-toggle__thumb {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     top: 3px;
     left: 3px;
   }
 
   .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(24px);
+    transform: translateX(18px);
   }
 
   .apex-music-btn {
-    padding: 4px 8px;
+    padding: 2px 6px;
     font-size: 0;
     gap: 0;
   }
 
   .apex-music-btn::before {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .apexon-header__inner {
+    gap: 2px;
+  }
+
+  .apexon-header-logo {
+    gap: 3px;
+  }
+
+  .apexon-header-logo img {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+  }
+
+  .apexon-header-logo span {
+    display: none;
+  }
+
+  .apexon-header-center {
+    gap: 2px;
+  }
+
+  .apexon-menu-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+  }
+
+  .apexon-menu-btn::before {
+    width: 12px;
+    box-shadow:
+      0 -3px 0 0 var(--apex-text-inverse),
+      0 3px 0 0 var(--apex-text-inverse);
+  }
+
+  .apexon-header-nav a {
+    padding: 2px 6px;
+    font-size: 0.5rem;
+  }
+
+  .header-actions {
+    gap: 2px;
+  }
+
+  .apex-bw-toggle {
+    width: 34px;
+    height: 18px;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 12px;
+    height: 12px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(16px);
+  }
+
+  .apex-music-btn {
+    padding: 2px 5px;
+  }
+
+  .apex-music-btn::before {
+    font-size: 0.7rem;
   }
 }
 
@@ -1123,28 +1224,6 @@ html[data-bw="true"] .apexon-header-nav.open {
 
 .apex-bw-toggle__icon {
   display: none;
-}
-
-@media (max-width: 767px) {
-  .header-actions {
-    gap: 8px;
-  }
-
-  .apex-bw-toggle {
-    width: 56px;
-    height: 28px;
-  }
-
-  .apex-bw-toggle__thumb {
-    width: 22px;
-    height: 22px;
-    top: 3px;
-    left: 3px;
-  }
-
-  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(28px);
-  }
 }
 
 /* ============================================================================
@@ -4827,23 +4906,142 @@ canvas#testBox,
     max-width: 240px;
     font-size: 1.125rem;
   }
+
+  /* 超小屏额外紧凑 */
+  .search-box {
+    margin-bottom: 12px;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .search-box input {
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+
+  .search-box button {
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .item-card,
+  .apex-card--game {
+    padding: 12px;
+  }
+
+  .item-card strong,
+  .apex-card--game strong {
+    font-size: 0.875rem;
+  }
+
+  .item-card .card-desc,
+  .apex-card--game .card-desc {
+    font-size: 0.6875rem;
+    line-height: 1.45;
+  }
+
+  .item-card__feature {
+    padding: 3px 8px;
+    font-size: 0.6875rem;
+  }
+
+  .hero-apexon {
+    padding: 12px 0 10px;
+  }
+
+  .hero-apexon .hero-logo-main {
+    margin-bottom: 8px;
+  }
+
+  .hero-apexon .hero-tagline {
+    font-size: 0.6875rem;
+    line-height: 1.5;
+  }
+
+  .hero-stats-bar {
+    margin-top: 10px;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .btn-group .btn {
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .long-article {
+    padding: 12px;
+    font-size: 0.8125rem;
+  }
+
+  .long-article h2 {
+    font-size: 0.9375rem;
+  }
+
+  .long-article h3 {
+    font-size: 0.875rem;
+  }
+
+  .game-stage {
+    min-height: 200px;
+  }
+
+  .game-stage__overlay {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .game-stage__hint {
+    font-size: 0.75rem;
+  }
+
+  .apex-start-screen {
+    min-height: 240px;
+    padding: 24px 14px;
+    gap: 12px;
+  }
+
+  .apex-start-screen__title {
+    font-size: 1.25rem;
+  }
+
+  .apex-start-screen__desc {
+    font-size: 0.8125rem;
+  }
+
+  .apex-start-screen__btn {
+    padding: 10px 24px;
+    font-size: 0.8125rem;
+  }
 }
 
 @media (min-width: 768px) {
+  /* 桌面端仍然保留三条杠菜单按钮，点击后展开快捷入口 */
   .apexon-header-nav {
-    position: static;
-    display: flex;
+    position: relative;
+    display: inline-flex;
     flex-direction: row;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
+    background: var(--apex-surface);
+    border: 1px solid var(--apex-border);
+    box-shadow: var(--apex-shadow-sm);
+    padding: 4px;
     inset: auto;
-    margin: 0 auto;
+    margin: 0;
+  }
+
+  .apexon-header-nav a.nav-more {
+    display: none;
+  }
+
+  .apexon-header-nav.open a.nav-more {
+    display: flex;
   }
 
   .apexon-menu-btn {
-    display: none;
+    display: inline-flex !important;
   }
 
   .info-panel-grid {
@@ -5611,7 +5809,7 @@ html[data-bw="true"] .game-canvas {
   background: var(--apex-surface-hover, rgba(255,255,255,0.06));
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .apexon-lang-selector {
     margin-left: 0.25rem;
   }
@@ -5619,21 +5817,35 @@ html[data-bw="true"] .game-canvas {
     display: none;
   }
   .apexon-lang-selector__btn {
-    padding: 0.3rem;
-  }
-  .apexon-lang-selector__flag {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .apexon-lang-selector__btn {
     padding: 0.25rem;
     border-radius: 0.45rem;
   }
   .apexon-lang-selector__flag {
     width: 1rem;
     height: 1rem;
+  }
+  .apexon-lang-selector__arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-lang-selector__btn {
+    padding: 0.2rem;
+    border-radius: 0.35rem;
+  }
+  .apexon-lang-selector__flag {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .apexon-lang-selector__btn {
+    padding: 0.15rem;
+  }
+  .apexon-lang-selector__flag {
+    width: 0.8rem;
+    height: 0.8rem;
   }
 }

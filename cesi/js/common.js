@@ -7,6 +7,22 @@
   'use strict';
   const APEXON = global.APEXON = global.APEXON || {};
 
+  // 全局菜单切换
+  global.toggleMenu = function () {
+    const nav = document.getElementById('headerNav');
+    if (nav) nav.classList.toggle('open');
+  };
+
+  // 点击页面其他区域关闭菜单
+  document.addEventListener('click', (e) => {
+    const nav = document.getElementById('headerNav');
+    const btn = document.querySelector('.apexon-menu-btn');
+    if (!nav || !btn) return;
+    if (!nav.contains(e.target) && !btn.contains(e.target)) {
+      nav.classList.remove('open');
+    }
+  });
+
   // ===== 配置 =====
   const SUPABASE_URL = 'https://kpmsijgonualekjyrkzs.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u';
@@ -111,6 +127,126 @@
   };
   APEXON.Security = Security;
 
+  // ===== 本地统计缓存 =====
+  // 作为远程 Supabase 统计的补充/兜底，确保用户在任何网络或权限问题下
+  // 都不会看到全 0 的统计，并且数字会随使用自然增长。
+  const LOCAL_STATS_KEY = 'apex_stats_v1';
+  const LOCAL_STATS_TTL_MS = 5 * 60 * 1000; // 在线心跳 5 分钟有效
+  const LocalStats = {
+    _safeLoad() {
+      try {
+        const raw = localStorage.getItem(LOCAL_STATS_KEY);
+        if (!raw) return this._empty();
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || parsed.constructor !== Object) return this._empty();
+        const data = this._empty();
+        if (Number.isFinite(parsed.total_tests) && parsed.total_tests >= 0) data.total_tests = parsed.total_tests;
+        if (parsed.users && typeof parsed.users === 'object' && parsed.users.constructor === Object) {
+          Object.keys(parsed.users).forEach(k => {
+            const ts = Number(parsed.users[k]);
+            if (typeof k === 'string' && k.length <= 128 && Number.isFinite(ts) && ts > 0) data.users[k] = ts;
+          });
+        }
+        if (parsed.online && typeof parsed.online === 'object' && parsed.online.constructor === Object) {
+          Object.keys(parsed.online).forEach(k => {
+            const ts = Number(parsed.online[k]);
+            if (typeof k === 'string' && k.length <= 128 && Number.isFinite(ts) && ts > 0) data.online[k] = ts;
+          });
+        }
+        if (parsed.lastRemote && typeof parsed.lastRemote === 'object' && parsed.lastRemote.constructor === Object) {
+          data.lastRemote = {
+            online: Number(parsed.lastRemote.online) || 0,
+            total_users: Number(parsed.lastRemote.total_users) || 0,
+            total_tests: Number(parsed.lastRemote.total_tests) || 0
+          };
+        }
+        return data;
+      } catch (e) {
+        return this._empty();
+      }
+    },
+
+    _empty() {
+      return { total_tests: 0, users: {}, online: {}, lastRemote: { online: 0, total_users: 0, total_tests: 0 } };
+    },
+
+    _save(data) {
+      try { localStorage.setItem(LOCAL_STATS_KEY, JSON.stringify(data)); } catch (e) {}
+    },
+
+    recordUser(userId) {
+      if (!userId || typeof userId !== 'string') return;
+      const data = this._safeLoad();
+      data.users[userId] = Date.now();
+      this._save(data);
+    },
+
+    recordTest(userId) {
+      if (!userId || typeof userId !== 'string') return;
+      const data = this._safeLoad();
+      data.total_tests += 1;
+      data.users[userId] = Date.now();
+      this._save(data);
+    },
+
+    recordOnline(userId) {
+      if (!userId || typeof userId !== 'string') return;
+      const data = this._safeLoad();
+      const now = Date.now();
+      data.online[userId] = now;
+      data.users[userId] = now;
+      // 清理过期心跳
+      Object.keys(data.online).forEach(k => {
+        if (now - data.online[k] > LOCAL_STATS_TTL_MS) delete data.online[k];
+      });
+      this._save(data);
+    },
+
+    _countOnline(data) {
+      const now = Date.now();
+      let count = 0;
+      Object.keys(data.online).forEach(k => {
+        if (now - data.online[k] <= LOCAL_STATS_TTL_MS) count += 1;
+      });
+      return count;
+    },
+
+    _countUsers(data) {
+      return Object.keys(data.users).length;
+    },
+
+    getCounts() {
+      const data = this._safeLoad();
+      return {
+        online: this._countOnline(data),
+        total_users: this._countUsers(data),
+        total_tests: data.total_tests
+      };
+    },
+
+    mergeRemote(remote) {
+      const data = this._safeLoad();
+      const now = Date.now();
+      data.lastRemote = {
+        online: Math.max(0, Number(remote && remote.online) || 0),
+        total_users: Math.max(0, Number(remote && remote.total_users) || 0),
+        total_tests: Math.max(0, Number(remote && remote.total_tests) || 0)
+      };
+      // 以远程为权威，但本地缓存可能因离线期间的操作更高，取较大值
+      data.total_tests = Math.max(data.total_tests, data.lastRemote.total_tests);
+      // 用户数：远程用户数 + 本地新增的去重用户数（避免当前设备不联网时归零）
+      const localUserCount = this._countUsers(data);
+      data.lastRemote.total_users = Math.max(data.lastRemote.total_users, localUserCount);
+      this._save(data);
+      return {
+        online: Math.max(data.lastRemote.online, this._countOnline(data)),
+        total_users: data.lastRemote.total_users,
+        total_tests: data.total_tests
+      };
+    }
+  };
+  APEXON.LocalStats = LocalStats;
+
   // ===== 1. Supabase 数据库 =====
   const DB = {
     async request(table, method, body, query, extraHeaders) {
@@ -156,6 +292,7 @@
 
     async upsertOnline(userId) {
       if (!userId) return false;
+      LocalStats.recordOnline(userId);
       const result = await this.request('online_users', 'POST', {
         user_id: String(userId),
         last_seen: new Date().toISOString()
@@ -178,14 +315,15 @@
         if (!res.ok) {
           const text = await res.text();
           console.error('[getSiteStats]', res.status, text);
-          return this._fallbackSiteStats();
+          return LocalStats.mergeRemote(await this._fallbackSiteStats());
         }
         const data = await res.json();
-        if (data && (data.total_users > 0 || data.total_tests > 0)) return data;
-        return this._fallbackSiteStats();
+        // 即使远程返回 0 也与本地缓存合并，避免全 0
+        const remote = (data && (data.total_users > 0 || data.total_tests > 0 || data.online > 0)) ? data : (await this._fallbackSiteStats());
+        return LocalStats.mergeRemote(remote);
       } catch (e) {
         console.error('[getSiteStats] failed:', e);
-        return this._fallbackSiteStats();
+        return LocalStats.mergeRemote(await this._fallbackSiteStats());
       }
     },
 
@@ -268,6 +406,7 @@
       });
       console.log('[saveScore]', testType, scoreValue, 'result:', result);
       if (result) {
+        LocalStats.recordTest(userId);
         document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
       }
       return !!result;
@@ -667,6 +806,7 @@
       console.log('[register] profile insert result:', profileResult);
 
       this._setSession(u, token, expiresAt);
+      LocalStats.recordUser(u);
       await this.mergeAnonymousData();
       return { success: true };
     },
@@ -703,6 +843,7 @@
       if (!updateResult) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed') : '登录失败，请重试') };
 
       this._setSession(u, token, expiresAt);
+      LocalStats.recordUser(u);
       await this.mergeAnonymousData();
       return { success: true };
     },
@@ -1272,7 +1413,29 @@
         .leaderboard-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-right: 10px; }
         .leaderboard-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .leaderboard-avatar svg { width: 18px; height: 18px; }
-        @media (max-width: 480px) { .apex-login-card { padding: 24px 20px 20px; } .apex-user-name { max-width: 80px; } .apex-profile-card { padding: 20px; } }
+        @media (max-width: 480px) {
+          .apex-login-card { padding: 24px 20px 20px; }
+          .apex-user-menu { margin-left: 6px; }
+          .apex-user-bar { gap: 4px; padding: 2px 6px 2px 4px; border-radius: 18px; }
+          .apex-avatar-wrap { width: 22px; height: 22px; }
+          .apex-avatar { width: 22px; height: 22px; }
+          .apex-avatar svg { width: 16px; height: 16px; }
+          .apex-mini-icon { width: 10px; height: 10px; }
+          .apex-user-name { font-size: 11px; max-width: 64px; }
+          .apex-user-caret { font-size: 9px; }
+          .apex-user-dropdown { min-width: 130px; border-radius: 12px; padding: 4px; }
+          .apex-user-dropdown button { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
+          .apex-profile-card { padding: 20px; }
+        }
+        @media (max-width: 375px) {
+          .apex-user-menu { margin-left: 4px; }
+          .apex-user-bar { padding: 2px 4px 2px 3px; }
+          .apex-avatar-wrap { width: 18px; height: 18px; }
+          .apex-avatar { width: 18px; height: 18px; }
+          .apex-avatar svg { width: 13px; height: 13px; }
+          .apex-user-name { display: none; }
+          .apex-user-caret { display: none; }
+        }
       `;
       document.head.appendChild(style);
     },
@@ -2807,7 +2970,9 @@
     UI.initTheme();
     Auth.init();
     await Auth.validateSession();
-    OnlineTracker.init(Auth.getUserId());
+    const userId = Auth.getUserId();
+    LocalStats.recordUser(userId);
+    OnlineTracker.init(userId);
     UI.mountUserButton();
     UI.relayoutHeader();
     Stats.init();

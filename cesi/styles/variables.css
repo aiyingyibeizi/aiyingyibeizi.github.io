@@ -242,19 +242,37 @@
 
 @media (max-width: 480px) {
   :root {
-    --header-height: 44px;
-    --container-padding: 8px;
+    --header-height: 40px;
+    --container-padding: 10px;
     --grid-gap: 6px;
     --section-gap: 8px;
-    --hero-title: 20px;
-    --hero-logo: 56px;
-    --hero-subtitle: 11px;
-    --font-base: 13px;
-    --font-scale: 0.8125;
+    --hero-title: 18px;
+    --hero-logo: 48px;
+    --hero-subtitle: 10px;
+    --font-base: 12px;
+    --font-scale: 0.75;
     --apex-radius-sm: 6px;
     --apex-radius: 10px;
     --apex-radius-lg: 14px;
-    --apex-radius-xl: 20px;
+    --apex-radius-xl: 18px;
+  }
+}
+
+@media (max-width: 375px) {
+  :root {
+    --header-height: 36px;
+    --container-padding: 8px;
+    --grid-gap: 5px;
+    --section-gap: 6px;
+    --hero-title: 16px;
+    --hero-logo: 42px;
+    --hero-subtitle: 9px;
+    --font-base: 11px;
+    --font-scale: 0.6875;
+    --apex-radius-sm: 5px;
+    --apex-radius: 8px;
+    --apex-radius-lg: 12px;
+    --apex-radius-xl: 16px;
   }
 }
 
