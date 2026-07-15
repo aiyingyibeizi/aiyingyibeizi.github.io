@@ -147,6 +147,14 @@
       return input.replace(/<[^>]*>/g, '');
     },
 
+    safeUrl(url) {
+      if (!url || typeof url !== 'string') return '';
+      const trimmed = url.trim();
+      const dangerousProtocol = /^(javascript|data|vbscript|file|about|blob):/i;
+      if (dangerousProtocol.test(trimmed)) return '';
+      return trimmed;
+    },
+
     validateRecord(type, data) {
       if (!data || typeof data !== 'object') return false;
       if (type === 'reaction') {
@@ -618,7 +626,7 @@
       const location = Security.filterDangerous((payload && payload.location) || '').slice(0, 80);
       const website = Security.filterDangerous((payload && payload.website) || '').slice(0, 200);
       const social = Security.filterDangerous((payload && payload.social) || '').slice(0, 200);
-      const avatarUrl = (payload && payload.avatar_url) || null;
+      const avatarUrl = Security.safeUrl((payload && payload.avatar_url) || '');
       const gender = (payload && payload.gender) || null;
 
       const body = {
@@ -1615,8 +1623,9 @@
     },
 
     _renderAvatarHTML(avatarUrl) {
-      if (avatarUrl) {
-        return '<img src="' + Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')">';
+      const safe = Security.safeUrl(avatarUrl);
+      if (safe) {
+        return '<img src="' + Security.escapeHtml(safe) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')">';
       }
       return '<svg viewBox="0 0 64 64" style="width:62%;height:62%;"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg>';
     },
@@ -1707,8 +1716,10 @@
       const avatar = '<div class="apex-profile-avatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
       const bio = p.bio || t('bioEmpty', '这个人很懒，什么都没有写。');
       const location = p.location || t('unknown', '未知');
-      const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : t('notFilled', '未填写');
-      const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : t('notFilled', '未填写');
+      const websiteUrl = Security.safeUrl(p.website);
+      const website = websiteUrl ? '<a href="' + esc(websiteUrl) + '" target="_blank" rel="noopener">' + esc(websiteUrl) + '</a>' : t('notFilled', '未填写');
+      const socialUrl = Security.safeUrl(p.social_links);
+      const social = socialUrl ? '<a href="' + esc(socialUrl) + '" target="_blank" rel="noopener">' + esc(socialUrl) + '</a>' : t('notFilled', '未填写');
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">' + t('genderLabel', '性别') + '</div><div class="apex-profile-value">' + esc(this._genderLabel(p.gender)) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">' + t('bioPlaceholder', '个人简介') + '</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +

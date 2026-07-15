@@ -889,7 +889,9 @@
 
   function escapeAttr(str) {
     if (str == null) return '';
-    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    const url = String(str).trim();
+    if (/^(javascript|data|vbscript|file|about|blob):/i.test(url)) return '';
+    return url.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
 
   window.APEXON = window.APEXON || {};
