@@ -463,41 +463,97 @@ body.loaded .apexon-page {
   display: none;
 }
 
-/* 下拉菜单定位在导航下方左侧 */
+/* 下拉菜单：带标题、图标、圆角、阴影 */
 .apexon-header-nav.open {
   position: absolute;
-  top: calc(var(--header-height) + 8px);
+  top: calc(var(--header-height) + 10px);
   left: 0;
-  width: 200px;
+  width: 220px;
   flex-direction: column;
   align-items: stretch;
   padding: 8px;
   margin: 0;
-  border-radius: 16px;
-  border: 1px solid var(--apex-border);
-  background: var(--apex-surface);
+  border-radius: 18px;
+  border: 1px solid var(--apex-border-strong);
+  background: var(--apex-surface-elevated);
   box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.35),
-    0 8px 24px rgba(0, 0, 0, 0.2);
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 10px 30px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   z-index: 999;
   gap: 2px;
+  overflow: hidden;
+}
+
+.apexon-header-nav.open::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--apex-primary-dark) 0%, var(--apex-primary) 50%, var(--apex-accent-cyan) 100%);
 }
 
 .apexon-header-nav.open a {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
-  padding: 9px 14px;
+  gap: 10px;
+  padding: 10px 14px;
   font-size: 0.875rem;
-  border-radius: 10px;
+  font-weight: 500;
+  border-radius: 12px;
   color: var(--apex-text);
   background: transparent;
   border: none;
   box-shadow: none;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
+.apexon-header-nav.open a::before {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 0.9375rem;
+  opacity: 0.9;
+}
+
+.apexon-header-nav.open a[data-i18n="navHome"]::before { content: '🏠'; }
+.apexon-header-nav.open a[data-i18n="navReaction"]::before { content: '⚡'; }
+.apexon-header-nav.open a[data-i18n="navType"]::before { content: '⌨️'; }
+.apexon-header-nav.open a[data-i18n="navStick"]::before { content: '🎯'; }
+.apexon-header-nav.open a[data-i18n="navNumber"]::before { content: '🔢'; }
+.apexon-header-nav.open a[data-i18n="navVerbal"]::before { content: '📝'; }
+.apexon-header-nav.open a[data-i18n="navVisual"]::before { content: '🎨'; }
+.apexon-header-nav.open a[data-i18n="navSequence"]::before { content: '🔀'; }
+.apexon-header-nav.open a[data-i18n="navAim"]::before { content: '🎯'; }
+.apexon-header-nav.open a[data-i18n="navMusic"]::before { content: '🎵'; }
+
 .apexon-header-nav.open a:hover {
-  background: var(--apex-primary-light);
+  background: linear-gradient(135deg, rgba(109, 93, 252, 0.18) 0%, rgba(139, 92, 246, 0.12) 100%);
+  color: var(--apex-text);
+  transform: translateX(2px);
+}
+
+.apexon-header-nav.open a.active {
+  background: linear-gradient(135deg, var(--apex-primary-dark) 0%, var(--apex-primary) 100%);
   color: var(--apex-text-inverse);
+  box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
+}
+
+.apexon-header-nav.open a.active::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
 }
 
 .apexon-menu-btn {
@@ -726,13 +782,16 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 
   .apexon-header-nav.open {
+    position: fixed;
     top: calc(var(--header-height) + 6px);
-    width: min(180px, calc(100vw - var(--container-padding) * 2));
+    left: var(--container-padding);
+    right: auto;
+    width: min(220px, calc(100vw - var(--container-padding) * 2));
   }
 
   .apexon-header-nav.open a {
-    padding: 8px 12px;
-    font-size: 0.8125rem;
+    padding: 10px 14px;
+    font-size: 0.875rem;
   }
 }
 
@@ -2907,36 +2966,62 @@ html[data-theme="light"] .apex-card--game:hover {
 .forum-category-select {
   appearance: none;
   -webkit-appearance: none;
-  padding: 9px 34px 9px 14px;
+  padding: 10px 38px 10px 16px;
   border-radius: 999px;
-  border: 1.5px solid var(--apex-border);
+  border: 1.5px solid var(--apex-border-strong);
   background:
-    var(--apex-bg)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    linear-gradient(135deg, var(--apex-surface) 0%, var(--apex-bg) 100%)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
     no-repeat right 12px center;
   color: var(--apex-text);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   outline: none;
   cursor: pointer;
   align-self: flex-start;
-  min-width: 120px;
+  min-width: 140px;
+  box-shadow: 0 2px 8px rgba(109, 93, 252, 0.08);
   transition: all var(--apex-transition-fast);
 }
 
 .forum-category-select:hover {
   border-color: var(--apex-primary);
-  box-shadow: 0 2px 8px rgba(109, 93, 252, 0.12);
+  box-shadow: 0 4px 14px rgba(109, 93, 252, 0.18);
+  transform: translateY(-1px);
 }
 
 .forum-category-select:focus {
   border-color: var(--apex-primary);
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 4px 14px rgba(109, 93, 252, 0.18);
 }
 
 .forum-category-select option {
-  padding: 8px;
+  padding: 10px;
   font-size: 0.875rem;
+  background: var(--apex-surface);
+  color: var(--apex-text);
+}
+
+html[data-theme="light"] .forum-category-select,
+html[data-bw="true"] .forum-category-select {
+  background:
+    linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  border-color: rgba(124, 107, 196, 0.28);
+  color: #1e1b4b;
+}
+
+html[data-theme="light"] .forum-category-select:hover,
+html[data-bw="true"] .forum-category-select:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 4px 14px rgba(124, 107, 196, 0.18);
+}
+
+html[data-theme="light"] .forum-category-select option,
+html[data-bw="true"] .forum-category-select option {
+  background: #ffffff;
+  color: #1e1b4b;
 }
 
 .forum-filter-bar,

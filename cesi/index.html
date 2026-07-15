@@ -20,7 +20,7 @@
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=6">
-    <link rel="stylesheet" href="styles/main.css?v=6">
+    <link rel="stylesheet" href="styles/main.css?v=7">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -160,12 +160,12 @@
             <div class="forum-title" data-i18n="discussionTitle">💬 玩家讨论区</div>
             <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:14px;text-align:center;padding:12px;" data-i18n="guestCanComment">游客模式可发表评论，登录后可修改用户名与资料</div>
             <div class="forum-input-wrap" id="forumInputWrap" style="display:none">
-                <div class="forum-category-tabs" id="forumCategoryTabs">
-                    <button type="button" class="forum-category-tab active" data-cat="chat" data-i18n="forumChat">闲聊</button>
-                    <button type="button" class="forum-category-tab" data-cat="score" data-i18n="forumScore">分数讨论</button>
-                    <button type="button" class="forum-category-tab" data-cat="bug" data-i18n="forumBug">Bug 反馈</button>
-                    <button type="button" class="forum-category-tab" data-cat="suggestion" data-i18n="forumSuggestion">网站建议</button>
-                </div>
+                <select class="forum-category-select" id="forumCategorySelect" onchange="document.getElementById('forumCategory').value = this.value">
+                    <option value="chat" data-i18n="forumChat">闲聊</option>
+                    <option value="score" data-i18n="forumScore">分数讨论</option>
+                    <option value="bug" data-i18n="forumBug">Bug 反馈</option>
+                    <option value="suggestion" data-i18n="forumSuggestion">网站建议</option>
+                </select>
                 <input type="hidden" id="forumCategory" value="chat">
                 <textarea id="forumText" data-i18n-placeholder="forumPlaceholder" placeholder="分享你的测试心得..." maxlength="500"></textarea>
                 <button class="forum-btn" onclick="postComment()" data-i18n="forumPublish">发布</button>
@@ -227,15 +227,6 @@
                 loadComments();
             });
         }
-
-        // 讨论区分类选择标签
-        document.getElementById('forumCategoryTabs').addEventListener('click', function(e) {
-            const tab = e.target.closest('.forum-category-tab');
-            if (!tab) return;
-            document.querySelectorAll('#forumCategoryTabs .forum-category-tab').forEach(b => b.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById('forumCategory').value = tab.dataset.cat;
-        });
 
         // ===== 排行榜 =====
         let currentLb = 'reaction';
