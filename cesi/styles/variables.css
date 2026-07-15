@@ -240,7 +240,7 @@
    ------------------------------------------------------------------ */
 @media (max-width: 767px) {
   :root {
-    --header-height: 50px;
+    --header-height: 52px;
     --container-padding: 10px;
     --grid-columns: 1;
     --grid-gap: 8px;
@@ -248,8 +248,8 @@
     --hero-title: 24px;
     --hero-logo: 68px;
     --hero-subtitle: 12px;
-    --font-base: 14px;
-    --font-scale: 0.875;
+    --font-base: 15px;
+    --font-scale: 0.9375;
     --apex-radius-sm: 8px;
     --apex-radius: 12px;
     --apex-radius-lg: 16px;
@@ -259,15 +259,15 @@
 
 @media (max-width: 480px) {
   :root {
-    --header-height: 40px;
+    --header-height: 46px;
     --container-padding: 10px;
     --grid-gap: 6px;
     --section-gap: 8px;
-    --hero-title: 18px;
-    --hero-logo: 48px;
-    --hero-subtitle: 10px;
-    --font-base: 12px;
-    --font-scale: 0.75;
+    --hero-title: 20px;
+    --hero-logo: 54px;
+    --hero-subtitle: 11px;
+    --font-base: 14px;
+    --font-scale: 0.875;
     --apex-radius-sm: 6px;
     --apex-radius: 10px;
     --apex-radius-lg: 14px;
@@ -277,15 +277,15 @@
 
 @media (max-width: 375px) {
   :root {
-    --header-height: 36px;
+    --header-height: 42px;
     --container-padding: 8px;
     --grid-gap: 5px;
     --section-gap: 6px;
-    --hero-title: 16px;
-    --hero-logo: 42px;
-    --hero-subtitle: 9px;
-    --font-base: 11px;
-    --font-scale: 0.6875;
+    --hero-title: 18px;
+    --hero-logo: 48px;
+    --hero-subtitle: 10px;
+    --font-base: 13px;
+    --font-scale: 0.8125;
     --apex-radius-sm: 5px;
     --apex-radius: 8px;
     --apex-radius-lg: 12px;

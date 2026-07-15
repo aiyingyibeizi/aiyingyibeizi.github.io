@@ -665,16 +665,10 @@ html[data-bw="true"] .apexon-header-nav a:hover {
   filter: brightness(1.1);
 }
 
-@media (max-width: 480px) {
-  .apex-music-btn {
-    padding: 6px 8px;
-    font-size: 0;
-    gap: 0;
-  }
-
-  .apex-music-btn::before {
-    font-size: 0.85rem;
-  }
+/* 左侧功能区：Logo + 名字 + 语言选择器 */
+.apexon-header-left .apexon-lang-selector {
+  margin-left: 2px;
+  flex-shrink: 0;
 }
 
 html[data-theme="light"] .apexon-header-nav.open,
@@ -686,16 +680,20 @@ html[data-bw="true"] .apexon-header-nav.open {
     0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* 右侧功能区：主题切换 + 语言 + 用户菜单 */
+/* 右侧功能区：紧凑主题切换 + 用户菜单 */
 .header-actions {
   justify-self: end;
   display: inline-flex;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   z-index: 3;
   white-space: nowrap;
+}
+
+.header-actions .apex-bw-toggle {
+  flex-shrink: 0;
 }
 
 /* 桌面端 */
@@ -724,238 +722,241 @@ html[data-bw="true"] .apexon-header-nav.open {
   }
 }
 
-/* 移动端 */
+/* 移动端：整体等比缩小，核心导航 [☰][首页][Music] 居中且醒目 */
 @media (max-width: 1023px) {
   .apexon-header__inner {
-    gap: 8px;
+    gap: 0.5rem;
     padding: 0 var(--container-padding);
   }
 
   .apexon-header-left {
-    gap: 6px;
+    gap: 0.35rem;
   }
 
   .apexon-header-logo {
-    font-size: 0.9375rem;
-    gap: 6px;
+    font-size: 0.95rem;
+    gap: 0.35rem;
   }
 
   .apexon-header-logo img {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 0.4rem;
   }
 
   .apexon-header-center {
-    gap: 6px;
+    gap: 0.4rem;
   }
 
   .apexon-menu-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 0.55rem;
   }
 
   .apexon-menu-btn::before {
-    width: 16px;
-    height: 2px;
+    width: 1rem;
+    height: 0.13rem;
     box-shadow:
-      0 -5px 0 0 var(--apex-text-inverse),
-      0 5px 0 0 var(--apex-text-inverse);
+      0 -0.32rem 0 0 var(--apex-text-inverse),
+      0 0.32rem 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav {
     flex: 0 0 auto;
     justify-content: center;
     min-width: 0;
-    padding: 3px;
-    gap: 3px;
+    padding: 0.2rem;
+    gap: 0.2rem;
     flex-wrap: nowrap;
     overflow: hidden;
   }
 
   .apexon-header-nav a {
-    padding: 7px 13px;
-    font-size: 0.8125rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
     flex-shrink: 0;
   }
 
-  .header-actions {
-    gap: 8px;
-  }
-
   .apex-music-btn {
-    padding: 7px 13px;
-    font-size: 0.8125rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    gap: 0.35rem;
   }
 
   .apex-music-btn::before {
-    font-size: 0.8125rem;
+    font-size: 0.8rem;
+  }
+
+  .apex-bw-toggle {
+    width: 2rem;
+    height: 1rem;
+    padding: 0.2rem;
+    margin: -0.2rem 0;
+  }
+
+  .apex-bw-toggle__track {
+    inset: 0.2rem;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 0.7rem;
+    height: 0.7rem;
+    top: 0.25rem;
+    left: 0.25rem;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(1rem);
+  }
+
+  .header-actions {
+    gap: 0.35rem;
   }
 
   .apexon-header-nav.open {
     position: fixed;
-    top: calc(var(--header-height) + 6px);
+    top: calc(var(--header-height) + 0.35rem);
     left: var(--container-padding);
     right: auto;
-    width: min(220px, calc(100vw - var(--container-padding) * 2));
+    width: min(15rem, calc(100vw - var(--container-padding) * 2));
+    padding: 0.5rem;
+    gap: 0.125rem;
+    border-radius: var(--apex-radius-lg);
   }
 
   .apexon-header-nav.open a {
-    padding: 10px 14px;
-    font-size: 0.875rem;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.85rem;
+    border-radius: var(--apex-radius);
   }
 }
 
 @media (max-width: 480px) {
   .apexon-header__inner {
-    gap: 6px;
-    padding: 0 var(--container-padding);
+    gap: 0.35rem;
   }
 
   .apexon-header-left {
-    gap: 4px;
+    gap: 0.25rem;
   }
 
   .apexon-header-logo {
-    font-size: 0.8125rem;
-    gap: 4px;
+    font-size: 0.85rem;
+    gap: 0.25rem;
   }
 
   .apexon-header-logo img {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
+    width: 1.45rem;
+    height: 1.45rem;
   }
 
   .apexon-header-center {
-    gap: 4px;
+    gap: 0.3rem;
   }
 
   .apexon-menu-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
   }
 
   .apexon-menu-btn::before {
-    width: 14px;
-    height: 2px;
+    width: 0.9rem;
     box-shadow:
-      0 -4px 0 0 var(--apex-text-inverse),
-      0 4px 0 0 var(--apex-text-inverse);
-  }
-
-  .apexon-header-nav {
-    padding: 2px;
-    gap: 2px;
+      0 -0.28rem 0 0 var(--apex-text-inverse),
+      0 0.28rem 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav a {
-    padding: 5px 10px;
-    font-size: 0.75rem;
-  }
-
-  .header-actions {
-    gap: 5px;
-  }
-
-  .apex-bw-toggle {
-    width: 38px;
-    height: 20px;
-  }
-
-  .apex-bw-toggle__thumb {
-    width: 14px;
-    height: 14px;
-    top: 3px;
-    left: 3px;
-  }
-
-  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(18px);
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
   }
 
   .apex-music-btn {
-    padding: 5px 10px;
-    font-size: 0.75rem;
-    gap: 4px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
   }
 
-  .apex-music-btn::before {
-    font-size: 0.75rem;
+  .apex-bw-toggle {
+    width: 1.75rem;
+    height: 0.9rem;
+    padding: 0.15rem;
+    margin: -0.15rem 0;
+  }
+
+  .apex-bw-toggle__track {
+    inset: 0.15rem;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 0.6rem;
+    height: 0.6rem;
+    top: 0.2rem;
+    left: 0.2rem;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(0.85rem);
   }
 }
 
 @media (max-width: 375px) {
   .apexon-header__inner {
-    gap: 4px;
-  }
-
-  .apexon-header-left {
-    gap: 3px;
+    gap: 0.2rem;
   }
 
   .apexon-header-logo {
-    font-size: 0.75rem;
-    gap: 3px;
+    font-size: 0.7rem;
   }
 
   .apexon-header-logo img {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-  }
-
-  .apexon-header-center {
-    gap: 3px;
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .apexon-menu-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
   .apexon-menu-btn::before {
-    width: 13px;
+    width: 0.75rem;
     box-shadow:
-      0 -4px 0 0 var(--apex-text-inverse),
-      0 4px 0 0 var(--apex-text-inverse);
+      0 -0.22rem 0 0 var(--apex-text-inverse),
+      0 0.22rem 0 0 var(--apex-text-inverse);
   }
 
   .apexon-header-nav a {
-    padding: 4px 8px;
-    font-size: 0.6875rem;
-  }
-
-  .header-actions {
-    gap: 4px;
-  }
-
-  .apex-bw-toggle {
-    width: 34px;
-    height: 18px;
-  }
-
-  .apex-bw-toggle__thumb {
-    width: 12px;
-    height: 12px;
-    top: 3px;
-    left: 3px;
-  }
-
-  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(16px);
+    padding: 0.4rem 0.65rem;
+    font-size: 0.72rem;
   }
 
   .apex-music-btn {
-    padding: 4px 8px;
-    font-size: 0.6875rem;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.72rem;
   }
 
-  .apex-music-btn::before {
-    font-size: 0.7rem;
+  .apex-bw-toggle {
+    width: 1.6rem;
+    height: 0.8rem;
+    padding: 0.12rem;
+    margin: -0.12rem 0;
+  }
+
+  .apex-bw-toggle__track {
+    inset: 0.12rem;
+  }
+
+  .apex-bw-toggle__thumb {
+    width: 0.55rem;
+    height: 0.55rem;
+    top: 0.16rem;
+    left: 0.16rem;
+  }
+
+  .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+    transform: translateX(0.8rem);
   }
 }
 
@@ -1254,15 +1255,18 @@ html[data-bw="true"] .apexon-header-nav.open {
   flex-shrink: 0;
 }
 
-/* 黑白/彩色（深色↔白色明亮主题）切换开关 */
+/* 黑白/彩色（深色↔白色明亮主题）切换开关 —— 紧凑胶囊 */
 .apex-bw-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 48px;
-  height: 24px;
+  justify-content: center;
+  width: 38px;
+  height: 20px;
   cursor: pointer;
   flex-shrink: 0;
+  padding: 4px;
+  margin: -4px 0;
 }
 
 .apex-bw-toggle input {
@@ -1274,32 +1278,32 @@ html[data-bw="true"] .apexon-header-nav.open {
 
 .apex-bw-toggle__track {
   position: absolute;
-  inset: 0;
+  inset: 4px;
   border-radius: 9999px;
   background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
-  transition: background-color 400ms ease, box-shadow 400ms ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: background-color 300ms ease, box-shadow 300ms ease;
 }
 
 .apex-bw-toggle__thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
+  top: 5px;
+  left: 5px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track {
   background: #e2e8f0;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-  transform: translateX(24px);
+  transform: translateX(18px);
   background: #f8fafc;
 }
 
@@ -3083,6 +3087,15 @@ html[data-theme="light"] .forum-category-select option,
 html[data-bw="true"] .forum-category-select option {
   background: #ffffff;
   color: #1e1b4b;
+}
+
+@media (max-width: 480px) {
+  .forum-category-select {
+    padding: 8px 32px 8px 12px;
+    font-size: 0.8rem;
+    min-width: 120px;
+    background-position: right 10px center;
+  }
 }
 
 .forum-filter-bar,
@@ -5090,16 +5103,26 @@ canvas#testBox,
   }
 
   .personal-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 6px;
   }
 
   .personal-card {
-    padding: 10px;
+    padding: 8px;
+  }
+
+  .personal-card-name {
+    font-size: 0.75rem;
   }
 
   .personal-card-value {
-    font-size: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .personal-card-unit,
+  .personal-card-count,
+  .personal-card-rank {
+    font-size: 0.65rem;
   }
 
   .game-stage {
@@ -5525,7 +5548,26 @@ canvas#testBox,
 
 @media (max-width: 480px) {
   .personal-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .personal-card {
+    padding: 8px;
+  }
+
+  .personal-card-name {
+    font-size: 0.75rem;
+  }
+
+  .personal-card-value {
+    font-size: 0.95rem;
+  }
+
+  .personal-card-unit,
+  .personal-card-count,
+  .personal-card-rank {
+    font-size: 0.65rem;
   }
 }
 
@@ -6048,19 +6090,19 @@ html[data-bw="true"] .game-canvas {
 }
 
 @media (max-width: 1023px) {
-  .apexon-lang-selector {
-    margin-left: 0.25rem;
+  .apexon-header-left .apexon-lang-selector {
+    margin-left: 0;
   }
   .apexon-lang-selector__name {
     display: none;
   }
   .apexon-lang-selector__btn {
-    padding: 0.25rem;
-    border-radius: 0.45rem;
+    padding: 0.2rem;
+    border-radius: 0.4rem;
   }
   .apexon-lang-selector__flag {
-    width: 1rem;
-    height: 1rem;
+    width: 0.95rem;
+    height: 0.95rem;
   }
   .apexon-lang-selector__arrow {
     display: none;
@@ -6085,5 +6127,36 @@ html[data-bw="true"] .game-canvas {
   .apexon-lang-selector__flag {
     width: 0.8rem;
     height: 0.8rem;
+  }
+}
+
+/* ============================================================================
+   Mobile Two-Column Tabs: 排行榜 / 讨论区筛选 / 发帖分类
+   ============================================================================ */
+@media (max-width: 767px) {
+  .leaderboard-tabs,
+  .forum-filter-bar,
+  .forum-category-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .leaderboard-tab,
+  .forum-filter-btn,
+  .forum-category-tab {
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-tab,
+  .forum-filter-btn,
+  .forum-category-tab {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.75rem;
   }
 }

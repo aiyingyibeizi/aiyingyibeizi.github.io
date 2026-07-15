@@ -1069,7 +1069,12 @@
       const left = document.querySelector('.apexon-header-left');
       const actions = document.querySelector('.header-actions');
       if (left) {
-        left.appendChild(wrapper);
+        const logo = left.querySelector('.apexon-header-logo');
+        if (logo && logo.nextSibling) {
+          left.insertBefore(wrapper, logo.nextSibling);
+        } else {
+          left.appendChild(wrapper);
+        }
       } else if (actions) {
         actions.appendChild(wrapper);
       } else {
