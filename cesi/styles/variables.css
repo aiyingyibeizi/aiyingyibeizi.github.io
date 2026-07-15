@@ -30,6 +30,7 @@
   --apex-bg-elevated: #0a0e18;
   --apex-surface: rgba(10, 14, 28, 0.72);
   --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+  --apex-surface-hover: rgba(255, 255, 255, 0.06);
   --apex-overlay: rgba(2, 5, 12, 0.82);
 
   /* 文字 */
@@ -135,6 +136,7 @@
   --apex-bg-elevated: #0a0e18;
   --apex-surface: rgba(10, 14, 28, 0.72);
   --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+  --apex-surface-hover: rgba(255, 255, 255, 0.06);
   --apex-overlay: rgba(2, 5, 12, 0.82);
 
   --apex-text: #f8fafc;
@@ -186,6 +188,7 @@
     --apex-bg-elevated: #0a0e18;
     --apex-surface: rgba(10, 14, 28, 0.72);
     --apex-surface-elevated: rgba(14, 20, 38, 0.84);
+    --apex-surface-hover: rgba(255, 255, 255, 0.06);
     --apex-overlay: rgba(2, 5, 12, 0.82);
 
     --apex-text: #f8fafc;
@@ -423,6 +426,7 @@ html[data-theme="light"] {
   --apex-bg-elevated: #ffffff;
   --apex-surface: #ffffff;
   --apex-surface-elevated: #ffffff;
+  --apex-surface-hover: rgba(30, 27, 75, 0.06);
   --apex-overlay: rgba(255, 255, 255, 0.96);
 
   --apex-text: #1e1b4b;
