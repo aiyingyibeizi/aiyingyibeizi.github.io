@@ -377,6 +377,10 @@ body.loaded .apexon-page {
   padding: 0 var(--container-padding);
 }
 
+.apexon-header__inner > * {
+  min-width: 0;
+}
+
 .apexon-header-logo {
   display: inline-flex;
   align-items: center;
@@ -2975,28 +2979,92 @@ html[data-theme="light"] .apex-card--game:hover {
   box-shadow: 0 4px 12px rgba(109, 93, 252, 0.28);
 }
 
+.forum-filter-btn[data-cat="chat"],
+.forum-category-tab[data-cat="chat"] {
+  border-color: rgba(14, 165, 233, 0.35);
+  color: rgba(56, 189, 248, 0.92);
+}
+
 .forum-filter-btn[data-cat="chat"].active,
 .forum-category-tab[data-cat="chat"].active {
   background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  color: var(--apex-text-inverse);
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28);
+}
+
+.forum-filter-btn[data-cat="score"],
+.forum-category-tab[data-cat="score"] {
+  border-color: rgba(139, 92, 246, 0.35);
+  color: rgba(167, 139, 250, 0.92);
 }
 
 .forum-filter-btn[data-cat="score"].active,
 .forum-category-tab[data-cat="score"].active {
   background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: var(--apex-text-inverse);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.28);
+}
+
+.forum-filter-btn[data-cat="bug"],
+.forum-category-tab[data-cat="bug"] {
+  border-color: rgba(244, 63, 94, 0.35);
+  color: rgba(251, 113, 133, 0.92);
 }
 
 .forum-filter-btn[data-cat="bug"].active,
 .forum-category-tab[data-cat="bug"].active {
   background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+  color: var(--apex-text-inverse);
   box-shadow: 0 4px 12px rgba(244, 63, 94, 0.28);
+}
+
+.forum-filter-btn[data-cat="suggestion"],
+.forum-category-tab[data-cat="suggestion"] {
+  border-color: rgba(16, 185, 129, 0.35);
+  color: rgba(52, 211, 153, 0.92);
 }
 
 .forum-filter-btn[data-cat="suggestion"].active,
 .forum-category-tab[data-cat="suggestion"].active {
   background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: var(--apex-text-inverse);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
+}
+
+html[data-theme="light"] .forum-filter-btn[data-cat="chat"],
+html[data-bw="true"] .forum-filter-btn[data-cat="chat"],
+html[data-theme="light"] .forum-category-tab[data-cat="chat"],
+html[data-bw="true"] .forum-category-tab[data-cat="chat"] {
+  border-color: rgba(14, 165, 233, 0.45);
+  color: #0284c7;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+html[data-theme="light"] .forum-filter-btn[data-cat="score"],
+html[data-bw="true"] .forum-filter-btn[data-cat="score"],
+html[data-theme="light"] .forum-category-tab[data-cat="score"],
+html[data-bw="true"] .forum-category-tab[data-cat="score"] {
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #7c3aed;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+html[data-theme="light"] .forum-filter-btn[data-cat="bug"],
+html[data-bw="true"] .forum-filter-btn[data-cat="bug"],
+html[data-theme="light"] .forum-category-tab[data-cat="bug"],
+html[data-bw="true"] .forum-category-tab[data-cat="bug"] {
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #e11d48;
+  background: rgba(244, 63, 94, 0.08);
+}
+
+html[data-theme="light"] .forum-filter-btn[data-cat="suggestion"],
+html[data-bw="true"] .forum-filter-btn[data-cat="suggestion"],
+html[data-theme="light"] .forum-category-tab[data-cat="suggestion"],
+html[data-bw="true"] .forum-category-tab[data-cat="suggestion"] {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
 }
 
 .forum-input-wrap textarea,
@@ -3473,6 +3541,26 @@ html[data-theme="light"] #testBox .apex-start-screen__desc {
     width: 54px;
     height: 54px;
     font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .apex-start-screen {
+    min-height: 220px;
+    padding: 22px 14px;
+    gap: 10px;
+    border-radius: var(--apex-radius-sm);
+  }
+
+  .apex-start-screen__icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+
+  .apex-start-screen__btn {
+    padding: 10px 24px;
+    font-size: 0.8125rem;
   }
 }
 
@@ -5755,11 +5843,9 @@ html[data-bw="true"] .game-canvas {
   display: block;
 }
 
-.apexon-lang-selector__name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 5.2rem;
+.apexon-lang-selector__name,
+.apexon-lang-selector__arrow {
+  display: none;
 }
 
 .apexon-lang-selector__arrow {

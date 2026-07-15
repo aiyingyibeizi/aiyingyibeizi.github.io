@@ -13,14 +13,17 @@
     if (nav) nav.classList.toggle('open');
   };
 
-  // 点击页面其他区域关闭菜单
+  // 点击页面其他区域关闭菜单；点击菜单链接后自动收起
   document.addEventListener('click', (e) => {
     const nav = document.getElementById('headerNav');
     const btn = document.querySelector('.apexon-menu-btn');
     if (!nav || !btn) return;
     if (!nav.contains(e.target) && !btn.contains(e.target)) {
       nav.classList.remove('open');
+      return;
     }
+    const link = e.target.closest('#headerNav a');
+    if (link) nav.classList.remove('open');
   });
 
   // ===== 配置 =====
@@ -1454,10 +1457,43 @@
     },
 
     relayoutHeader() {
-      // 所有页面已在 HTML 中显式放置 [☰] [首页] [Music]，此处仅做兜底高亮
+      // 兜底高亮当前页：Music 按钮 + 下拉菜单中的对应链接
+      const path = location.pathname;
       const music = document.querySelector('.apex-music-btn');
-      if (music && location.pathname.endsWith('music.html')) {
+      if (music && path.endsWith('music.html')) {
         music.classList.add('active');
+      }
+      const pageMap = {
+        'index.html': 'nav-main',
+        'reaction.html': 'navReaction',
+        'type.html': 'navType',
+        'stick.html': 'navStick',
+        'number.html': 'navNumber',
+        'verbal.html': 'navVerbal',
+        'visual.html': 'navVisual',
+        'sequence.html': 'navSequence',
+        'aim.html': 'navAim',
+        'music.html': 'navMusic'
+      };
+      let matched = false;
+      Object.keys(pageMap).forEach(file => {
+        if (path.endsWith(file) || (file === 'index.html' && (path.endsWith('/') || path.endsWith('/cesi/')))) {
+          const key = pageMap[file];
+          const links = document.querySelectorAll('#headerNav a');
+          links.forEach(a => {
+            if (a.getAttribute('data-i18n') === key || a.classList.contains(key)) {
+              a.classList.add('active');
+              matched = true;
+            }
+          });
+        }
+      });
+      // 兜底：按 href 匹配
+      if (!matched) {
+        const fileName = path.split('/').pop() || 'index.html';
+        document.querySelectorAll('#headerNav a').forEach(a => {
+          if (a.getAttribute('href') === fileName) a.classList.add('active');
+        });
       }
     },
 
