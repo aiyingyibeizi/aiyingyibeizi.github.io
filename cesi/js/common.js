@@ -7,23 +7,82 @@
   'use strict';
   const APEXON = global.APEXON = global.APEXON || {};
 
-  // 全局菜单切换
+  // 全局菜单切换：下拉菜单与三条杠对齐，首页 Pill 始终保留
   global.toggleMenu = function () {
-    const nav = document.getElementById('headerNav');
-    if (nav) nav.classList.toggle('open');
+    const dropdown = document.getElementById('headerDropdown');
+    if (dropdown) dropdown.classList.toggle('open');
   };
 
   // 点击页面其他区域关闭菜单；点击菜单链接后自动收起
   document.addEventListener('click', (e) => {
-    const nav = document.getElementById('headerNav');
+    const dropdown = document.getElementById('headerDropdown');
     const btn = document.querySelector('.apexon-menu-btn');
-    if (!nav || !btn) return;
-    if (!nav.contains(e.target) && !btn.contains(e.target)) {
-      nav.classList.remove('open');
+    if (!dropdown || !btn) return;
+    if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+      dropdown.classList.remove('open');
       return;
     }
-    const link = e.target.closest('#headerNav a');
-    if (link) nav.classList.remove('open');
+    const link = e.target.closest('#headerDropdown a');
+    if (link) dropdown.classList.remove('open');
+  });
+
+  // ===== 页面切换丝滑过渡 =====
+  (function initPageTransition() {
+    const overlay = document.createElement('div');
+    overlay.className = 'apex-page-transition';
+    document.body.appendChild(overlay);
+
+    function isLocalLink(href) {
+      if (!href) return false;
+      try {
+        const url = new URL(href, location.href);
+        return url.origin === location.origin && !href.startsWith('#') && !href.startsWith('javascript:');
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function navigateWithTransition(href) {
+      overlay.classList.add('active');
+      document.body.classList.remove('loaded');
+      setTimeout(() => {
+        location.href = href;
+      }, 260);
+    }
+
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!isLocalLink(href)) return;
+      // 排除需要直接下载或新标签的链接，以及 LOGO/菜单等已自身处理的导航
+      if (link.target === '_blank' || link.getAttribute('download')) return;
+      e.preventDefault();
+      navigateWithTransition(href);
+    });
+
+    // 页面加载完成后淡入
+    window.addEventListener('pageshow', () => {
+      overlay.classList.remove('active', 'exit');
+      document.body.classList.add('loaded');
+    });
+
+    // 安全兜底：若过渡异常导致页面未显示，3s 后强制显示
+    setTimeout(() => document.body.classList.add('loaded'), 3000);
+  })();
+
+  // LOGO 防拖拽/防长按选中/防右键保存兜底
+  document.addEventListener('dragstart', (e) => {
+    const logo = e.target.closest('.apexon-header-logo');
+    if (logo) e.preventDefault();
+  });
+  document.addEventListener('selectstart', (e) => {
+    const logo = e.target.closest('.apexon-header-logo');
+    if (logo) e.preventDefault();
+  });
+  document.addEventListener('contextmenu', (e) => {
+    const logo = e.target.closest('.apexon-header-logo');
+    if (logo) e.preventDefault();
   });
 
   // ===== 配置 =====
@@ -1317,20 +1376,32 @@
         .apex-user-name { font-size: 13px; font-weight: 600; color: var(--apex-text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .apex-user-caret { font-size: 10px; color: var(--apex-text-secondary); margin-left: 2px; }
         .apex-user-dropdown {
-          position: absolute; top: calc(100% + 8px); right: 0; min-width: 150px;
-          background: var(--apex-surface); border: 1px solid var(--apex-border-subtle);
-          border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); padding: 6px;
-          opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .2s ease, transform .2s ease; z-index: 1001;
+          position: absolute; top: calc(100% + 8px); right: 0; left: auto; min-width: 150px; max-width: calc(100vw - 24px);
+          background: var(--apex-surface-elevated); border: 1px solid var(--apex-border-strong);
+          border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,0.28); padding: 6px;
+          opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.98); transform-origin: top right;
+          transition: opacity .2s ease, transform .2s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 1001;
+          display: flex; flex-direction: column; gap: 2px;
         }
-        .apex-user-dropdown.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .apex-user-dropdown.show { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         .apex-user-dropdown button {
           width: 100%; text-align: left; padding: 10px 14px; border: none; border-radius: 10px;
-          background: transparent; color: var(--apex-text); font-size: 13px; cursor: pointer;
-          transition: background .15s ease;
+          background: transparent; color: var(--apex-text); font-size: 13px; font-weight: 500;
+          cursor: pointer; white-space: nowrap; line-height: 1.4;
+          transition: background .15s ease, transform .15s ease, color .15s ease;
         }
-        .apex-user-dropdown button:hover { background: rgba(124, 58, 237, 0.1); }
+        .apex-user-dropdown button:hover { background: linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(139, 92, 246, 0.1) 100%); transform: translateX(2px); }
         .apex-user-dropdown button.danger { color: #ef4444; }
-        .apex-user-dropdown button.danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .apex-user-dropdown button.danger:hover { background: rgba(239, 68, 68, 0.12); }
+        html[data-theme="light"] .apex-user-dropdown,
+        html[data-bw="true"] .apex-user-dropdown {
+          background: #ffffff; border-color: rgba(124, 107, 196, 0.22);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+        }
+        html[data-theme="light"] .apex-user-dropdown button,
+        html[data-bw="true"] .apex-user-dropdown button { color: #1e1b4b; }
+        html[data-theme="light"] .apex-user-dropdown button.danger,
+        html[data-bw="true"] .apex-user-dropdown button.danger { color: #dc2626; }
         .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-login-modal.show { opacity: 1; pointer-events: auto; }
         .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
@@ -1457,12 +1528,11 @@
     },
 
     relayoutHeader() {
-      // 兜底高亮当前页：Music 按钮 + 下拉菜单中的对应链接
+      // 兜底高亮当前页：Music 按钮 + Pill + 下拉菜单中的对应链接
       const path = location.pathname;
       const music = document.querySelector('.apex-music-btn');
-      if (music && path.endsWith('music.html')) {
-        music.classList.add('active');
-      }
+      if (music) music.classList.toggle('active', path.endsWith('music.html'));
+
       const pageMap = {
         'index.html': 'nav-main',
         'reaction.html': 'navReaction',
@@ -1475,23 +1545,31 @@
         'aim.html': 'navAim',
         'music.html': 'navMusic'
       };
+
+      const isCurrent = (file) => path.endsWith(file) || (file === 'index.html' && (path.endsWith('/') || path.endsWith('/cesi/')));
+
+      // 同步 Pill 与 Dropdown 的高亮状态
+      const pillLinks = document.querySelectorAll('#headerPill a');
+      const dropdownLinks = document.querySelectorAll('#headerDropdown a');
+
+      [...pillLinks, ...dropdownLinks].forEach(a => a.classList.remove('active'));
+
       let matched = false;
       Object.keys(pageMap).forEach(file => {
-        if (path.endsWith(file) || (file === 'index.html' && (path.endsWith('/') || path.endsWith('/cesi/')))) {
-          const key = pageMap[file];
-          const links = document.querySelectorAll('#headerNav a');
-          links.forEach(a => {
-            if (a.getAttribute('data-i18n') === key || a.classList.contains(key)) {
-              a.classList.add('active');
-              matched = true;
-            }
-          });
-        }
+        if (!isCurrent(file)) return;
+        const key = pageMap[file];
+        [...pillLinks, ...dropdownLinks].forEach(a => {
+          if (a.getAttribute('data-i18n') === key || a.classList.contains(key)) {
+            a.classList.add('active');
+            matched = true;
+          }
+        });
       });
+
       // 兜底：按 href 匹配
       if (!matched) {
         const fileName = path.split('/').pop() || 'index.html';
-        document.querySelectorAll('#headerNav a').forEach(a => {
+        [...pillLinks, ...dropdownLinks].forEach(a => {
           if (a.getAttribute('href') === fileName) a.classList.add('active');
         });
       }

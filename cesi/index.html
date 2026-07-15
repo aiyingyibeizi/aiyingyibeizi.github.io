@@ -20,7 +20,7 @@
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=7">
-    <link rel="stylesheet" href="styles/main.css?v=10">
+    <link rel="stylesheet" href="styles/main.css?v=12">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -33,31 +33,13 @@
 <body>
     <canvas id="particles"></canvas>
 
-            <header class="apexon-header">
+    <header class="apexon-header">
         <div class="apexon-header__inner">
             <div class="apexon-header-left">
-                <a href="index.html" class="apexon-header-logo nav-main">
-                    <img src="assets/favicon.png" alt="Logo">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
                     <span>APEXON</span>
                 </a>
-            </div>
-            <div class="apexon-header-center">
-                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
-                <nav class="apexon-header-nav" id="headerNav">
-                    <a href="index.html" class="active nav-main" data-i18n="navHome">首页</a>
-                    <a href="reaction.html" class="nav-more" data-i18n="navReaction">反应测试</a>
-                    <a href="type.html" class="nav-more" data-i18n="navType">打字测试</a>
-                    <a href="stick.html" class="nav-more" data-i18n="navStick">注意力测试</a>
-                    <a href="number.html" class="nav-more" data-i18n="navNumber">数字记忆</a>
-                    <a href="verbal.html" class="nav-more" data-i18n="navVerbal">单词记忆</a>
-                    <a href="visual.html" class="nav-more" data-i18n="navVisual">视觉记忆</a>
-                    <a href="sequence.html" class="nav-more" data-i18n="navSequence">序列记忆</a>
-                    <a href="aim.html" class="nav-more" data-i18n="navAim">瞄准训练</a>
-                    <a href="music.html" class="nav-more" data-i18n="navMusic">Music</a>
-                </nav>
-                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
-            </div>
-            <div class="header-actions">
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
@@ -67,6 +49,26 @@
                     </span>
                 </label>
             </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions"></div>
         </div>
     </header>
 
@@ -202,8 +204,8 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=8"></script>
-    <script src="js/common.js?v=16"></script>
+    <script src="js/i18n.js?v=9"></script>
+    <script src="js/common.js?v=18"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -323,6 +325,7 @@
         const MAX_COMMENT_PAGES = 8;
         let currentCommentFilter = 'all';
         let allComments = [];
+        let commentProfiles = {};
         let currentCommentPage = 1;
 
         window.setPostCategory = function(cat) {
@@ -363,8 +366,27 @@
             setCommentFilter(category);
         };
 
+        // 论坛头像渲染
+        function renderForumAvatar(avatarUrl) {
+            if (avatarUrl) {
+                return '<div class="forum-avatar"><img src="' + APEXON.Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')"></div>';
+            }
+            return '<div class="forum-avatar"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg></div>';
+        }
+
         async function loadComments() {
             allComments = await APEXON.DB.getComments(COMMENTS_PER_PAGE * MAX_COMMENT_PAGES, currentCommentFilter);
+            // 批量拉取评论用户的头像资料
+            const userIds = [...new Set(allComments.map(c => c.user_id).filter(Boolean))];
+            if (userIds.length && APEXON.DB.getProfilesForUsers) {
+                try {
+                    const profiles = await APEXON.DB.getProfilesForUsers(userIds);
+                    commentProfiles = {};
+                    profiles.forEach(p => { if (p.user_id) commentProfiles[p.user_id] = p; });
+                } catch (e) {
+                    commentProfiles = {};
+                }
+            }
             currentCommentPage = 1;
             renderComments();
         }
@@ -381,16 +403,21 @@
             const totalPages = Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES);
             const start = (currentCommentPage - 1) * COMMENTS_PER_PAGE;
             const pageItems = allComments.slice(start, start + COMMENTS_PER_PAGE);
-            listEl.innerHTML = pageItems.map(c =>
-                '<div class="forum-item">' +
+            listEl.innerHTML = pageItems.map(c => {
+                const profile = c.user_id ? commentProfiles[c.user_id] : null;
+                const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : null;
+                return '<div class="forum-item">' +
                     '<div class="forum-item-header">' +
-                        '<div class="forum-item-user">' + esc(c.username) + '</div>' +
+                        '<div class="forum-item-user" onclick="window.showForumProfile && window.showForumProfile(' + esc(JSON.stringify(c.user_id || '')) + ')">' +
+                            renderForumAvatar(avatarUrl) +
+                            '<span>' + esc(c.username) + '</span>' +
+                        '</div>' +
                         '<span class="forum-item-category ' + esc(c.category) + '" data-cat="' + esc(c.category) + '">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
                         '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</div>' +
                     '</div>' +
                     '<div class="forum-item-content">' + esc(c.content) + '</div>' +
-                '</div>'
-            ).join('');
+                '</div>';
+            }).join('');
 
             if (totalPages <= 1) {
                 pageEl.innerHTML = '';
@@ -403,6 +430,12 @@
             pagesHtml += '<button class="forum-page-btn forum-page-next" onclick="goCommentPage(' + (currentCommentPage + 1) + ')"' + (currentCommentPage === totalPages ? ' disabled' : '') + '>' + t('nextPage', '下一页') + '</button>';
             pageEl.innerHTML = pagesHtml;
         }
+
+        // 点击论坛头像查看个人资料
+        window.showForumProfile = function(userId) {
+            if (!userId || !APEXON.UI || !APEXON.UI.showProfileModal) return;
+            APEXON.UI.showProfileModal('view', userId);
+        };
 
         // ===== 反馈 =====
         window.submitFeedback = async function() {
@@ -426,10 +459,10 @@
 
         // ===== 导航 =====
         window.toggleMenu = function() {
-            document.getElementById('headerNav').classList.toggle('open');
+            document.getElementById('headerDropdown').classList.toggle('open');
         };
         document.addEventListener('click', e => {
-            if (!e.target.closest('.apexon-header')) document.getElementById('headerNav').classList.remove('open');
+            if (!e.target.closest('.apexon-header')) document.getElementById('headerDropdown').classList.remove('open');
         });
 
         await initApp();
