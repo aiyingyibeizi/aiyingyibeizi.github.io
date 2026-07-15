@@ -20,7 +20,7 @@
     <title data-i18n="stickTitle">注意力测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=7">
-    <link rel="stylesheet" href="styles/main.css?v=12">
+    <link rel="stylesheet" href="styles/main.css?v=13">
     <style>
         canvas#testBox {
             width: 100%;
@@ -149,18 +149,11 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=9"></script>
-    <script src="js/common.js?v=18"></script>
+    <script src="js/i18n.js?v=10"></script>
+    <script src="js/common.js?v=19"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
-
-        window.toggleMenu = function () {
-            document.getElementById('headerDropdown').classList.toggle('open');
-        };
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.apexon-header')) document.getElementById('headerDropdown').classList.remove('open');
-        });
 
         // 粒子背景
         APEXON.Particles.init();
