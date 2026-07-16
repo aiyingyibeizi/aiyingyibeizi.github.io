@@ -1,0 +1,25 @@
+{
+  "name": "cesi-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers + Hono + TypeScript backend with multi-db sharding",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.7.0",
+    "@supabase/supabase-js": "^2.44.4",
+    "@upstash/redis": "^1.34.0",
+    "hono": "^4.4.13",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240718.0",
+    "@types/pg": "^8.11.6",
+    "typescript": "^5.5.4",
+    "wrangler": "^3.65.1"
+  }
+}
