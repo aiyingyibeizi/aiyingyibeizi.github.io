@@ -85,9 +85,10 @@
     if (logo) e.preventDefault();
   });
 
-  // ===== 配置 =====
+  // ===== 公开配置（可安全放在前端） =====
   const SUPABASE_URL = 'https://kpmsijgonualekjyrkzs.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u';
+  const SUPABASE_ANON_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u'; // 这是公开匿名密钥，允许前端调用 Supabase Auth
+  const WORKER_API_URL = 'https://cesi-worker.luoyangmengjin2025.workers.dev'; // Cloudflare Worker 后端地址
 
   // ===== 预设头像：30 张精选艺术风景 / 几何 / 木纹 / 专辑封面风格头像（本地文件，不占用数据库存储）=====
   const PRESET_AVATARS = [
@@ -316,8 +317,8 @@
       if (query) url += '?' + query;
       const isMergeUpsert = method === 'POST' && query && query.includes('on_conflict');
       const headers = {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': isMergeUpsert ? 'return=representation,resolution=merge-duplicates' : 'return=representation'
       };
@@ -368,8 +369,8 @@
         const res = await fetch(url, {
           method: 'POST',
           headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json'
           },
           body: '{}'
@@ -393,7 +394,7 @@
       const url = `${SUPABASE_URL}/rest/v1/scores?select=count()`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return 0;
         const data = await res.json();
@@ -407,7 +408,7 @@
       const url = `${SUPABASE_URL}/rest/v1/scores?select=user_id&limit=10000`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return [];
         const rows = await res.json();
@@ -488,7 +489,7 @@
       const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=1000`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return [];
         const rows = await res.json();
@@ -519,7 +520,7 @@
       const url = `${SUPABASE_URL}/rest/v1/scores?user_id=eq.${encodeURIComponent(userId)}&test_type=eq.${encodeURIComponent(type)}&order=created_at.desc&limit=${limit}`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return [];
         const rows = await res.json();
@@ -575,7 +576,7 @@
       }
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return [];
         return await res.json();
@@ -602,7 +603,7 @@
       const url = `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&limit=1`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return null;
         const data = await res.json();
@@ -643,8 +644,8 @@
         const res = await fetch(url, {
           method: 'POST',
           headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ old_un: oldUsername, new_un: newUsername, token: token })
@@ -668,7 +669,7 @@
       const url = `${SUPABASE_URL}/rest/v1/profiles?user_id=in.(${list})`;
       try {
         const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
         if (!res.ok) return [];
         return await res.json();
