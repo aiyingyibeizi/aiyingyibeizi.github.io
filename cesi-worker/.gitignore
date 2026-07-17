@@ -2,6 +2,7 @@
 .dev.vars
 .env
 .env.local
+secrets.json
 
 # Dependencies
 node_modules/
