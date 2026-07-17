@@ -1,6 +1,6 @@
 name = "cesi-worker"
 main = "src/index.ts"
-compatibility_date = "2024-07-17"
+compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Non-sensitive values can live in [vars].
