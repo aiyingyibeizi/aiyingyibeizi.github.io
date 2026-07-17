@@ -1,0 +1,15 @@
+# Secrets and local env vars
+.dev.vars
+.env
+.env.local
+
+# Dependencies
+node_modules/
+
+# Wrangler build artifacts
+.wrangler/
+dist/
+
+# Logs
+*.log
+npm-debug.log*

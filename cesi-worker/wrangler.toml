@@ -4,7 +4,8 @@ compatibility_date = "2024-07-17"
 node_compat = true
 
 # Non-sensitive values can live in [vars].
-# For sensitive values, run `wrangler secret put <NAME>` after configuring your account.
+# For local development, put all secrets in .dev.vars (already created and gitignored).
+# For production, run: npx wrangler secret bulk
 [vars]
 NEON_DSN = "__NEON_DSN__"
 SUPABASE_DSN = "__SUPABASE_DSN__"
@@ -16,7 +17,3 @@ TURSO_URL_APEXON_2 = "__TURSO_URL_APEXON_2__"
 TURSO_TOKEN_APEXON_2 = "__TURSO_TOKEN_APEXON_2__"
 SUPABASE_URL = "__SUPABASE_URL__"
 UPSTASH_REDIS_URL = "__UPSTASH_REDIS_URL__"
-
-# Set these via `wrangler secret put`:
-#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-#   wrangler secret put UPSTASH_REDIS_TOKEN
