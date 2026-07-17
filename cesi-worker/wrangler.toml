@@ -1,7 +1,7 @@
 name = "cesi-worker"
 main = "src/index.ts"
 compatibility_date = "2024-07-17"
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 # Non-sensitive values can live in [vars].
 # For local development, put all secrets in .dev.vars (already created and gitignored).
