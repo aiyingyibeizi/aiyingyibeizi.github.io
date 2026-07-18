@@ -1,5 +1,5 @@
 import { createClient, type Client } from '@libsql/client/web';
-import type { MixedData, Meta } from '../types/models';
+import type { MixedData, Meta, SelectOptions } from '../types/models';
 
 export function createTursoClient(url: string, authToken: string): Client {
   return createClient({ url, authToken });
@@ -7,9 +7,19 @@ export function createTursoClient(url: string, authToken: string): Client {
 
 export async function tursoInsert(client: Client, data: MixedData): Promise<void> {
   await client.execute({
-    sql: `INSERT INTO mixed_data (id, user_id, type, payload, file_url, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: [data.id, data.user_id, data.type, data.payload, data.file_url, data.created_at, data.updated_at],
+    sql: `INSERT INTO mixed_data (id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      data.id,
+      data.user_id,
+      data.type,
+      data.subtype,
+      data.score_value,
+      data.payload,
+      data.file_url,
+      data.created_at,
+      data.updated_at,
+    ],
   });
 }
 
@@ -19,7 +29,7 @@ export async function tursoSelectByUser(
   limit: number
 ): Promise<MixedData[]> {
   const result = await client.execute({
-    sql: `SELECT id, user_id, type, payload, file_url, created_at, updated_at
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
           FROM mixed_data
           WHERE user_id = ?
           ORDER BY created_at DESC
@@ -27,6 +37,70 @@ export async function tursoSelectByUser(
     args: [userId, limit],
   });
   return result.rows as unknown as MixedData[];
+}
+
+export async function tursoSelectByType(
+  client: Client,
+  type: string,
+  options: SelectOptions
+): Promise<MixedData[]> {
+  const conditions = ['type = ?'];
+  const args: (string | number)[] = [type];
+
+  if (options.userId) {
+    conditions.push('user_id = ?');
+    args.push(options.userId);
+  }
+  if (options.subtype) {
+    conditions.push('subtype = ?');
+    args.push(options.subtype);
+  }
+
+  const orderBy =
+    options.orderByScore === 'asc'
+      ? 'score_value ASC, created_at DESC'
+      : options.orderByScore === 'desc'
+      ? 'score_value DESC, created_at DESC'
+      : 'created_at DESC';
+
+  const limit = Math.min(Math.max(options.limit ?? 100, 1), 1000);
+
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM mixed_data
+          WHERE ${conditions.join(' AND ')}
+          ORDER BY ${orderBy}
+          LIMIT ?`,
+    args: [...args, limit],
+  });
+  return result.rows as unknown as MixedData[];
+}
+
+export async function tursoSelectById(client: Client, id: string): Promise<MixedData | undefined> {
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM mixed_data
+          WHERE id = ?
+          LIMIT 1`,
+    args: [id],
+  });
+  return (result.rows[0] as unknown as MixedData) ?? undefined;
+}
+
+export async function tursoDeleteById(client: Client, id: string): Promise<void> {
+  await client.execute({
+    sql: `DELETE FROM mixed_data WHERE id = ?`,
+    args: [id],
+  });
+}
+
+export async function tursoCountByType(client: Client, type: string): Promise<number> {
+  const result = await client.execute({
+    sql: `SELECT COUNT(*) AS count FROM mixed_data WHERE type = ?`,
+    args: [type],
+  });
+  const row = result.rows[0] as unknown as { count: number } | undefined;
+  return row ? Number(row.count) : 0;
 }
 
 export async function tursoGetMetaUsedBytes(client: Client, dbName: string): Promise<number> {
