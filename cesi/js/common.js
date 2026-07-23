@@ -1490,21 +1490,21 @@
         .leaderboard-avatar svg { width: 18px; height: 18px; }
         @media (max-width: 480px) {
           .apex-login-card { padding: 24px 20px 20px; }
-          .apex-user-menu { margin-left: 6px; }
-          .apex-user-bar { gap: 4px; padding: 2px 6px 2px 4px; border-radius: 18px; }
-          .apex-avatar-wrap { width: 22px; height: 22px; }
-          .apex-avatar { width: 22px; height: 22px; }
-          .apex-avatar svg { width: 16px; height: 16px; }
-          .apex-mini-icon { width: 10px; height: 10px; }
-          .apex-user-name { font-size: 11px; max-width: 64px; }
-          .apex-user-caret { font-size: 9px; }
+          .apex-user-menu { margin-left: 4px; }
+          .apex-user-bar { gap: 3px; padding: 2px 4px 2px 3px; border-radius: 16px; }
+          .apex-avatar-wrap { width: 20px; height: 20px; }
+          .apex-avatar { width: 20px; height: 20px; }
+          .apex-avatar svg { width: 14px; height: 14px; }
+          .apex-mini-icon { width: 9px; height: 9px; }
+          .apex-user-name { display: none; }
+          .apex-user-caret { display: none; }
           .apex-user-dropdown { min-width: 130px; border-radius: 12px; padding: 4px; }
           .apex-user-dropdown button { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
           .apex-profile-card { padding: 20px; }
         }
         @media (max-width: 375px) {
-          .apex-user-menu { margin-left: 4px; }
-          .apex-user-bar { padding: 2px 4px 2px 3px; }
+          .apex-user-menu { margin-left: 3px; }
+          .apex-user-bar { padding: 2px 3px 2px 2px; }
           .apex-avatar-wrap { width: 18px; height: 18px; }
           .apex-avatar { width: 18px; height: 18px; }
           .apex-avatar svg { width: 13px; height: 13px; }
