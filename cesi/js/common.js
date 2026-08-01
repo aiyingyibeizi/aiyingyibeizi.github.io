@@ -90,6 +90,30 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u'; // 这是公开匿名密钥，允许前端调用 Supabase Auth
   const WORKER_API_URL = 'https://cesi-worker.luoyangmengjin2025.workers.dev'; // Cloudflare Worker 后端地址
 
+  // ===== Cloudflare Worker API 帮助对象 =====
+  const WorkerAPI = {
+    async request(path, method = 'GET', body, token) {
+      const url = `${WORKER_API_URL}${path}`;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const options = { method, headers };
+      if (body != null) options.body = JSON.stringify(body);
+      try {
+        const res = await fetch(url, options);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : {};
+        if (!res.ok) {
+          console.error(`[WorkerAPI ${method}] ${path} ${res.status}:`, data);
+          return { ok: false, status: res.status, data };
+        }
+        return { ok: true, status: res.status, data };
+      } catch (e) {
+        console.error('[WorkerAPI request failed]', path, method, e);
+        return { ok: false, status: 0, data: null };
+      }
+    }
+  };
+
   // ===== 预设头像：30 张精选艺术风景 / 几何 / 木纹 / 专辑封面风格头像（本地文件，不占用数据库存储）=====
   const PRESET_AVATARS = [
     { id: 0, url: 'assets/avatars/avatar_01.jpg?v=2' },
@@ -156,7 +180,7 @@
         if (data.times && !Array.isArray(data.times)) return false;
         if (data.times) {
           for (const t of data.times) {
-            if (t === null || t === undefined || t === 'skip') continue;
+            if (t === null || t === undefined || t === 'skip' || t === 'invalid') continue;
             const v = parseFloat(t);
             if (isNaN(v) || v < 0 || v > 5000) return false;
           }
@@ -313,6 +337,16 @@
   // ===== 1. Supabase 数据库 =====
   const DB = {
     async request(table, method, body, query, extraHeaders) {
+      //  scores / comments / profiles 通过 Cloudflare Worker 访问
+      if (table === 'scores' || table === 'comments' || table === 'profiles') {
+        let path = `/api/${table}`;
+        if (query) path += '?' + query;
+        const token = (extraHeaders && (extraHeaders['x-token'] || extraHeaders['x-user-id'] || extraHeaders['x-anon-id'])) || Auth.getToken() || Auth.getUserId();
+        const res = await WorkerAPI.request(path, method, body, token);
+        return res.ok ? res.data : null;
+      }
+
+      // 其余表（users / online_users / feedback / accounts 等）继续走 Supabase 直连兜底
       let url = `${SUPABASE_URL}/rest/v1/${table}`;
       if (query) url += '?' + query;
       const isMergeUpsert = method === 'POST' && query && query.includes('on_conflict');
@@ -364,30 +398,13 @@
     },
 
     async getSiteStats() {
-      const url = `${SUPABASE_URL}/rest/v1/rpc/get_site_stats`;
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: '{}'
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          console.error('[getSiteStats]', res.status, text);
-          return LocalStats.mergeRemote(await this._fallbackSiteStats());
-        }
-        const data = await res.json();
-        // 即使远程返回 0 也与本地缓存合并，避免全 0
-        const remote = (data && (data.total_users > 0 || data.total_tests > 0 || data.online > 0)) ? data : (await this._fallbackSiteStats());
+      const res = await WorkerAPI.request('/api/stats', 'GET');
+      if (res.ok && res.data) {
+        const remote = (res.data.total_users > 0 || res.data.total_tests > 0 || res.data.online > 0) ? res.data : (await this._fallbackSiteStats());
         return LocalStats.mergeRemote(remote);
-      } catch (e) {
-        console.error('[getSiteStats] failed:', e);
-        return LocalStats.mergeRemote(await this._fallbackSiteStats());
       }
+      console.error('[getSiteStats] failed:', res.status, res.data);
+      return LocalStats.mergeRemote(await this._fallbackSiteStats());
     },
 
     async _countScores() {
@@ -444,35 +461,27 @@
         return false;
       }
       const scoreValue = parseFloat(data.avg || data.score || 0);
-      const lowerIsBetter = ['reaction', 'type', 'aim'].includes(testType);
-
-      const history = await this.getHistoryByUserAndType(userId, testType, 1);
-      if (history.length) {
-        const best = history[0].score;
-        const isBetter = lowerIsBetter ? scoreValue < best : scoreValue > best;
-        if (!isBetter) {
-          console.log('[saveScore] not better than current best, skipped');
-          return true;
-        }
-        await this.deleteScore(history[0].id, userId);
-      }
-
-      const result = await this.request('scores', 'POST', {
-        user_id: userId,
+      const token = Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request('/api/scores', 'POST', {
         username: username || '',
         test_type: testType,
         score_value: scoreValue,
         accuracy: data.accuracy != null ? data.accuracy : (data.fouls != null ? data.fouls : null),
         wpm: data.wpm || null,
         cpm: data.cpm || null,
-        created_at: new Date().toISOString()
-      });
-      console.log('[saveScore]', testType, scoreValue, 'result:', result);
-      if (result) {
+        payload: {
+          times: data.times,
+          fouls: data.fouls,
+          leaderboard_eligible: data.leaderboard_eligible
+        }
+      }, token);
+      console.log('[saveScore]', testType, scoreValue, 'result:', res.data);
+      if (res.ok) {
         LocalStats.recordTest(userId);
         document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
+        return true;
       }
-      return !!result;
+      return false;
     },
 
     async deleteScore(id, userId) {
@@ -483,63 +492,35 @@
     },
 
     async getLeaderboard(testType, limit = 100) {
-      // 反应/打字/瞄准：数值越低越好；其他：数值越高越好
-      const lowerIsBetter = ['reaction', 'type', 'aim'];
-      const order = lowerIsBetter.includes(testType) ? 'score_value.asc' : 'score_value.desc';
-      const url = `${SUPABASE_URL}/rest/v1/scores?test_type=eq.${encodeURIComponent(testType)}&order=${order}&limit=1000`;
-      try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return [];
-        const rows = await res.json();
-        const bestByUser = new Map();
-        for (const row of rows) {
-          const existing = bestByUser.get(row.user_id);
-          if (!existing) {
-            bestByUser.set(row.user_id, row);
-            continue;
-          }
-          const isBetter = lowerIsBetter.includes(testType)
-            ? row.score_value < existing.score_value
-            : row.score_value > existing.score_value;
-          if (isBetter) bestByUser.set(row.user_id, row);
-        }
-        const bestRows = Array.from(bestByUser.values());
-        bestRows.sort((a, b) => lowerIsBetter.includes(testType)
-          ? a.score_value - b.score_value
-          : b.score_value - a.score_value);
-        return bestRows.slice(0, limit);
-      } catch (e) {
-        return [];
-      }
+      const res = await WorkerAPI.request(`/api/scores?leaderboard=1&test_type=${encodeURIComponent(testType)}&limit=${limit}`, 'GET');
+      if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
+      const rows = res.data.data;
+      return rows.map(r => ({
+        user_id: r.user_id,
+        username: r.username,
+        score_value: r.score_value,
+        created_at: r.created_at
+      }));
     },
 
     async getHistoryByUserAndType(userId, type, limit = 20) {
       if (!userId || !type) return [];
-      const url = `${SUPABASE_URL}/rest/v1/scores?user_id=eq.${encodeURIComponent(userId)}&test_type=eq.${encodeURIComponent(type)}&order=created_at.desc&limit=${limit}`;
-      try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return [];
-        const rows = await res.json();
-        return rows.map(r => ({
-          id: r.id,
-          user_id: r.user_id,
-          username: r.username,
-          test_type: r.test_type,
-          score: r.score_value,
-          avg: r.score_value,
-          accuracy: r.accuracy,
-          wpm: r.wpm,
-          cpm: r.cpm,
-          timestamp: r.created_at,
-          date: new Date(r.created_at).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')
-        }));
-      } catch (e) {
-        return [];
-      }
+      const res = await WorkerAPI.request(`/api/scores?user_id=${encodeURIComponent(userId)}&test_type=${encodeURIComponent(type)}&limit=${limit}`, 'GET');
+      if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
+      const rows = res.data.data;
+      return rows.map(r => ({
+        id: r.id,
+        user_id: r.user_id,
+        username: r.username,
+        test_type: r.test_type,
+        score: r.score_value,
+        avg: r.score_value,
+        accuracy: r.accuracy,
+        wpm: r.wpm,
+        cpm: r.cpm,
+        timestamp: r.created_at,
+        date: new Date(r.created_at).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')
+      }));
     },
 
     async addComment(userId, username, content, category) {
@@ -555,14 +536,15 @@
         console.warn('[addComment] rejected: too long', filtered.length);
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制') };
       }
-      const result = await this.request('comments', 'POST', {
+      const token = Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request('/api/comments', 'POST', {
         user_id: userId,
         username: username,
         content: filtered,
         category: cat
-      });
-      console.log('[addComment] result:', result);
-      if (!result) {
+      }, token);
+      console.log('[addComment] result:', res.data);
+      if (!res.ok) {
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
       }
       document.dispatchEvent(new CustomEvent('apexon:commentPosted', { detail: { category: cat } }));
@@ -570,19 +552,13 @@
     },
 
     async getComments(limit = 50, category = 'all') {
-      let url = `${SUPABASE_URL}/rest/v1/comments?order=created_at.desc&limit=${limit}`;
+      let path = `/api/comments?limit=${limit}`;
       if (category && category !== 'all') {
-        url += `&category=eq.${encodeURIComponent(category)}`;
+        path += `&category=${encodeURIComponent(category)}`;
       }
-      try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return [];
-        return await res.json();
-      } catch (e) {
-        return [];
-      }
+      const res = await WorkerAPI.request(path, 'GET');
+      if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
+      return res.data.data;
     },
 
     async addFeedback(name, email, content) {
@@ -600,17 +576,9 @@
     },
 
     async getProfile(userId) {
-      const url = `${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&limit=1`;
-      try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data[0] || null;
-      } catch (e) {
-        return null;
-      }
+      const res = await WorkerAPI.request(`/api/profiles/${encodeURIComponent(userId)}`, 'GET');
+      if (!res.ok) return null;
+      return res.data || null;
     },
 
     async saveProfile(userId, username, payload) {
@@ -634,8 +602,9 @@
       if (avatarUrl) body.avatar_url = avatarUrl;
       if (gender) body.gender = gender;
 
-      const result = await this.request('profiles', 'POST', body, 'on_conflict=user_id');
-      return !!result;
+      const token = Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request('/api/profiles', 'POST', body, token);
+      return res.ok;
     },
 
     async changeUsername(oldUsername, newUsername, token) {
@@ -714,17 +683,9 @@
 
     async validateSession() {
       if (!this.currentUser) return true;
-      const username = this.currentUser.username;
       const token = this.currentUser.token;
-      const nowIso = new Date().toISOString();
-      const rows = await DB.request(
-        'accounts',
-        'GET',
-        null,
-        `username=eq.${encodeURIComponent(username)}&session_token=eq.${encodeURIComponent(token)}&session_expires_at=gte.${encodeURIComponent(nowIso)}&limit=1`,
-        { 'x-username': username, 'x-token': token }
-      );
-      if (rows && rows.length) {
+      const res = await WorkerAPI.request('/api/profiles', 'GET', null, token);
+      if (res.ok) {
         this._extendSession();
         return true;
       }
@@ -762,24 +723,10 @@
     async mergeAnonymousData() {
       if (!this.currentUser || !this.anonId) return;
       const anonId = this.anonId;
-      const username = this.currentUser.username;
       const token = this.currentUser.token;
 
-      await DB.request(
-        'scores',
-        'PATCH',
-        { user_id: username, username: username },
-        `user_id=eq.${encodeURIComponent(anonId)}`,
-        { 'x-anon-id': anonId, 'x-username': username, 'x-token': token }
-      ).catch(e => console.error('[merge] scores failed:', e));
-
-      await DB.request(
-        'comments',
-        'PATCH',
-        { user_id: username, username: username },
-        `user_id=eq.${encodeURIComponent(anonId)}`,
-        { 'x-anon-id': anonId, 'x-username': username, 'x-token': token }
-      ).catch(e => console.error('[merge] comments failed:', e));
+      await WorkerAPI.request('/api/auth/merge-anon', 'POST', { anon_id: anonId }, token)
+        .catch(e => console.error('[merge] failed:', e));
 
       const newAnonId = this._generateAnonId();
       localStorage.setItem('apexon-anon-id', newAnonId);
@@ -837,39 +784,25 @@
       const passErr = this._validatePassword(password);
       if (passErr) return { success: false, error: passErr };
 
-      const exists = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
-      console.log('[register] exists check:', exists ? exists.length : null);
-      if (exists && exists.length) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('usernameExists') : '用户名已存在') };
+      const res = await WorkerAPI.request('/api/auth/register', 'POST', { username: u, password: password });
+      console.log('[register] worker result:', res.data);
+      if (!res.ok || !res.data || !res.data.token) {
+        return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerFailed') : '注册失败，请重试') };
       }
 
-      const salt = this._generateSalt();
-      const hash = await this._hashPassword(password, salt);
-      const token = this._generateToken();
-      const expiresAt = this._computeExpires(remember);
-      const result = await DB.request('accounts', 'POST', {
-        username: u,
-        password_hash: hash,
-        salt: salt,
-        session_token: token,
-        session_expires_at: new Date(expiresAt).toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      console.log('[register] account insert result:', result);
-      if (!result) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerFailed') : '注册失败，请重试') };
+      const expiresAt = new Date(res.data.expires_at).getTime();
+      this._setSession(res.data.username || u, res.data.token, expiresAt);
 
-      const profileResult = await DB.saveProfile(u, u, {
+      await DB.saveProfile(res.data.username || u, res.data.username || u, {
         bio: '',
         location: '',
         website: '',
         social: '',
         gender: ['male', 'female', 'secret'].includes(gender) ? gender : 'secret'
       });
-      console.log('[register] profile insert result:', profileResult);
+      console.log('[register] profile saved');
 
-      this._setSession(u, token, expiresAt);
-      LocalStats.recordUser(u);
+      LocalStats.recordUser(res.data.username || u);
       await this.mergeAnonymousData();
       return { success: true };
     },
@@ -880,49 +813,20 @@
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('enterCredentials') : '请输入用户名和密码') };
       }
       console.log('[login] start', u);
-      const rows = await DB.request('accounts', 'GET', null, `username=eq.${encodeURIComponent(u)}&limit=1`, { 'x-username': u });
-      console.log('[login] account rows:', rows ? rows.length : null);
-      if (!rows || !rows.length) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
-      }
-      const account = rows[0];
-      console.log('[login] account found, has salt:', !!account.salt, 'has hash:', !!account.password_hash);
-      const hash = await this._hashPassword(password, account.salt);
-      console.log('[login] computed hash length:', hash.length, 'stored length:', account.password_hash ? account.password_hash.length : 0);
-      if (hash !== account.password_hash) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
+      const res = await WorkerAPI.request('/api/auth/login', 'POST', { username: u, password: password });
+      console.log('[login] worker result:', res.data);
+      if (!res.ok || !res.data || !res.data.token) {
+        return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
       }
 
-      const token = this._generateToken();
-      const expiresAt = this._computeExpires(remember);
-      const updateResult = await DB.request(
-        'accounts',
-        'PATCH',
-        { session_token: token, session_expires_at: new Date(expiresAt).toISOString(), updated_at: new Date().toISOString() },
-        `username=eq.${encodeURIComponent(u)}`,
-        { 'x-username': u }
-      );
-      console.log('[login] session update result:', updateResult);
-      if (!updateResult) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed') : '登录失败，请重试') };
-
-      this._setSession(u, token, expiresAt);
-      LocalStats.recordUser(u);
+      const expiresAt = new Date(res.data.expires_at).getTime();
+      this._setSession(res.data.username || u, res.data.token, expiresAt);
+      LocalStats.recordUser(res.data.username || u);
       await this.mergeAnonymousData();
       return { success: true };
     },
 
     async logout() {
-      const username = this.getUser();
-      const token = this.getToken();
-      if (username && token) {
-        await DB.request(
-          'accounts',
-          'PATCH',
-          { session_token: null, session_expires_at: null, updated_at: new Date().toISOString() },
-          `username=eq.${encodeURIComponent(username)}`,
-          { 'x-username': username, 'x-token': token }
-        ).catch(() => {});
-      }
       this._clearSession();
       location.reload();
     },
@@ -2855,6 +2759,7 @@
       TOTAL_ROUNDS: 5,
       MIN_WAIT_MS: 2000,
       MAX_WAIT_MS: 5000,
+      MIN_VALID_TIME_MS: 100,
 
       init() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
@@ -2914,24 +2819,27 @@
 
         const showScoreCard = async () => {
           isFinished = true;
-          const validTimes = timeList.filter(t => t !== null);
+          const validTimes = timeList.filter(t => t !== null && t !== 'invalid');
           const sum = validTimes.reduce((a, b) => a + parseFloat(b), 0);
           const avg = validTimes.length ? (sum / validTimes.length) : 0;
           const grade = validTimes.length ? Utils.getGrade(avg, 'reaction') : { grade: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('foulGrade') : '违规'), color: 'var(--apex-danger)' };
 
           const rows = timeList.map((t, i) => {
-            const value = t === null ? '<span style="color:var(--apex-danger)">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('earlyClick') : '提前点击') + '</span>' : Security.escapeHtml(t) + ' ms';
+            const value = t === null || t === 'invalid'
+              ? '<span style="color:var(--apex-danger)">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('roundVoid', '作废') : '作废') + '</span>'
+              : Security.escapeHtml(t) + ' ms';
             return '<div class="score-detail-item"><div class="score-detail-value">' + value + '</div><div class="score-detail-label">第' + (i + 1) + '轮</div></div>';
           });
 
           const foulTag = foulCount > 0 ? '<div class="score-foul">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('foulCountLabel', '违规 {count} 次').replace('{count}', foulCount) : '违规 ' + foulCount + ' 次') + '</div>' : '';
+          const ineligibleMsg = foulCount >= 3 ? '<div class="score-ineligible" style="color:var(--apex-danger);margin-top:8px;">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('leaderboardIneligible', '本次成绩因犯规过多，仅计入个人记录，不参与排行榜') : '本次成绩因犯规过多，仅计入个人记录，不参与排行榜') + '</div>' : '';
 
           if (resDom) {
-            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + '<div class="score-details">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('reaction', avg.toFixed(2), grade.grade) + '</div>';
+            resDom.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('avgReactionTime') : '平均反应时间') + ' ' + avg.toFixed(2) + ' ms</div>' + foulTag + ineligibleMsg + '<div class="score-details">' + rows.join('') + '</div>' + APEXON.Share.buttonsHTML('reaction', avg.toFixed(2), grade.grade) + '</div>';
             APEXON.Share.bindShareEvents(resDom);
           }
 
-          const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount });
+          const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount, leaderboard_eligible: foulCount < 3 });
           if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
 
           AudioManager.playSuccess();
@@ -2985,9 +2893,9 @@
               resetAll();
               isProcessing = true;
               foulCount++;
-              timeList.push(null); // 记录本轮为违规跳过
+              timeList.push(null); // 记录本轮为违规作废
               box.className = 'reaction-click-area foul';
-              box.textContent = t('clickedEarly', '提前点击，本轮跳过');
+              box.textContent = t('clickedEarly', '提前点击，本轮作废');
               AudioManager.playFail();
               timer = setTimeout(() => { isProcessing = false; advanceRound(); }, 900);
               break;
@@ -2999,6 +2907,19 @@
               let penalty = Utils.reactionPenalty();
               let final = raw - penalty;
               if (final < 0) final = 0;
+              if (final < this.MIN_VALID_TIME_MS) {
+                timeList.push('invalid');
+                box.className = 'reaction-click-area foul';
+                box.textContent = t('tooFast', '成绩过快，本轮作废');
+                box.style.color = 'var(--apex-danger)';
+                AudioManager.playFail();
+                timer = setTimeout(() => {
+                  box.style.color = '';
+                  isProcessing = false;
+                  advanceRound();
+                }, 900);
+                break;
+              }
               const t = final.toFixed(2);
               timeList.push(t);
               box.className = 'reaction-click-area blue';

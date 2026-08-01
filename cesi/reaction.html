@@ -39,6 +39,13 @@
                     <img src="assets/favicon.png" alt="Logo" draggable="false">
                     <span>APEXON</span>
                 </a>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
@@ -47,13 +54,7 @@
                         </span>
                     </span>
                 </label>
-            </div>
-            <div class="apexon-header-center">
-                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
-                <nav class="apexon-header-nav" id="headerPill">
-                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
-                </nav>
-                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
                 <nav class="apexon-header-dropdown" id="headerDropdown">
                     <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
                     <a href="reaction.html" data-i18n="navReaction">反应测试</a>
@@ -92,6 +93,15 @@
         <div class="history-list" style="margin-top:24px">
             <div class="history-title" data-i18n="recentRecords">最近记录</div>
             <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="reaction-rules" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(124,58,237,0.08)); border:1px solid rgba(139,92,246,0.35); border-radius:16px; padding:18px 22px; margin:24px 0; color:var(--apex-text-primary);">
+            <strong style="display:block; margin-bottom:10px; color:#a78bfa; font-size:16px;">📋 测试规则</strong>
+            <ul style="margin:0; padding-left:20px; line-height:1.8; font-size:14px; color:var(--apex-text-secondary);">
+                <li>反应时间低于 <strong style="color:#a78bfa;">100 毫秒</strong> 的成绩将被判定为过快，本轮作废</li>
+                <li>提前点击将被判定为犯规，本轮作废</li>
+                <li>累计犯规达到 <strong style="color:#a78bfa;">3 次或以上</strong>，成绩仅计入个人记录，不参与排行榜排名</li>
+            </ul>
         </div>
 
         <div class="measurement-notice">
