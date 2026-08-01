@@ -3,17 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Non-sensitive values can live in [vars].
-# For local development, put all secrets in .dev.vars (already created and gitignored).
-# For production, run: npx wrangler secret bulk
-[vars]
-NEON_DSN = "__NEON_DSN__"
-SUPABASE_DSN = "__SUPABASE_DSN__"
-TURSO_URL_APEXON = "__TURSO_URL_APEXON__"
-TURSO_TOKEN_APEXON = "__TURSO_TOKEN_APEXON__"
-TURSO_URL_APEXON_1 = "__TURSO_URL_APEXON_1__"
-TURSO_TOKEN_APEXON_1 = "__TURSO_TOKEN_APEXON_1__"
-TURSO_URL_APEXON_2 = "__TURSO_URL_APEXON_2__"
-TURSO_TOKEN_APEXON_2 = "__TURSO_TOKEN_APEXON_2__"
-SUPABASE_URL = "__SUPABASE_URL__"
-UPSTASH_REDIS_URL = "__UPSTASH_REDIS_URL__"
+# All database credentials are stored as Cloudflare Secrets (encrypted).
+# Run: npx wrangler secret bulk
+# Local development: put secrets in .dev.vars (gitignored).
