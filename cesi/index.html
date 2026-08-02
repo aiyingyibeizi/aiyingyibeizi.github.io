@@ -66,6 +66,8 @@
                     <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
                     <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
                     <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
                     <a href="music.html" data-i18n="navMusic">Music</a>
                 </nav>
             </div>
@@ -123,6 +125,14 @@
                 <strong data-i18n="cardSequenceTitle">序列记忆测试</strong>
                 <div class="card-desc" data-i18n="cardSequenceDesc">彩色方块按特定顺序依次闪烁，演示结束后你需要按相同顺序点击复现。每通过一关序列长度增加，同时考验视觉记忆、时间顺序保持与模式识别能力，是训练序列记忆的经典范式。</div>
             </a>
+            <a href="stroop.html" class="item-card nav-more">
+                <strong data-i18n="cardStroopTitle">Stroop 抑制控制测试</strong>
+                <div class="card-desc" data-i18n="cardStroopDesc">经典 Stroop 范式：屏幕呈现颜色汉字，但字体颜色可能与字义冲突。你需要忽略文字含义、只判断字体颜色。40 个试次测量你的抑制控制与抗干扰能力，是评估前额叶执行功能的核心任务。</div>
+            </a>
+            <a href="nback.html" class="item-card nav-more">
+                <strong data-i18n="cardNbackTitle">N-Back 工作记忆测试</strong>
+                <div class="card-desc" data-i18n="cardNbackDesc">工作记忆"金标准"测试：判断当前刺激是否与 N 步前的刺激相同。从 2-Back 开始自适应晋级，正确率达 75% 即挑战更高 N。考验工作记忆的持续更新与抗干扰能力，与流体智力密切相关。</div>
+            </a>
             <a href="music.html" class="item-card item-card--wide nav-main">
                 <div class="item-card__visual">
                     <img src="assets/favicon.png" alt="APEXON Music">
@@ -152,6 +162,8 @@
                 <button class="leaderboard-tab" onclick="showLb('visual')" data-i18n="lbVisual">视觉</button>
                 <button class="leaderboard-tab" onclick="showLb('aim')" data-i18n="lbAim">瞄准</button>
                 <button class="leaderboard-tab" onclick="showLb('sequence')" data-i18n="lbSequence">序列</button>
+                <button class="leaderboard-tab" onclick="showLb('stroop')" data-i18n="lbStroop">Stroop</button>
+                <button class="leaderboard-tab" onclick="showLb('nback')" data-i18n="lbNback">N-Back</button>
             </div>
             <div id="lbContent" data-i18n="lbEmpty">还没有人上榜</div>
         </div>
@@ -243,10 +255,11 @@
 
         // ===== 排行榜 =====
         let currentLb = 'reaction';
-        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence'];
+        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence','stroop','nback'];
         const LB_UNITS = {
             reaction: 'ms', type: 's', stick: t('points', '分'),
-            number: t('level', '级'), verbal: t('points', '分'), visual: t('level', '级'), aim: t('points', '分'), sequence: t('level', '级')
+            number: t('level', '级'), verbal: t('points', '分'), visual: t('level', '级'), aim: t('points', '分'), sequence: t('level', '级'),
+            stroop: t('points', '分'), nback: 'N'
         };
         window.showLb = function(type) {
             currentLb = type;
@@ -268,6 +281,9 @@
         });
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
+            const lbEl = document.getElementById('lbContent');
+            // 骨架屏：立即展示占位，避免空白闪烁
+            if (lbEl) lbEl.innerHTML = Array.from({length: 6}, () => '<div class="leaderboard-row skeleton-row"><div class="skeleton-bar" style="width:28px"></div><div class="skeleton-circle"></div><div class="skeleton-bar" style="width:90px"></div><div class="skeleton-bar" style="width:50px;margin-left:auto"></div></div>').join('');
             const entries = await APEXON.DB.getLeaderboard(type, 100);
             if (!entries.length) {
                 document.getElementById('lbContent').innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('lbEmptyFirst') : '还没有人上榜，快来成为第一个！') + '</div>';
@@ -295,10 +311,13 @@
         async function loadPersonal() {
             const esc = APEXON.Security.escapeHtml;
             const userId = APEXON.Auth.getUserId();
+            const personalEl = document.getElementById('personalContent');
             if (!userId) {
-                document.getElementById('personalContent').innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestRecordTip') : '登录或游客模式均可记录成绩') + '</div>';
+                if (personalEl) personalEl.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestRecordTip') : '登录或游客模式均可记录成绩') + '</div>';
                 return;
             }
+            // 骨架屏占位
+            if (personalEl) personalEl.innerHTML = '<div class="personal-grid">' + Array.from({length: 10}, () => '<div class="personal-card skeleton-card"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:28px;margin-top:12px"></div><div class="skeleton-bar" style="width:50%;height:12px;margin-top:8px"></div></div>').join('') + '</div>';
 
             const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
             const types = [
@@ -309,11 +328,13 @@
                 { key: 'verbal', name: t('lbVerbal', '单词记忆'), unit: t('points', '分') },
                 { key: 'visual', name: t('lbVisual', '视觉记忆'), unit: t('level', '级') },
                 { key: 'aim', name: t('lbAim', '瞄准训练'), unit: t('points', '分') },
-                { key: 'sequence', name: t('lbSequence', '序列记忆'), unit: t('level', '级') }
+                { key: 'sequence', name: t('lbSequence', '序列记忆'), unit: t('level', '级') },
+                { key: 'stroop', name: t('lbStroop', 'Stroop'), unit: t('points', '分') },
+                { key: 'nback', name: t('lbNback', 'N-Back'), unit: 'N' }
             ];
-            const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
+            const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence', 'stroop', 'nback'];
             let html = '<div class="personal-grid">';
-            // 并行拉取所有 8 种测试的排行榜（之前是串行 8 次，每次 3-6 秒 = 24-48 秒）
+            // 并行拉取所有测试的排行榜（之前是串行，每次 3-6 秒）
             const allScores = await Promise.all(types.map(type => APEXON.DB.getLeaderboard(type.key, 200)));
             types.forEach((type, i) => {
                 const scores = allScores[i];
@@ -373,19 +394,51 @@
         };
 
         window.postComment = async function() {
-            const text = document.getElementById('forumText').value;
+            const textEl = document.getElementById('forumText');
+            const text = textEl.value;
             const category = document.getElementById('forumCategory').value;
             const userId = APEXON.Auth.getUserId();
             const username = APEXON.Auth.getUser();
             if (!userId || !username) { APEXON.UI.toast(t('identityInitTip', '身份初始化中，请刷新重试')); return; }
-            const res = await APEXON.DB.addComment(userId, username, text, category);
+            const trimmed = String(text || '').trim();
+            if (!trimmed) { APEXON.UI.toast(t('commentEmpty', '评论内容不能为空')); return; }
+            // 发布按钮 loading 状态 + 防重复提交
+            const btn = document.querySelector('.forum-btn');
+            if (btn) { btn.disabled = true; btn.dataset.origText = btn.textContent; btn.textContent = t('processing', '发布中…'); }
+            // 乐观更新：先在列表顶部插入新评论，让用户立即看到
+            const optimisticComment = {
+                user_id: userId,
+                username: username,
+                category: category,
+                content: trimmed,
+                created_at: new Date().toISOString()
+            };
+            allComments.unshift(optimisticComment);
+            // 同步 profile 缓存（当前用户）
+            if (!commentProfiles[userId]) {
+                try {
+                    const me = await APEXON.DB.getProfile(userId);
+                    if (me) commentProfiles[userId] = me;
+                } catch (e) { /* ignore */ }
+            }
+            // 切换到对应分类并渲染（如果当前是 all 或相同分类则立即可见）
+            if (currentCommentFilter === 'all' || currentCommentFilter === category) {
+                currentCommentPage = 1;
+                renderComments();
+            }
+            textEl.value = '';
+            const res = await APEXON.DB.addComment(userId, username, trimmed, category);
+            if (btn) { btn.disabled = false; if (btn.dataset.origText) btn.textContent = btn.dataset.origText; }
             if (!res || !res.success) {
+                // 发布失败：回滚乐观更新
+                const idx = allComments.indexOf(optimisticComment);
+                if (idx >= 0) allComments.splice(idx, 1);
+                renderComments();
                 APEXON.UI.toast(res && res.error ? res.error : t('publishFailed', '发布失败'));
                 return;
             }
-            document.getElementById('forumText').value = '';
-            currentCommentPage = 1;
-            setCommentFilter(category);
+            // 发布成功：静默刷新拿真实数据（含服务端时间戳）
+            loadComments();
         };
 
         // 论坛头像渲染
@@ -397,6 +450,11 @@
         }
 
         async function loadComments() {
+            const listEl = document.getElementById('forumList');
+            // 骨架屏占位（乐观更新时跳过，避免覆盖刚插入的评论）
+            if (listEl && !listEl.querySelector('.forum-item')) {
+                listEl.innerHTML = Array.from({length: 3}, () => '<div class="forum-item skeleton-forum"><div class="forum-item-header"><div class="skeleton-circle"></div><div class="skeleton-bar" style="width:80px"></div><div class="skeleton-bar" style="width:50px;margin-left:auto"></div></div><div class="skeleton-bar" style="width:100%;height:14px;margin-top:10px"></div><div class="skeleton-bar" style="width:70%;height:14px;margin-top:6px"></div></div>').join('');
+            }
             allComments = await APEXON.DB.getComments(COMMENTS_PER_PAGE * MAX_COMMENT_PAGES, currentCommentFilter);
             // 批量拉取评论用户的头像资料
             const userIds = [...new Set(allComments.map(c => c.user_id).filter(Boolean))];

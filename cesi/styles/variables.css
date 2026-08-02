@@ -463,7 +463,7 @@ html[data-theme="light"] {
 /* ------------------------------------------------------------------
    随机强调色轮换系统：每次访问随机选一套色调，避免审美疲劳
    通过 data-accent 属性切换（由 JS 在加载时随机设置）
-   暗色主题下提供 6 套差异化配色
+   暗色主题下提供 8 套差异化配色
    ------------------------------------------------------------------ */
 
 /* 配色 1：雷电青紫（默认） */
@@ -595,4 +595,82 @@ html[data-theme="light"] {
   --game-card-border: rgba(234, 88, 12, 0.16);
   --game-card-title: #7c2d12;
   --game-card-desc: #c2410c;
+}
+
+/* 配色 7：日落晚霞（粉橙渐变） */
+:root[data-accent="sunset"][data-theme="dark"],
+:root[data-accent="sunset"]:not([data-bw="true"]) {
+  --apex-primary: #f97316;
+  --apex-primary-dark: #ea580c;
+  --apex-primary-light: #fb923c;
+  --apex-accent-cyan: #f97316;
+  --apex-accent-purple: #ec4899;
+  --apex-glow-primary: rgba(249, 115, 22, 0.38);
+  --apex-glow-violet: rgba(236, 72, 153, 0.30);
+  --apex-shadow-glow: 0 0 28px rgba(249, 115, 22, 0.14), 0 0 48px rgba(236, 72, 153, 0.10);
+  --apex-border: rgba(249, 115, 22, 0.10);
+  --apex-border-strong: rgba(236, 72, 153, 0.16);
+}
+:root[data-accent="sunset"][data-bw="true"] {
+  --apex-primary: #d97706;
+  --apex-primary-dark: #b45309;
+  --apex-primary-light: #f59e0b;
+  --apex-accent-cyan: #d97706;
+  --apex-accent-purple: #be185d;
+  --apex-glow-primary: rgba(217, 119, 6, 0.25);
+  --game-card-bg: linear-gradient(135deg, #fef3c7 0%, #fbcfe8 100%);
+  --game-card-border: rgba(217, 119, 6, 0.16);
+  --game-card-title: #7c2d12;
+  --game-card-desc: #b45309;
+}
+
+/* 配色 8：薄荷青柠 */
+:root[data-accent="mint"][data-theme="dark"],
+:root[data-accent="mint"]:not([data-bw="true"]) {
+  --apex-primary: #2dd4bf;
+  --apex-primary-dark: #14b8a6;
+  --apex-primary-light: #5eead4;
+  --apex-accent-cyan: #2dd4bf;
+  --apex-glow-primary: rgba(45, 212, 191, 0.38);
+  --apex-glow-violet: rgba(20, 184, 166, 0.30);
+  --apex-shadow-glow: 0 0 28px rgba(45, 212, 191, 0.14), 0 0 48px rgba(20, 184, 166, 0.10);
+  --apex-border: rgba(45, 212, 191, 0.10);
+  --apex-border-strong: rgba(45, 212, 191, 0.16);
+}
+:root[data-accent="mint"][data-bw="true"] {
+  --apex-primary: #0d9488;
+  --apex-primary-dark: #0f766e;
+  --apex-primary-light: #14b8a6;
+  --apex-accent-cyan: #0d9488;
+  --apex-glow-primary: rgba(13, 148, 136, 0.25);
+  --game-card-bg: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+  --game-card-border: rgba(13, 148, 136, 0.16);
+  --game-card-title: #134e4a;
+  --game-card-desc: #0f766e;
+}
+
+/* 配色 9：深红绛紫 */
+:root[data-accent="crimson"][data-theme="dark"],
+:root[data-accent="crimson"]:not([data-bw="true"]) {
+  --apex-primary: #f43f5e;
+  --apex-primary-dark: #e11d48;
+  --apex-primary-light: #fb7185;
+  --apex-accent-cyan: #f43f5e;
+  --apex-accent-purple: #be185d;
+  --apex-glow-primary: rgba(244, 63, 94, 0.38);
+  --apex-glow-violet: rgba(225, 29, 72, 0.30);
+  --apex-shadow-glow: 0 0 28px rgba(244, 63, 94, 0.14), 0 0 48px rgba(225, 29, 72, 0.10);
+  --apex-border: rgba(244, 63, 94, 0.10);
+  --apex-border-strong: rgba(244, 63, 94, 0.16);
+}
+:root[data-accent="crimson"][data-bw="true"] {
+  --apex-primary: #be123c;
+  --apex-primary-dark: #9f1239;
+  --apex-primary-light: #e11d48;
+  --apex-accent-cyan: #be123c;
+  --apex-glow-primary: rgba(190, 18, 60, 0.25);
+  --game-card-bg: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  --game-card-border: rgba(190, 18, 60, 0.16);
+  --game-card-title: #881337;
+  --game-card-desc: #9f1239;
 }

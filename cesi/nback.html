@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="N-Back 工作记忆测试，判断当前刺激是否与 N 步前相同，检验你的工作记忆更新能力。APEXON 免费在线认知测试。">
+    <meta name="keywords" content="N-Back,工作记忆,认知训练,流体智力,执行功能,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="N-Back 工作记忆测试 - APEXON">
+    <meta property="og:description" content="N-Back 工作记忆测试，判断当前刺激是否与 N 步前相同，检验你的工作记忆更新能力。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/nback.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="N-Back 工作记忆测试 - APEXON">
+    <meta name="twitter:description" content="N-Back 工作记忆测试，判断当前刺激是否与 N 步前相同，检验你的工作记忆更新能力。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="nbackTitle">N-Back 工作记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=18">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 20px;
+            padding: 36px 24px;
+        }
+        #testBox .nback-hint {
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+        #testBox .nback-level {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--apex-primary-light);
+        }
+        .nback-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            width: min(320px, 78vw);
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+        }
+        .nback-cell {
+            border-radius: var(--apex-radius-sm);
+            background: var(--apex-surface-elevated);
+            border: 1px solid var(--apex-border);
+            transition: background var(--apex-transition-fast), box-shadow var(--apex-transition-fast), transform var(--apex-transition-fast);
+        }
+        .nback-cell.nback-active {
+            background: var(--apex-primary);
+            box-shadow: 0 0 24px var(--apex-glow-primary);
+            transform: scale(0.96);
+        }
+        .nback-cell.nback-hit {
+            background: var(--apex-success);
+            box-shadow: 0 0 24px rgba(52, 211, 153, 0.5);
+        }
+        .nback-cell.nback-miss {
+            background: var(--apex-danger);
+            box-shadow: 0 0 24px rgba(248, 113, 113, 0.5);
+        }
+        #testBox .nback-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            min-height: 56px;
+        }
+        #testBox .nback-buttons .btn {
+            min-width: 130px;
+        }
+        #testBox .nback-buttons .btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        #testBox .nback-feedback {
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 1.4em;
+        }
+        .nback-progress-dots {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 12px;
+        }
+        .nback-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--apex-border-strong);
+            transition: background var(--apex-transition-fast);
+        }
+        .nback-dot.nback-dot-correct { background: var(--apex-success); }
+        .nback-dot.nback-dot-wrong { background: var(--apex-danger); }
+        .nback-dot.nback-dot-skip { background: var(--apex-warning); }
+
+        @media (max-width: 767px) {
+            #testBox { gap: 16px; padding: 26px 18px; }
+            .nback-grid { width: min(280px, 80vw); gap: 8px; }
+            #testBox .nback-buttons { gap: 12px; }
+            #testBox .nback-buttons .btn { min-width: 110px; }
+        }
+        @media (max-width: 480px) {
+            #testBox { gap: 12px; padding: 22px 14px; }
+            .nback-grid { width: min(240px, 82vw); gap: 6px; }
+            #testBox .nback-buttons { gap: 10px; width: 100%; }
+            #testBox .nback-buttons .btn { min-width: 0; flex: 1 1 calc(50% - 5px); }
+            #testBox .nback-hint, #testBox .nback-feedback { font-size: 0.8125rem; }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="nbackTitle">N-Back 工作记忆测试</h1>
+
+        <div class="info-row"><span data-i18n="progressLabel">进度</span>：<span id="progressText">0 / 20</span>　<span data-i18n="nbackLevelLabel">等级</span>：<span id="levelDisplay" class="nback-level">2-Back</span></div>
+
+        <div id="testBox" data-test-type="nback"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>N-Back 工作记忆测试：挑战你的认知极限</h2>
+            <p>N-Back 是认知科学领域公认的工作记忆"金标准"测试之一。它要求你持续监控一个不断变化的刺激序列，并判断当前刺激是否与 N 步之前的刺激相同。这个看似简单的任务实际上对大脑提出了极高的要求：你需要不断更新工作记忆中的内容、抑制旧信息的干扰、并在时间压力下做出准确判断。研究发现，N-Back 表现与流体智力、执行功能密切相关，因此它不仅是评估工具，也是备受关注的认知训练范式。</p>
+            <p>工作记忆是认知系统的"工作台"，它在短时间内主动保持和操作信息，是推理、理解、学习的基础。与短时记忆不同，工作记忆强调的不仅是"记住"，更是"加工"——你需要在记住信息的同时对其进行比较、转换或更新。N-Back 正是针对"更新"这一核心环节设计的：每出现一个新刺激，你就必须把工作记忆中的内容向后推移一位，丢弃最早的、加入最新的，并与当前刺激比较。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>本测试在 3×3 网格中依次点亮一个格子。从 2-Back 开始：你需要判断当前点亮的格子是否与<strong>上上个</strong>点亮的格子位置相同。相同则点击"匹配"，不同则点击"不匹配"。每个等级共 20 个试次，其中约 30% 为匹配试次。若该等级正确率达到 75% 以上，自动晋升到更高的 N（3-Back、4-Back……）；若低于 75%，测试结束。最终成绩为你成功通过的最高 N 值。</p>
+            <p>N-Back 的难度随 N 增大呈指数上升。从 2-Back 到 3-Back，你需要在工作记忆中多保持一个项目，并多进行一次比较；到 4-Back、5-Back 时，绝大多数人会感到明显的认知负荷。这种负荷主要来自三个方面：一是工作记忆容量的有限性（经典理论认为工作记忆只能保持 4±1 个项目）；二是持续更新的执行需求，需要前额叶皮层反复介入；三是抗干扰需求，旧刺激的痕迹会干扰对新刺激的判断。</p>
+            <h3>影响 N-Back 表现的因素</h3>
+            <ul>
+                <li><strong>工作记忆容量</strong>：天生容量较大的人能在更高 N 下保持准确，这是最直接的限制因素。</li>
+                <li><strong>注意力稳定性</strong>：N-Back 要求持续专注，任何走神都会导致序列追踪中断。</li>
+                <li><strong>策略运用</strong>：善于使用复述、视觉化等策略的人表现更好。</li>
+                <li><strong>疲劳程度</strong>：N-Back 是高强度认知任务，疲劳会迅速拉低表现。</li>
+                <li><strong>训练经验</strong>：长期 N-Back 训练可提升特定 N 下的表现，但能否迁移到一般智力仍有争议。</li>
+            </ul>
+            <h3>提升工作记忆的方法</h3>
+            <ul>
+                <li><strong>渐进式训练</strong>：从自己能稳定完成的 N 开始，逐步挑战更高 N，避免长期停留在舒适区。</li>
+                <li><strong>分组与组块</strong>：尝试将刺激序列分组记忆，减轻工作记忆负担。</li>
+                <li><strong>正念练习</strong>：提升注意力的稳定性与抗走神能力，间接改善 N-Back 表现。</li>
+                <li><strong>有氧运动</strong>：长期有氧运动可增加前额叶和顶叶灰质，有利于工作记忆。</li>
+                <li><strong>保证睡眠</strong>：工作记忆对睡眠剥夺极为敏感，充足睡眠是基础保障。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>N-Back 广泛应用于认知老化研究、ADHD 评估、工作记忆训练干预的科研实验，以及高要求职业（如飞行员、空中交通管制员）的认知筛选。对于普通人，定期进行 N-Back 测试可以客观追踪工作记忆的变化，发现因压力、年龄或生活习惯带来的认知波动。需要说明的是，虽然 N-Back 训练能提升 N-Back 任务本身的表现，但"通过 N-Back 训练提升一般智力"这一观点在学术界仍有争议，建议将其视为工作记忆的专项训练而非智力提升的捷径。</p>
+            <h3>温馨提示</h3>
+            <p>2-Back 对大多数人来说已经具有挑战性，如果初次尝试正确率不高，不必气馁。随着练习，你会逐渐熟悉"持续更新"的节奏，表现会稳步提升。测试时请保持专注，尽量在刺激出现时立即判断，不要过度犹豫。如果某个等级未能通过，可以休息片刻后再试，因为疲劳状态下工作记忆表现会明显下降。坚持练习，你会感受到自己"脑力工作台"逐渐扩大的过程。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=11"></script>
+    <script src="js/common.js?v=26"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🧠</div>' +
+                '<div class="apex-start-screen__title">' + t('nbackStartTitle', 'N-Back 工作记忆挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('nbackStartDesc', '判断当前格子是否与 N 步前的格子位置相同，考验你的工作记忆更新能力。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const progressText = document.getElementById('progressText');
+        const levelDisplay = document.getElementById('levelDisplay');
+
+        const GRID_SIZE = 9; // 3x3
+        const TRIALS_PER_LEVEL = 20;
+        const STIMULUS_MS = 1200;   // 刺激显示时长
+        const GAP_MS = 800;         // 刺激间隔
+        const MATCH_RATIO = 0.30;   // 匹配试次比例
+        const PROMOTE_ACC = 0.75;   // 晋升正确率阈值（低于此值则测试结束）
+        const START_N = 2;
+        const MAX_N = 6;
+
+        let currentN = START_N;
+        let sequence = [];
+        let trialIndex = 0;
+        let correctCount = 0;
+        let answered = false;
+        let state = 'idle';
+        let timerId = null;
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        // 生成一个等级的序列：前 N 个试次无法匹配（没有 N 步前），其余按 MATCH_RATIO 概率匹配
+        function generateSequence(n) {
+            const seq = [];
+            // 先随机生成所有位置
+            for (let i = 0; i < TRIALS_PER_LEVEL; i++) {
+                seq.push({ position: Math.floor(Math.random() * GRID_SIZE), isMatch: false, answered: false, correct: false });
+            }
+            // 对 i >= n 的试次，以 MATCH_RATIO 概率设为匹配（与 i-n 相同）
+            for (let i = n; i < TRIALS_PER_LEVEL; i++) {
+                if (Math.random() < MATCH_RATIO) {
+                    seq[i].position = seq[i - n].position;
+                    seq[i].isMatch = true;
+                }
+            }
+            return seq;
+        }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'nback', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.score) + '-Back</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function renderDots() {
+            let html = '<div class="nback-progress-dots">';
+            for (let i = 0; i < TRIALS_PER_LEVEL; i++) {
+                let cls = 'nback-dot';
+                if (i < trialIndex) {
+                    const trial = sequence[i];
+                    if (!trial.answered) cls += ' nback-dot-skip';
+                    else if (trial.correct) cls += ' nback-dot-correct';
+                    else cls += ' nback-dot-wrong';
+                }
+                html += '<span class="' + cls + '"></span>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function renderGrid(activePos, highlightClass) {
+            let html = '<div class="nback-grid">';
+            for (let i = 0; i < GRID_SIZE; i++) {
+                let cls = 'nback-cell';
+                if (i === activePos) {
+                    cls += ' nback-active';
+                    if (highlightClass) cls += ' ' + highlightClass;
+                }
+                html += '<div class="' + cls + '"></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function showStimulus() {
+            if (trialIndex >= TRIALS_PER_LEVEL) { endLevel(); return; }
+            answered = false;
+            const pos = sequence[trialIndex].position;
+            testBox.innerHTML = '<div class="nback-hint">' + t('nbackTrialHint', '第 {index} / {total} 个 · 当前 {n}-Back').replace('{index}', trialIndex + 1).replace('{total}', TRIALS_PER_LEVEL).replace('{n}', currentN) + '</div>' +
+                renderGrid(pos) +
+                '<div class="nback-buttons" id="nbackBtns">' +
+                    '<button class="btn" id="matchBtn">' + t('nbackMatch', '匹配') + '</button>' +
+                    '<button class="btn" id="noMatchBtn">' + t('nbackNoMatch', '不匹配') + '</button>' +
+                '</div>' +
+                '<div class="nback-feedback" id="feedback"></div>' +
+                renderDots();
+            const matchBtn = document.getElementById('matchBtn');
+            const noMatchBtn = document.getElementById('noMatchBtn');
+            matchBtn.addEventListener('click', () => answer(true));
+            noMatchBtn.addEventListener('click', () => answer(false));
+
+            // 超时自动判为"不匹配"（若未作答）
+            timerId = setTimeout(() => {
+                if (!answered) answer(null);
+            }, STIMULUS_MS + GAP_MS);
+        }
+
+        function answer(chosen) {
+            if (answered) return;
+            answered = true;
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+            const trial = sequence[trialIndex];
+            trial.answered = (chosen !== null);
+            const isMatch = trial.isMatch;
+            let correct = false;
+            if (chosen === null) {
+                // 超时未答：若本就是匹配试次则算错；非匹配试次也算错（漏答）
+                correct = false;
+            } else {
+                correct = (chosen === isMatch);
+            }
+            trial.correct = correct;
+            if (correct) {
+                correctCount++;
+            }
+
+            const feedback = document.getElementById('feedback');
+            const matchBtn = document.getElementById('matchBtn');
+            const noMatchBtn = document.getElementById('noMatchBtn');
+            if (matchBtn) matchBtn.disabled = true;
+            if (noMatchBtn) noMatchBtn.disabled = true;
+
+            if (chosen === null) {
+                feedback.textContent = t('nbackTimeout', '超时未答');
+                feedback.style.color = 'var(--apex-warning)';
+            } else if (correct) {
+                feedback.textContent = t('correctLabel', '正确');
+                feedback.style.color = 'var(--apex-success)';
+                playSuccess();
+            } else {
+                feedback.textContent = t('wrongLabel', '错误') + ' · ' + (isMatch ? t('nbackWasMatch', '本应是匹配') : t('nbackWasNoMatch', '本应是不匹配'));
+                feedback.style.color = 'var(--apex-danger)';
+                playFail();
+            }
+
+            trialIndex++;
+            progressText.textContent = trialIndex + ' / ' + TRIALS_PER_LEVEL;
+
+            setTimeout(showStimulus, 700);
+        }
+
+        function endLevel() {
+            const acc = correctCount / TRIALS_PER_LEVEL;
+            if (acc >= PROMOTE_ACC && currentN < MAX_N) {
+                // 晋级
+                currentN++;
+                levelDisplay.textContent = currentN + '-Back';
+                startLevel(true);
+            } else if (acc >= PROMOTE_ACC && currentN >= MAX_N) {
+                // 已达最高等级
+                endGame(true);
+            } else {
+                // 结束
+                endGame(false);
+            }
+        }
+
+        function startLevel(isPromotion) {
+            sequence = generateSequence(currentN);
+            trialIndex = 0;
+            correctCount = 0;
+            progressText.textContent = '0 / ' + TRIALS_PER_LEVEL;
+            result.innerHTML = '';
+            if (isPromotion) {
+                testBox.innerHTML = '<div class="apex-start-screen">' +
+                    '<div class="apex-start-screen__icon">⬆️</div>' +
+                    '<div class="apex-start-screen__title">' + t('nbackPromoted', '晋级到 {n}-Back！').replace('{n}', currentN) + '</div>' +
+                    '<div class="apex-start-screen__desc">' + t('nbackPromotedDesc', '准备好了就开始下一关') + '</div>' +
+                    '<div class="apex-start-screen__btn">' + t('clickStart', '点击开始') + '</div>' +
+                    '</div>';
+                state = 'ready';
+            } else {
+                showStimulus();
+            }
+        }
+
+        function endGame(reachedMax) {
+            state = 'ended';
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+            // 成绩：成功通过的最高 N（若当前等级未通过，则成绩为 currentN - 1，最小为 START_N-1 但不低于 1）
+            let scoreN;
+            if (reachedMax) {
+                scoreN = currentN;
+            } else {
+                scoreN = Math.max(1, currentN - 1);
+            }
+            const grade = APEXON.Utils.getGrade(scoreN, 'nback');
+            const lastAcc = (correctCount / TRIALS_PER_LEVEL * 100).toFixed(0);
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('nbackResult', '达到 {n}-Back').replace('{n}', scoreN) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + scoreN + '</div><div class="score-detail-label">' + t('nbackMaxLevel', '最高 N') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + lastAcc + '%</div><div class="score-detail-label">' + t('nbackLastAcc', '末关正确率') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('nback', scoreN, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'nback', { score: scoreN }).then(saved => {
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+            testBox.innerHTML = '<div class="nback-hint">' + t('nbackFinished', '测试结束，查看你的成绩') + '</div>';
+        }
+
+        function startTest() {
+            if (state !== 'idle' && state !== 'ready') return;
+            state = 'running';
+            startLevel(false);
+        }
+
+        window.restartTest = function () {
+            if (timerId) { clearTimeout(timerId); timerId = null; }
+            state = 'idle';
+            currentN = START_N;
+            sequence = [];
+            trialIndex = 0;
+            correctCount = 0;
+            levelDisplay.textContent = currentN + '-Back';
+            progressText.textContent = '0 / ' + TRIALS_PER_LEVEL;
+            result.innerHTML = '';
+            renderStartScreen();
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (state === 'idle' || state === 'ready') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && (state === 'idle' || state === 'ready')) { e.preventDefault(); startTest(); }
+            if (state === 'running' && !answered) {
+                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') { e.preventDefault(); answer(true); }
+                if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') { e.preventDefault(); answer(false); }
+            }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

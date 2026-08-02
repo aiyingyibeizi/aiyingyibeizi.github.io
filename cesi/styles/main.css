@@ -3059,6 +3059,70 @@ html[data-theme="light"] .apex-card--game:hover {
   color: var(--apex-text-inverse);
 }
 
+/* ============================================================================
+   Section: Skeleton Loading Screens
+   ============================================================================ */
+@keyframes apex-skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-bar,
+.skeleton-circle {
+  background: linear-gradient(
+    90deg,
+    var(--apex-border-subtle) 25%,
+    var(--apex-border) 50%,
+    var(--apex-border-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: apex-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  display: inline-block;
+  height: 12px;
+}
+
+.skeleton-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-row {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.skeleton-row .skeleton-bar,
+.skeleton-row .skeleton-circle {
+  margin-right: 8px;
+}
+
+.skeleton-card {
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.skeleton-card .skeleton-bar {
+  display: block;
+}
+
+.skeleton-forum {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.skeleton-forum .skeleton-bar {
+  display: block;
+}
+
+.skeleton-forum .forum-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .leaderboard-row {
   display: flex;
   align-items: center;
@@ -6609,3 +6673,259 @@ html[data-bw="true"] .game-canvas {
     font-size: 0.75rem;
   }
 }
+
+/* ============================================================================
+   Section: Apex 动效与无障碍增强系统（v19 新增）
+   - 数字滚动 / 列表交错 / 按钮涟漪 / 模态关键帧
+   - skip-link / 焦点可见性 / reduced-motion 全覆盖
+   - 骨架→内容 crossfade / 滚动揭示 JS 降级
+   ============================================================================ */
+
+/* ---- skip-to-content 链接：默认不可见，键盘聚焦时显现 ---- */
+.apex-skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 18px;
+  background: var(--apex-primary);
+  color: #fff;
+  border-radius: 0 0 12px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--apex-shadow-md);
+  transition: top 0.2s ease;
+}
+.apex-skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--apex-warning, #f59e0b);
+  outline-offset: 2px;
+}
+
+/* ---- 列表交错入场 ---- */
+@keyframes apex-stagger-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.apex-stagger-in {
+  opacity: 0;
+  animation: apex-stagger-in 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.apex-stagger-done { opacity: 1; }
+
+/* ---- 按钮涟漪 ---- */
+.apex-ripple-host { position: relative; overflow: hidden; }
+.apex-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(0);
+  animation: apex-ripple-spread 0.6s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes apex-ripple-spread {
+  to { transform: scale(2.4); opacity: 0; }
+}
+
+/* ---- 成绩揭晓动画（数字 scale+fade） ---- */
+@keyframes apex-score-reveal {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.score-card.apex-reveal { animation: apex-score-reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.score-grade.apex-reveal { animation: apex-score-reveal 0.7s 0.1s both cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ---- 模态框入场关键帧（card scale+fade，backdrop 单独 fade） ---- */
+@keyframes apex-modal-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes apex-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.apex-profile-modal.show .apex-profile-card,
+.apex-login-modal.show .apex-login-card {
+  animation: apex-modal-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.apex-profile-modal.show .apex-profile-backdrop,
+.apex-login-modal.show .apex-login-backdrop {
+  animation: apex-backdrop-in 0.25s ease;
+}
+
+/* ---- 排行榜行入场（冠军/亚军/季军高亮） ---- */
+@keyframes apex-row-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.leaderboard-row { animation: apex-row-in 0.35s ease both; }
+@keyframes apex-podium-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.35); }
+}
+.leaderboard-row.gold { animation: apex-row-in 0.35s ease both, apex-podium-glow 2.4s 0.4s ease-in-out infinite; }
+
+/* ---- 骨架屏 → 真实内容 crossfade ---- */
+.apex-fade-in { animation: apex-fade-in 0.4s ease both; }
+@keyframes apex-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- 滚动揭示 JS 降级（IntersectionObserver 触发） ---- */
+.apex-reveal-hidden { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.apex-reveal-shown { opacity: 1; transform: translateY(0); }
+
+/* ---- 加载 spinner ---- */
+@keyframes apex-spin { to { transform: rotate(360deg); } }
+.apex-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: apex-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+/* ---- 空状态美化（图标 + CTA + 重试） ---- */
+.apex-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 20px;
+  text-align: center;
+}
+.apex-empty-state__icon {
+  font-size: 40px;
+  line-height: 1;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.apex-empty-state__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--apex-text-secondary);
+}
+.apex-empty-state__desc {
+  font-size: 13px;
+  color: var(--apex-text-tertiary);
+  max-width: 320px;
+  line-height: 1.5;
+}
+.apex-empty-state__cta {
+  margin-top: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: var(--apex-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.apex-empty-state__cta:hover { transform: translateY(-1px); box-shadow: var(--apex-shadow-md); }
+
+/* ---- Stroop / N-Back 测试专用样式 ---- */
+.stroop-stimulus {
+  font-size: clamp(48px, 12vw, 96px);
+  font-weight: 800;
+  text-align: center;
+  margin: 24px 0;
+  letter-spacing: 2px;
+  user-select: none;
+}
+.stroop-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.stroop-choice {
+  min-width: 84px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 2px solid var(--apex-border-strong);
+  background: var(--apex-surface);
+  color: var(--apex-text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.stroop-choice:hover { transform: translateY(-2px); border-color: var(--apex-primary); box-shadow: var(--apex-shadow-sm); }
+.stroop-choice:active { transform: scale(0.97); }
+
+.nback-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 360px;
+  margin: 20px auto;
+  aspect-ratio: 1;
+}
+.nback-cell {
+  background: var(--apex-surface-elevated);
+  border: 2px solid var(--apex-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.nback-cell.active {
+  background: var(--apex-primary);
+  border-color: var(--apex-primary-light);
+  box-shadow: 0 0 24px var(--apex-glow-primary);
+  transform: scale(0.96);
+}
+.nback-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 18px 0;
+}
+.nback-btn {
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nback-btn--match { background: var(--apex-success); color: #fff; }
+.nback-btn--nomatch { background: var(--apex-surface-elevated); color: var(--apex-text); border: 2px solid var(--apex-border-strong); }
+.nback-btn:hover { transform: translateY(-2px); box-shadow: var(--apex-shadow-sm); }
+.nback-btn:active { transform: scale(0.97); }
+.nback-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ---- reduced-motion 全覆盖：禁用所有动画/过渡，仅保留功能性变化 ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .apex-ripple { display: none !important; }
+  .apex-stagger-in { opacity: 1 !important; animation: none !important; }
+  .apex-reveal-hidden { opacity: 1 !important; transform: none !important; }
+}
+
+/* ---- 焦点可见性增强：键盘用户清晰可见的 outline ---- */
+:focus-visible {
+  outline: 2px solid var(--apex-primary-light, #a5a2fd);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* 鼠标点击时不显示 outline（仅键盘导航显示） */
+:focus:not(:focus-visible) { outline: none; }
+
