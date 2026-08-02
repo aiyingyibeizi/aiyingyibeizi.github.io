@@ -47,22 +47,6 @@ async function buildShardService(env: Env): Promise<ShardService> {
   const neonPool = createNeonPool(env.NEON_DSN);
   const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
 
-  // Run migrations only once (first request); subsequent calls skip migration.
-  if (!migrated) {
-    migrated = true;
-    try {
-      await Promise.all([
-        tursoMigrate(tursoApexonClient),
-        tursoMigrate(tursoApexon1Client),
-        tursoMigrate(tursoApexon2Client),
-        neonMigrate(neonPool),
-        supabasePgMigrate(supabasePgPool),
-      ]);
-    } catch (err) {
-      console.error('Migration failed:', err);
-    }
-  }
-
   const tursoApexon: DbConfig = {
     name: 'APEXON',
     maxBytes: 450 * 1024 * 1024,
@@ -133,7 +117,24 @@ async function buildShardService(env: Env): Promise<ShardService> {
     updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(supabasePgPool, 'SUPABASE', 450 * 1024 * 1024, used),
   };
 
-  return new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2, neon, supabasePg]);
+  // Create shard service immediately (don't wait for migration)
+  cachedShardService = new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2, neon, supabasePg]);
+
+  // Run migrations in background (non-blocking)
+  if (!migrated) {
+    migrated = true;
+    Promise.all([
+      tursoMigrate(tursoApexonClient),
+      tursoMigrate(tursoApexon1Client),
+      tursoMigrate(tursoApexon2Client),
+      neonMigrate(neonPool),
+      supabasePgMigrate(supabasePgPool),
+    ]).catch((err) => {
+      console.error('Background migration failed:', err);
+    });
+  }
+
+  return cachedShardService;
 }
 
 type Variables = { userId: string };

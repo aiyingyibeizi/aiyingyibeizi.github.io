@@ -50,8 +50,16 @@ export class ShardService {
 
     for (const db of this.dbs) {
       try {
-        const used = await this.getUsedBytes(db.name);
-        if (used + estimatedSize > db.maxBytes) {
+        // Skip capacity check on first write (meta table may not exist yet).
+        // After first successful write, Redis cache will have the value.
+        let used = 0;
+        try {
+          used = await this.getUsedBytes(db.name);
+        } catch {
+          used = 0; // meta table not ready yet, skip capacity check
+        }
+
+        if (used > 0 && used + estimatedSize > db.maxBytes) {
           console.log(`DB ${db.name} would exceed capacity: ${used} + ${estimatedSize} > ${db.maxBytes}`);
           errors.push(`${db.name}: full`);
           continue;
