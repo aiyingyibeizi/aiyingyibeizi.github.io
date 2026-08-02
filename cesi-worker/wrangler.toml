@@ -3,10 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Use a plain route because apexon.qzz.io already has manual DNS records.
-# Traffic to this hostname will be handled by the Worker.
+# API subdomain for China-accessible backend endpoint.
+# Traffic to api.apexon.qzz.io will be handled by this Worker.
 routes = [
-  "apexon.qzz.io/*"
+  "api.apexon.qzz.io/*"
 ]
 
 # All database credentials are stored as Cloudflare Secrets (encrypted).

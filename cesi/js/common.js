@@ -89,7 +89,7 @@
   // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
   const SUPABASE_URL = '';
   const SUPABASE_ANON_KEY = '';
-  const WORKER_API_URL = 'https://apexon.qzz.io'; // Cloudflare Worker 后端地址（唯一允许的后端入口）
+  const WORKER_API_URL = 'https://api.apexon.qzz.io'; // Cloudflare Worker 后端地址（唯一允许的后端入口）
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
