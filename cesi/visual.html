@@ -60,6 +60,28 @@
             color: var(--apex-text-secondary);
             font-weight: 500;
         }
+
+        /* 手机端：视觉记忆网格更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 6px;
+                padding: 18px;
+                max-width: 320px;
+                min-height: 260px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 5px;
+                padding: 14px;
+                max-width: 280px;
+                min-height: 220px;
+            }
+            #testBox .visual-hint {
+                font-size: 0.8125rem;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">

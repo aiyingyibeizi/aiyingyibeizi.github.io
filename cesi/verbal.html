@@ -52,6 +52,45 @@
             font-weight: 700;
             min-height: 1.4em;
         }
+
+        /* 手机端：单词记忆测试更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 18px;
+                padding: 26px 18px;
+            }
+            #testBox .verbal-word {
+                font-size: clamp(1.5rem, 9vw, 2.5rem);
+            }
+            #testBox .verbal-buttons {
+                gap: 12px;
+            }
+            #testBox .verbal-buttons .btn {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 14px;
+                padding: 22px 14px;
+            }
+            #testBox .verbal-word {
+                font-size: clamp(1.25rem, 9vw, 2rem);
+            }
+            #testBox .verbal-buttons {
+                gap: 10px;
+                width: 100%;
+            }
+            #testBox .verbal-buttons .btn {
+                min-width: 0;
+                flex: 1 1 calc(50% - 5px);
+            }
+            #testBox .verbal-hint,
+            #testBox .verbal-feedback {
+                font-size: 0.8125rem;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">

@@ -64,6 +64,35 @@
         #testBox .aim-target:active {
             transform: translate(-50%, -50%) scale(0.92);
         }
+
+        /* 手机端：瞄准训练区域更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                min-height: 280px;
+            }
+            #testBox .aim-target {
+                width: 38px;
+                height: 38px;
+            }
+            #testBox .aim-target::after {
+                width: 15px;
+                height: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                min-height: 240px;
+            }
+            #testBox .aim-target {
+                width: 34px;
+                height: 34px;
+            }
+            #testBox .aim-target::after {
+                width: 13px;
+                height: 13px;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">

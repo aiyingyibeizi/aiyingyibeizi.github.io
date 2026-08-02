@@ -55,6 +55,43 @@
             font-weight: 500;
             color: var(--apex-text-secondary);
         }
+
+        /* 手机端：数字记忆测试更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 14px;
+                padding: 22px 16px;
+            }
+            #testBox .number-display {
+                font-size: clamp(1.5rem, 9vw, 2.5rem);
+                letter-spacing: 5px;
+            }
+            #testBox .number-input {
+                max-width: 260px;
+                padding: 12px 14px;
+                font-size: clamp(1rem, 5vw, 1.5rem);
+                letter-spacing: 3px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 12px;
+                padding: 18px 14px;
+            }
+            #testBox .number-display {
+                font-size: clamp(1.25rem, 9vw, 2rem);
+                letter-spacing: 4px;
+            }
+            #testBox .number-input {
+                max-width: 220px;
+                padding: 10px 12px;
+                font-size: clamp(0.9375rem, 5vw, 1.25rem);
+            }
+            #testBox .number-hint {
+                font-size: 0.8125rem;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">

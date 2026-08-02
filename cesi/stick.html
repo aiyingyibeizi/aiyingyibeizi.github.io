@@ -50,6 +50,36 @@
             font-weight: 600;
             color: var(--apex-text);
         }
+
+        /* 手机端：注意力测试画布与计数器适配 */
+        @media (max-width: 767px) {
+            canvas#testBox {
+                height: 280px;
+                border-radius: var(--apex-radius-sm);
+            }
+            .countdown-wrap {
+                gap: 12px;
+                margin-bottom: 10px;
+            }
+            .countdown-number {
+                font-size: 22px;
+            }
+            .score-live {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            canvas#testBox {
+                height: 240px;
+            }
+            .countdown-number {
+                font-size: 20px;
+            }
+            .score-live {
+                font-size: 14px;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">

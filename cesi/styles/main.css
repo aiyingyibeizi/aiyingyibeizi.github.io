@@ -783,11 +783,12 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.65)) drop-shadow(0 0 28px rgba(34, 211, 238, 0.45));
   }
 
+  /* 桌面端：Logo 右侧的明暗切换按钮，用户可按需调整以下参数 */
   .apexon-header-left .apex-bw-toggle {
-    width: 64px;
-    height: 34px;
-    padding: 0;
-    margin: 0;
+    width: 64px; /* 桌面端按钮宽度，用户可改 */
+    height: 34px; /* 桌面端按钮高度，用户可改 */
+    padding: 0; /* 桌面端内边距，用户可改 */
+    margin: 0; /* 桌面端外边距，用户可改 */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -795,18 +796,18 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   }
 
   .apexon-header-left .apex-bw-toggle__track {
-    inset: 3px;
+    inset: 3px; /* 桌面端轨道内边距，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle__thumb {
-    width: 26px;
-    height: 26px;
-    top: 2px;
-    left: 3px;
+    width: 26px; /* 桌面端滑块宽度，用户可改 */
+    height: 26px; /* 桌面端滑块高度，用户可改 */
+    top: 2px; /* 桌面端滑块顶部位置，用户可改 */
+    left: 3px; /* 桌面端滑块左侧位置，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(30px);
+    transform: translateX(30px); /* 桌面端滑块选中时平移距离，用户可改 */
   }
 
   .apexon-menu-btn {
@@ -876,31 +877,32 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     max-width: 100%;
   }
 
+  /* 移动端（<=1023px）：Logo 右侧的明暗切换按钮，用户可按需调整以下参数 */
   .apexon-header-left .apex-bw-toggle {
     position: relative;
     right: auto;
     top: auto;
     transform: none;
-    width: 40px;
-    height: 22px;
-    padding: 0;
-    margin: 0;
+    width: 40px; /* 移动端按钮宽度，用户可改 */
+    height: 22px; /* 移动端按钮高度，用户可改 */
+    padding: 0; /* 移动端内边距，用户可改 */
+    margin: 0; /* 移动端外边距，用户可改 */
     flex-shrink: 0;
   }
 
   .apexon-header-left .apex-bw-toggle__track {
-    inset: 2px;
+    inset: 2px; /* 移动端轨道内边距，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle__thumb {
-    width: 16px;
-    height: 16px;
-    top: 3px;
-    left: 3px;
+    width: 16px; /* 移动端滑块宽度，用户可改 */
+    height: 16px; /* 移动端滑块高度，用户可改 */
+    top: 3px; /* 移动端滑块顶部位置，用户可改 */
+    left: 3px; /* 移动端滑块左侧位置，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(18px);
+    transform: translateX(18px); /* 移动端滑块选中时平移距离，用户可改 */
   }
 
   .apexon-header-center {
@@ -977,20 +979,21 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     border-radius: 8px;
   }
 
+  /* 小屏手机（<=480px）：明暗切换按钮进一步缩小，用户可按需调整以下参数 */
   .apexon-header-left .apex-bw-toggle {
-    width: 36px;
-    height: 20px;
+    width: 36px; /* 小屏按钮宽度，用户可改 */
+    height: 20px; /* 小屏按钮高度，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle__thumb {
-    width: 14px;
-    height: 14px;
-    top: 3px;
-    left: 3px;
+    width: 14px; /* 小屏滑块宽度，用户可改 */
+    height: 14px; /* 小屏滑块高度，用户可改 */
+    top: 3px; /* 小屏滑块顶部位置，用户可改 */
+    left: 3px; /* 小屏滑块左侧位置，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(16px);
+    transform: translateX(16px); /* 小屏滑块选中时平移距离，用户可改 */
   }
 
   .apexon-menu-btn {
@@ -1023,20 +1026,21 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     height: 30px;
   }
 
+  /* 超小屏手机（<=375px）：明暗切换按钮最小尺寸，用户可按需调整以下参数 */
   .apexon-header-left .apex-bw-toggle {
-    width: 34px;
-    height: 18px;
+    width: 34px; /* 超小屏按钮宽度，用户可改 */
+    height: 18px; /* 超小屏按钮高度，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle__thumb {
-    width: 12px;
-    height: 12px;
-    top: 3px;
-    left: 3px;
+    width: 12px; /* 超小屏滑块宽度，用户可改 */
+    height: 12px; /* 超小屏滑块高度，用户可改 */
+    top: 3px; /* 超小屏滑块顶部位置，用户可改 */
+    left: 3px; /* 超小屏滑块左侧位置，用户可改 */
   }
 
   .apexon-header-left .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
-    transform: translateX(16px);
+    transform: translateX(16px); /* 超小屏滑块选中时平移距离，用户可改 */
   }
 
   .apexon-menu-btn {
@@ -1388,18 +1392,26 @@ body.loaded {
   flex-shrink: 0;
 }
 
-/* 黑白/彩色（深色↔白色明亮主题）切换开关 —— 紧凑胶囊 */
+/* ============================================================================
+   黑白/彩色（深色↔白色明亮主题）切换开关 —— 紧凑胶囊
+   ============================================================================
+   【用户可调参数说明】
+   - width / height：按钮整体宽高
+   - padding：按钮 clickable 区域（会影响与相邻元素的间距）
+   - margin：微调按钮在父容器中的垂直/水平位置
+   下面的 .apex-bw-toggle__track / __thumb 控制内部轨道与滑块尺寸。
+   ============================================================================ */
 .apex-bw-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 20px;
+  width: 38px; /* 按钮整体宽度，用户可改 */
+  height: 20px; /* 按钮整体高度，用户可改 */
   cursor: pointer;
   flex-shrink: 0;
-  padding: 4px;
-  margin: -4px 0;
+  padding: 4px; /* 按钮内边距，用户可改 */
+  margin: -4px 0; /* 垂直位置微调，用户可改 */
 }
 
 .apex-bw-toggle input {
@@ -1411,7 +1423,7 @@ body.loaded {
 
 .apex-bw-toggle__track {
   position: absolute;
-  inset: 4px;
+  inset: 4px; /* 轨道距离按钮边缘的距离，用户可改；越小轨道越大 */
   border-radius: 9999px;
   background: linear-gradient(135deg, #22d3ee 0%, #a855f7 100%);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
@@ -1420,10 +1432,10 @@ body.loaded {
 
 .apex-bw-toggle__thumb {
   position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 14px;
-  height: 14px;
+  top: 5px; /* 滑块距离轨道上边的距离，用户可改 */
+  left: 5px; /* 滑块在关闭（暗色）状态下的左边距，用户可改 */
+  width: 14px; /* 滑块宽度，用户可改 */
+  height: 14px; /* 滑块高度，用户可改 */
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
@@ -1436,6 +1448,8 @@ body.loaded {
 }
 
 .apex-bw-toggle input:checked + .apex-bw-toggle__track .apex-bw-toggle__thumb {
+  /* 滑块打开（明亮主题）时向右平移的距离，用户可改
+     建议 = width - thumb宽度 - left*2 - inset*2 左右，保证正好贴到右侧 */
   transform: translateX(18px);
   background: #f8fafc;
 }
