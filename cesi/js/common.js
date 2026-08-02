@@ -746,6 +746,10 @@
       return this.currentUser ? this.currentUser.token : null;
     },
 
+    getAnonId() {
+      return this.anonId;
+    },
+
     async mergeAnonymousData() {
       if (!this.currentUser || !this.anonId) return;
       const anonId = this.anonId;
