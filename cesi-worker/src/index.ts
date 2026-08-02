@@ -224,6 +224,37 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService), async 
 // Protected API routes.
 app.use('/api/*', createAuthMiddleware(buildShardService));
 
+type FlatScore = {
+  id: string;
+  user_id: string;
+  username: string;
+  test_type: string;
+  score_value: number | null;
+  accuracy: number | null;
+  wpm: number | null;
+  cpm: number | null;
+  created_at: string;
+  updated_at: string;
+  payload: unknown;
+};
+
+function flattenScore(r: MixedData): FlatScore {
+  const payload: any = safeJsonParse(r.payload) || {};
+  return {
+    id: r.id,
+    user_id: r.user_id,
+    username: payload.username || r.user_id,
+    test_type: payload.test_type || r.subtype || '',
+    score_value: r.score_value != null ? Number(r.score_value) : (payload.score_value != null ? Number(payload.score_value) : null),
+    accuracy: payload.accuracy != null ? Number(payload.accuracy) : null,
+    wpm: payload.wpm != null ? Number(payload.wpm) : null,
+    cpm: payload.cpm != null ? Number(payload.cpm) : null,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    payload,
+  };
+}
+
 app.get('/api/scores', async (c) => {
   const userId = c.req.query('user_id');
   const testType = c.req.query('test_type');
@@ -264,7 +295,7 @@ app.get('/api/scores', async (c) => {
       ? (a.score_value ?? Infinity) - (b.score_value ?? Infinity)
       : (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
     bestRows = bestRows.slice(0, Math.min(Math.max(limit, 1), 1000));
-    return c.json({ data: bestRows.map((r) => ({ ...r, payload: safeJsonParse(r.payload) })) });
+    return c.json({ data: bestRows.map(flattenScore) });
   }
 
   const options: { userId?: string; subtype?: string; limit: number } = { limit: Math.min(Math.max(limit, 1), 1000) };
@@ -272,7 +303,7 @@ app.get('/api/scores', async (c) => {
   if (testType) options.subtype = testType;
 
   const rows = await shard.readByType('score', options);
-  return c.json({ data: rows.map((r) => ({ ...r, payload: safeJsonParse(r.payload) })) });
+  return c.json({ data: rows.map(flattenScore) });
 });
 
 app.post('/api/scores', async (c) => {
@@ -334,12 +365,26 @@ app.get('/api/comments', async (c) => {
   const options: { subtype?: string; limit: number } = { limit: Math.min(Math.max(limit, 1), 1000) };
   if (category) options.subtype = category;
   const rows = await shard.readByType('comment', options);
-  return c.json({ data: rows.map((r) => ({ ...r, payload: safeJsonParse(r.payload) })) });
+  return c.json({
+    data: rows.map((r) => {
+      const payload: any = safeJsonParse(r.payload) || {};
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        username: payload.username || r.user_id,
+        category: payload.category || r.subtype || 'chat',
+        content: payload.content || '',
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+        payload,
+      };
+    }),
+  });
 });
 
 app.post('/api/comments', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ content?: string; category?: string }>();
+  const body = await c.req.json<{ username?: string; content?: string; category?: string }>();
   if (!body.content || !body.content.trim()) return c.json({ error: 'content is required' }, 400);
 
   const shard = buildShardService(c.env);
@@ -350,6 +395,7 @@ app.post('/api/comments', async (c) => {
     subtype: body.category || 'chat',
     score_value: null,
     payload: JSON.stringify({
+      username: body.username || userId,
       content: body.content.trim(),
       category: body.category || 'chat',
     }),
@@ -362,20 +408,64 @@ app.post('/api/comments', async (c) => {
   return c.json({ ok: true, db: result.db });
 });
 
-app.get('/api/profiles', async (c) => {
-  const userId = c.get('userId');
-  const shard = buildShardService(c.env);
-  const rows = await shard.readByUserAndType(userId, 'profile', 1);
-  if (!rows.length) return c.json({ data: null });
-  return c.json({ data: { ...rows[0], payload: safeJsonParse(rows[0].payload) } });
-});
-
 app.get('/api/profiles/:userId', async (c) => {
   const userId = c.req.param('userId');
   const shard = buildShardService(c.env);
   const rows = await shard.readByUserAndType(userId, 'profile', 1);
   if (!rows.length) return c.json({ data: null });
-  return c.json({ data: { ...rows[0], payload: safeJsonParse(rows[0].payload) } });
+  const r = rows[0];
+  const payload: any = safeJsonParse(r.payload) || {};
+  return c.json({
+    data: {
+      id: r.id,
+      user_id: r.user_id,
+      username: payload.username || r.user_id,
+      bio: payload.bio || '',
+      location: payload.location || '',
+      website: payload.website || '',
+      social_links: payload.social_links || '',
+      avatar_url: payload.avatar_url || null,
+      gender: payload.gender || null,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      payload,
+    },
+  });
+});
+
+// 批量读取多个用户的 profile（排行榜、用户卡片等展示场景）
+// 同时兼容：不传 user_ids 时返回当前登录用户自身的 profile
+app.get('/api/profiles', async (c) => {
+  const userIdsQuery = c.req.query('user_ids');
+  const shard = buildShardService(c.env);
+  const flattenProfile = (r: MixedData) => {
+    const payload: any = safeJsonParse(r.payload) || {};
+    return {
+      id: r.id,
+      user_id: r.user_id,
+      username: payload.username || r.user_id,
+      bio: payload.bio || '',
+      location: payload.location || '',
+      website: payload.website || '',
+      social_links: payload.social_links || '',
+      avatar_url: payload.avatar_url || null,
+      gender: payload.gender || null,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      payload,
+    };
+  };
+  if (userIdsQuery) {
+    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
+    const rows = await shard.readByType('profile', { limit: Math.min(ids.length, 1000) });
+    const filtered = rows.filter(r => ids.includes(r.user_id));
+    return c.json({ data: filtered.map(flattenProfile) });
+  }
+  // 默认行为：返回当前登录用户自身的 profile
+  const userId = c.get('userId');
+  const rows = await shard.readByUserAndType(userId, 'profile', 1);
+  if (!rows.length) return c.json({ data: null });
+  return c.json({ data: flattenProfile(rows[0]) });
 });
 
 app.post('/api/profiles', async (c) => {
@@ -401,24 +491,6 @@ app.post('/api/profiles', async (c) => {
 
   if (!result.ok) return c.json({ error: result.error }, 503);
   return c.json({ ok: true, db: result.db });
-});
-
-// 批量读取多个用户的 profile（排行榜、用户卡片等展示场景）
-app.get('/api/profiles', async (c) => {
-  const userIdsQuery = c.req.query('user_ids');
-  if (userIdsQuery) {
-    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
-    const shard = buildShardService(c.env);
-    const rows = await shard.readByType('profile', { limit: Math.min(ids.length, 1000) });
-    const filtered = rows.filter(r => ids.includes(r.user_id));
-    return c.json({ data: filtered.map(r => ({ ...r, payload: safeJsonParse(r.payload) })) });
-  }
-  // 默认行为：返回当前登录用户自身的 profile
-  const userId = c.get('userId');
-  const shard = buildShardService(c.env);
-  const rows = await shard.readByUserAndType(userId, 'profile', 1);
-  if (!rows.length) return c.json({ data: null });
-  return c.json({ data: { ...rows[0], payload: safeJsonParse(rows[0].payload) } });
 });
 
 // 修改用户名（原先走 Supabase RPC change_username，现统一走 Worker）
@@ -526,18 +598,49 @@ app.post('/api/users', async (c) => {
 
 app.get('/api/stats', async (c) => {
   const shard = buildShardService(c.env);
-  const [totalTests, totalComments, totalUsers] = await Promise.all([
+  const FIVE_MIN_MS = 5 * 60 * 1000;
+  const now = Date.now();
+  const [totalTests, totalComments, scores, onlineRecords] = await Promise.all([
     shard.countByType('score'),
     shard.countByType('comment'),
-    (async () => {
-      const scores = await shard.readByType('score', { limit: 10000 });
-      const users = new Set(scores.map((r) => r.user_id));
-      return users.size;
-    })(),
+    shard.readByType('score', { limit: 10000 }),
+    shard.readByType('online', { limit: 10000 }),
   ]);
 
+  // 统计在线人数：last_seen 在 5 分钟内
+  let online = 0;
+  try {
+    for (const r of onlineRecords) {
+      const payload = safeJsonParse(r.payload);
+      const lastSeenStr = (payload && (payload as any).last_seen) || r.updated_at || r.created_at;
+      if (lastSeenStr) {
+        const ts = new Date(String(lastSeenStr)).getTime();
+        if (!isNaN(ts) && now - ts <= FIVE_MIN_MS) online += 1;
+      }
+    }
+  } catch {
+    online = onlineRecords.length;
+  }
+
+  // 总用户数 = 参与成绩的用户 + 有 profile 的用户 + 有 online 记录的用户（去重）
+  const totalUserSet = new Set<string>();
+  try {
+    const [profiles, accounts] = await Promise.all([
+      shard.readByType('profile', { limit: 10000 }),
+      shard.readByType('account', { limit: 10000 }),
+    ]);
+    scores.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
+    profiles.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
+    accounts.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
+    onlineRecords.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
+  } catch {
+    // ignore
+  }
+  const scoreUserCount = new Set(scores.map((r) => r.user_id).filter(Boolean)).size;
+  const total_users = Math.max(totalUserSet.size, scoreUserCount);
+
   const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
-  return c.json({ total_tests: totalTests, total_comments: totalComments, total_users: totalUsers, dbs });
+  return c.json({ online, total_tests: totalTests, total_comments: totalComments, total_users, dbs });
 });
 
 app.post('/api/upload', async (c) => {

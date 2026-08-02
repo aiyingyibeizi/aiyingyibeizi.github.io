@@ -96,7 +96,12 @@
     async request(path, method = 'GET', body, token) {
       const url = `${WORKER_API_URL}${path}`;
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
+      // 关键修复：所有请求默认带上认证信息，避免公开接口（排行榜、评论、统计）被 auth 中间件 401 拦截。
+      // 优先级：显式 token > Auth session token > Auth userId/anonId
+      const effectiveToken = token
+        || (typeof Auth !== 'undefined' && Auth.getToken && Auth.getToken())
+        || (typeof Auth !== 'undefined' && Auth.getUserId && Auth.getUserId());
+      if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
       const options = { method, headers };
       if (body != null) options.body = JSON.stringify(body);
       try {
@@ -473,7 +478,7 @@
     async deleteScore(id, userId) {
       if (!id) return false;
       const extraHeaders = userId ? { 'x-user-id': userId } : undefined;
-      const result = await this.request('scores', 'DELETE', null, `id=eq.${id}`, extraHeaders);
+      const result = await this.request('scores', 'DELETE', null, `id=${encodeURIComponent(id)}`, extraHeaders);
       return !!result;
     },
 
@@ -564,7 +569,8 @@
     async getProfile(userId) {
       const res = await WorkerAPI.request(`/api/profiles/${encodeURIComponent(userId)}`, 'GET');
       if (!res.ok) return null;
-      return res.data || null;
+      // Worker 返回 { data: profile | null }，profile 已被后端扁平化处理（含 username/avatar_url 等顶层字段）
+      return res.data && res.data.data != null ? res.data.data : (res.data || null);
     },
 
     async saveProfile(userId, username, payload) {
@@ -871,6 +877,7 @@
   APEXON.Auth = {
     isLoggedIn: Auth.isLoggedIn.bind(Auth),
     getUser: Auth.getUser.bind(Auth),
+    getDisplayUser: Auth.getDisplayUser.bind(Auth),
     getUserId: Auth.getUserId.bind(Auth),
     getToken: Auth.getToken.bind(Auth),
     register: Auth.register.bind(Auth),
@@ -878,7 +885,10 @@
     logout: Auth.logout.bind(Auth),
     deleteAccount: Auth.deleteAccount.bind(Auth),
     changeUsername: Auth.changeUsername.bind(Auth),
-    getAnonId: Auth.getAnonId.bind(Auth)
+    getAnonId: Auth.getAnonId.bind(Auth),
+    init: Auth.init.bind(Auth),
+    _validateUsername: Auth._validateUsername.bind(Auth),
+    _validatePassword: Auth._validatePassword.bind(Auth)
   };
 
   // ===== 3. 音频 =====
@@ -1496,7 +1506,12 @@
       if (!isLoggedIn) {
         if (forumTip) {
           forumTip.style.display = 'block';
-          forumTip.textContent = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestModeTip') : '游客模式可正常使用全部功能，登录后可修改用户名与资料');
+          // 移到底部小字，不使用"显眼"的强提示
+          forumTip.textContent = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestModeTip') : '游客可发表评论，登录后可修改用户名与资料');
+          forumTip.style.fontSize = '11px';
+          forumTip.style.opacity = '0.65';
+          forumTip.style.marginTop = '4px';
+          forumTip.style.padding = '6px 12px';
         }
         if (forumInput) forumInput.style.display = 'flex';
         document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: false } }));
