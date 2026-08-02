@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { createClient } from '@supabase/supabase-js';
 import { createRedis } from './db/redis';
 import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
@@ -14,6 +15,9 @@ import type { MixedData, DbConfig } from './types/models';
 const DEFAULT_READ_LIMIT = 100;
 const LOWER_IS_BETTER = new Set(['reaction', 'type', 'aim']);
 
+let migrated = false;
+let cachedShardService: ShardService | null = null;
+
 function safeJsonParse(payload: string): unknown {
   try {
     return JSON.parse(payload);
@@ -27,6 +31,11 @@ function uuid(): string {
 }
 
 async function buildShardService(env: Env): Promise<ShardService> {
+  // Return cached instance if available
+  if (cachedShardService) {
+    return cachedShardService;
+  }
+
   const redis = createRedis(env);
 
   // Reuse a single Turso client per database across requests
@@ -38,17 +47,20 @@ async function buildShardService(env: Env): Promise<ShardService> {
   const neonPool = createNeonPool(env.NEON_DSN);
   const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
 
-  // Run migrations: create tables and add missing columns
-  try {
-    await Promise.all([
-      tursoMigrate(tursoApexonClient),
-      tursoMigrate(tursoApexon1Client),
-      tursoMigrate(tursoApexon2Client),
-      neonMigrate(neonPool),
-      supabasePgMigrate(supabasePgPool),
-    ]);
-  } catch (err) {
-    console.error('Migration failed:', err);
+  // Run migrations only once (first request); subsequent calls skip migration.
+  if (!migrated) {
+    migrated = true;
+    try {
+      await Promise.all([
+        tursoMigrate(tursoApexonClient),
+        tursoMigrate(tursoApexon1Client),
+        tursoMigrate(tursoApexon2Client),
+        neonMigrate(neonPool),
+        supabasePgMigrate(supabasePgPool),
+      ]);
+    } catch (err) {
+      console.error('Migration failed:', err);
+    }
   }
 
   const tursoApexon: DbConfig = {
@@ -643,29 +655,36 @@ app.post('/api/profiles/username', async (c) => {
   return c.json({ success: true, username: newUsername });
 });
 
-// online_users 心跳（替代原来的 Supabase online_users 表直连）
+// online_users 心跳（轻量级，失败不影响用户体验）
 app.post('/api/online_users', async (c) => {
-  const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
-  const userId = (body.user_id || c.get('userId') || '').toString().trim();
-  if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
-  const lastSeen = body.last_seen || new Date().toISOString();
-  const shard = await buildShardService(c.env);
-  // upsert：删除旧的再写新的，保证同一用户只有一条在线记录
-  const existing = await shard.readByUserAndType(userId, 'online', 1);
-  for (const row of existing) await shard.deleteById(row.id);
-  const result = await shard.write({
-    id: uuid(),
-    user_id: userId,
-    type: 'online',
-    subtype: null,
-    score_value: null,
-    payload: JSON.stringify({ last_seen: lastSeen }),
-    file_url: null,
-    created_at: lastSeen,
-    updated_at: lastSeen,
-  });
-  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
-  return c.json({ ok: true, db: result.db });
+  try {
+    const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
+    const userId = (body.user_id || c.get('userId') || '').toString().trim();
+    if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
+    const lastSeen = body.last_seen || new Date().toISOString();
+    const shard = await buildShardService(c.env);
+    // 直接写入，不做 read-then-delete（减少 DB 压力）
+    const result = await shard.write({
+      id: uuid(),
+      user_id: userId,
+      type: 'online',
+      subtype: null,
+      score_value: null,
+      payload: JSON.stringify({ last_seen: lastSeen }),
+      file_url: null,
+      created_at: lastSeen,
+      updated_at: lastSeen,
+    });
+    if (!result.ok) {
+      console.warn('online_users write failed:', result.error);
+      // 返回 200 而非 503，避免前端报错
+      return c.json({ ok: true, db: 'fallback' });
+    }
+    return c.json({ ok: true, db: result.db });
+  } catch (err) {
+    console.error('online_users error:', err);
+    return c.json({ ok: true }); // 静默失败
+  }
 });
 
 // users 表 upsert（syncUser：首次登录/注册时写基础资料）
