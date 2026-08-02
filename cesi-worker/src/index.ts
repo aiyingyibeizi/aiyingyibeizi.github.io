@@ -347,7 +347,7 @@ app.post('/api/scores', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
-  return c.json({ ok: true, db: result.db });
+  return c.json({ success: true });
 });
 
 app.delete('/api/scores', async (c) => {
@@ -405,17 +405,18 @@ app.post('/api/comments', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
-  return c.json({ ok: true, db: result.db });
+  return c.json({ success: true });
 });
 
 app.get('/api/profiles/:userId', async (c) => {
   const userId = c.req.param('userId');
   const shard = buildShardService(c.env);
   const rows = await shard.readByUserAndType(userId, 'profile', 1);
-  if (!rows.length) return c.json({ data: null });
+  if (!rows.length) return c.json({ success: true, data: null });
   const r = rows[0];
   const payload: any = safeJsonParse(r.payload) || {};
   return c.json({
+    success: true,
     data: {
       id: r.id,
       user_id: r.user_id,
@@ -490,7 +491,7 @@ app.post('/api/profiles', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
-  return c.json({ ok: true, db: result.db });
+  return c.json({ success: true });
 });
 
 // 修改用户名（原先走 Supabase RPC change_username，现统一走 Worker）
@@ -640,7 +641,10 @@ app.get('/api/stats', async (c) => {
   const total_users = Math.max(totalUserSet.size, scoreUserCount);
 
   const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
-  return c.json({ online, total_tests: totalTests, total_comments: totalComments, total_users, dbs });
+  return c.json({
+    success: true,
+    data: { online, total_tests: totalTests, total_comments: totalComments, total_users, dbs },
+  });
 });
 
 app.post('/api/upload', async (c) => {
