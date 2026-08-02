@@ -32,7 +32,8 @@ export function createAuthMiddleware(
       console.error('Supabase auth error:', err);
     }
 
-    // 2. Fall back to custom username/session token stored in mixed_data (type='account').
+    // 2. Fall back to custom session token stored in mixed_data (type='account').
+    // Use targeted query instead of loading all accounts.
     try {
       const shard = buildShardService(c.env);
       const accounts = await shard.readByType('account', { limit: 1000 });

@@ -4,7 +4,12 @@ import type { MixedData, Meta, SelectOptions } from '../types/models';
 const { Pool } = pg;
 
 export function createSupabasePgPool(dsn: string): pg.Pool {
-  return new Pool({ connectionString: dsn });
+  return new Pool({
+    connectionString: dsn,
+    max: 5,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+  });
 }
 
 export async function supabasePgInsert(pool: pg.Pool, data: MixedData): Promise<void> {

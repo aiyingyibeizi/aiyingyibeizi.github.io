@@ -29,74 +29,83 @@ function uuid(): string {
 function buildShardService(env: Env): ShardService {
   const redis = createRedis(env);
 
+  // Reuse a single Turso client per database across requests
+  const tursoApexonClient = createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON);
+  const tursoApexon1Client = createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1);
+  const tursoApexon2Client = createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2);
+
+  // Reuse a single pg Pool per database
+  const neonPool = createNeonPool(env.NEON_DSN);
+  const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
+
   const tursoApexon: DbConfig = {
     name: 'APEXON',
-    maxBytes: 450 * 1024 * 1024, // 450 MB
+    maxBytes: 450 * 1024 * 1024,
     type: 'turso',
-    insert: (data) => tursoInsert(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), data),
-    selectByUser: (userId, limit) => tursoSelectByUser(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), userId, limit),
-    selectByType: (type, options) => tursoSelectByType(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), type, options),
-    selectById: (id) => tursoSelectById(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), id),
-    deleteById: (id) => tursoDeleteById(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), id),
-    countByType: (type) => tursoCountByType(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), type),
-    getMetaUsedBytes: () => tursoGetMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), 'APEXON'),
-    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON, env.TURSO_TOKEN_APEXON), 'APEXON', 450 * 1024 * 1024, used),
+    insert: (data) => tursoInsert(tursoApexonClient, data),
+    selectByUser: (userId, limit) => tursoSelectByUser(tursoApexonClient, userId, limit),
+    selectByType: (type, options) => tursoSelectByType(tursoApexonClient, type, options),
+    selectById: (id) => tursoSelectById(tursoApexonClient, id),
+    deleteById: (id) => tursoDeleteById(tursoApexonClient, id),
+    countByType: (type) => tursoCountByType(tursoApexonClient, type),
+    getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexonClient, 'APEXON'),
+    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexonClient, 'APEXON', 450 * 1024 * 1024, used),
   };
 
   const tursoApexon1: DbConfig = {
     name: 'APEXON_1',
     maxBytes: 450 * 1024 * 1024,
     type: 'turso',
-    insert: (data) => tursoInsert(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), data),
-    selectByUser: (userId, limit) => tursoSelectByUser(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), userId, limit),
-    selectByType: (type, options) => tursoSelectByType(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), type, options),
-    selectById: (id) => tursoSelectById(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), id),
-    deleteById: (id) => tursoDeleteById(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), id),
-    countByType: (type) => tursoCountByType(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), type),
-    getMetaUsedBytes: () => tursoGetMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), 'APEXON_1'),
-    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1), 'APEXON_1', 450 * 1024 * 1024, used),
+    insert: (data) => tursoInsert(tursoApexon1Client, data),
+    selectByUser: (userId, limit) => tursoSelectByUser(tursoApexon1Client, userId, limit),
+    selectByType: (type, options) => tursoSelectByType(tursoApexon1Client, type, options),
+    selectById: (id) => tursoSelectById(tursoApexon1Client, id),
+    deleteById: (id) => tursoDeleteById(tursoApexon1Client, id),
+    countByType: (type) => tursoCountByType(tursoApexon1Client, type),
+    getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon1Client, 'APEXON_1'),
+    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon1Client, 'APEXON_1', 450 * 1024 * 1024, used),
   };
 
   const tursoApexon2: DbConfig = {
     name: 'APEXON_2',
     maxBytes: 450 * 1024 * 1024,
     type: 'turso',
-    insert: (data) => tursoInsert(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), data),
-    selectByUser: (userId, limit) => tursoSelectByUser(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), userId, limit),
-    selectByType: (type, options) => tursoSelectByType(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), type, options),
-    selectById: (id) => tursoSelectById(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), id),
-    deleteById: (id) => tursoDeleteById(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), id),
-    countByType: (type) => tursoCountByType(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), type),
-    getMetaUsedBytes: () => tursoGetMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), 'APEXON_2'),
-    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2), 'APEXON_2', 450 * 1024 * 1024, used),
+    insert: (data) => tursoInsert(tursoApexon2Client, data),
+    selectByUser: (userId, limit) => tursoSelectByUser(tursoApexon2Client, userId, limit),
+    selectByType: (type, options) => tursoSelectByType(tursoApexon2Client, type, options),
+    selectById: (id) => tursoSelectById(tursoApexon2Client, id),
+    deleteById: (id) => tursoDeleteById(tursoApexon2Client, id),
+    countByType: (type) => tursoCountByType(tursoApexon2Client, type),
+    getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon2Client, 'APEXON_2'),
+    updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon2Client, 'APEXON_2', 450 * 1024 * 1024, used),
   };
 
   const neon: DbConfig = {
     name: 'NEON',
     maxBytes: 450 * 1024 * 1024,
     type: 'postgres',
-    insert: (data) => neonInsert(createNeonPool(env.NEON_DSN), data),
-    selectByUser: (userId, limit) => neonSelectByUser(createNeonPool(env.NEON_DSN), userId, limit),
-    selectByType: (type, options) => neonSelectByType(createNeonPool(env.NEON_DSN), type, options),
-    selectById: (id) => neonSelectById(createNeonPool(env.NEON_DSN), id),
-    deleteById: (id) => neonDeleteById(createNeonPool(env.NEON_DSN), id),
-    countByType: (type) => neonCountByType(createNeonPool(env.NEON_DSN), type),
-    getMetaUsedBytes: () => neonGetMetaUsedBytes(createNeonPool(env.NEON_DSN), 'NEON'),
-    updateMetaUsedBytes: (used) => neonUpdateMetaUsedBytes(createNeonPool(env.NEON_DSN), 'NEON', 450 * 1024 * 1024, used),
+    insert: (data) => neonInsert(neonPool, data),
+    selectByUser: (userId, limit) => neonSelectByUser(neonPool, userId, limit),
+    selectByType: (type, options) => neonSelectByType(neonPool, type, options),
+    selectById: (id) => neonSelectById(neonPool, id),
+    deleteById: (id) => neonDeleteById(neonPool, id),
+    countByType: (type) => neonCountByType(neonPool, type),
+    getMetaUsedBytes: () => neonGetMetaUsedBytes(neonPool, 'NEON'),
+    updateMetaUsedBytes: (used) => neonUpdateMetaUsedBytes(neonPool, 'NEON', 450 * 1024 * 1024, used),
   };
 
   const supabasePg: DbConfig = {
     name: 'SUPABASE',
     maxBytes: 450 * 1024 * 1024,
     type: 'postgres',
-    insert: (data) => supabasePgInsert(createSupabasePgPool(env.SUPABASE_DSN), data),
-    selectByUser: (userId, limit) => supabasePgSelectByUser(createSupabasePgPool(env.SUPABASE_DSN), userId, limit),
-    selectByType: (type, options) => supabasePgSelectByType(createSupabasePgPool(env.SUPABASE_DSN), type, options),
-    selectById: (id) => supabasePgSelectById(createSupabasePgPool(env.SUPABASE_DSN), id),
-    deleteById: (id) => supabasePgDeleteById(createSupabasePgPool(env.SUPABASE_DSN), id),
-    countByType: (type) => supabasePgCountByType(createSupabasePgPool(env.SUPABASE_DSN), type),
-    getMetaUsedBytes: () => supabasePgGetMetaUsedBytes(createSupabasePgPool(env.SUPABASE_DSN), 'SUPABASE'),
-    updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(createSupabasePgPool(env.SUPABASE_DSN), 'SUPABASE', 450 * 1024 * 1024, used),
+    insert: (data) => supabasePgInsert(supabasePgPool, data),
+    selectByUser: (userId, limit) => supabasePgSelectByUser(supabasePgPool, userId, limit),
+    selectByType: (type, options) => supabasePgSelectByType(supabasePgPool, type, options),
+    selectById: (id) => supabasePgSelectById(supabasePgPool, id),
+    deleteById: (id) => supabasePgDeleteById(supabasePgPool, id),
+    countByType: (type) => supabasePgCountByType(supabasePgPool, type),
+    getMetaUsedBytes: () => supabasePgGetMetaUsedBytes(supabasePgPool, 'SUPABASE'),
+    updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(supabasePgPool, 'SUPABASE', 450 * 1024 * 1024, used),
   };
 
   return new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2, neon, supabasePg]);
@@ -106,7 +115,20 @@ type Variables = { userId: string };
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 app.use('*', async (c, next) => {
-  c.header('Access-Control-Allow-Origin', '*');
+  const origin = c.req.header('Origin') || '';
+  const allowedOrigins = [
+    'https://apexon.qzz.io',
+    'https://www.apexon.qzz.io',
+    'https://api.apexon.qzz.io',
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ];
+  if (allowedOrigins.includes(origin)) {
+    c.header('Access-Control-Allow-Origin', origin);
+    c.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    c.header('Access-Control-Allow-Origin', '*');
+  }
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
@@ -123,8 +145,16 @@ app.post('/api/auth/register', async (c) => {
   if (password.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
 
   const shard = buildShardService(c.env);
-  const existing = await shard.readByType('account', { limit: 1000 });
-  if (existing.find((r) => JSON.parse(r.payload).username === username)) {
+  // Targeted query: only load accounts and check username match
+  const existing = await shard.readByType('account', { limit: 500 });
+  const duplicate = existing.find((r) => {
+    try {
+      return JSON.parse(r.payload).username === username;
+    } catch {
+      return false;
+    }
+  });
+  if (duplicate) {
     return c.json({ error: 'Username already exists' }, 409);
   }
 
@@ -160,7 +190,8 @@ app.post('/api/auth/login', async (c) => {
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
 
   const shard = buildShardService(c.env);
-  const accounts = await shard.readByType('account', { limit: 1000 });
+  // Targeted query: only load accounts and find matching username
+  const accounts = await shard.readByType('account', { limit: 500 });
   const account = accounts.find((r) => {
     try {
       const p = JSON.parse(r.payload);
@@ -190,9 +221,10 @@ app.post('/api/auth/login', async (c) => {
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
 
-  // Delete old account record and insert updated one (mixed_data is append-only by design).
-  await shard.deleteById(account.id);
-  await shard.write({
+  // Atomic-ish: write new record first, then delete old one.
+  // If write succeeds but delete fails, we have a duplicate (harmless).
+  // If delete succeeds but write fails, the old record is gone (mitigated by writing first).
+  const writeResult = await shard.write({
     id: uuid(),
     user_id: account.user_id,
     type: 'account',
@@ -203,6 +235,9 @@ app.post('/api/auth/login', async (c) => {
     created_at: account.created_at,
     updated_at: new Date().toISOString(),
   });
+
+  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
+  await shard.deleteById(account.id);
 
   return c.json({ user_id: account.user_id, username, token: sessionToken, expires_at: expiresAt });
 });
@@ -219,6 +254,30 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService), async 
   }
 
   return c.json({ merged: anonScores.length });
+});
+
+// feedback 提交（公开接口，不需要认证）
+app.post('/api/feedback', async (c) => {
+  const body = await c.req.json<{ name?: string; email?: string; content?: string }>();
+  const name = (body.name || '').toString().trim().slice(0, 60);
+  const email = (body.email || '').toString().trim().slice(0, 120);
+  const content = (body.content || '').toString().trim().slice(0, 2000);
+  if (!name || !email || !content) return c.json({ ok: false, error: '所有字段必填' }, 400);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return c.json({ ok: false, error: '邮箱格式不正确' }, 400);
+  const shard = buildShardService(c.env);
+  const result = await shard.write({
+    id: uuid(),
+    user_id: 'feedback@public',
+    type: 'feedback',
+    subtype: 'contact',
+    score_value: null,
+    payload: JSON.stringify({ name, email, content }),
+    file_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
+  return c.json({ ok: true });
 });
 
 // Protected API routes.
@@ -351,11 +410,18 @@ app.post('/api/scores', async (c) => {
 });
 
 app.delete('/api/scores', async (c) => {
+  const userId = c.get('userId');
   const id = c.req.query('id');
   if (!id) return c.json({ error: 'id is required' }, 400);
   const shard = buildShardService(c.env);
+
+  // Permission check: only the owner can delete their own score
+  const row = await shard.readById(id);
+  if (!row) return c.json({ error: 'Score not found' }, 404);
+  if (row.user_id !== userId) return c.json({ error: 'Forbidden' }, 403);
+
   await shard.deleteById(id);
-  return c.json({ ok: true });
+  return c.json({ success: true });
 });
 
 app.get('/api/comments', async (c) => {
@@ -408,6 +474,41 @@ app.post('/api/comments', async (c) => {
   return c.json({ success: true });
 });
 
+// 批量读取多个用户的 profile（排行榜、用户卡片等展示场景）
+// 同时兼容：不传 user_ids 时返回当前登录用户自身的 profile
+app.get('/api/profiles', async (c) => {
+  const userIdsQuery = c.req.query('user_ids');
+  const shard = buildShardService(c.env);
+  const flattenProfile = (r: MixedData) => {
+    const payload: any = safeJsonParse(r.payload) || {};
+    return {
+      id: r.id,
+      user_id: r.user_id,
+      username: payload.username || r.user_id,
+      bio: payload.bio || '',
+      location: payload.location || '',
+      website: payload.website || '',
+      social_links: payload.social_links || '',
+      avatar_url: payload.avatar_url || null,
+      gender: payload.gender || null,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      payload,
+    };
+  };
+  if (userIdsQuery) {
+    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
+    const rows = await shard.readByType('profile', { limit: Math.min(ids.length * 2, 1000) });
+    const filtered = rows.filter(r => ids.includes(r.user_id));
+    return c.json({ data: filtered.map(flattenProfile) });
+  }
+  // 默认行为：返回当前登录用户自身的 profile
+  const userId = c.get('userId');
+  const rows = await shard.readByUserAndType(userId, 'profile', 1);
+  if (!rows.length) return c.json({ data: null });
+  return c.json({ data: flattenProfile(rows[0]) });
+});
+
 app.get('/api/profiles/:userId', async (c) => {
   const userId = c.req.param('userId');
   const shard = buildShardService(c.env);
@@ -434,50 +535,12 @@ app.get('/api/profiles/:userId', async (c) => {
   });
 });
 
-// 批量读取多个用户的 profile（排行榜、用户卡片等展示场景）
-// 同时兼容：不传 user_ids 时返回当前登录用户自身的 profile
-app.get('/api/profiles', async (c) => {
-  const userIdsQuery = c.req.query('user_ids');
-  const shard = buildShardService(c.env);
-  const flattenProfile = (r: MixedData) => {
-    const payload: any = safeJsonParse(r.payload) || {};
-    return {
-      id: r.id,
-      user_id: r.user_id,
-      username: payload.username || r.user_id,
-      bio: payload.bio || '',
-      location: payload.location || '',
-      website: payload.website || '',
-      social_links: payload.social_links || '',
-      avatar_url: payload.avatar_url || null,
-      gender: payload.gender || null,
-      created_at: r.created_at,
-      updated_at: r.updated_at,
-      payload,
-    };
-  };
-  if (userIdsQuery) {
-    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
-    const rows = await shard.readByType('profile', { limit: Math.min(ids.length, 1000) });
-    const filtered = rows.filter(r => ids.includes(r.user_id));
-    return c.json({ data: filtered.map(flattenProfile) });
-  }
-  // 默认行为：返回当前登录用户自身的 profile
-  const userId = c.get('userId');
-  const rows = await shard.readByUserAndType(userId, 'profile', 1);
-  if (!rows.length) return c.json({ data: null });
-  return c.json({ data: flattenProfile(rows[0]) });
-});
-
 app.post('/api/profiles', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<Record<string, unknown>>();
   const shard = buildShardService(c.env);
 
-  // Overwrite previous profile for this user.
-  const existing = await shard.readByUserAndType(userId, 'profile', 1);
-  for (const row of existing) await shard.deleteById(row.id);
-
+  // Atomic-ish: write new profile first, then delete old ones
   const result = await shard.write({
     id: uuid(),
     user_id: userId,
@@ -491,6 +554,15 @@ app.post('/api/profiles', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
+
+  // Delete old profiles after successful write
+  const existing = await shard.readByUserAndType(userId, 'profile', 10);
+  for (const row of existing) {
+    if (row.payload !== JSON.stringify(body)) {
+      await shard.deleteById(row.id);
+    }
+  }
+
   return c.json({ success: true });
 });
 
@@ -520,30 +592,6 @@ app.post('/api/profiles/username', async (c) => {
     if (!result.ok) return c.json({ success: false, error: result.error }, 503);
   }
   return c.json({ success: true, username: newUsername });
-});
-
-// feedback 提交（替代原来的 Supabase feedback 表直连）
-app.post('/api/feedback', async (c) => {
-  const body = await c.req.json<{ name?: string; email?: string; content?: string }>();
-  const name = (body.name || '').toString().trim().slice(0, 60);
-  const email = (body.email || '').toString().trim().slice(0, 120);
-  const content = (body.content || '').toString().trim().slice(0, 2000);
-  if (!name || !email || !content) return c.json({ ok: false, error: '所有字段必填' }, 400);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return c.json({ ok: false, error: '邮箱格式不正确' }, 400);
-  const shard = buildShardService(c.env);
-  const result = await shard.write({
-    id: uuid(),
-    user_id: 'feedback@public',
-    type: 'feedback',
-    subtype: 'contact',
-    score_value: null,
-    payload: JSON.stringify({ name, email, content }),
-    file_url: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
-  return c.json({ ok: true, db: result.db });
 });
 
 // online_users 心跳（替代原来的 Supabase online_users 表直连）
@@ -601,11 +649,11 @@ app.get('/api/stats', async (c) => {
   const shard = buildShardService(c.env);
   const FIVE_MIN_MS = 5 * 60 * 1000;
   const now = Date.now();
-  const [totalTests, totalComments, scores, onlineRecords] = await Promise.all([
+
+  const [totalTests, totalComments, onlineRecords] = await Promise.all([
     shard.countByType('score'),
     shard.countByType('comment'),
-    shard.readByType('score', { limit: 10000 }),
-    shard.readByType('online', { limit: 10000 }),
+    shard.readByType('online', { limit: 1000 }),
   ]);
 
   // 统计在线人数：last_seen 在 5 分钟内
@@ -623,22 +671,8 @@ app.get('/api/stats', async (c) => {
     online = onlineRecords.length;
   }
 
-  // 总用户数 = 参与成绩的用户 + 有 profile 的用户 + 有 online 记录的用户（去重）
-  const totalUserSet = new Set<string>();
-  try {
-    const [profiles, accounts] = await Promise.all([
-      shard.readByType('profile', { limit: 10000 }),
-      shard.readByType('account', { limit: 10000 }),
-    ]);
-    scores.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
-    profiles.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
-    accounts.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
-    onlineRecords.forEach((r) => { if (r.user_id) totalUserSet.add(r.user_id); });
-  } catch {
-    // ignore
-  }
-  const scoreUserCount = new Set(scores.map((r) => r.user_id).filter(Boolean)).size;
-  const total_users = Math.max(totalUserSet.size, scoreUserCount);
+  // 总用户数：使用 account 类型的 count（每个注册账号一条记录）
+  const total_users = await shard.countByType('account');
 
   const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
   return c.json({

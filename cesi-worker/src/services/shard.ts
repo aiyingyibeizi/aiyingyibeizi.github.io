@@ -139,6 +139,28 @@ export class ShardService {
       .reduce((sum, r) => sum + r.value, 0);
   }
 
+  async countDistinctUsers(type: string): Promise<number> {
+    const queries = this.dbs.map(async (db) => {
+      try {
+        const dbAny = db as any;
+        if (typeof dbAny.countDistinctUsersByType === 'function') {
+          return await dbAny.countDistinctUsersByType(type);
+        }
+        // Fallback: read a sample and count unique user_ids
+        const rows = await db.selectByType(type, { limit: 2000 });
+        const users = new Set(rows.map(r => r.user_id));
+        return users.size;
+      } catch (err) {
+        console.error(`countDistinctUsers failed for ${db.name}`, err);
+        return 0;
+      }
+    });
+    const results = await Promise.allSettled(queries);
+    return results
+      .filter((r): r is PromiseFulfilledResult<number> => r.status === 'fulfilled')
+      .reduce((sum, r) => sum + r.value, 0);
+  }
+
   private estimateSize(data: MixedData): number {
     // Rough byte estimate of the stored row, including some overhead.
     const payload = new TextEncoder().encode(data.payload).length;
