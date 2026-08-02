@@ -3,6 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Use a plain route because apexon.qzz.io already has manual DNS records.
+# Traffic to this hostname will be handled by the Worker.
+routes = [
+  "apexon.qzz.io/*"
+]
+
 # All database credentials are stored as Cloudflare Secrets (encrypted).
 # Run: npx wrangler secret bulk
 # Local development: put secrets in .dev.vars (gitignored).
