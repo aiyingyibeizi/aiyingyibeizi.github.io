@@ -403,6 +403,127 @@ app.post('/api/profiles', async (c) => {
   return c.json({ ok: true, db: result.db });
 });
 
+// 批量读取多个用户的 profile（排行榜、用户卡片等展示场景）
+app.get('/api/profiles', async (c) => {
+  const userIdsQuery = c.req.query('user_ids');
+  if (userIdsQuery) {
+    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
+    const shard = buildShardService(c.env);
+    const rows = await shard.readByType('profile', { limit: Math.min(ids.length, 1000) });
+    const filtered = rows.filter(r => ids.includes(r.user_id));
+    return c.json({ data: filtered.map(r => ({ ...r, payload: safeJsonParse(r.payload) })) });
+  }
+  // 默认行为：返回当前登录用户自身的 profile
+  const userId = c.get('userId');
+  const shard = buildShardService(c.env);
+  const rows = await shard.readByUserAndType(userId, 'profile', 1);
+  if (!rows.length) return c.json({ data: null });
+  return c.json({ data: { ...rows[0], payload: safeJsonParse(rows[0].payload) } });
+});
+
+// 修改用户名（原先走 Supabase RPC change_username，现统一走 Worker）
+app.post('/api/profiles/username', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{ old_username?: string; new_username?: string; token?: string }>();
+  if (!body.new_username || typeof body.new_username !== 'string') {
+    return c.json({ success: false, error: '新用户名不能为空' }, 400);
+  }
+  const newUsername = body.new_username.trim().slice(0, 40);
+  const shard = buildShardService(c.env);
+  const existing = await shard.readByUserAndType(userId, 'profile', 1);
+  if (existing.length) {
+    const prev = existing[0];
+    await shard.deleteById(prev.id);
+    const result = await shard.write({
+      ...prev,
+      id: uuid(),
+      payload: JSON.stringify({
+        ...(safeJsonParse(prev.payload) || {}),
+        username: newUsername,
+        updated_at: new Date().toISOString(),
+      }),
+      updated_at: new Date().toISOString(),
+    });
+    if (!result.ok) return c.json({ success: false, error: result.error }, 503);
+  }
+  return c.json({ success: true, username: newUsername });
+});
+
+// feedback 提交（替代原来的 Supabase feedback 表直连）
+app.post('/api/feedback', async (c) => {
+  const body = await c.req.json<{ name?: string; email?: string; content?: string }>();
+  const name = (body.name || '').toString().trim().slice(0, 60);
+  const email = (body.email || '').toString().trim().slice(0, 120);
+  const content = (body.content || '').toString().trim().slice(0, 2000);
+  if (!name || !email || !content) return c.json({ ok: false, error: '所有字段必填' }, 400);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return c.json({ ok: false, error: '邮箱格式不正确' }, 400);
+  const shard = buildShardService(c.env);
+  const result = await shard.write({
+    id: uuid(),
+    user_id: 'feedback@public',
+    type: 'feedback',
+    subtype: 'contact',
+    score_value: null,
+    payload: JSON.stringify({ name, email, content }),
+    file_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
+  return c.json({ ok: true, db: result.db });
+});
+
+// online_users 心跳（替代原来的 Supabase online_users 表直连）
+app.post('/api/online_users', async (c) => {
+  const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
+  const userId = (body.user_id || c.get('userId') || '').toString().trim();
+  if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
+  const lastSeen = body.last_seen || new Date().toISOString();
+  const shard = buildShardService(c.env);
+  // upsert：删除旧的再写新的，保证同一用户只有一条在线记录
+  const existing = await shard.readByUserAndType(userId, 'online', 1);
+  for (const row of existing) await shard.deleteById(row.id);
+  const result = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'online',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify({ last_seen: lastSeen }),
+    file_url: null,
+    created_at: lastSeen,
+    updated_at: lastSeen,
+  });
+  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
+  return c.json({ ok: true, db: result.db });
+});
+
+// users 表 upsert（syncUser：首次登录/注册时写基础资料）
+app.post('/api/users', async (c) => {
+  const body = await c.req.json<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>();
+  const userId = (body.user_id || c.get('userId') || '').toString().trim();
+  if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
+  const shard = buildShardService(c.env);
+  const existing = await shard.readByUserAndType(userId, 'user', 1);
+  if (existing.length) return c.json({ ok: true, existed: true });
+  const result = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'user',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify({
+      username: body.username || '',
+      email: body.email || '',
+    }),
+    file_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
+  return c.json({ ok: true, db: result.db });
+});
+
 app.get('/api/stats', async (c) => {
   const shard = buildShardService(c.env);
   const [totalTests, totalComments, totalUsers] = await Promise.all([

@@ -86,9 +86,10 @@
   });
 
   // ===== 公开配置（可安全放在前端） =====
-  const SUPABASE_URL = 'https://kpmsijgonualekjyrkzs.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_u7AUQG2_8iq24jR_mBU38Q_LrqEkt3u'; // 这是公开匿名密钥，允许前端调用 Supabase Auth
-  const WORKER_API_URL = 'https://cesi-worker.luoyangmengjin2025.workers.dev'; // Cloudflare Worker 后端地址
+  // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
+  const SUPABASE_URL = '';
+  const SUPABASE_ANON_KEY = '';
+  const WORKER_API_URL = 'https://cesi-api.apexon.workers.dev'; // Cloudflare Worker 后端地址（唯一允许的后端入口）
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
@@ -354,33 +355,17 @@
         return res.ok ? res.data : null;
       }
 
-      // 其余表（users / online_users / feedback / accounts 等）继续走 Supabase 直连兜底
-      let url = `${SUPABASE_URL}/rest/v1/${table}`;
-      if (query) url += '?' + query;
+      // 所有表（users / online_users / feedback / accounts 等）统一经 Worker 代理访问
+      // 不再直接暴露 Supabase URL / apikey
+      let path = `/api/${table}`;
+      if (query) path += '?' + query;
       const isMergeUpsert = method === 'POST' && query && query.includes('on_conflict');
-      const headers = {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': isMergeUpsert ? 'return=representation,resolution=merge-duplicates' : 'return=representation'
-      };
-      if (extraHeaders) Object.assign(headers, extraHeaders);
-      const options = { method, headers };
-      if (body) options.body = JSON.stringify(body);
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error(`[DB ${method}] ${table} ${res.status}:`, errText, 'body=', body);
-          throw new Error('DB error ' + res.status + ': ' + errText);
-        }
-        const text = await res.text();
-        // 空响应视为成功（如 INSERT 不返回 representation 时）
-        return text ? JSON.parse(text) : {};
-      } catch (e) {
-        console.error('[DB request failed]', table, method, e);
-        return null;
+      if (isMergeUpsert && body) {
+        body = Object.assign({}, body, { on_conflict: true });
       }
+      const token = (extraHeaders && (extraHeaders['x-token'] || extraHeaders['x-user-id'] || extraHeaders['x-anon-id'])) || Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request(path, method, body, token);
+      return res.ok ? res.data : null;
     },
 
     async syncUser(userId, username, email) {
@@ -416,30 +401,23 @@
     },
 
     async _countScores() {
-      const url = `${SUPABASE_URL}/rest/v1/scores?select=count()`;
       try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return 0;
-        const data = await res.json();
-        return data[0] ? (parseInt(data[0].count, 10) || 0) : 0;
+        const res = await WorkerAPI.request('/api/stats?scores_count=1', 'GET');
+        if (!res.ok || !res.data) return 0;
+        return Number(res.data.total_tests) || 0;
       } catch (e) {
         return 0;
       }
     },
 
     async _getAllScoreUserIds() {
-      const url = `${SUPABASE_URL}/rest/v1/scores?select=user_id&limit=10000`;
       try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return [];
-        const rows = await res.json();
-        const set = new Set();
-        for (const row of rows) set.add(row.user_id);
-        return Array.from(set);
+        const res = await WorkerAPI.request('/api/stats?user_ids=1', 'GET');
+        if (!res.ok || !res.data) return [];
+        if (Array.isArray(res.data)) return res.data;
+        if (Array.isArray(res.data.user_ids)) return res.data.user_ids;
+        if (Array.isArray(res.data.data)) return res.data.data.map(r => r.user_id).filter(Boolean);
+        return [];
       } catch (e) {
         return [];
       }
@@ -616,24 +594,18 @@
     },
 
     async changeUsername(oldUsername, newUsername, token) {
-      const url = `${SUPABASE_URL}/rest/v1/rpc/change_username`;
+      // 改为通过 Worker 调用后端 RPC / 更新
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ old_un: oldUsername, new_un: newUsername, token: token })
-        });
+        const res = await WorkerAPI.request('/api/profiles/username', 'POST', {
+          old_username: oldUsername,
+          new_username: newUsername,
+          token: token
+        }, token);
         if (!res.ok) {
-          const text = await res.text();
-          console.error('[changeUsername]', res.status, text);
+          console.error('[changeUsername] failed:', res.status, res.data);
           return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('changeFailed') : '修改失败，请重试') };
         }
-        const data = await res.json();
-        return data || { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('unknownError') : '未知错误') };
+        return res.data || { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('unknownError') : '未知错误') };
       } catch (e) {
         console.error('[changeUsername] failed:', e);
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('networkError') : '网络错误') };
@@ -643,13 +615,10 @@
     async getProfilesForUsers(userIds) {
       if (!userIds || !userIds.length) return [];
       const list = userIds.map(id => encodeURIComponent(String(id))).join(',');
-      const url = `${SUPABASE_URL}/rest/v1/profiles?user_id=in.(${list})`;
       try {
-        const res = await fetch(url, {
-          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!res.ok) return [];
-        return await res.json();
+        const res = await WorkerAPI.request(`/api/profiles?user_ids=${list}`, 'GET');
+        if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
+        return res.data.data;
       } catch (e) {
         return [];
       }
