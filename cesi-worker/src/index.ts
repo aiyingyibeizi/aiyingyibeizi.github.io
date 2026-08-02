@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { createClient } from '@supabase/supabase-js';
 import { createRedis } from './db/redis';
-import { createTursoClient, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
-import { createNeonPool, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
-import { createSupabasePgPool, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
+import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
+import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
+import { createSupabasePgPool, supabasePgMigrate, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
 import { ShardService } from './services/shard';
 import { createAuthMiddleware } from './services/auth';
 import { uploadFile } from './services/storage';
@@ -26,7 +26,7 @@ function uuid(): string {
   return crypto.randomUUID();
 }
 
-function buildShardService(env: Env): ShardService {
+async function buildShardService(env: Env): Promise<ShardService> {
   const redis = createRedis(env);
 
   // Reuse a single Turso client per database across requests
@@ -37,6 +37,19 @@ function buildShardService(env: Env): ShardService {
   // Reuse a single pg Pool per database
   const neonPool = createNeonPool(env.NEON_DSN);
   const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
+
+  // Run migrations: create tables and add missing columns
+  try {
+    await Promise.all([
+      tursoMigrate(tursoApexonClient),
+      tursoMigrate(tursoApexon1Client),
+      tursoMigrate(tursoApexon2Client),
+      neonMigrate(neonPool),
+      supabasePgMigrate(supabasePgPool),
+    ]);
+  } catch (err) {
+    console.error('Migration failed:', err);
+  }
 
   const tursoApexon: DbConfig = {
     name: 'APEXON',
@@ -144,7 +157,7 @@ app.post('/api/auth/register', async (c) => {
   if (username.length < 3 || username.length > 32) return c.json({ error: 'Username must be 3-32 characters' }, 400);
   if (password.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and check username match
   const existing = await shard.readByType('account', { limit: 500 });
   const duplicate = existing.find((r) => {
@@ -189,7 +202,7 @@ app.post('/api/auth/login', async (c) => {
   const { username, password } = await c.req.json<{ username?: string; password?: string }>();
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and find matching username
   const accounts = await shard.readByType('account', { limit: 500 });
   const account = accounts.find((r) => {
@@ -247,7 +260,7 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService), async 
   const { anon_id } = await c.req.json<{ anon_id?: string }>();
   if (!anon_id || !anon_id.startsWith('anon_')) return c.json({ error: 'Invalid anon_id' }, 400);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const anonScores = await shard.readByUserAndType(anon_id, 'score', 1000);
   for (const row of anonScores) {
     await shard.write({ ...row, id: uuid(), user_id: userId, updated_at: new Date().toISOString() });
@@ -264,7 +277,7 @@ app.post('/api/feedback', async (c) => {
   const content = (body.content || '').toString().trim().slice(0, 2000);
   if (!name || !email || !content) return c.json({ ok: false, error: '所有字段必填' }, 400);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return c.json({ ok: false, error: '邮箱格式不正确' }, 400);
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
     user_id: 'feedback@public',
@@ -281,7 +294,7 @@ app.post('/api/feedback', async (c) => {
 });
 
 app.get('/api/stats', async (c) => {
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const FIVE_MIN_MS = 5 * 60 * 1000;
   const now = Date.now();
 
@@ -356,7 +369,7 @@ app.get('/api/scores', async (c) => {
   const leaderboard = c.req.query('leaderboard') === '1';
   const limit = Number(c.req.query('limit') || DEFAULT_READ_LIMIT);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
 
   if (leaderboard && testType) {
     const order = LOWER_IS_BETTER.has(testType) ? 'asc' : 'desc';
@@ -420,7 +433,7 @@ app.post('/api/scores', async (c) => {
   const payload = body.payload || {};
   if (body.leaderboard_eligible === false) payload.leaderboardEligible = false;
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
     user_id: userId,
@@ -449,7 +462,7 @@ app.delete('/api/scores', async (c) => {
   const userId = c.get('userId');
   const id = c.req.query('id');
   if (!id) return c.json({ error: 'id is required' }, 400);
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
 
   // Permission check: only the owner can delete their own score
   const row = await shard.readById(id);
@@ -463,7 +476,7 @@ app.delete('/api/scores', async (c) => {
 app.get('/api/comments', async (c) => {
   const category = c.req.query('category');
   const limit = Number(c.req.query('limit') || DEFAULT_READ_LIMIT);
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const options: { subtype?: string; limit: number } = { limit: Math.min(Math.max(limit, 1), 1000) };
   if (category) options.subtype = category;
   const rows = await shard.readByType('comment', options);
@@ -489,7 +502,7 @@ app.post('/api/comments', async (c) => {
   const body = await c.req.json<{ username?: string; content?: string; category?: string }>();
   if (!body.content || !body.content.trim()) return c.json({ error: 'content is required' }, 400);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
     user_id: userId,
@@ -514,7 +527,7 @@ app.post('/api/comments', async (c) => {
 // 同时兼容：不传 user_ids 时返回当前登录用户自身的 profile
 app.get('/api/profiles', async (c) => {
   const userIdsQuery = c.req.query('user_ids');
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const flattenProfile = (r: MixedData) => {
     const payload: any = safeJsonParse(r.payload) || {};
     return {
@@ -547,7 +560,7 @@ app.get('/api/profiles', async (c) => {
 
 app.get('/api/profiles/:userId', async (c) => {
   const userId = c.req.param('userId');
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const rows = await shard.readByUserAndType(userId, 'profile', 1);
   if (!rows.length) return c.json({ success: true, data: null });
   const r = rows[0];
@@ -574,7 +587,7 @@ app.get('/api/profiles/:userId', async (c) => {
 app.post('/api/profiles', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<Record<string, unknown>>();
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
 
   // Atomic-ish: write new profile first, then delete old ones
   const result = await shard.write({
@@ -610,7 +623,7 @@ app.post('/api/profiles/username', async (c) => {
     return c.json({ success: false, error: '新用户名不能为空' }, 400);
   }
   const newUsername = body.new_username.trim().slice(0, 40);
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const existing = await shard.readByUserAndType(userId, 'profile', 1);
   if (existing.length) {
     const prev = existing[0];
@@ -636,7 +649,7 @@ app.post('/api/online_users', async (c) => {
   const userId = (body.user_id || c.get('userId') || '').toString().trim();
   if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
   const lastSeen = body.last_seen || new Date().toISOString();
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   // upsert：删除旧的再写新的，保证同一用户只有一条在线记录
   const existing = await shard.readByUserAndType(userId, 'online', 1);
   for (const row of existing) await shard.deleteById(row.id);
@@ -660,7 +673,7 @@ app.post('/api/users', async (c) => {
   const body = await c.req.json<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>();
   const userId = (body.user_id || c.get('userId') || '').toString().trim();
   if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const existing = await shard.readByUserAndType(userId, 'user', 1);
   if (existing.length) return c.json({ ok: true, existed: true });
   const result = await shard.write({
@@ -689,7 +702,7 @@ app.post('/api/upload', async (c) => {
 
   const fileUrl = await uploadFile(c.env, userId, file);
 
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   await shard.write({
     id: uuid(),
     user_id: userId,
@@ -706,7 +719,7 @@ app.post('/api/upload', async (c) => {
 });
 
 app.get('/api/admin/dbs', async (c) => {
-  const shard = buildShardService(c.env);
+  const shard = await buildShardService(c.env);
   const statuses = await Promise.all(
     shard.getDbs().map(async (db) => {
       try {

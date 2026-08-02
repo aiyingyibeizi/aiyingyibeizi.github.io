@@ -6,7 +6,7 @@ import type { ShardService } from './shard';
 type Variables = { userId: string };
 
 export function createAuthMiddleware(
-  buildShardService: (env: Env) => ShardService
+  buildShardService: (env: Env) => Promise<ShardService>
 ): MiddlewareHandler<{ Bindings: Env; Variables: Variables }> {
   return async (c, next) => {
     const authHeader = c.req.header('Authorization');
@@ -35,7 +35,7 @@ export function createAuthMiddleware(
     // 2. Fall back to custom session token stored in mixed_data (type='account').
     // Use targeted query instead of loading all accounts.
     try {
-      const shard = buildShardService(c.env);
+      const shard = await buildShardService(c.env);
       const accounts = await shard.readByType('account', { limit: 1000 });
       const account = accounts.find((row) => {
         try {

@@ -12,6 +12,31 @@ export function createSupabasePgPool(dsn: string): pg.Pool {
   });
 }
 
+export async function supabasePgMigrate(pool: pg.Pool): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mixed_data (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      subtype TEXT,
+      score_value DOUBLE PRECISION,
+      payload TEXT NOT NULL,
+      file_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+  await pool.query(`ALTER TABLE mixed_data ADD COLUMN IF NOT EXISTS subtype TEXT`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS meta (
+      db_name TEXT PRIMARY KEY,
+      used_bytes BIGINT DEFAULT 0,
+      max_bytes BIGINT DEFAULT 0,
+      updated_at TIMESTAMPTZ
+    )
+  `);
+}
+
 export async function supabasePgInsert(pool: pg.Pool, data: MixedData): Promise<void> {
   await pool.query(
     `INSERT INTO mixed_data (id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at)
