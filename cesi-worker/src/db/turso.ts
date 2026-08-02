@@ -5,6 +5,40 @@ export function createTursoClient(url: string, authToken: string): Client {
   return createClient({ url, authToken });
 }
 
+export async function tursoMigrate(client: Client): Promise<void> {
+  // Create mixed_data table if not exists
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS mixed_data (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      subtype TEXT,
+      score_value REAL,
+      payload TEXT NOT NULL,
+      file_url TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
+  // Add subtype column if missing (for existing tables)
+  try {
+    await client.execute(`ALTER TABLE mixed_data ADD COLUMN subtype TEXT`);
+  } catch {
+    // Column already exists, ignore
+  }
+
+  // Create meta table if not exists
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS meta (
+      db_name TEXT PRIMARY KEY,
+      used_bytes INTEGER DEFAULT 0,
+      max_bytes INTEGER DEFAULT 0,
+      updated_at TEXT
+    )
+  `);
+}
+
 export async function tursoInsert(client: Client, data: MixedData): Promise<void> {
   await client.execute({
     sql: `INSERT INTO mixed_data (id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at)

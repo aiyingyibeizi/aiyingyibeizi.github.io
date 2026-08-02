@@ -2,6 +2,14 @@ import type { Redis } from '@upstash/redis/cloudflare';
 import type { MixedData, DbConfig, SelectOptions } from '../types/models';
 
 const USED_BYTES_PREFIX = 'used_bytes:';
+const DB_TIMEOUT_MS = 8000; // 8 second timeout per DB operation
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+  );
+  return Promise.race([promise, timeout]);
+}
 
 export class ShardService {
   constructor(
@@ -27,7 +35,7 @@ export class ShardService {
     if (!db) return 0;
 
     try {
-      const used = await db.getMetaUsedBytes();
+      const used = await withTimeout(db.getMetaUsedBytes(), DB_TIMEOUT_MS, `getUsedBytes(${dbName})`);
       await this.redis.set(`${USED_BYTES_PREFIX}${dbName}`, used);
       return used;
     } catch (err) {
@@ -38,16 +46,18 @@ export class ShardService {
 
   async write(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
     const estimatedSize = this.estimateSize(data);
+    const errors: string[] = [];
 
     for (const db of this.dbs) {
       try {
         const used = await this.getUsedBytes(db.name);
         if (used + estimatedSize > db.maxBytes) {
           console.log(`DB ${db.name} would exceed capacity: ${used} + ${estimatedSize} > ${db.maxBytes}`);
+          errors.push(`${db.name}: full`);
           continue;
         }
 
-        await db.insert(data);
+        await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
 
         try {
           await this.redis.incrby(`${USED_BYTES_PREFIX}${db.name}`, estimatedSize);
@@ -62,17 +72,19 @@ export class ShardService {
 
         return { ok: true, db: db.name };
       } catch (err) {
-        console.error(`Write to ${db.name} failed`, err);
+        const errMsg = `${db.name}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`Write to ${db.name} failed:`, errMsg);
+        errors.push(errMsg);
       }
     }
 
-    return { ok: false, error: 'All databases are full or unavailable' };
+    return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
   }
 
   async readByType(type: string, options: SelectOptions = {}): Promise<MixedData[]> {
     const queries = this.dbs.map(async (db) => {
       try {
-        return await db.selectByType(type, options);
+        return await withTimeout(db.selectByType(type, options), DB_TIMEOUT_MS, `readByType(${db.name})`);
       } catch (err) {
         console.error(`Fan-out readByType failed for ${db.name}`, err);
         return [] as MixedData[];
@@ -102,7 +114,7 @@ export class ShardService {
   async readById(id: string): Promise<MixedData | undefined> {
     for (const db of this.dbs) {
       try {
-        const row = await db.selectById(id);
+        const row = await withTimeout(db.selectById(id), DB_TIMEOUT_MS, `readById(${db.name})`);
         if (row) return row;
       } catch (err) {
         console.error(`readById failed for ${db.name}`, err);
@@ -115,7 +127,7 @@ export class ShardService {
     let deleted = false;
     for (const db of this.dbs) {
       try {
-        await db.deleteById(id);
+        await withTimeout(db.deleteById(id), DB_TIMEOUT_MS, `deleteById(${db.name})`);
         deleted = true;
       } catch (err) {
         console.error(`deleteById failed for ${db.name}`, err);
@@ -127,7 +139,7 @@ export class ShardService {
   async countByType(type: string): Promise<number> {
     const queries = this.dbs.map(async (db) => {
       try {
-        return await db.countByType(type);
+        return await withTimeout(db.countByType(type), DB_TIMEOUT_MS, `countByType(${db.name})`);
       } catch (err) {
         console.error(`countByType failed for ${db.name}`, err);
         return 0;
@@ -147,7 +159,7 @@ export class ShardService {
           return await dbAny.countDistinctUsersByType(type);
         }
         // Fallback: read a sample and count unique user_ids
-        const rows = await db.selectByType(type, { limit: 2000 });
+        const rows = await withTimeout(db.selectByType(type, { limit: 2000 }), DB_TIMEOUT_MS, `countDistinctUsers(${db.name})`);
         const users = new Set(rows.map(r => r.user_id));
         return users.size;
       } catch (err) {
