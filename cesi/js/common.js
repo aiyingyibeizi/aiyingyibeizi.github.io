@@ -518,9 +518,9 @@
 
     async deleteScore(id, userId) {
       if (!id) return false;
-      const extraHeaders = userId ? { 'x-user-id': userId } : undefined;
-      const result = await this.request('scores', 'DELETE', null, `id=${encodeURIComponent(id)}`, extraHeaders);
-      return !!result;
+      const token = Auth.getToken() || Auth.getUserId() || userId;
+      const res = await WorkerAPI.request(`/api/scores?id=${encodeURIComponent(id)}`, 'DELETE', null, token);
+      return !!(res && res.ok);
     },
 
     async getLeaderboard(testType, limit = 100) {

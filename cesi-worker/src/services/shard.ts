@@ -45,21 +45,11 @@ export class ShardService {
   }
 
   async write(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
-    // 第一次尝试
-    let result = await this._tryWrite(data);
-    if (result.ok) return result;
-
-    // 全部失败时立即重试一次（可能是临时网络波动）
-    console.warn('First write attempt failed, retrying...', result.error);
-    result = await this._tryWrite(data);
-    return result;
-  }
-
-  private async _tryWrite(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
     const estimatedSize = this.estimateSize(data);
 
     // 并行写入所有数据库，用 allSettled 收集结果，找到第一个成功的。
-    // 之前用 Promise.any，全部失败时抛 AggregateError，处理不当会导致未捕获异常。
+    // 不做重试：重试会用相同 id，导致已写入的 DB 报 UNIQUE constraint 冲突。
+    // 并行写入已有 5 个 DB 冗余，只要一个成功就够。
     const results = await Promise.allSettled(
       this.dbs.map(async (db) => {
         await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
