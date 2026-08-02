@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createClient } from '@supabase/supabase-js';
+import { Redis } from '@upstash/redis/cloudflare';
 import { createRedis } from './db/redis';
 import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
 import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
@@ -17,6 +18,12 @@ const LOWER_IS_BETTER = new Set(['reaction', 'type', 'aim']);
 
 let migrated = false;
 let cachedShardService: ShardService | null = null;
+let cachedRedis: Redis | null = null;
+
+function getRedis(env: Env): Redis {
+  if (!cachedRedis) cachedRedis = createRedis(env);
+  return cachedRedis;
+}
 
 function safeJsonParse(payload: string): unknown {
   try {
@@ -316,6 +323,16 @@ app.post('/api/feedback', async (c) => {
 });
 
 app.get('/api/stats', async (c) => {
+  const redis = getRedis(c.env);
+  const STATS_CACHE_KEY = 'cache:stats';
+  try {
+    // 直接存取对象，Upstash SDK 自动序列化/反序列化
+    const cached = await redis.get(STATS_CACHE_KEY);
+    if (cached) return c.json(cached);
+  } catch (err) {
+    console.warn('stats cache read failed:', err);
+  }
+
   const shard = await buildShardService(c.env);
   const FIVE_MIN_MS = 5 * 60 * 1000;
   const now = Date.now();
@@ -345,10 +362,16 @@ app.get('/api/stats', async (c) => {
   const total_users = await shard.countByType('account');
 
   const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
-  return c.json({
+  const body = {
     success: true,
     data: { online, total_tests: totalTests, total_comments: totalComments, total_users, dbs },
-  });
+  };
+  try {
+    await redis.set(STATS_CACHE_KEY, body, { ex: 30 });
+  } catch (err) {
+    console.warn('stats cache write failed:', err);
+  }
+  return c.json(body);
 });
 
 // Protected API routes.
@@ -394,6 +417,15 @@ app.get('/api/scores', async (c) => {
   const shard = await buildShardService(c.env);
 
   if (leaderboard && testType) {
+    const redis = getRedis(c.env);
+    const lbCacheKey = `cache:lb:${testType}`;
+    try {
+      const cached = await redis.get(lbCacheKey);
+      if (cached) return c.json(cached);
+    } catch (err) {
+      console.warn('leaderboard cache read failed:', err);
+    }
+
     const order = LOWER_IS_BETTER.has(testType) ? 'asc' : 'desc';
     const rows = await shard.readByType('score', { subtype: testType, limit: 1000, orderByScore: order });
 
@@ -425,7 +457,13 @@ app.get('/api/scores', async (c) => {
       ? (a.score_value ?? Infinity) - (b.score_value ?? Infinity)
       : (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
     bestRows = bestRows.slice(0, Math.min(Math.max(limit, 1), 1000));
-    return c.json({ data: bestRows.map(flattenScore) });
+    const body = { data: bestRows.map(flattenScore) };
+    try {
+      await redis.set(lbCacheKey, body, { ex: 30 });
+    } catch (err) {
+      console.warn('leaderboard cache write failed:', err);
+    }
+    return c.json(body);
   }
 
   const options: { userId?: string; subtype?: string; limit: number } = { limit: Math.min(Math.max(limit, 1), 1000) };
@@ -477,6 +515,13 @@ app.post('/api/scores', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
+  const redis = getRedis(c.env);
+  try {
+    await redis.del(`cache:lb:${body.test_type}`);
+    await redis.del('cache:stats');
+  } catch (err) {
+    console.warn('scores cache invalidate failed:', err);
+  }
   return c.json({ success: true });
 });
 
@@ -542,6 +587,12 @@ app.post('/api/comments', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
+  const redis = getRedis(c.env);
+  try {
+    await redis.del('cache:stats');
+  } catch (err) {
+    console.warn('comments cache invalidate failed:', err);
+  }
   return c.json({ success: true });
 });
 

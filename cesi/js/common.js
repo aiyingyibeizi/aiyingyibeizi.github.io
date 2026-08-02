@@ -93,7 +93,43 @@
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
+    // 内存缓存：GET 请求 60 秒 TTL，避免重复请求拖慢页面
+    _cache: new Map(),
+    _CACHE_TTL: 60000,
+
+    _cacheGet(key) {
+      const entry = this._cache.get(key);
+      if (!entry) return null;
+      if (Date.now() - entry.ts > this._CACHE_TTL) {
+        this._cache.delete(key);
+        return null;
+      }
+      return entry.data;
+    },
+
+    _cacheSet(key, data) {
+      this._cache.set(key, { data, ts: Date.now() });
+    },
+
+    invalidate(prefix) {
+      for (const key of this._cache.keys()) {
+        if (key.startsWith(prefix)) this._cache.delete(key);
+      }
+    },
+
     async request(path, method = 'GET', body, token) {
+      // GET 请求走缓存（可缓存路径前缀白名单）
+      const cacheable = method === 'GET' && (
+        path.startsWith('/api/scores?leaderboard=') ||
+        path.startsWith('/api/comments?') ||
+        path === '/api/stats' ||
+        path.startsWith('/api/profiles?user_ids=')
+      );
+      if (cacheable) {
+        const cached = this._cacheGet(method + ':' + path);
+        if (cached) return { ok: true, status: 200, data: cached, cached: true };
+      }
+
       const url = `${WORKER_API_URL}${path}`;
       const headers = { 'Content-Type': 'application/json' };
       // 关键修复：所有请求默认带上认证信息，避免公开接口（排行榜、评论、统计）被 auth 中间件 401 拦截。
@@ -112,6 +148,7 @@
           console.error(`[WorkerAPI ${method}] ${path} ${res.status}:`, data);
           return { ok: false, status: res.status, data };
         }
+        if (cacheable) this._cacheSet(method + ':' + path, data);
         return { ok: true, status: res.status, data };
       } catch (e) {
         console.error('[WorkerAPI request failed]', path, method, e);
@@ -470,6 +507,9 @@
       console.log('[saveScore]', testType, scoreValue, 'result:', res.data);
       if (res.ok) {
         LocalStats.recordTest(userId);
+        // 失效排行榜和统计缓存，让下次读取拿到最新数据
+        WorkerAPI.invalidate('GET:/api/scores?leaderboard=');
+        WorkerAPI.invalidate('GET:/api/stats');
         document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
         return true;
       }
@@ -539,6 +579,9 @@
       if (!res.ok) {
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
       }
+      // 失效评论和统计缓存
+      WorkerAPI.invalidate('GET:/api/comments?');
+      WorkerAPI.invalidate('GET:/api/stats');
       document.dispatchEvent(new CustomEvent('apexon:commentPosted', { detail: { category: cat } }));
       return { success: true };
     },
@@ -1895,11 +1938,11 @@
       darkPalette: ['#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e2e8f0'],
       // 白色背景下使用高饱和、高对比的亮蓝/电紫/深靛，避免发灰
       lightPalette: ['#0066ff', '#0088ff', '#6d28ff', '#4f46e5', '#0891b2', '#1e1b4b', '#0f172a'],
-      baseCount: 44,
-      mobileCount: 24,
-      connectionDistance: 130,
+      baseCount: 28,
+      mobileCount: 16,
+      connectionDistance: 120,
       mouseDistance: 150,
-      speed: 0.42
+      speed: 0.38
     },
 
     init(options = {}) {
@@ -2456,19 +2499,19 @@
       const draw = () => {
         if (!isActive) return;
         frameCount++;
+        // 30fps 节流：隔帧渲染，CPU 占用减半
+        if (frameCount % 2 !== 0) {
+          frameId = requestAnimationFrame(draw);
+          return;
+        }
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        drawHexGrid();
         updateParticles();
-        if (frameCount % 2 === 0) buildConnectionList();
-        updatePackets();
+        buildConnectionList();
         updateBursts();
-        updateGlyphs();
         drawConnections();
-        drawPackets();
         drawParticles();
         drawBursts();
         drawStars();
-        drawGlyphs();
         frameId = requestAnimationFrame(draw);
       };
 
@@ -2508,10 +2551,8 @@
       };
       const onThemeChange = () => {
         palette = colorPalette();
-        drawHexGridToOffscreen();
         for (const p of particles) p.color = randColor();
         for (const s of stars) s.color = accent();
-        for (const g of glyphs) g.color = randColor();
       };
 
       document.addEventListener('apexon:themechange', onThemeChange);
@@ -3021,6 +3062,14 @@
   // ===== 12. 初始化 =====
   async function boot() {
     VisibilityManager.init();
+    // 随机选择强调色（6 套配色轮换，避免审美疲劳），每天换一次
+    try {
+      const accents = ['cyan', 'emerald', 'amber', 'rose', 'indigo', 'coral'];
+      const today = new Date().toDateString();
+      const dayIndex = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const accent = accents[dayIndex % accents.length];
+      document.documentElement.setAttribute('data-accent', accent);
+    } catch (e) { /* ignore */ }
     UI.initTheme();
     Auth.init();
     await Auth.validateSession();

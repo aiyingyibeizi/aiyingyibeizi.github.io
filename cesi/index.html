@@ -19,8 +19,8 @@
     <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="stylesheet" href="styles/variables.css?v=7">
-    <link rel="stylesheet" href="styles/main.css?v=17">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=18">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -206,8 +206,8 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=10"></script>
-    <script src="js/common.js?v=24"></script>
+    <script src="js/i18n.js?v=11"></script>
+    <script src="js/common.js?v=25"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -255,6 +255,17 @@
             });
             loadLeaderboard(type);
         };
+        // hover 预取：鼠标悬停在 tab 上时预加载排行榜数据，点击时秒开
+        document.querySelectorAll('.leaderboard-tab').forEach((tab, i) => {
+            const type = LB_TYPES[i];
+            if (!type) return;
+            let prefetched = false;
+            tab.addEventListener('mouseenter', () => {
+                if (prefetched) return;
+                prefetched = true;
+                APEXON.DB.getLeaderboard(type, 100).catch(() => {});
+            }, { passive: true });
+        });
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
             const entries = await APEXON.DB.getLeaderboard(type, 100);
@@ -302,8 +313,10 @@
             ];
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence'];
             let html = '<div class="personal-grid">';
-            for (const type of types) {
-                const scores = await APEXON.DB.getLeaderboard(type.key, 9999);
+            // 并行拉取所有 8 种测试的排行榜（之前是串行 8 次，每次 3-6 秒 = 24-48 秒）
+            const allScores = await Promise.all(types.map(type => APEXON.DB.getLeaderboard(type.key, 200)));
+            types.forEach((type, i) => {
+                const scores = allScores[i];
                 const myScores = scores.filter(s => s.user_id === userId);
                 const best = myScores.length ? myScores.reduce((a, b) => higherBetter.includes(type.key) ? (a.score_value > b.score_value ? a : b) : (a.score_value < b.score_value ? a : b)) : null;
                 const val = best ? best.score_value : '-';
@@ -317,7 +330,7 @@
                     '<div class="personal-card-value">' + esc(val) + ' <span class="personal-card-unit">' + esc(type.unit) + '</span></div>' +
                     '<div class="personal-card-rank">' + (rank ? t('rankLabel', '第 {rank} 名').replace('{rank}', rank) : t('noRank', '暂无排名')) + '</div>' +
                 '</div>';
-            }
+            });
             html += '</div>';
             document.getElementById('personalContent').innerHTML = html;
         }
