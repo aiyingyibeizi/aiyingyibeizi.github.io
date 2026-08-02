@@ -212,7 +212,15 @@
       return false;
     }
   };
-  APEXON.Security = Security;
+
+  /**
+   * Security 仅对外暴露必要的转义/过滤工具，核心校验逻辑保留在闭包内，
+   * 防止恶意脚本读取或篡改安全规则。
+   */
+  APEXON.Security = {
+    escapeHtml: Security.escapeHtml.bind(Security),
+    filterDangerous: Security.filterDangerous.bind(Security)
+  };
 
   // ===== 本地统计缓存 =====
   // 作为远程 Supabase 统计的补充/兜底，确保用户在任何网络或权限问题下
@@ -647,7 +655,25 @@
       }
     }
   };
-  APEXON.DB = DB;
+
+  /**
+   * DB 仅对外暴露业务需要的公开方法；内部 request、RPC 调用、fallback 等实现
+   * 保留在闭包内，避免外部脚本直接调用底层数据库接口或绕过安全校验。
+   */
+  APEXON.DB = {
+    saveScore: DB.saveScore.bind(DB),
+    deleteScore: DB.deleteScore.bind(DB),
+    getLeaderboard: DB.getLeaderboard.bind(DB),
+    getHistoryByUserAndType: DB.getHistoryByUserAndType.bind(DB),
+    addComment: DB.addComment.bind(DB),
+    getComments: DB.getComments.bind(DB),
+    addFeedback: DB.addFeedback.bind(DB),
+    getProfile: DB.getProfile.bind(DB),
+    saveProfile: DB.saveProfile.bind(DB),
+    changeUsername: DB.changeUsername.bind(DB),
+    getProfilesForUsers: DB.getProfilesForUsers.bind(DB),
+    getSiteStats: DB.getSiteStats.bind(DB)
+  };
 
   // ===== 2. 认证 =====
   const Auth = {
@@ -859,38 +885,28 @@
       return Date.now() + days * 24 * 60 * 60 * 1000;
     },
 
-    _generateSalt() {
-      const arr = new Uint8Array(32);
-      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-        crypto.getRandomValues(arr);
-      } else {
-        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
-      }
-      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-    },
-
-    _generateToken() {
-      const arr = new Uint8Array(32);
-      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-        crypto.getRandomValues(arr);
-      } else {
-        for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
-      }
-      return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-    },
-
-    async _hashPassword(password, salt) {
-      if (typeof crypto === 'undefined' || !crypto.subtle) {
-        throw new Error((window.APEXON && APEXON.i18n ? APEXON.i18n.t('notSupportedHash') : '当前环境不支持安全密码哈希'));
-      }
-      const encoder = new TextEncoder();
-      const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
-      const params = { name: 'PBKDF2', salt: encoder.encode(salt), iterations: 100000, hash: 'SHA-256' };
-      const derived = await crypto.subtle.deriveBits(params, keyMaterial, 256);
-      return Array.from(new Uint8Array(derived)).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
+    // 前端不再执行任何密码哈希、盐值生成、高强度迭代或会话令牌生成。
+    // 所有密码安全处理（PBKDF2-SHA256 10 万次迭代 + 随机盐）与会话令牌生成
+    // 已迁移至 Cloudflare Workers 后端。前端仅做格式校验，并通过 HTTPS 传输
+    // 明文密码，彻底避免加密算法、盐值、迭代次数暴露给前端攻击者。
   };
-  APEXON.Auth = Auth;
+
+  /**
+   * Auth 仅暴露 UI 需要的公开方法；内部验证、token 生成等全部保留在闭包内，
+   * 禁止外部脚本直接访问或篡改登录态。
+   */
+  APEXON.Auth = {
+    isLoggedIn: Auth.isLoggedIn.bind(Auth),
+    getUser: Auth.getUser.bind(Auth),
+    getUserId: Auth.getUserId.bind(Auth),
+    getToken: Auth.getToken.bind(Auth),
+    register: Auth.register.bind(Auth),
+    login: Auth.login.bind(Auth),
+    logout: Auth.logout.bind(Auth),
+    deleteAccount: Auth.deleteAccount.bind(Auth),
+    changeUsername: Auth.changeUsername.bind(Auth),
+    getAnonId: Auth.getAnonId.bind(Auth)
+  };
 
   // ===== 3. 音频 =====
   const AudioManager = {
@@ -1538,28 +1554,41 @@
       const bar = document.getElementById('apexUserBar');
       const dropdown = document.getElementById('apexUserDropdown');
       if (!bar || !dropdown) return;
-      bar.addEventListener('click', (e) => {
+
+      // 先彻底移除旧监听器，防止切换页面或重复初始化导致事件堆积、点击连击。
+      if (this._barClickHandler) bar.removeEventListener('click', this._barClickHandler);
+      if (this._dropdownClickHandler) dropdown.removeEventListener('click', this._dropdownClickHandler);
+      if (this._dropdownCloser) document.removeEventListener('click', this._dropdownCloser);
+
+      this._barClickHandler = (e) => {
         e.stopPropagation();
         dropdown.classList.toggle('show');
-      });
-      dropdown.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dropdown.classList.remove('show');
-          const action = btn.dataset.action;
+      };
+      bar.addEventListener('click', this._barClickHandler);
+
+      // 使用事件委托，一个监听器处理所有按钮，避免重复绑定。
+      this._dropdownClickHandler = (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        e.stopPropagation();
+        dropdown.classList.remove('show');
+        const action = btn.dataset.action;
+        try {
           if (action === 'login') this.showLoginModal();
-          if (action === 'edit-profile') this.showProfileModal('edit', APEXON.Auth.getUserId());
-          if (action === 'change-username') this.showChangeUsernameModal();
-          if (action === 'logout') APEXON.Auth.logout();
-          if (action === 'delete-account') APEXON.Auth.deleteAccount();
-        });
-      });
-      const closeDropdown = (e) => {
+          else if (action === 'edit-profile') this.showProfileModal('edit', APEXON.Auth.getUserId());
+          else if (action === 'change-username') this.showChangeUsernameModal();
+          else if (action === 'logout') APEXON.Auth.logout();
+          else if (action === 'delete-account') APEXON.Auth.deleteAccount();
+        } catch (err) {
+          console.error('[UserMenu] action error:', action, err);
+        }
+      };
+      dropdown.addEventListener('click', this._dropdownClickHandler);
+
+      this._dropdownCloser = (e) => {
         if (!e.target.closest('#apex-user-menu')) dropdown.classList.remove('show');
       };
-      document.removeEventListener('click', this._dropdownCloser);
-      document.addEventListener('click', closeDropdown);
-      this._dropdownCloser = closeDropdown;
+      document.addEventListener('click', this._dropdownCloser);
     },
 
     showProfileModal(mode, userId) {

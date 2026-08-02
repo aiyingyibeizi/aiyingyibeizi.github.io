@@ -7,6 +7,7 @@ import { createSupabasePgPool, supabasePgInsert, supabasePgSelectByUser, supabas
 import { ShardService } from './services/shard';
 import { createAuthMiddleware } from './services/auth';
 import { uploadFile } from './services/storage';
+import { hashPassword, verifyPassword, isLegacyPassword } from './utils/password';
 import type { Env } from './types/env';
 import type { MixedData, DbConfig } from './types/models';
 
@@ -131,6 +132,9 @@ app.post('/api/auth/register', async (c) => {
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+  // 密码哈希必须在后端完成，严禁在前端暴露哈希算法、盐值或迭代次数。
+  const passwordHash = await hashPassword(password);
+
   await shard.write({
     id: uuid(),
     user_id: userId,
@@ -139,7 +143,7 @@ app.post('/api/auth/register', async (c) => {
     score_value: null,
     payload: JSON.stringify({
       username,
-      password_hash: password, // In production, hash the password before storing.
+      password_hash: passwordHash,
       session_token: sessionToken,
       session_expires_at: expiresAt,
     }),
@@ -160,7 +164,7 @@ app.post('/api/auth/login', async (c) => {
   const account = accounts.find((r) => {
     try {
       const p = JSON.parse(r.payload);
-      return p.username === username && p.password_hash === password;
+      return p.username === username;
     } catch {
       return false;
     }
@@ -168,11 +172,21 @@ app.post('/api/auth/login', async (c) => {
 
   if (!account) return c.json({ error: 'Invalid username or password' }, 401);
 
+  const payload = JSON.parse(account.payload);
+  const passwordHash = payload.password_hash;
+
+  // 后端验证密码：旧版明文密码登录成功后自动迁移为新哈希格式。
+  const passwordValid = await verifyPassword(password, passwordHash);
+  if (!passwordValid) return c.json({ error: 'Invalid username or password' }, 401);
+
+  // 若是旧版明文密码，立即重哈希并更新存储。
+  if (isLegacyPassword(passwordHash)) {
+    payload.password_hash = await hashPassword(password);
+  }
+
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Update session token in place.
-  const payload = JSON.parse(account.payload);
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
 

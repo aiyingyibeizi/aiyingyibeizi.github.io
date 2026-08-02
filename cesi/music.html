@@ -1805,6 +1805,382 @@
                 border-right-color: rgba(124, 107, 196, 0.14);
             }
         }
+
+        /* 手机端独立布局：更紧凑的播放器、更小的封面与间距 */
+        @media (max-width: 767px) {
+            :root {
+                --music-player-height: 72px;
+                --music-sidebar-width: 0px;
+            }
+
+            .music-app {
+                padding-top: calc(var(--header-height) + 8px);
+                padding-bottom: var(--music-player-height);
+            }
+
+            .music-sidebar {
+                top: var(--header-height);
+                bottom: var(--music-player-height);
+                width: min(260px, 80vw);
+                transform: translateX(-100%);
+            }
+
+            .music-main {
+                padding: 16px var(--container-padding);
+            }
+
+            .music-topbar {
+                margin-bottom: 18px;
+                gap: 10px;
+            }
+
+            .music-search input {
+                padding: 10px 14px 10px 38px;
+                font-size: 0.875rem;
+            }
+
+            .music-search__icon {
+                left: 13px;
+                font-size: 0.875rem;
+            }
+
+            .music-user-chip {
+                display: none;
+            }
+
+            .music-section {
+                margin-bottom: 24px;
+            }
+
+            .music-section__header {
+                margin-bottom: 14px;
+            }
+
+            .music-section__title {
+                font-size: 1.15rem;
+            }
+
+            .music-section__subtitle {
+                font-size: 0.75rem;
+            }
+
+            .music-hero {
+                padding: 18px;
+                margin-bottom: 20px;
+                border-radius: var(--music-radius-sm);
+            }
+
+            .music-hero__content {
+                flex-direction: row;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .music-hero__cover {
+                width: 96px;
+                height: 96px;
+                border-radius: 10px;
+            }
+
+            .music-hero__label {
+                padding: 4px 10px;
+                font-size: 0.625rem;
+                margin-bottom: 8px;
+            }
+
+            .music-hero__title {
+                font-size: 1.15rem;
+                margin-bottom: 6px;
+                letter-spacing: -0.3px;
+            }
+
+            .music-hero__desc {
+                font-size: 0.75rem;
+                line-height: 1.5;
+                margin-bottom: 12px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .music-hero__actions {
+                gap: 10px;
+            }
+
+            .music-hero__btn {
+                padding: 9px 18px;
+                font-size: 0.8125rem;
+            }
+
+            .music-hero__btn-secondary {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+
+            .music-chips {
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+
+            .music-chip {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+
+            .music-cards,
+            .music-skeleton {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .music-card {
+                padding: 10px;
+            }
+
+            .music-card__cover {
+                margin-bottom: 10px;
+            }
+
+            .music-card__play {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+                opacity: 1;
+                transform: none;
+                right: 8px;
+                bottom: 8px;
+            }
+
+            .music-card__title {
+                font-size: 0.8125rem;
+            }
+
+            .music-card__artist {
+                font-size: 0.75rem;
+            }
+
+            .music-list__row {
+                grid-template-columns: 34px 1fr 44px;
+                gap: 8px;
+                padding: 8px;
+            }
+
+            .music-list__number,
+            .music-list__play-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+
+            .music-list__track-name {
+                font-size: 0.8125rem;
+            }
+
+            .music-list__artist-name,
+            .music-list__duration {
+                display: none;
+            }
+
+            /* 播放器底部栏手机端紧凑布局 */
+            .music-player-bar {
+                height: var(--music-player-height);
+                padding: 0 12px;
+                gap: 10px;
+            }
+
+            .music-player__info {
+                width: auto;
+                flex: 0 1 auto;
+                gap: 10px;
+                min-width: 0;
+            }
+
+            .music-player__cover {
+                width: 46px;
+                height: 46px;
+            }
+
+            .music-player__title {
+                font-size: 0.8125rem;
+            }
+
+            .music-player__artist {
+                font-size: 0.75rem;
+            }
+
+            .music-player__like {
+                display: none;
+            }
+
+            .music-player__center {
+                flex: 1;
+                min-width: 0;
+                gap: 4px;
+            }
+
+            .music-player__controls {
+                gap: 12px;
+            }
+
+            .music-player__btn {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+
+            .music-player__btn.play-pause {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .music-progress {
+                gap: 8px;
+            }
+
+            .music-progress__time {
+                font-size: 0.625rem;
+                min-width: 30px;
+            }
+
+            .music-progress__bar {
+                height: 4px;
+            }
+
+            .music-progress__handle {
+                width: 12px;
+                height: 12px;
+            }
+
+            .music-player__right {
+                display: none;
+            }
+
+            .music-lyrics-toggle {
+                right: 10px;
+                bottom: calc(var(--music-player-height) + 10px);
+                width: 36px;
+                height: 36px;
+            }
+
+            .music-lyrics-panel {
+                width: 100vw;
+                max-width: 100vw;
+                top: var(--header-height);
+                bottom: var(--music-player-height);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .music-main {
+                padding: 12px var(--container-padding);
+            }
+
+            .music-hero {
+                padding: 14px;
+            }
+
+            .music-hero__content {
+                gap: 12px;
+            }
+
+            .music-hero__cover {
+                width: 80px;
+                height: 80px;
+            }
+
+            .music-hero__title {
+                font-size: 1rem;
+            }
+
+            .music-hero__desc {
+                -webkit-line-clamp: 2;
+            }
+
+            .music-hero__btn {
+                padding: 8px 14px;
+                font-size: 0.75rem;
+            }
+
+            .music-hero__btn-secondary {
+                width: 34px;
+                height: 34px;
+            }
+
+            .music-cards,
+            .music-skeleton {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .music-card {
+                padding: 8px;
+            }
+
+            .music-card__title {
+                font-size: 0.75rem;
+            }
+
+            .music-card__artist {
+                font-size: 0.6875rem;
+            }
+
+            .music-player-bar {
+                padding: 0 10px;
+                gap: 8px;
+            }
+
+            .music-player__info {
+                gap: 8px;
+            }
+
+            .music-player__cover {
+                width: 42px;
+                height: 42px;
+            }
+
+            .music-player__controls {
+                gap: 8px;
+            }
+
+            .music-player__btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.9rem;
+            }
+
+            .music-player__btn.play-pause {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            .music-progress__time {
+                min-width: 26px;
+            }
+        }
+
+        @media (max-width: 375px) {
+            .music-hero__cover {
+                width: 68px;
+                height: 68px;
+            }
+
+            .music-hero__desc {
+                display: none;
+            }
+
+            .music-cards,
+            .music-skeleton {
+                grid-template-columns: 1fr;
+            }
+
+            .music-card__cover {
+                aspect-ratio: 16 / 9;
+            }
+        }
     </style>
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
@@ -1824,13 +2200,6 @@
                     <img src="assets/favicon.png" alt="Logo" draggable="false">
                     <span>APEXON</span>
                 </a>
-            </div>
-            <div class="apexon-header-center">
-                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
-                <nav class="apexon-header-nav" id="headerPill">
-                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
-                </nav>
-                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
                     <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
                     <span class="apex-bw-toggle__track">
@@ -1839,6 +2208,13 @@
                         </span>
                     </span>
                 </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
 
                 <nav class="apexon-header-dropdown" id="headerDropdown">
                     <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
