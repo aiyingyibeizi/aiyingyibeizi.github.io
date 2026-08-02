@@ -45,13 +45,23 @@ export class ShardService {
   }
 
   async write(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
+    // 第一次尝试
+    let result = await this._tryWrite(data);
+    if (result.ok) return result;
+
+    // 全部失败时立即重试一次（可能是临时网络波动）
+    console.warn('First write attempt failed, retrying...', result.error);
+    result = await this._tryWrite(data);
+    return result;
+  }
+
+  private async _tryWrite(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
     const estimatedSize = this.estimateSize(data);
 
-    // 并行写入所有数据库，第一个成功就返回。
-    // 之前是串行尝试，如果前几个 Turso DB 失败（每个需数秒），到 NEON 时已超时。
-    // 并行后所有 DB 同时尝试，即使只有 NEON 能工作也能立即返回。
-    const writePromises = this.dbs.map(async (db) => {
-      try {
+    // 并行写入所有数据库，用 allSettled 收集结果，找到第一个成功的。
+    // 之前用 Promise.any，全部失败时抛 AggregateError，处理不当会导致未捕获异常。
+    const results = await Promise.allSettled(
+      this.dbs.map(async (db) => {
         await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
 
         // 写入成功后更新 Redis 和 meta（失败不影响结果）
@@ -71,24 +81,26 @@ export class ShardService {
           console.error(`Async meta update for ${db.name} failed`, err);
         });
 
-        return { ok: true as const, db: db.name };
-      } catch (err) {
-        const errMsg = `${db.name}: ${err instanceof Error ? err.message : String(err)}`;
-        console.error(`Write to ${db.name} failed:`, errMsg);
-        // reject 让 Promise.any 跳过失败的，只等第一个成功的
-        throw new Error(errMsg);
-      }
-    });
+        return db.name;
+      })
+    );
 
-    // Promise.any 等待第一个成功；如果全部 reject，抛出 AggregateError。
-    try {
-      const result = await Promise.any(writePromises);
-      return result;
-    } catch (aggregateError) {
-      const errors = (aggregateError as AggregateError).errors
-        .map((e) => e instanceof Error ? e.message : String(e));
-      return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    // 找到第一个成功的
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        return { ok: true, db: r.value };
+      }
     }
+
+    // 全部失败，收集错误信息
+    const errors = results.map((r, i) => {
+      if (r.status === 'rejected') {
+        const err = r.reason;
+        return `${this.dbs[i].name}: ${err instanceof Error ? err.message : String(err)}`;
+      }
+      return `${this.dbs[i].name}: unknown`;
+    });
+    return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
   }
 
   async readByType(type: string, options: SelectOptions = {}): Promise<MixedData[]> {

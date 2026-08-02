@@ -2499,11 +2499,6 @@
       const draw = () => {
         if (!isActive) return;
         frameCount++;
-        // 30fps 节流：隔帧渲染，CPU 占用减半
-        if (frameCount % 2 !== 0) {
-          frameId = requestAnimationFrame(draw);
-          return;
-        }
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         updateParticles();
         buildConnectionList();
