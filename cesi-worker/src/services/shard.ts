@@ -46,47 +46,49 @@ export class ShardService {
 
   async write(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
     const estimatedSize = this.estimateSize(data);
-    const errors: string[] = [];
 
-    for (const db of this.dbs) {
+    // 并行写入所有数据库，第一个成功就返回。
+    // 之前是串行尝试，如果前几个 Turso DB 失败（每个需数秒），到 NEON 时已超时。
+    // 并行后所有 DB 同时尝试，即使只有 NEON 能工作也能立即返回。
+    const writePromises = this.dbs.map(async (db) => {
       try {
-        // Skip capacity check on first write (meta table may not exist yet).
-        // After first successful write, Redis cache will have the value.
-        let used = 0;
-        try {
-          used = await this.getUsedBytes(db.name);
-        } catch {
-          used = 0; // meta table not ready yet, skip capacity check
-        }
-
-        if (used > 0 && used + estimatedSize > db.maxBytes) {
-          console.log(`DB ${db.name} would exceed capacity: ${used} + ${estimatedSize} > ${db.maxBytes}`);
-          errors.push(`${db.name}: full`);
-          continue;
-        }
-
         await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
 
+        // 写入成功后更新 Redis 和 meta（失败不影响结果）
         try {
           await this.redis.incrby(`${USED_BYTES_PREFIX}${db.name}`, estimatedSize);
         } catch (err) {
           console.error(`Redis INCRBY ${USED_BYTES_PREFIX}${db.name} failed`, err);
         }
 
-        // Update meta asynchronously; failures are logged but do not fail the request.
+        let used = 0;
+        try {
+          used = await this.getUsedBytes(db.name);
+        } catch {
+          used = 0;
+        }
         this.updateMeta(db, used + estimatedSize).catch((err) => {
           console.error(`Async meta update for ${db.name} failed`, err);
         });
 
-        return { ok: true, db: db.name };
+        return { ok: true as const, db: db.name };
       } catch (err) {
         const errMsg = `${db.name}: ${err instanceof Error ? err.message : String(err)}`;
         console.error(`Write to ${db.name} failed:`, errMsg);
-        errors.push(errMsg);
+        // reject 让 Promise.any 跳过失败的，只等第一个成功的
+        throw new Error(errMsg);
       }
-    }
+    });
 
-    return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    // Promise.any 等待第一个成功；如果全部 reject，抛出 AggregateError。
+    try {
+      const result = await Promise.any(writePromises);
+      return result;
+    } catch (aggregateError) {
+      const errors = (aggregateError as AggregateError).errors
+        .map((e) => e instanceof Error ? e.message : String(e));
+      return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    }
   }
 
   async readByType(type: string, options: SelectOptions = {}): Promise<MixedData[]> {

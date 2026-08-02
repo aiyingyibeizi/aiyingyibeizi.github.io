@@ -21,11 +21,15 @@ export async function tursoMigrate(client: Client): Promise<void> {
     )
   `);
 
-  // Add subtype column if missing (for existing tables)
-  try {
+  // 用 PRAGMA 检查 subtype 列是否存在，避免盲目的 ALTER TABLE（其错误被 try/catch 吞掉）。
+  // 之前 APEXON_1 的 ALTER TABLE 静默失败，导致 insert 报 "no column named subtype"。
+  const columns = await client.execute(`PRAGMA table_info(mixed_data)`);
+  const hasSubtype = columns.rows.some((row: unknown) => {
+    const r = row as { name?: string };
+    return r.name === 'subtype';
+  });
+  if (!hasSubtype) {
     await client.execute(`ALTER TABLE mixed_data ADD COLUMN subtype TEXT`);
-  } catch {
-    // Column already exists, ignore
   }
 
   // Create meta table if not exists

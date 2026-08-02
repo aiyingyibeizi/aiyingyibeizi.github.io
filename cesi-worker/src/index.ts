@@ -117,20 +117,29 @@ async function buildShardService(env: Env): Promise<ShardService> {
     updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(supabasePgPool, 'SUPABASE', 450 * 1024 * 1024, used),
   };
 
-  // Create shard service immediately (don't wait for migration)
   cachedShardService = new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2, neon, supabasePg]);
 
-  // Run migrations in background (non-blocking)
+  // 同步执行迁移（带超时保护）。
+  // 之前是后台异步执行，导致 write() 在迁移完成前就执行，insert 因缺 subtype 列而失败。
+  // 现在同步等待迁移完成，第一次请求会稍慢，但后续请求不会再有表结构问题。
   if (!migrated) {
     migrated = true;
-    Promise.all([
-      tursoMigrate(tursoApexonClient),
-      tursoMigrate(tursoApexon1Client),
-      tursoMigrate(tursoApexon2Client),
-      neonMigrate(neonPool),
-      supabasePgMigrate(supabasePgPool),
-    ]).catch((err) => {
-      console.error('Background migration failed:', err);
+    const withMigrateTimeout = <T>(p: Promise<T>, label: string): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} migrate timed out`)), 10000)),
+      ]);
+    const results = await Promise.allSettled([
+      withMigrateTimeout(tursoMigrate(tursoApexonClient), 'APEXON'),
+      withMigrateTimeout(tursoMigrate(tursoApexon1Client), 'APEXON_1'),
+      withMigrateTimeout(tursoMigrate(tursoApexon2Client), 'APEXON_2'),
+      withMigrateTimeout(neonMigrate(neonPool), 'NEON'),
+      withMigrateTimeout(supabasePgMigrate(supabasePgPool), 'SUPABASE'),
+    ]);
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') {
+        console.error(`Migration ${i} failed:`, r.reason);
+      }
     });
   }
 
