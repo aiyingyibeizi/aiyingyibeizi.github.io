@@ -135,7 +135,7 @@ app.post('/api/auth/register', async (c) => {
   // 密码哈希必须在后端完成，严禁在前端暴露哈希算法、盐值或迭代次数。
   const passwordHash = await hashPassword(password);
 
-  await shard.write({
+  const result = await shard.write({
     id: uuid(),
     user_id: userId,
     type: 'account',
@@ -151,6 +151,8 @@ app.post('/api/auth/register', async (c) => {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
+
+  if (!result.ok) return c.json({ error: result.error }, 503);
 
   return c.json({ user_id: userId, username, token: sessionToken, expires_at: expiresAt });
 });
@@ -190,9 +192,9 @@ app.post('/api/auth/login', async (c) => {
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
 
-  // Delete old account record and insert updated one (mixed_data is append-only by design).
-  await shard.deleteById(account.id);
-  await shard.write({
+  // Write the updated account record first, then delete the old one, so a write
+  // failure never leaves the user without an account record.
+  const result = await shard.write({
     id: uuid(),
     user_id: account.user_id,
     type: 'account',
@@ -203,6 +205,10 @@ app.post('/api/auth/login', async (c) => {
     created_at: account.created_at,
     updated_at: new Date().toISOString(),
   });
+
+  if (!result.ok) return c.json({ error: result.error || 'Failed to update session' }, 503);
+
+  await shard.deleteById(account.id);
 
   return c.json({ user_id: account.user_id, username, token: sessionToken, expires_at: expiresAt });
 });
@@ -351,9 +357,13 @@ app.post('/api/scores', async (c) => {
 });
 
 app.delete('/api/scores', async (c) => {
+  const userId = c.get('userId');
   const id = c.req.query('id');
   if (!id) return c.json({ error: 'id is required' }, 400);
   const shard = buildShardService(c.env);
+  const row = await shard.readById(id);
+  if (!row) return c.json({ error: 'Score not found' }, 404);
+  if (row.user_id !== userId) return c.json({ error: 'Forbidden' }, 403);
   await shard.deleteById(id);
   return c.json({ ok: true });
 });
@@ -476,7 +486,6 @@ app.post('/api/profiles', async (c) => {
 
   // Overwrite previous profile for this user.
   const existing = await shard.readByUserAndType(userId, 'profile', 1);
-  for (const row of existing) await shard.deleteById(row.id);
 
   const result = await shard.write({
     id: uuid(),
@@ -491,6 +500,10 @@ app.post('/api/profiles', async (c) => {
   });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
+
+  // Only delete the old record after the new one is persisted successfully.
+  for (const row of existing) await shard.deleteById(row.id);
+
   return c.json({ success: true });
 });
 
