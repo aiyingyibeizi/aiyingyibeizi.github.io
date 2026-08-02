@@ -19,7 +19,16 @@ export function createAuthMiddleware(
       return c.json({ error: 'Empty Bearer token' }, 401);
     }
 
-    // 1. Try Supabase Auth JWT first.
+    // 1. Fast path: anonymous IDs are instantly recognisable and the most common case.
+    //    Skip all network/DB work — every POST from a guest used to trigger a Supabase
+    //    round-trip + a full account scan across 5 DBs before reaching this check.
+    if (token.startsWith('anon_') && token.length >= 10) {
+      c.set('userId', token);
+      await next();
+      return;
+    }
+
+    // 2. Try Supabase Auth JWT (only for tokens that are not anon IDs).
     try {
       const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY);
       const { data, error } = await supabase.auth.getUser(token);
@@ -32,8 +41,7 @@ export function createAuthMiddleware(
       console.error('Supabase auth error:', err);
     }
 
-    // 2. Fall back to custom session token stored in mixed_data (type='account').
-    // Use targeted query instead of loading all accounts.
+    // 3. Fall back to custom session token stored in mixed_data (type='account').
     try {
       const shard = await buildShardService(c.env);
       const accounts = await shard.readByType('account', { limit: 1000 });
@@ -54,13 +62,6 @@ export function createAuthMiddleware(
       }
     } catch (err) {
       console.error('Custom token verification error:', err);
-    }
-
-    // 3. Allow anonymous IDs (matches frontend anon_xxx behavior for unauthenticated actions).
-    if (typeof token === 'string' && token.startsWith('anon_') && token.length >= 10) {
-      c.set('userId', token);
-      await next();
-      return;
     }
 
     return c.json({ error: 'Invalid or expired token' }, 401);

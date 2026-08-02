@@ -398,7 +398,9 @@
     async getSiteStats() {
       const res = await WorkerAPI.request('/api/stats', 'GET');
       if (res.ok && res.data) {
-        const remote = (res.data.total_users > 0 || res.data.total_tests > 0 || res.data.online > 0) ? res.data : (await this._fallbackSiteStats());
+        // Worker 返回 { success: true, data: { online, total_tests, total_comments, total_users, dbs } }
+        const stats = res.data.data || res.data;
+        const remote = (stats.total_users > 0 || stats.total_tests > 0 || stats.online > 0) ? stats : (await this._fallbackSiteStats());
         return LocalStats.mergeRemote(remote);
       }
       console.error('[getSiteStats] failed:', res.status, res.data);
@@ -407,9 +409,10 @@
 
     async _countScores() {
       try {
-        const res = await WorkerAPI.request('/api/stats?scores_count=1', 'GET');
+        const res = await WorkerAPI.request('/api/stats', 'GET');
         if (!res.ok || !res.data) return 0;
-        return Number(res.data.total_tests) || 0;
+        const stats = res.data.data || res.data;
+        return Number(stats.total_tests) || 0;
       } catch (e) {
         return 0;
       }
@@ -417,12 +420,10 @@
 
     async _getAllScoreUserIds() {
       try {
-        const res = await WorkerAPI.request('/api/stats?user_ids=1', 'GET');
+        const res = await WorkerAPI.request('/api/scores?limit=1000', 'GET');
         if (!res.ok || !res.data) return [];
-        if (Array.isArray(res.data)) return res.data;
-        if (Array.isArray(res.data.user_ids)) return res.data.user_ids;
-        if (Array.isArray(res.data.data)) return res.data.data.map(r => r.user_id).filter(Boolean);
-        return [];
+        const rows = Array.isArray(res.data.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+        return rows.map(r => r.user_id).filter(Boolean);
       } catch (e) {
         return [];
       }
@@ -1059,7 +1060,7 @@
   // ===== 5. 在线状态追踪 =====
   const OnlineTracker = {
     timer: null,
-    INTERVAL_MS: 3000,
+    INTERVAL_MS: 30000,
 
     init(userId) {
       if (!userId) return;
@@ -1094,7 +1095,7 @@
   // ===== 6. 站点统计 =====
   const Stats = {
     timer: null,
-    INTERVAL_MS: 3000,
+    INTERVAL_MS: 30000,
     els: {},
     prev: { online: 0, total_users: 0, total_tests: 0 },
 
