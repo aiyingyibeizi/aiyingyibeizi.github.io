@@ -280,6 +280,42 @@ app.post('/api/feedback', async (c) => {
   return c.json({ ok: true });
 });
 
+app.get('/api/stats', async (c) => {
+  const shard = buildShardService(c.env);
+  const FIVE_MIN_MS = 5 * 60 * 1000;
+  const now = Date.now();
+
+  const [totalTests, totalComments, onlineRecords] = await Promise.all([
+    shard.countByType('score'),
+    shard.countByType('comment'),
+    shard.readByType('online', { limit: 1000 }),
+  ]);
+
+  // 统计在线人数：last_seen 在 5 分钟内
+  let online = 0;
+  try {
+    for (const r of onlineRecords) {
+      const payload = safeJsonParse(r.payload);
+      const lastSeenStr = (payload && (payload as any).last_seen) || r.updated_at || r.created_at;
+      if (lastSeenStr) {
+        const ts = new Date(String(lastSeenStr)).getTime();
+        if (!isNaN(ts) && now - ts <= FIVE_MIN_MS) online += 1;
+      }
+    }
+  } catch {
+    online = onlineRecords.length;
+  }
+
+  // 总用户数：使用 account 类型的 count（每个注册账号一条记录）
+  const total_users = await shard.countByType('account');
+
+  const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
+  return c.json({
+    success: true,
+    data: { online, total_tests: totalTests, total_comments: totalComments, total_users, dbs },
+  });
+});
+
 // Protected API routes.
 app.use('/api/*', createAuthMiddleware(buildShardService));
 
@@ -643,42 +679,6 @@ app.post('/api/users', async (c) => {
   });
   if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
   return c.json({ ok: true, db: result.db });
-});
-
-app.get('/api/stats', async (c) => {
-  const shard = buildShardService(c.env);
-  const FIVE_MIN_MS = 5 * 60 * 1000;
-  const now = Date.now();
-
-  const [totalTests, totalComments, onlineRecords] = await Promise.all([
-    shard.countByType('score'),
-    shard.countByType('comment'),
-    shard.readByType('online', { limit: 1000 }),
-  ]);
-
-  // 统计在线人数：last_seen 在 5 分钟内
-  let online = 0;
-  try {
-    for (const r of onlineRecords) {
-      const payload = safeJsonParse(r.payload);
-      const lastSeenStr = (payload && (payload as any).last_seen) || r.updated_at || r.created_at;
-      if (lastSeenStr) {
-        const ts = new Date(String(lastSeenStr)).getTime();
-        if (!isNaN(ts) && now - ts <= FIVE_MIN_MS) online += 1;
-      }
-    }
-  } catch {
-    online = onlineRecords.length;
-  }
-
-  // 总用户数：使用 account 类型的 count（每个注册账号一条记录）
-  const total_users = await shard.countByType('account');
-
-  const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
-  return c.json({
-    success: true,
-    data: { online, total_tests: totalTests, total_comments: totalComments, total_users, dbs },
-  });
 });
 
 app.post('/api/upload', async (c) => {
