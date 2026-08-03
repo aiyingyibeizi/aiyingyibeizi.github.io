@@ -5,11 +5,15 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -20,12 +24,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build site
         run: npm run build
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          publish_branch: gh-pages
           publish_dir: ./public
-          # 使用默认的 GITHUB_TOKEN，无需在仓库中添加 PAT
-          # 如果你需要设置自定义域名或其他选项，可在这里配置
+          cname: 'apexon.qzz.io'
+          # token: uses the default GITHUB_TOKEN provided to Actions
