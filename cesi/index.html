@@ -218,7 +218,7 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=11"></script>
+    <script src="js/i18n.js?v=12"></script>
     <script src="js/common.js?v=26"></script>
     <script>
     (async function() {
@@ -286,7 +286,7 @@
             if (lbEl) lbEl.innerHTML = Array.from({length: 6}, () => '<div class="leaderboard-row skeleton-row"><div class="skeleton-bar" style="width:28px"></div><div class="skeleton-circle"></div><div class="skeleton-bar" style="width:90px"></div><div class="skeleton-bar" style="width:50px;margin-left:auto"></div></div>').join('');
             const entries = await APEXON.DB.getLeaderboard(type, 100);
             if (!entries.length) {
-                document.getElementById('lbContent').innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('lbEmptyFirst') : '还没有人上榜，快来成为第一个！') + '</div>';
+                document.getElementById('lbContent').innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">🏆</div><div class="apex-empty-state__title">' + t('lbEmptyTitle', '暂无榜单数据') + '</div><div class="apex-empty-state__desc">' + t('lbEmptyFirst', '还没有人上榜，快来成为第一个！') + '</div></div>';
                 return;
             }
             const userIds = entries.map(e => e.user_id);
@@ -313,7 +313,7 @@
             const userId = APEXON.Auth.getUserId();
             const personalEl = document.getElementById('personalContent');
             if (!userId) {
-                if (personalEl) personalEl.innerHTML = '<div class="forum-empty">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestRecordTip') : '登录或游客模式均可记录成绩') + '</div>';
+                if (personalEl) personalEl.innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">📊</div><div class="apex-empty-state__title">' + t('personalGuestTitle', '游客模式') + '</div><div class="apex-empty-state__desc">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestRecordTip') : '登录或游客模式均可记录成绩') + '</div><a class="apex-empty-state__cta" href="reaction.html">' + t('startTestCta', '开始测试') + '</a></div>';
                 return;
             }
             // 骨架屏占位
@@ -476,7 +476,7 @@
             const listEl = document.getElementById('forumList');
             const pageEl = document.getElementById('forumPagination');
             if (!allComments.length) {
-                listEl.innerHTML = '<div class="forum-empty">' + t('noDiscussionInCategory', '该分类下还没有讨论') + '</div>';
+                listEl.innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">💬</div><div class="apex-empty-state__title">' + t('forumEmptyTitle', '暂无讨论') + '</div><div class="apex-empty-state__desc">' + t('noDiscussionInCategory', '该分类下还没有讨论') + '</div></div>';
                 pageEl.innerHTML = '';
                 return;
             }
