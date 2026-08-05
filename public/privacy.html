@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta name="keywords" content="隐私政策,APEXON,数据保护">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="隐私政策 - APEXON">
+    <meta property="og:description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/privacy.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="隐私政策 - APEXON">
+    <meta name="twitter:description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title>隐私政策 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=18">
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>隐私政策</h1>
+        <div class="legal-content">
+            <p>最后更新日期：2026 年 7 月 10 日</p>
+            <p>欢迎您使用 APEXON（以下简称"本站"）。本隐私政策旨在向您清晰、透明地说明我们在您使用本站服务过程中如何收集、使用、存储、共享和保护您的个人信息，以及您享有的相关权利。请您在使用本站前仔细阅读本政策。如果您对本政策有任何疑问，可以通过本政策末尾的联系方式与我们联系。</p>
+
+            <h2>1. 我们收集的信息</h2>
+            <p>当您使用 APEXON 时，我们可能会收集以下类型的信息。我们坚持"最小必要"原则，仅收集提供服务所必需的信息：</p>
+            <ul>
+                <li><strong>账号信息：</strong>当您注册或完善资料时，我们可能会收集用户名、密码哈希、性别（可选）、个人简介、头像链接等您主动填写的资料。密码将以哈希形式存储，我们不会以明文保存您的密码。</li>
+                <li><strong>测试数据：</strong>您在各测试项目中的成绩、用时、正确率、等级评定以及测试时间等。这些数据用于生成您的个人历史记录、排行榜数据和能力分析。</li>
+                <li><strong>互动数据：</strong>您在讨论区发表的评论、帖子分类、点赞或反馈内容。这些信息用于维持社区互动和改进用户体验。</li>
+                <li><strong>技术信息：</strong>包括浏览器类型与版本、操作系统、设备类型、屏幕分辨率、访问时间、IP 地址（可能经过匿名化处理）、匿名设备标识以及页面访问路径。这些信息用于优化服务性能、排查故障、防止滥用和保障账号安全。</li>
+                <li><strong>第三方统计信息：</strong>我们可能使用第三方分析工具（如 Microsoft Clarity）收集匿名化的用户行为数据，以了解页面使用情况和改进产品设计。此类数据通常以聚合和匿名的形式处理。</li>
+            </ul>
+
+            <h2>2. 我们如何使用信息</h2>
+            <p>我们使用收集的信息为您提供安全、稳定、个性化的服务，具体用途包括但不限于：</p>
+            <ul>
+                <li>提供、维护、优化和改进本站各项功能与服务，包括测试引擎、排行榜、讨论区和音乐播放器等；</li>
+                <li>生成并展示您的个人成绩、历史记录、统计图表和全球排行榜；</li>
+                <li>保护账号安全，防止欺诈、作弊、自动化脚本攻击和其他滥用行为；</li>
+                <li>回复您的反馈、咨询和投诉，处理账号相关问题；</li>
+                <li>进行匿名化的数据分析，以改进测试设计、用户体验和网站性能；</li>
+                <li>在获得您同意或符合法律规定的情况下，向您发送服务通知或功能更新信息。</li>
+            </ul>
+
+            <h2>3. 信息的存储与保护</h2>
+            <p>您的数据存储在第三方云服务提供商的服务器上，这些服务器可能位于您所在司法辖区以外的地区。我们会采取合理的技术和管理措施保护您的数据安全，包括但不限于密码哈希存储、会话令牌机制、传输层加密（HTTPS）以及访问控制策略。</p>
+            <p>我们会对员工和第三方服务提供商的数据访问权限进行严格限制，仅允许为履行职责所必需的人员访问您的个人信息。然而，互联网环境并非绝对安全，我们无法保证数据在传输或存储过程中 100% 不被非法访问、泄露、篡改或丢失。如发生安全事件，我们将按照适用法律的要求及时通知您并采取补救措施。</p>
+
+            <h2>4. 信息共享</h2>
+            <p>我们高度重视您的隐私，不会将您的个人信息出售、出租或以其他方式非法提供给任何第三方。仅在以下情形中，我们可能会披露您的必要信息：</p>
+            <ul>
+                <li>依据法律法规、司法命令或行政机关的合法要求；</li>
+                <li>为保护本站、我们用户或公众的合法权益、财产安全或人身安全所必需；</li>
+                <li>在合并、收购、资产转让或类似交易中，您的信息可能作为业务资产的一部分被转移，但我们会要求接收方继续遵守不低于本政策标准的保护措施；</li>
+                <li>经您事先明确同意的其他情形。</li>
+            </ul>
+
+            <h2>5. 您的权利</h2>
+            <p>根据适用法律，您对个人信息享有以下权利：</p>
+            <ul>
+                <li><strong>访问权：</strong>您可以登录账号查看自己的个人资料和测试记录。</li>
+                <li><strong>更正权：</strong>您可以随时修改或更新个人资料中的不准确信息。</li>
+                <li><strong>删除权：</strong>您可以删除自己的部分资料或发布的内容。如需删除账号及全部关联数据，请发送邮件至 luoyangmengjin2025@163.com，我们将在核实身份后尽快处理。</li>
+                <li><strong>限制处理权：</strong>在特定情况下，您有权要求我们限制对您个人信息的处理。</li>
+                <li><strong>撤回同意：</strong>对于基于同意而收集的信息，您可以随时撤回同意，但撤回同意可能影响您使用部分功能。</li>
+            </ul>
+
+            <h2>6. Cookie 与本地存储</h2>
+            <p>本站使用浏览器本地存储（localStorage）保存登录状态、匿名用户标识、语言偏好、主题偏好和音乐播放设置等信息，以便在您下次访问时提供一致的使用体验。我们还可能使用 Cookie 或类似技术来识别设备、记录会话状态和进行匿名流量分析。</p>
+            <p>大多数浏览器都允许您清除本地存储、禁用 Cookie 或设置提醒。但请注意，禁用这些技术可能导致部分功能无法正常使用，例如自动登录、主题记忆和播放进度保存等。</p>
+
+            <h2>7. 未成年人</h2>
+            <p>我们建议 14 岁以下未成年人在监护人指导下使用本站。我们不会故意收集未成年人的个人信息。如果我们发现自己无意中收集了未成年人的个人信息，且未获得监护人同意，我们将尽快采取措施删除相关信息。如果家长或监护人认为未成年人向我们提供了个人信息，请通过本政策末尾的联系方式与我们联系。</p>
+
+            <h2>8. 第三方链接与服务</h2>
+            <p>本站可能包含指向第三方网站或服务的链接（例如 Jamendo 音乐服务、社交媒体分享等）。这些第三方服务拥有独立的隐私政策，我们不对其内容或隐私实践负责。在向其提供个人信息前，建议您仔细阅读相关第三方的隐私政策。</p>
+
+            <h2>9. 政策变更</h2>
+            <p>我们可能会不时更新本隐私政策，以适应法律法规变化、业务发展或技术进步。更新后的政策将在页面上公布，并注明最后更新日期。若更新内容涉及重大变更，我们可能会通过站内公告或其他适当方式通知您。您在政策更新后继续使用本站，视为您已阅读、理解并接受更新后的政策。</p>
+
+            <h2>10. 联系我们</h2>
+            <p>如有任何隐私相关问题、投诉或请求，请发送邮件至 luoyangmengjin2025@163.com。我们会在收到您的请求后尽快进行评估和回复。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=12"></script>
+    <script src="js/common.js?v=26"></script>
+    <script>
+    (function () {
+        APEXON.Particles.init();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

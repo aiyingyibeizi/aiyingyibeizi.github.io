@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="FPS 瞄准训练，快速点击 30 个随机目标，测试手眼协调与点击精准度。APEXON 免费在线瞄准训练。">
+    <meta name="keywords" content="瞄准训练,FPS瞄准,手眼协调,点击精准度,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="瞄准训练 - APEXON">
+    <meta property="og:description" content="FPS 瞄准训练，快速点击 30 个随机目标，测试手眼协调与点击精准度。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/aim.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="瞄准训练 - APEXON">
+    <meta name="twitter:description" content="FPS 瞄准训练，快速点击 30 个随机目标，测试手眼协调与点击精准度。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="aimTitle">瞄准训练 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=18">
+    <style>
+        #testBox {
+            position: relative;
+            min-height: 360px;
+            overflow: hidden;
+            padding: 0;
+        }
+        #testBox .aim-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1;
+        }
+        #testBox .aim-target {
+            position: absolute;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ff9a9e, #f43f5e);
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.45);
+            cursor: pointer;
+            z-index: 2;
+            transform: translate(-50%, -50%);
+            transition: transform 0.08s ease;
+        }
+        #testBox .aim-target::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+        }
+        #testBox .aim-target:active {
+            transform: translate(-50%, -50%) scale(0.92);
+        }
+
+        /* 手机端：瞄准训练区域更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                min-height: 280px;
+            }
+            #testBox .aim-target {
+                width: 38px;
+                height: 38px;
+            }
+            #testBox .aim-target::after {
+                width: 15px;
+                height: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                min-height: 240px;
+            }
+            #testBox .aim-target {
+                width: 34px;
+                height: 34px;
+            }
+            #testBox .aim-target::after {
+                width: 13px;
+                height: 13px;
+            }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="aimTitle">瞄准训练</h1>
+
+        <div class="info-row"><span data-i18n="remainingTargets">剩余目标</span>: <span id="remainingDisplay">30</span>　<span data-i18n="currentAvg">当前平均</span>: <span id="avgDisplay">0</span> ms</div>
+
+        <div id="testBox" data-test-type="aim"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'aim', testTitle:'瞄准训练', score: window.lastScore || 0, scoreUnit:'ms', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getUsername&&APEXON.Auth.getUsername())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>瞄准训练：提升你的手眼协调与精细操作</h2>
+            <p>瞄准能力是指快速、准确地将视觉注意力聚焦到目标上，并通过手部动作完成精确点击或指向的能力。它是 FPS 游戏、射击运动、外科手术、精细维修、显微操作等众多领域的基础技能。APEXON 瞄准训练通过随机出现的目标点击任务，帮助玩家评估和提升手眼协调、鼠标控制精度、动态视觉追踪能力以及快速决策能力。</p>
+            <p>在电子竞技中，瞄准能力是区分普通玩家和高水平玩家的重要指标之一。顶尖选手的瞄准并不是单纯靠反应速度，而是建立在大量练习形成的肌肉记忆之上。他们能够根据目标的位置、移动方向和速度，瞬间计算出鼠标需要移动的距离，并以极小的修正完成锁定。这种能力无法通过理论学习获得，只能通过反复训练来内化为自动化动作。普通玩家与高手的差距，往往不在于单次瞄准的速度，而在于长时间比赛中保持稳定瞄准精度的能力。</p>
+            <p>从神经科学角度看，瞄准涉及视觉系统、顶叶空间加工区和运动皮层的高度协同。当眼睛捕捉到目标位置后，大脑会快速规划手部运动轨迹，并通过小脑进行实时微调。长期训练可以强化这些神经通路，使瞄准动作变得更加流畅和精准。这也是为什么专业的 FPS 选手每天会进行大量瞄准训练，而不仅仅是打实战——他们需要通过重复练习把复杂的瞄准动作固化为低认知负荷的自动化技能。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>测试开始后，屏幕上会随机出现 30 个圆形目标，每个目标出现的位置都是不可预测的。玩家需要尽可能快速且准确地点击每一个目标，系统会记录从目标出现到被点击之间的时间差，并计算平均点击时间作为最终成绩。目标大小和数量固定，因此成绩主要取决于移动速度和点击精度的综合表现。</p>
+            <p>与固定目标训练不同，随机目标位置可以更好地反映真实场景中的瞄准需求。目标会在被点击后立即消失，并在新的随机位置出现，整个过程要求玩家保持高度集中，连续完成多次快速瞄准。最终成绩综合反映了反应速度、移动速度、点击精度和持续专注力。多次测试后，你可以看到自己的平均点击时间是否呈现下降趋势，这是训练效果最直接的体现。</p>
+            <h3>影响瞄准表现的关键因素</h3>
+            <p>鼠标灵敏度是最重要的可控因素之一。过高的灵敏度会导致微调困难，容易出现"滑过头"的情况；过低的灵敏度则会让大距离移动变得迟缓，需要多次加速才能完成转身。找到适合自己的灵敏度需要反复尝试，一般来说，能够以一次平稳移动命中目标为佳。其次是鼠标垫和鼠标本身的质量，传感器的精准度、鼠标的重量、脚贴顺滑度和握持舒适度都会影响发挥。</p>
+            <p>身体状态同样重要。手臂和手腕紧张会导致动作僵硬，降低微调精度；而过于放松又可能失去控制。最佳状态是肌肉适度紧张、手腕灵活、呼吸平稳。此外，显示器的刷新率和响应时间也会影响视觉信息的及时性，高刷新率显示器能让目标出现和移动的视觉反馈更加顺滑，减少因画面撕裂或拖影带来的瞄准误差。</p>
+            <h3>提升瞄准能力的系统训练方法</h3>
+            <ul>
+                <li><strong>找到适合自己的灵敏度</strong>：通过反复测试找到一个既能快速转身又能精确瞄准的灵敏度，并保持一致。频繁更换灵敏度会打断肌肉记忆的形成。</li>
+                <li><strong>练习平滑移动</strong>：避免"甩枪"后频繁修正，尽量让鼠标一次移动到位。可以通过在桌面上画直线、弧线来练习手臂和手腕的协调。</li>
+                <li><strong>加强目标切换训练</strong>：多个目标快速切换可以锻炼眼睛的重新定位能力和手部反应的连贯性。这是 APEXON 瞄准训练的核心价值之一。</li>
+                <li><strong>保持稳定姿势</strong>：坐姿端正，手臂有支撑，手腕自然放松，减少不必要的身体晃动。椅子高度应使前臂与桌面基本平行。</li>
+                <li><strong>热身与休息</strong>：正式训练前进行几分钟热身，长时间练习后注意休息，避免肌肉疲劳导致动作变形。建议每训练 30 分钟休息 5 到 10 分钟。</li>
+                <li><strong>分析与复盘</strong>：记录每次测试的成绩，分析成绩波动的原因。是设备问题、状态问题，还是某个距离段的目标总是点不准？针对性改进比盲目重复更有效。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>本测试适合 FPS 玩家、射击运动爱好者、外科医生、牙医、手工艺人、无人机操作员以及任何需要精细手眼协调的用户。通过定期测试，你可以追踪自己的瞄准进步曲线，并发现需要改进的环节。对于竞技游戏玩家来说，瞄准训练是基本功；对于医疗和工业领域的精细操作人员来说，稳定的瞄准能力直接关系到工作质量和安全。</p>
+            <h3>温馨提示</h3>
+            <p>测试成绩会受到设备性能、鼠标灵敏度和当前状态的影响，建议在同一设备和设置下多次测试以获得稳定参考。如果某次成绩明显异常，可能是状态波动导致，不必过于在意。初学者不必追求极限速度，先保证准确率，速度会随着练习自然提升。坚持科学训练，你的瞄准速度和精度都会逐步提升。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=11"></script>
+    <script src="js/common.js?v=26"></script>
+    <script src="js/share.js?v=1"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🎯</div>' +
+                '<div class="apex-start-screen__title">' + t('aimStartTitle', '瞄准训练挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('aimStartDesc', '尽可能快速准确地点击 30 个随机目标，测试你的手眼协调。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        // 粒子背景
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const remainingDisplay = document.getElementById('remainingDisplay');
+        const avgDisplay = document.getElementById('avgDisplay');
+
+        const TOTAL_TARGETS = 30;
+        const TARGET_SIZE = 46;
+
+        let state = 'idle';
+        let remaining = TOTAL_TARGETS;
+        let totalMs = 0;
+        let targetSpawnTime = 0;
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'aim', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.avg) + ' ms</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function updateStats() {
+            remainingDisplay.textContent = remaining;
+            const avg = remaining >= TOTAL_TARGETS ? 0 : (totalMs / (TOTAL_TARGETS - remaining));
+            avgDisplay.textContent = Math.round(avg);
+        }
+
+        function spawnTarget() {
+            const rect = testBox.getBoundingClientRect();
+            const w = Math.max(TARGET_SIZE, rect.width - TARGET_SIZE);
+            const h = Math.max(TARGET_SIZE, rect.height - TARGET_SIZE);
+            const left = TARGET_SIZE / 2 + Math.random() * w;
+            const top = TARGET_SIZE / 2 + Math.random() * h;
+            const target = document.createElement('div');
+            target.className = 'aim-target';
+            target.style.left = left + 'px';
+            target.style.top = top + 'px';
+            target.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                if (state !== 'running') return;
+                const now = performance.now();
+                totalMs += (now - targetSpawnTime);
+                target.remove();
+                remaining--;
+                updateStats();
+                playSuccess();
+                if (navigator.vibrate) navigator.vibrate(15);
+                if (remaining <= 0) endGame();
+                else {
+                    targetSpawnTime = performance.now();
+                    spawnTarget();
+                }
+            });
+            testBox.appendChild(target);
+            targetSpawnTime = performance.now();
+        }
+
+        function endGame() {
+            state = 'ended';
+            const avg = totalMs / TOTAL_TARGETS;
+            const avgMs = Math.round(avg);
+            const grade = APEXON.Utils.getGrade(avgMs, 'aim');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('avgPerClick', '平均耗时') + ' ' + avgMs + ' ms</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + avgMs + '</div><div class="score-detail-label">' + t('avgPerClick', '平均耗时') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + TOTAL_TARGETS + '</div><div class="score-detail-label">' + t('targetCount', '目标数') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('aim', avgMs, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'aim', { avg: avgMs }).then(saved => {
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            state = 'running';
+            remaining = TOTAL_TARGETS;
+            totalMs = 0;
+            updateStats();
+            result.innerHTML = '';
+            const overlay = testBox.querySelector('.aim-overlay');
+            if (overlay) overlay.remove();
+            targetSpawnTime = performance.now();
+            spawnTarget();
+        }
+
+        window.restartTest = function () {
+            state = 'idle';
+            remaining = TOTAL_TARGETS;
+            totalMs = 0;
+            updateStats();
+            result.innerHTML = '';
+            renderStartScreen();
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (state === 'idle') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

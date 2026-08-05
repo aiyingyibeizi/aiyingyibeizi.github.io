@@ -1,0 +1,6 @@
+# 允许所有搜索引擎爬虫访问网站全部内容
+User-agent: *
+Disallow:
+
+# 站点地图
+Sitemap: https://apexon.qzz.io/sitemap.xml
