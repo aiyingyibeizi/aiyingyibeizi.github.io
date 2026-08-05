@@ -1705,6 +1705,96 @@
 
         panel.appendChild(title);
         panel.appendChild(grid);
+
+        // 动态背景设置区域
+        const bgSection = document.createElement('div');
+        bgSection.className = 'apex-bg-settings';
+        bgSection.style.cssText = 'margin-top:16px;padding-top:16px;border-top:1px solid var(--apex-border-subtle);';
+
+        const bgTitle = document.createElement('div');
+        bgTitle.className = 'apex-style-panel__title';
+        bgTitle.style.cssText = 'font-size:13px;margin-bottom:12px;';
+        bgTitle.textContent = '动态背景设置';
+        bgSection.appendChild(bgTitle);
+
+        // 速度滑块
+        const speedRow = document.createElement('div');
+        speedRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+        const speedLabel = document.createElement('label');
+        speedLabel.style.cssText = 'font-size:12px;color:var(--apex-text-secondary);min-width:60px;';
+        speedLabel.textContent = '速度';
+        const speedSlider = document.createElement('input');
+        speedSlider.type = 'range';
+        speedSlider.min = '0.1';
+        speedSlider.max = '3';
+        speedSlider.step = '0.1';
+        speedSlider.value = ParticleSystem.settings.speed;
+        speedSlider.style.cssText = 'flex:1;accent-color:var(--apex-primary);';
+        const speedVal = document.createElement('span');
+        speedVal.style.cssText = 'font-size:11px;color:var(--apex-text-tertiary);min-width:32px;text-align:right;';
+        speedVal.textContent = ParticleSystem.settings.speed.toFixed(1) + 'x';
+        speedSlider.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          ParticleSystem.settings.speed = v;
+          speedVal.textContent = v.toFixed(1) + 'x';
+        });
+        speedRow.appendChild(speedLabel);
+        speedRow.appendChild(speedSlider);
+        speedRow.appendChild(speedVal);
+        bgSection.appendChild(speedRow);
+
+        // 颜色强度滑块
+        const intRow = document.createElement('div');
+        intRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+        const intLabel = document.createElement('label');
+        intLabel.style.cssText = 'font-size:12px;color:var(--apex-text-secondary);min-width:60px;';
+        intLabel.textContent = '强度';
+        const intSlider = document.createElement('input');
+        intSlider.type = 'range';
+        intSlider.min = '0.2';
+        intSlider.max = '2';
+        intSlider.step = '0.1';
+        intSlider.value = ParticleSystem.settings.intensity;
+        intSlider.style.cssText = 'flex:1;accent-color:var(--apex-primary);';
+        const intVal = document.createElement('span');
+        intVal.style.cssText = 'font-size:11px;color:var(--apex-text-tertiary);min-width:32px;text-align:right;';
+        intVal.textContent = (ParticleSystem.settings.intensity * 100).toFixed(0) + '%';
+        intSlider.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          ParticleSystem.settings.intensity = v;
+          intVal.textContent = (v * 100).toFixed(0) + '%';
+        });
+        intRow.appendChild(intLabel);
+        intRow.appendChild(intSlider);
+        intRow.appendChild(intVal);
+        bgSection.appendChild(intRow);
+
+        // 开关行
+        const toggleRow = document.createElement('div');
+        toggleRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;';
+
+        const makeToggle = (label, key) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const active = ParticleSystem.settings[key];
+          btn.style.cssText = `flex:1;min-width:100px;padding:6px 10px;border-radius:8px;border:1px solid ${active ? 'var(--apex-primary)' : 'var(--apex-border)'};background:${active ? 'var(--apex-primary)' : 'transparent'};color:${active ? '#fff' : 'var(--apex-text-secondary)'};font-size:12px;cursor:pointer;transition:all 0.2s;`;
+          btn.textContent = label;
+          btn.addEventListener('click', () => {
+            const newVal = !ParticleSystem.settings[key];
+            ParticleSystem.settings[key] = newVal;
+            btn.style.background = newVal ? 'var(--apex-primary)' : 'transparent';
+            btn.style.color = newVal ? '#fff' : 'var(--apex-text-secondary)';
+            btn.style.borderColor = newVal ? 'var(--apex-primary)' : 'var(--apex-border)';
+          });
+          return btn;
+        };
+
+        toggleRow.appendChild(makeToggle('动态背景', 'animated'));
+        toggleRow.appendChild(makeToggle('省电模式', 'subtle'));
+        bgSection.appendChild(toggleRow);
+
+        panel.appendChild(bgSection);
+
         container.appendChild(toggleBtn);
         container.appendChild(panel);
       });
@@ -1956,6 +2046,72 @@
         const target = document.getElementById('main-content');
         if (target) { target.focus(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
       });
+    },
+
+    // 注入页脚
+    injectFooter() {
+      if (document.querySelector('.apexon-footer')) return;
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : (k, fb) => fb;
+      const footer = document.createElement('footer');
+      footer.className = 'apexon-footer';
+      footer.innerHTML = `
+        <div class="apexon-footer__inner">
+          <div class="apexon-footer__brand">
+            <a href="index.html" class="apexon-footer__logo">
+              <img src="assets/favicon.png" alt="APEXON">
+              <span>APEXON</span>
+            </a>
+            <p class="apexon-footer__tagline">${t('footerTagline', '免费在线认知能力测试与训练平台，探索大脑的无限可能。')}</p>
+          </div>
+          <div class="apexon-footer__links">
+            <div class="apexon-footer__col">
+              <h5>${t('footerTests', '测试项目')}</h5>
+              <a href="reaction.html">${t('navReaction', '反应测试')}</a>
+              <a href="type.html">${t('navType', '打字测试')}</a>
+              <a href="stick.html">${t('navStick', '注意力测试')}</a>
+              <a href="number.html">${t('navNumber', '数字记忆')}</a>
+              <a href="verbal.html">${t('navVerbal', '单词记忆')}</a>
+            </div>
+            <div class="apexon-footer__col">
+              <h5>${t('footerMore', '更多训练')}</h5>
+              <a href="visual.html">${t('navVisual', '视觉记忆')}</a>
+              <a href="sequence.html">${t('navSequence', '序列记忆')}</a>
+              <a href="aim.html">${t('navAim', '瞄准训练')}</a>
+              <a href="stroop.html">${t('navStroop', 'Stroop 测试')}</a>
+              <a href="nback.html">${t('navNback', 'N-Back 测试')}</a>
+            </div>
+            <div class="apexon-footer__col">
+              <h5>${t('footerResources', '资源')}</h5>
+              <a href="music.html">${t('navMusic', '音乐播放器')}</a>
+              <a href="taskswitch.html">${t('navTaskswitch', 'Task Switching')}</a>
+              <a href="visualsearch.html">${t('navVisualsearch', 'Visual Search')}</a>
+              <a href="index.html#forum">${t('navForum', '讨论社区')}</a>
+            </div>
+            <div class="apexon-footer__col">
+              <h5>${t('footerAbout', '关于本站')}</h5>
+              <a href="about.html">${t('footerAboutUs', '关于本站')}</a>
+              <a href="privacy.html">${t('footerPrivacy', '隐私政策')}</a>
+              <a href="terms.html">${t('footerTerms', '服务条款')}</a>
+              <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+        <div class="apexon-footer__bottom">
+          <div class="apexon-footer__copyright">© ${new Date().getFullYear()} APEXON. ${t('footerRights', '保留所有权利。')}</div>
+          <div class="apexon-footer__social">
+            <a href="https://github.com/" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+          </div>
+        </div>
+      `;
+      // 插入到 body 末尾，在 script 标签之前
+      const lastScript = document.querySelector('body > script:last-of-type');
+      if (lastScript) {
+        document.body.insertBefore(footer, lastScript);
+      } else {
+        document.body.appendChild(footer);
+      }
     },
 
     // 无障碍：全局 Escape 关闭顶栏下拉菜单与语言选择器
@@ -2558,7 +2714,7 @@
     Array.prototype.forEach.call(nodes, function (el) {
       if (el._apexGlobalRippleBound) return;
       el._apexGlobalRippleBound = true;
-      el.classList.add('apex-ripple');
+      el.classList.add('apex-ripple-host');
       if (prefersReduced) return;
       el.addEventListener('pointerdown', function (e) {
         const rect = el.getBoundingClientRect();
@@ -2680,7 +2836,40 @@
       mobileCount: 16,
       connectionDistance: 120,
       mouseDistance: 150,
-      speed: 0.38
+      speed: 0.38,
+      // 高级动态背景配置
+      intensity: 1.0,           // 颜色强度 0.2 - 2.0
+      cloudCount: 6,            // 云朵数量
+      scanlineCount: 3,         // 霓虹扫描线数量
+      enableNoise: true,        // 启用流铁噪声背景
+      enableClouds: true,       // 启用云朵
+      enableScanlines: true,    // 启用霓虹扫描线
+      subtleMode: false,        // 微动特效模式（省电）
+      animated: true            // 动态/静态切换
+    },
+
+    // 用户可调参数（通过 localStorage 持久化）
+    settings: {
+      get speed() {
+        const v = parseFloat(localStorage.getItem('apexon_bg_speed'));
+        return isNaN(v) ? 1.0 : Math.max(0.1, Math.min(3.0, v));
+      },
+      set speed(v) { localStorage.setItem('apexon_bg_speed', String(v)); },
+      get intensity() {
+        const v = parseFloat(localStorage.getItem('apexon_bg_intensity'));
+        return isNaN(v) ? 1.0 : Math.max(0.2, Math.min(2.0, v));
+      },
+      set intensity(v) { localStorage.setItem('apexon_bg_intensity', String(v)); },
+      get animated() {
+        const v = localStorage.getItem('apexon_bg_animated');
+        return v === null ? true : v === 'true';
+      },
+      set animated(v) { localStorage.setItem('apexon_bg_animated', String(v)); },
+      get subtle() {
+        const v = localStorage.getItem('apexon_bg_subtle');
+        return v === null ? false : v === 'true';
+      },
+      set subtle(v) { localStorage.setItem('apexon_bg_subtle', String(v)); }
     },
 
     init(options = {}) {
@@ -2693,10 +2882,13 @@
       const offCtx = offscreen.getContext('2d');
       let w, h, particles = [], stars = [], bursts = [];
       let packets = [], scanLines = [], glyphs = [], rings = [];
+      let clouds = [], neonLines = [];
       let mouse = { x: null, y: null, active: false };
       let frameId = null;
       let isActive = true;
       let frameCount = 0;
+      let time = 0;
+      let lastFrameTime = performance.now();
 
       // 缓存主题判断结果，避免每帧数十次 DOM 读取（getAttribute/classList）
       // 仅在 apexon:themechange 事件时刷新
@@ -2776,6 +2968,46 @@
             pulseSpeed: Math.random() * 0.04 + 0.02,
             core: isCore,
             ring: Math.random() * Math.PI * 2
+          });
+        }
+      };
+
+      // 创建云朵粒子（大而柔和的半透明团块，缓慢飘动）
+      const createClouds = () => {
+        clouds = [];
+        const isMobile = window.innerWidth < 768;
+        const count = isMobile ? 3 : config.cloudCount;
+        for (let i = 0; i < count; i++) {
+          const ww = window.innerWidth;
+          const wh = window.innerHeight;
+          clouds.push({
+            x: Math.random() * ww,
+            y: Math.random() * wh * 0.8,
+            vx: (Math.random() * 0.15 + 0.05) * (Math.random() > 0.5 ? 1 : -1),
+            vy: (Math.random() - 0.5) * 0.03,
+            radius: Math.random() * 120 + 80,
+            alpha: Math.random() * 0.06 + 0.03,
+            colorIdx: Math.floor(Math.random() * 3),
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      };
+
+      // 创建霓虹扫描线（柔和的垂直光带，缓慢横向移动）
+      const createNeonLines = () => {
+        neonLines = [];
+        const isMobile = window.innerWidth < 768;
+        const count = isMobile ? 1 : config.scanlineCount;
+        for (let i = 0; i < count; i++) {
+          neonLines.push({
+            x: Math.random() * window.innerWidth,
+            y: 0,
+            vx: (Math.random() * 0.4 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+            width: Math.random() * 200 + 100,
+            height: window.innerHeight,
+            alpha: Math.random() * 0.08 + 0.04,
+            phase: Math.random() * Math.PI * 2,
+            colorIdx: i % 3
           });
         }
       };
@@ -2908,6 +3140,127 @@
           p.pulse += p.pulseSpeed;
           p.ring += 0.03;
         }
+      };
+
+      // 更新云朵位置
+      const updateClouds = () => {
+        const speedMul = ParticleSystem.settings.speed;
+        const subtle = ParticleSystem.settings.subtle;
+        for (const c of clouds) {
+          c.x += c.vx * speedMul * (subtle ? 0.3 : 1);
+          c.y += c.vy * speedMul * (subtle ? 0.3 : 1);
+          c.phase += 0.002 * speedMul;
+          // 边界环绕
+          if (c.x < -c.radius * 2) c.x = window.innerWidth + c.radius;
+          if (c.x > window.innerWidth + c.radius * 2) c.x = -c.radius;
+          if (c.y < -c.radius) c.y = window.innerHeight + c.radius;
+          if (c.y > window.innerHeight + c.radius) c.y = -c.radius;
+        }
+      };
+
+      // 更新霓虹扫描线
+      const updateNeonLines = () => {
+        const speedMul = ParticleSystem.settings.speed;
+        const subtle = ParticleSystem.settings.subtle;
+        for (const n of neonLines) {
+          n.x += n.vx * speedMul * (subtle ? 0.3 : 1);
+          n.phase += 0.015 * speedMul;
+          // 边界环绕
+          if (n.x < -n.width) n.x = window.innerWidth + n.width;
+          if (n.x > window.innerWidth + n.width) n.x = -n.width;
+        }
+      };
+
+      // 绘制流铁噪声背景（柔和渐变 + 伪噪声）
+      const drawNoiseBackground = () => {
+        if (!config.enableNoise) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        const ww = window.innerWidth;
+        const wh = window.innerHeight;
+
+        // 大尺度柔和渐变（类似流动的霓虹光）
+        const t = time * 0.0003 * ParticleSystem.settings.speed;
+        const grad = ctx.createRadialGradient(
+          ww * (0.3 + 0.15 * Math.sin(t)), wh * (0.4 + 0.1 * Math.cos(t * 1.3)), 0,
+          ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.8
+        );
+        const col1 = palette[0] || '#22d3ee';
+        const col2 = palette[2] || '#818cf8';
+        const col3 = palette[4] || '#c084fc';
+        grad.addColorStop(0, hexToRgba(col1, 0.06 * intensity * (subtle ? 0.4 : 1)));
+        grad.addColorStop(0.5, hexToRgba(col2, 0.04 * intensity * (subtle ? 0.4 : 1)));
+        grad.addColorStop(1, hexToRgba(col3, 0.02 * intensity * (subtle ? 0.4 : 1)));
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, ww, wh);
+
+        // 第二个渐变层（流动的铁质感）
+        const t2 = time * 0.0002 * ParticleSystem.settings.speed;
+        const grad2 = ctx.createRadialGradient(
+          ww * (0.7 + 0.2 * Math.cos(t2 * 0.8)), wh * (0.6 + 0.15 * Math.sin(t2)), 0,
+          ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.7
+        );
+        grad2.addColorStop(0, hexToRgba(col2, 0.05 * intensity * (subtle ? 0.4 : 1)));
+        grad2.addColorStop(0.6, hexToRgba(col3, 0.03 * intensity * (subtle ? 0.4 : 1)));
+        grad2.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, ww, wh);
+      };
+
+      // 辅助：hex 转 rgba
+      const hexToRgba = (hex, alpha) => {
+        if (!hex) return `rgba(255,255,255,${alpha})`;
+        const h = hex.replace('#', '');
+        if (h.length === 3) {
+          const r = parseInt(h[0] + h[0], 16);
+          const g = parseInt(h[1] + h[1], 16);
+          const b = parseInt(h[2] + h[2], 16);
+          return `rgba(${r},${g},${b},${alpha})`;
+        }
+        const r = parseInt(h.substring(0, 2), 16);
+        const g = parseInt(h.substring(2, 4), 16);
+        const b = parseInt(h.substring(4, 6), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      };
+
+      // 绘制云朵
+      const drawClouds = () => {
+        if (!config.enableClouds) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        for (const c of clouds) {
+          const pulseR = c.radius + Math.sin(c.phase) * 12;
+          const col = palette[c.colorIdx % palette.length] || palette[0];
+          const grad = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, pulseR);
+          grad.addColorStop(0, hexToRgba(col, c.alpha * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(0.6, hexToRgba(col, c.alpha * 0.5 * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, pulseR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      // 绘制霓虹扫描线
+      const drawNeonLines = () => {
+        if (!config.enableScanlines) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        for (const n of neonLines) {
+          const flicker = 0.7 + Math.sin(n.phase) * 0.3;
+          const col = palette[n.colorIdx % palette.length] || palette[0];
+          const grad = ctx.createLinearGradient(n.x - n.width / 2, 0, n.x + n.width / 2, 0);
+          grad.addColorStop(0, 'transparent');
+          grad.addColorStop(0.5, hexToRgba(col, n.alpha * flicker * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.fillRect(n.x - n.width / 2, 0, n.width, window.innerHeight);
+        }
+        ctx.globalCompositeOperation = 'source-over';
       };
 
       const updateBursts = () => {
@@ -3269,11 +3622,28 @@
       const draw = () => {
         if (!isActive) return;
         frameCount++;
+        const now = performance.now();
+        const delta = now - lastFrameTime;
+        lastFrameTime = now;
+
+        if (ParticleSystem.settings.animated) {
+          time += delta;
+          updateParticles();
+          updateClouds();
+          updateNeonLines();
+          // 连接列表每 4 帧重建一次（O(n²) 操作），其余帧复用上次结果，大幅降低 CPU 开销
+          if (frameCount % 4 === 0) buildConnectionList();
+          updateBursts();
+        }
+
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        updateParticles();
-        // 连接列表每 4 帧重建一次（O(n²) 操作），其余帧复用上次结果，大幅降低 CPU 开销
-        if (frameCount % 4 === 0) buildConnectionList();
-        updateBursts();
+
+        // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
+        if (ParticleSystem.settings.animated) {
+          drawNoiseBackground();
+          drawClouds();
+          drawNeonLines();
+        }
         drawConnections();
         drawParticles();
         drawBursts();
@@ -3281,7 +3651,7 @@
         frameId = requestAnimationFrame(draw);
       };
 
-      const onResize = () => { resize(); createParticles(); };
+      const onResize = () => { resize(); createParticles(); createClouds(); createNeonLines(); };
       const onMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; };
       const onMouseLeave = () => { mouse.active = false; };
       const onTouchMove = (e) => {
@@ -3363,6 +3733,8 @@
 
       resize();
       createParticles();
+      createClouds();
+      createNeonLines();
       draw();
     }
   };
@@ -3877,6 +4249,8 @@
     UI.injectSkipLink();
     // 无障碍：全局 Escape 关闭顶栏下拉菜单（toggleMenu 打开的 #headerDropdown）
     UI.bindGlobalEscape();
+    // 注入页脚
+    UI.injectFooter();
     // 微交互：为关键按钮自动绑定涟漪效果
     UI.bindGlobalRipple();
     document.addEventListener('apexon:langchange', () => {

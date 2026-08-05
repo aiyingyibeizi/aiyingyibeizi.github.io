@@ -7390,3 +7390,156 @@ html[data-bw="true"] .game-canvas {
 @keyframes apex-fade-in { from {opacity:0} to {opacity:1} }
 @keyframes apex-zoom-in { from {opacity:0; transform:scale(0.92)} to {opacity:1; transform:scale(1)} }
 
+/* ============================================================================
+   Section: Footer 页脚
+   ============================================================================ */
+
+.apexon-footer {
+  margin-top: 80px;
+  padding: 48px 24px 32px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.12) 100%);
+  border-top: 1px solid var(--apex-border-subtle);
+  position: relative;
+  z-index: 5;
+}
+
+.apexon-footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 2fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.apexon-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.apexon-footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--apex-text);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.apexon-footer__logo img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.apexon-footer__tagline {
+  font-size: 13px;
+  color: var(--apex-text-secondary);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+.apexon-footer__links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.apexon-footer__col h5 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apex-text);
+  margin: 0 0 14px;
+  letter-spacing: 0.03em;
+}
+
+.apexon-footer__col a {
+  display: block;
+  font-size: 13px;
+  color: var(--apex-text-tertiary);
+  text-decoration: none;
+  padding: 5px 0;
+  transition: color 0.2s ease;
+}
+
+.apexon-footer__col a:hover {
+  color: var(--apex-primary);
+}
+
+.apexon-footer__bottom {
+  max-width: 1200px;
+  margin: 36px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--apex-border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.apexon-footer__copyright {
+  font-size: 12px;
+  color: var(--apex-text-tertiary);
+}
+
+.apexon-footer__social {
+  display: flex;
+  gap: 8px;
+}
+
+.apexon-footer__social a {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--apex-surface-hover);
+  color: var(--apex-text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.apexon-footer__social a:hover {
+  background: var(--apex-primary);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .apexon-footer {
+    padding: 36px 16px 24px;
+    margin-top: 48px;
+  }
+  .apexon-footer__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .apexon-footer__links {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .apexon-footer__bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* 关于页面特色样式 */
+.about-lead {
+  font-size: 16px;
+  line-height: 1.8;
+  padding: 20px 24px;
+  border-left: 3px solid var(--apex-primary);
+  background: var(--apex-surface);
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 28px;
+}
+.about-lead strong {
+  color: var(--apex-primary);
+}
+
