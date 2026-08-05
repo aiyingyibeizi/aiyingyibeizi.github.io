@@ -6929,3 +6929,203 @@ html[data-bw="true"] .game-canvas {
 /* 鼠标点击时不显示 outline（仅键盘导航显示） */
 :focus:not(:focus-visible) { outline: none; }
 
+/* 主题调色板选择器 */
+.apex-palette-btn {
+  width: 40px; height: 40px; border-radius: 14px;
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  color: var(--apex-text); cursor: pointer;
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+}
+.apex-palette-btn:hover { transform: translateY(-2px); box-shadow: var(--apex-shadow-sm); }
+.apex-palette-panel {
+  position: absolute; right: 0; top: 56px; z-index: 200;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius);
+  padding: 14px; box-shadow: var(--apex-shadow-lg);
+  width: 240px; backdrop-filter: blur(14px);
+}
+.apex-palette-panel h6 {
+  margin: 0 0 10px; font-size: 12px; font-weight: 600;
+  color: var(--apex-text-secondary);
+}
+.apex-palette-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+}
+.apex-palette-swatch {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform var(--apex-transition-bounce);
+}
+.apex-palette-swatch:hover { transform: scale(1.15); }
+.apex-palette-swatch.active {
+  border-color: var(--apex-text);
+  box-shadow: 0 0 0 3px var(--apex-glow-primary);
+}
+
+/* ============================================================================
+   Section: 全站基础动效 - 卡片悬停 / 按钮 / Tab
+   ============================================================================ */
+
+/* 卡片悬停动效：上移 4px + 发光阴影 + 边框增强 */
+.item-card {
+  transition:
+    transform var(--apex-transition-base),
+    box-shadow var(--apex-transition-base),
+    border-color var(--apex-transition-base);
+}
+.item-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    var(--apex-shadow-md),
+    var(--apex-shadow-glow);
+  border-color: var(--game-card-border-hover);
+}
+
+/* 按钮按下缩放效果 */
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* leaderboard-tab active 下划线动画 */
+.leaderboard-tab {
+  position: relative;
+}
+.leaderboard-tab::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--apex-primary) 0%, var(--apex-accent-cyan) 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+}
+.leaderboard-tab.active::after {
+  width: 72%;
+  opacity: 1;
+}
+
+/* ============================================================================
+   Section: 涟漪点击效果
+   ============================================================================ */
+
+/* 按钮涟漪效果 */
+.apex-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.apex-ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  animation: apex-ripple-anim 600ms ease-out forwards;
+  background: currentColor;
+  opacity: 0.25;
+}
+@keyframes apex-ripple-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   Section: Toast 通知系统
+   ============================================================================ */
+
+/* Toast 通知 */
+.apex-toast-wrap {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.apex-toast {
+  min-width: 240px;
+  max-width: 360px;
+  padding: 12px 18px;
+  border-radius: var(--apex-radius);
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  box-shadow: var(--apex-shadow-lg);
+  color: var(--apex-text);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: apex-toast-in 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.apex-toast.success {
+  border-left: 4px solid var(--apex-success);
+}
+.apex-toast.error {
+  border-left: 4px solid var(--apex-danger);
+}
+.apex-toast.warn {
+  border-left: 4px solid var(--apex-warning);
+}
+.apex-toast.info {
+  border-left: 4px solid var(--apex-info);
+}
+.apex-toast.leaving {
+  animation: apex-toast-out 220ms ease-in forwards;
+}
+@keyframes apex-toast-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes apex-toast-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   Section: 骨架屏 shimmer
+   ============================================================================ */
+
+/* 骨架屏 shimmer */
+.apex-skeleton {
+  background: linear-gradient(90deg,
+    var(--apex-surface) 0%,
+    var(--apex-surface-hover) 50%,
+    var(--apex-surface) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--apex-radius-sm);
+  animation: apex-shimmer 1400ms ease-in-out infinite;
+}
+@keyframes apex-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.apex-skeleton-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.apex-skeleton-line {
+  height: 14px;
+}
+

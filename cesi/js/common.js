@@ -1527,6 +1527,70 @@
       }
     },
 
+    initAccentPicker() {
+      try {
+        const accents = ['cyan', 'emerald', 'amber', 'rose', 'indigo', 'coral', 'sunset', 'mint', 'crimson'];
+        const savedAccent = localStorage.getItem('apex_accent');
+        if (savedAccent && accents.indexOf(savedAccent) >= 0) {
+          document.documentElement.setAttribute('data-accent', savedAccent);
+        } else {
+          const today = new Date().toDateString();
+          const dayIndex = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+          const accent = accents[dayIndex % accents.length];
+          document.documentElement.setAttribute('data-accent', accent);
+        }
+      } catch (e) { /* ignore */ }
+    },
+
+    bindPaletteButton() {
+      const paletteBtn = document.querySelector('.apex-palette-btn');
+      const palettePanel = document.querySelector('.apex-palette-panel');
+      if (!paletteBtn || !palettePanel) return;
+
+      paletteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = palettePanel.hasAttribute('hidden');
+        if (isHidden) {
+          palettePanel.removeAttribute('hidden');
+          this._refreshPaletteActive();
+        } else {
+          palettePanel.setAttribute('hidden', '');
+        }
+      });
+
+      const swatches = palettePanel.querySelectorAll('.apex-palette-swatch');
+      swatches.forEach((swatch) => {
+        swatch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const accent = swatch.dataset.accent;
+          if (!accent) return;
+          document.documentElement.setAttribute('data-accent', accent);
+          localStorage.setItem('apex_accent', accent);
+          this._refreshPaletteActive();
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!palettePanel.contains(e.target) && !paletteBtn.contains(e.target)) {
+          palettePanel.setAttribute('hidden', '');
+        }
+      });
+
+      this._refreshPaletteActive();
+    },
+
+    _refreshPaletteActive() {
+      const currentAccent = document.documentElement.getAttribute('data-accent');
+      const swatches = document.querySelectorAll('.apex-palette-swatch');
+      swatches.forEach((swatch) => {
+        if (swatch.dataset.accent === currentAccent) {
+          swatch.classList.add('active');
+        } else {
+          swatch.classList.remove('active');
+        }
+      });
+    },
+
     injectAuthStyles() {
       if (document.getElementById('apex-auth-styles')) return;
       const style = document.createElement('style');
@@ -2285,6 +2349,66 @@
       setTimeout(() => { location.href = 'index.html'; }, 300);
     }
   };
+
+  // ===== 追加：UI.Toast 模块（全新 apex- 前缀样式） =====
+  UI.Toast = {
+    show(msg, type = 'info', duration = 2800) {
+      let wrap = document.querySelector('.apex-toast-wrap');
+      if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.className = 'apex-toast-wrap';
+        document.body.appendChild(wrap);
+      }
+      const toast = document.createElement('div');
+      const validTypes = ['success', 'error', 'warn', 'info'];
+      const t = validTypes.indexOf(type) !== -1 ? type : 'info';
+      toast.className = 'apex-toast ' + t;
+      toast.textContent = String(msg);
+      wrap.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('leaving');
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+          if (wrap && wrap.childNodes.length === 0 && wrap.parentNode) {
+            wrap.parentNode.removeChild(wrap);
+          }
+        }, 240);
+      }, duration);
+    }
+  };
+
+  // ===== 追加：UI.bindGlobalRipple（给 .btn / .item-card 加 apex-ripple class + pointerdown 涟漪） =====
+  const origBindGlobalRipple = UI.bindGlobalRipple;
+  UI.bindGlobalRipple = function () {
+    if (typeof origBindGlobalRipple === 'function') {
+      try { origBindGlobalRipple.call(this); } catch (e) {}
+    }
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const nodes = document.querySelectorAll('.btn, .item-card');
+    Array.prototype.forEach.call(nodes, function (el) {
+      if (el._apexGlobalRippleBound) return;
+      el._apexGlobalRippleBound = true;
+      el.classList.add('apex-ripple');
+      if (prefersReduced) return;
+      el.addEventListener('pointerdown', function (e) {
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const wave = document.createElement('span');
+        wave.className = 'apex-ripple-wave';
+        wave.style.width = size + 'px';
+        wave.style.height = size + 'px';
+        const x = (e.clientX != null ? e.clientX : rect.left + rect.width / 2) - rect.left - size / 2;
+        const y = (e.clientY != null ? e.clientY : rect.top + rect.height / 2) - rect.top - size / 2;
+        wave.style.left = x + 'px';
+        wave.style.top = y + 'px';
+        el.appendChild(wave);
+        setTimeout(function () {
+          if (wave.parentNode) wave.parentNode.removeChild(wave);
+        }, 650);
+      }, { passive: true });
+    });
+  };
+
   APEXON.UI = UI;
 
   // ===== 8. 粒子背景系统 =====
@@ -3451,21 +3575,9 @@
   // ===== 12. 初始化 =====
   async function boot() {
     VisibilityManager.init();
-    // 随机选择强调色（9 套配色轮换，避免审美疲劳），每天换一次
-    // 用户手动选择后记住偏好，不再被覆盖
-    try {
-      const accents = ['cyan', 'emerald', 'amber', 'rose', 'indigo', 'coral', 'sunset', 'mint', 'crimson'];
-      const savedAccent = localStorage.getItem('apex_accent');
-      if (savedAccent && accents.indexOf(savedAccent) >= 0) {
-        document.documentElement.setAttribute('data-accent', savedAccent);
-      } else {
-        const today = new Date().toDateString();
-        const dayIndex = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        const accent = accents[dayIndex % accents.length];
-        document.documentElement.setAttribute('data-accent', accent);
-      }
-    } catch (e) { /* ignore */ }
+    UI.initAccentPicker();
     UI.initTheme();
+    UI.bindPaletteButton();
     Auth.init();
     await Auth.validateSession();
     const userId = Auth.getUserId();
