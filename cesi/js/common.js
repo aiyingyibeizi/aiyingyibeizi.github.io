@@ -2056,53 +2056,22 @@
       footer.className = 'apexon-footer';
       footer.innerHTML = `
         <div class="apexon-footer__inner">
-          <div class="apexon-footer__brand">
-            <a href="index.html" class="apexon-footer__logo">
-              <img src="assets/favicon.png" alt="APEXON">
-              <span>APEXON</span>
-            </a>
-            <p class="apexon-footer__tagline">${t('footerTagline', '免费在线认知能力测试与训练平台，探索大脑的无限可能。')}</p>
-          </div>
-          <div class="apexon-footer__links">
-            <div class="apexon-footer__col">
-              <h5>${t('footerTests', '测试项目')}</h5>
-              <a href="reaction.html">${t('navReaction', '反应测试')}</a>
-              <a href="type.html">${t('navType', '打字测试')}</a>
-              <a href="stick.html">${t('navStick', '注意力测试')}</a>
-              <a href="number.html">${t('navNumber', '数字记忆')}</a>
-              <a href="verbal.html">${t('navVerbal', '单词记忆')}</a>
-            </div>
-            <div class="apexon-footer__col">
-              <h5>${t('footerMore', '更多训练')}</h5>
-              <a href="visual.html">${t('navVisual', '视觉记忆')}</a>
-              <a href="sequence.html">${t('navSequence', '序列记忆')}</a>
-              <a href="aim.html">${t('navAim', '瞄准训练')}</a>
-              <a href="stroop.html">${t('navStroop', 'Stroop 测试')}</a>
-              <a href="nback.html">${t('navNback', 'N-Back 测试')}</a>
-            </div>
-            <div class="apexon-footer__col">
-              <h5>${t('footerResources', '资源')}</h5>
-              <a href="music.html">${t('navMusic', '音乐播放器')}</a>
-              <a href="taskswitch.html">${t('navTaskswitch', 'Task Switching')}</a>
-              <a href="visualsearch.html">${t('navVisualsearch', 'Visual Search')}</a>
-              <a href="index.html#forum">${t('navForum', '讨论社区')}</a>
-            </div>
-            <div class="apexon-footer__col">
-              <h5>${t('footerAbout', '关于本站')}</h5>
-              <a href="about.html">${t('footerAboutUs', '关于本站')}</a>
-              <a href="privacy.html">${t('footerPrivacy', '隐私政策')}</a>
-              <a href="terms.html">${t('footerTerms', '服务条款')}</a>
-              <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
-            </div>
-          </div>
+          <a href="index.html" class="apexon-footer__logo">
+            <img src="assets/favicon.png" alt="APEXON">
+            <span>APEXON</span>
+          </a>
+          <nav class="apexon-footer__nav" aria-label="页脚导航">
+            <a href="about.html">${t('footerAboutUs', '关于本站')}</a>
+            <a href="privacy.html">${t('footerPrivacy', '隐私政策')}</a>
+            <a href="terms.html">${t('footerTerms', '服务条款')}</a>
+            <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+          </nav>
         </div>
         <div class="apexon-footer__bottom">
-          <div class="apexon-footer__copyright">© ${new Date().getFullYear()} APEXON. ${t('footerRights', '保留所有权利。')}</div>
-          <div class="apexon-footer__social">
-            <a href="https://github.com/" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            </a>
-          </div>
+          <span class="apexon-footer__copyright">© ${new Date().getFullYear()} APEXON. ${t('footerRights', '保留所有权利。')}</span>
+          <a href="https://github.com/" target="_blank" rel="noopener" class="apexon-footer__github" aria-label="GitHub">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
         </div>
       `;
       // 插入到 body 末尾，在 script 标签之前

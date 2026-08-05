@@ -7395,137 +7395,149 @@ html[data-bw="true"] .game-canvas {
    ============================================================================ */
 
 .apexon-footer {
-  margin-top: 80px;
-  padding: 48px 24px 32px;
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.12) 100%);
+  margin-top: 64px;
+  padding: 28px 20px 22px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.08) 100%);
   border-top: 1px solid var(--apex-border-subtle);
   position: relative;
   z-index: 5;
 }
 
 .apexon-footer__inner {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.2fr 2fr;
-  gap: 48px;
-  align-items: start;
-}
-
-.apexon-footer__brand {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
 }
 
 .apexon-footer__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
+  gap: 8px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--apex-text);
   text-decoration: none;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 .apexon-footer__logo img {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
 }
 
-.apexon-footer__tagline {
+.apexon-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+}
+
+.apexon-footer__nav a {
   font-size: 13px;
   color: var(--apex-text-secondary);
-  line-height: 1.6;
-  max-width: 280px;
-}
-
-.apexon-footer__links {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-.apexon-footer__col h5 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--apex-text);
-  margin: 0 0 14px;
-  letter-spacing: 0.03em;
-}
-
-.apexon-footer__col a {
-  display: block;
-  font-size: 13px;
-  color: var(--apex-text-tertiary);
   text-decoration: none;
-  padding: 5px 0;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
-.apexon-footer__col a:hover {
+.apexon-footer__nav a:hover {
   color: var(--apex-primary);
 }
 
 .apexon-footer__bottom {
-  max-width: 1200px;
-  margin: 36px auto 0;
-  padding-top: 20px;
+  max-width: 1100px;
+  margin: 18px auto 0;
+  padding-top: 14px;
   border-top: 1px solid var(--apex-border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .apexon-footer__copyright {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--apex-text-tertiary);
+  letter-spacing: 0.01em;
 }
 
-.apexon-footer__social {
-  display: flex;
-  gap: 8px;
-}
-
-.apexon-footer__social a {
-  width: 32px;
-  height: 32px;
+.apexon-footer__github {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--apex-surface-hover);
   color: var(--apex-text-secondary);
   text-decoration: none;
-  font-size: 14px;
   transition: all 0.2s ease;
 }
 
-.apexon-footer__social a:hover {
-  background: var(--apex-primary);
-  color: #fff;
+.apexon-footer__github:hover {
+  background: var(--apex-surface-hover);
+  color: var(--apex-primary);
   transform: translateY(-1px);
 }
 
+/* ---- 手机端适配 ---- */
 @media (max-width: 768px) {
   .apexon-footer {
-    padding: 36px 16px 24px;
-    margin-top: 48px;
+    margin-top: 40px;
+    padding: 20px 14px 16px;
   }
   .apexon-footer__inner {
-    grid-template-columns: 1fr;
-    gap: 32px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
   }
-  .apexon-footer__links {
-    grid-template-columns: repeat(2, 1fr);
+  .apexon-footer__nav {
+    justify-content: center;
+    gap: 6px 16px;
+  }
+  .apexon-footer__nav a {
+    font-size: 12px;
   }
   .apexon-footer__bottom {
     flex-direction: column;
     text-align: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-footer {
+    margin-top: 32px;
+    padding: 16px 12px 14px;
+  }
+  .apexon-footer__logo {
+    font-size: 14px;
+  }
+  .apexon-footer__logo img {
+    width: 22px;
+    height: 22px;
+  }
+  .apexon-footer__nav {
+    gap: 4px 12px;
+  }
+  .apexon-footer__nav a {
+    font-size: 11.5px;
+  }
+  .apexon-footer__copyright {
+    font-size: 10.5px;
+  }
+  .apexon-footer__github {
+    width: 26px;
+    height: 26px;
   }
 }
 
