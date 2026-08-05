@@ -302,6 +302,12 @@
         if (isNaN(score) || score < 1 || score > 10) return false;
         return true;
       }
+      // Visual Search 视觉搜索：平均搜索时间（越小越好，单位 ms）
+      if (type === 'visualsearch') {
+        const score = parseInt(data.score, 10);
+        if (isNaN(score) || score < 100 || score > 30000) return false;
+        return true;
+      }
       return false;
     }
   };
@@ -557,6 +563,10 @@
       console.log('[saveScore]', testType, scoreValue, 'result:', res.data);
       if (res.ok) {
         LocalStats.recordTest(userId);
+        // 记录成就统计并触发解锁检查（Toast 通知复用 UI.Toast）
+        if (window.APEXON && APEXON.Achievements) {
+          try { APEXON.Achievements.recordTest(testType, scoreValue); } catch (e) {}
+        }
         // 失效排行榜和统计缓存，让下次读取拿到最新数据
         WorkerAPI.invalidate('GET:/api/scores?leaderboard=');
         WorkerAPI.invalidate('GET:/api/stats');
@@ -1264,15 +1274,33 @@
 
   // ===== 7. 工具函数 =====
   const Utils = {
+    // 防抖：停止输入 delay 毫秒后才执行一次（用于搜索框等高频输入）
     debounce(fn, ms) {
-      let timer;
-      return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
+      let timer = null;
+      return function (...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+      };
     },
+    // 节流（leading + trailing）：首次立即触发，间隔内的最后一次调用延后补发，
+    // 既能防止快速点击连发请求，又能保证最终状态与用户最后一次操作一致（用于 tab/分类切换）
     throttle(fn, ms) {
-      let last = 0;
+      let lastCall = 0;
+      let timer = null;
       return function (...args) {
         const now = Date.now();
-        if (now - last >= ms) { last = now; fn.apply(this, args); }
+        const remaining = ms - (now - lastCall);
+        if (remaining <= 0) {
+          if (timer) { clearTimeout(timer); timer = null; }
+          lastCall = now;
+          fn.apply(this, args);
+        } else if (!timer) {
+          timer = setTimeout(() => {
+            lastCall = Date.now();
+            timer = null;
+            fn.apply(this, args);
+          }, remaining);
+        }
       };
     },
     vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); },
@@ -1362,6 +1390,14 @@
         if (val >= 4) return { grade: 'A', color: '#FF6B6B' };
         if (val >= 3) return { grade: 'B', color: '#4ECDC4' };
         if (val >= 2) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // Visual Search 视觉搜索平均时间（越低越好，单位 ms）
+      if (type === 'visualsearch') {
+        if (val <= 800) return { grade: 'S', color: '#FFD700' };
+        if (val <= 1500) return { grade: 'A', color: '#FF6B6B' };
+        if (val <= 2500) return { grade: 'B', color: '#4ECDC4' };
+        if (val <= 4000) return { grade: 'C', color: '#95E1D3' };
         return { grade: 'D', color: '#aaa' };
       }
       return { grade: '-', color: '#aaa' };
@@ -2407,6 +2443,93 @@
         }, 650);
       }, { passive: true });
     });
+  };
+
+  // ===== 追加：UI.countUp（数字滚动动画，requestAnimationFrame + easeOutCubic，IntersectionObserver 懒触发） =====
+  UI.countUp = function (el, target, options) {
+    if (!el) return;
+    // 防止重复执行：已计数过的元素直接跳过
+    if (el.getAttribute('data-counted') === 'true') return;
+    const opts = Object.assign({ duration: 1200, decimals: 0, prefix: '', suffix: '' }, options || {});
+    const targetNum = Number(target) || 0;
+    const decimals = Math.max(0, parseInt(opts.decimals, 10) || 0);
+
+    // easeOutCubic 缓动：前期快、后期慢，适合数字归位
+    const easeOutCubic = function (t) { return 1 - Math.pow(1 - t, 3); };
+    const formatVal = function (v) {
+      return opts.prefix + Number(v).toFixed(decimals) + opts.suffix;
+    };
+
+    // 先填起始值 0，避免视口外时显示原始占位
+    el.textContent = formatVal(0);
+
+    const run = function () {
+      if (el.getAttribute('data-counted') === 'true') return;
+      const start = performance.now();
+      const step = function (now) {
+        const p = Math.min(1, (now - start) / opts.duration);
+        const v = targetNum * easeOutCubic(p);
+        el.textContent = formatVal(v);
+        if (p < 1) {
+          requestAnimationFrame(step);
+        } else {
+          // 终值精确归位，避免浮点误差
+          el.textContent = formatVal(targetNum);
+          el.setAttribute('data-counted', 'true');
+        }
+      };
+      requestAnimationFrame(step);
+    };
+
+    // IntersectionObserver 懒触发：元素进入视口时才开始滚动
+    if (typeof IntersectionObserver !== 'undefined') {
+      const io = new IntersectionObserver(function (entries) {
+        Array.prototype.forEach.call(entries, function (entry) {
+          if (entry.isIntersecting) {
+            io.unobserve(el);
+            run();
+          }
+        });
+      }, { threshold: 0.2 });
+      io.observe(el);
+    } else {
+      // 降级：直接执行
+      run();
+    }
+  };
+
+  // ===== 追加：UI.staggerList（列表交错进入动画，IntersectionObserver 懒触发） =====
+  UI.staggerList = function (container, selector, delayStep) {
+    if (!container) return;
+    const sel = selector || '> *';
+    // querySelectorAll 不支持以 '>' 开头的裸选择器，自动补 :scope
+    const fullSel = sel.charAt(0) === '>' ? ':scope ' + sel : sel;
+    const step = (typeof delayStep === 'number' && delayStep >= 0) ? delayStep : 60;
+    const items = Array.prototype.slice.call(container.querySelectorAll(fullSel));
+
+    const apply = function () {
+      items.forEach(function (item, i) {
+        item.classList.add('apex-stagger-item');
+        // 第 i 个子项的 animation-delay = i * delayStep
+        item.style.animationDelay = (i * step) + 'ms';
+      });
+    };
+
+    // IntersectionObserver 懒触发：容器进入视口时才交错入场
+    if (typeof IntersectionObserver !== 'undefined') {
+      const io = new IntersectionObserver(function (entries) {
+        Array.prototype.forEach.call(entries, function (entry) {
+          if (entry.isIntersecting) {
+            io.unobserve(container);
+            apply();
+          }
+        });
+      }, { threshold: 0.1 });
+      io.observe(container);
+    } else {
+      // 降级：直接应用
+      apply();
+    }
   };
 
   APEXON.UI = UI;
@@ -3598,6 +3721,9 @@
     document.addEventListener('apexon:langchange', () => {
       UI.updateUserDisplay();
     });
+    // 页面切换过渡：给主内容容器 .container 添加淡入 class（若存在）
+    const apexPageContainer = document.querySelector('.container');
+    if (apexPageContainer) apexPageContainer.classList.add('apex-page-enter');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

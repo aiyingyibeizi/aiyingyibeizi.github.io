@@ -7129,3 +7129,104 @@ html[data-bw="true"] .game-canvas {
   height: 14px;
 }
 
+/* 成就系统 */
+.apex-ach-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.apex-ach-title { font-size: 18px; font-weight: 700; color: var(--apex-text); }
+.apex-ach-count { font-size: 14px; color: var(--apex-text-secondary); font-weight: 600; }
+.apex-ach-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.apex-ach-badge {
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius);
+  padding: 14px 10px; text-align: center;
+  transition: transform var(--apex-transition-base), box-shadow var(--apex-transition-base);
+}
+.apex-ach-badge.unlocked {
+  border-color: var(--apex-primary);
+  box-shadow: 0 0 12px var(--apex-glow-primary);
+}
+.apex-ach-badge.unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--apex-shadow-md), 0 0 16px var(--apex-glow-primary);
+}
+.apex-ach-badge.locked { opacity: 0.5; filter: grayscale(0.6); }
+.apex-ach-icon { font-size: 28px; margin-bottom: 6px; }
+.apex-ach-name { font-size: 13px; font-weight: 600; color: var(--apex-text); margin-bottom: 2px; }
+.apex-ach-desc { font-size: 11px; color: var(--apex-text-tertiary); line-height: 1.4; }
+
+/* 成就解锁动画 */
+@keyframes apex-ach-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.apex-ach-badge.unlocked .apex-ach-icon {
+  animation: apex-ach-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================================
+   Section: 列表交错进入动画 & 页面切换过渡
+   ============================================================================ */
+
+/* 列表交错进入动画 */
+.apex-stagger-item {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: apex-stagger-in 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes apex-stagger-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 页面主内容淡入 */
+.apex-page-enter {
+  animation: apex-page-fade-in 360ms ease-out;
+}
+@keyframes apex-page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 成绩分享卡片模态框 */
+.apex-share-modal {
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: apex-fade-in 240ms ease-out;
+}
+.apex-share-modal__box {
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius-lg);
+  padding: 24px; max-width: 880px; width: 100%;
+  box-shadow: var(--apex-shadow-lg);
+  animation: apex-zoom-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.apex-share-modal__title {
+  font-size: 18px; font-weight: 700; color: var(--apex-text);
+  margin: 0 0 16px;
+}
+.apex-share-modal__preview {
+  width: 100%; border-radius: var(--apex-radius);
+  border: 1px solid var(--apex-border);
+}
+.apex-share-modal__actions {
+  display: flex; gap: 12px; margin-top: 16px;
+  flex-wrap: wrap;
+}
+.apex-share-modal__close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--apex-surface-hover); border: none;
+  color: var(--apex-text); cursor: pointer; font-size: 18px;
+}
+@keyframes apex-fade-in { from {opacity:0} to {opacity:1} }
+@keyframes apex-zoom-in { from {opacity:0; transform:scale(0.92)} to {opacity:1; transform:scale(1)} }
+

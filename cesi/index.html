@@ -68,6 +68,8 @@
                     <a href="aim.html" data-i18n="navAim">瞄准训练</a>
                     <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
                     <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
                     <a href="music.html" data-i18n="navMusic">Music</a>
                 </nav>
             </div>
@@ -149,6 +151,10 @@
                 <strong data-i18n="cardNbackTitle">N-Back 工作记忆测试</strong>
                 <div class="card-desc" data-i18n="cardNbackDesc">工作记忆"金标准"测试：判断当前刺激是否与 N 步前的刺激相同。从 2-Back 开始自适应晋级，正确率达 75% 即挑战更高 N。考验工作记忆的持续更新与抗干扰能力，与流体智力密切相关。</div>
             </a>
+            <a href="visualsearch.html" class="item-card nav-more">
+                <strong data-i18n="cardVisualsearchTitle">Visual Search 视觉搜索测试</strong>
+                <div class="card-desc" data-i18n="cardVisualsearchDesc">在干扰项中快速找到目标，从 4×4 到 8×8 网格递增难度，测量你的视觉搜索效率与注意力分配能力，是安检员、放射科医生、飞行员的核心能力评估。</div>
+            </a>
             <a href="music.html" class="item-card item-card--wide nav-main">
                 <div class="item-card__visual">
                     <img src="assets/favicon.png" alt="APEXON Music">
@@ -180,13 +186,19 @@
                 <button class="leaderboard-tab" onclick="showLb('sequence')" data-i18n="lbSequence">序列</button>
                 <button class="leaderboard-tab" onclick="showLb('stroop')" data-i18n="lbStroop">Stroop</button>
                 <button class="leaderboard-tab" onclick="showLb('nback')" data-i18n="lbNback">N-Back</button>
+                <button class="leaderboard-tab" onclick="showLb('visualsearch')" data-i18n="lbVisualsearch">Visual Search</button>
             </div>
-            <div id="lbContent" data-i18n="lbEmpty">还没有人上榜</div>
+            <div id="lbContent"><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:60%"></div><div class="apex-skeleton apex-skeleton-line" style="width:80%"></div><div class="apex-skeleton apex-skeleton-line" style="width:40%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:55%"></div><div class="apex-skeleton apex-skeleton-line" style="width:75%"></div><div class="apex-skeleton apex-skeleton-line" style="width:35%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:65%"></div><div class="apex-skeleton apex-skeleton-line" style="width:85%"></div><div class="apex-skeleton apex-skeleton-line" style="width:45%"></div></div></div>
         </div>
 
         <div class="personal-stats" id="personalStats">
             <div class="personal-stats-title" data-i18n="myScoresTitle">📊 我的成绩</div>
-            <div id="personalContent" data-i18n="loading">加载中...</div>
+            <div id="personalContent"><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:60%"></div><div class="apex-skeleton apex-skeleton-line" style="width:80%"></div><div class="apex-skeleton apex-skeleton-line" style="width:40%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:55%"></div><div class="apex-skeleton apex-skeleton-line" style="width:70%"></div><div class="apex-skeleton apex-skeleton-line" style="width:35%"></div></div></div>
+        </div>
+
+        <div class="achievements-section" id="achievementsSection">
+            <div class="achievements-title" data-i18n="achievementsTitle">🏆 成就墙</div>
+            <div id="achievementsContent"></div>
         </div>
 
         <div class="forum-section" id="forumSection">
@@ -209,7 +221,7 @@
                 <button class="forum-filter-btn" data-cat="bug" onclick="setCommentFilter('bug')" data-i18n="forumBug">Bug 反馈</button>
                 <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')" data-i18n="forumSuggestion">网站建议</button>
             </div>
-            <div class="forum-list" id="forumList"></div>
+            <div class="forum-list" id="forumList"><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:60%"></div><div class="apex-skeleton apex-skeleton-line" style="width:80%"></div><div class="apex-skeleton apex-skeleton-line" style="width:40%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:55%"></div><div class="apex-skeleton apex-skeleton-line" style="width:75%"></div><div class="apex-skeleton apex-skeleton-line" style="width:35%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:65%"></div><div class="apex-skeleton apex-skeleton-line" style="width:85%"></div><div class="apex-skeleton apex-skeleton-line" style="width:45%"></div></div></div>
             <div class="forum-pagination" id="forumPagination"></div>
             <!-- 移到底部小字显示，不干扰主流程 -->
             <div id="forumLoginTip" style="color:var(--apex-text-tertiary);font-size:11px;text-align:center;padding:6px 12px;opacity:0.65;margin-top:4px;" data-i18n="guestCanComment">游客可发表评论，登录后可修改用户名与资料</div>
@@ -235,7 +247,8 @@
     </div>
 
     <script src="js/i18n.js?v=12"></script>
-    <script src="js/common.js?v=26"></script>
+    <script src="js/common.js?v=27"></script>
+    <script src="js/achievements.js?v=1"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -243,24 +256,32 @@
         // ===== 粒子背景 =====
         APEXON.Particles.init();
 
+        // ===== 渲染成就墙 =====
+        if (window.APEXON && APEXON.Achievements) {
+            APEXON.Achievements.renderWall(document.getElementById('achievementsContent'));
+        }
+
         // ===== 应用初始化 =====
         // 注意：通用 UI/认证/统计初始化已在 common.js 的 boot() 函数中统一执行
         // （主题、菜单、用户按钮、Visibility、Stats、Auth.init 等）
         // 此处仅执行首页特有的数据加载逻辑。
         async function initHomeData() {
-            // 加载首页各项数据
-            loadLeaderboard('reaction');
-            loadPersonal();
-            loadComments();
-            document.addEventListener('apexon:userchange', (e) => {
-                loadPersonal();
-                loadComments();
+            // 首页数据并行预取：/api/stats 由 common.js 的 Stats.init() 在 boot() 中并行启动，
+            // 此处用 Promise.all 让排行榜(/api/scores?leaderboard)、个人成绩、讨论区(/api/comments)
+            // 三个请求同时发出，而不是串行等待。
+            const prefetch = Promise.all([
+                loadLeaderboard('reaction'),
+                loadPersonal(),
+                loadComments()
+            ]);
+            // 事件监听需在预取 await 之前注册，避免某次请求 reject 导致监听漏挂
+            document.addEventListener('apexon:userchange', () => {
+                Promise.all([loadPersonal(), loadComments()]);
             });
             document.addEventListener('apexon:langchange', () => {
-                loadLeaderboard(currentLb);
-                loadPersonal();
-                loadComments();
+                Promise.all([loadLeaderboard(currentLb), loadPersonal(), loadComments()]);
             });
+            await prefetch;
         }
         // 启动首页数据加载
         if (document.readyState === 'loading') {
@@ -271,19 +292,19 @@
 
         // ===== 排行榜 =====
         let currentLb = 'reaction';
-        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence','stroop','nback'];
+        const LB_TYPES = ['reaction','type','stick','number','verbal','visual','aim','sequence','stroop','nback','visualsearch'];
         const LB_UNITS = {
             reaction: 'ms', type: 's', stick: t('points', '分'),
             number: t('level', '级'), verbal: t('points', '分'), visual: t('level', '级'), aim: t('points', '分'), sequence: t('level', '级'),
-            stroop: t('points', '分'), nback: 'N'
+            stroop: t('points', '分'), nback: 'N', visualsearch: 'ms'
         };
-        window.showLb = function(type) {
+        window.showLb = APEXON.Utils.throttle(function(type) {
             currentLb = type;
             document.querySelectorAll('.leaderboard-tab').forEach((t, i) => {
                 t.classList.toggle('active', LB_TYPES[i] === type);
             });
             loadLeaderboard(type);
-        };
+        }, 500);
         // hover 预取：鼠标悬停在 tab 上时预加载排行榜数据，点击时秒开
         document.querySelectorAll('.leaderboard-tab').forEach((tab, i) => {
             const type = LB_TYPES[i];
@@ -333,7 +354,7 @@
                 return;
             }
             // 骨架屏占位
-            if (personalEl) personalEl.innerHTML = '<div class="personal-grid">' + Array.from({length: 10}, () => '<div class="personal-card skeleton-card"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:28px;margin-top:12px"></div><div class="skeleton-bar" style="width:50%;height:12px;margin-top:8px"></div></div>').join('') + '</div>';
+            if (personalEl) personalEl.innerHTML = '<div class="personal-grid">' + Array.from({length: 11}, () => '<div class="personal-card skeleton-card"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:28px;margin-top:12px"></div><div class="skeleton-bar" style="width:50%;height:12px;margin-top:8px"></div></div>').join('') + '</div>';
 
             const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
             const types = [
@@ -346,7 +367,8 @@
                 { key: 'aim', name: t('lbAim', '瞄准训练'), unit: t('points', '分') },
                 { key: 'sequence', name: t('lbSequence', '序列记忆'), unit: t('level', '级') },
                 { key: 'stroop', name: t('lbStroop', 'Stroop'), unit: t('points', '分') },
-                { key: 'nback', name: t('lbNback', 'N-Back'), unit: 'N' }
+                { key: 'nback', name: t('lbNback', 'N-Back'), unit: 'N' },
+                { key: 'visualsearch', name: t('lbVisualsearch', 'Visual Search'), unit: 'ms' }
             ];
             const higherBetter = ['stick', 'number', 'verbal', 'visual', 'sequence', 'stroop', 'nback'];
             let html = '<div class="personal-grid">';
@@ -394,14 +416,14 @@
             });
         };
 
-        window.setCommentFilter = function(cat) {
+        window.setCommentFilter = APEXON.Utils.throttle(function(cat) {
             currentCommentFilter = cat;
             currentCommentPage = 1;
             document.querySelectorAll('#forumFilterBar .forum-filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.cat === cat);
             });
             loadComments();
-        };
+        }, 300);
 
         window.goCommentPage = function(page) {
             if (page < 1 || page > Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES)) return;
@@ -421,8 +443,11 @@
             // 发布按钮 loading 状态 + 防重复提交
             const btn = document.querySelector('.forum-btn');
             if (btn) { btn.disabled = true; btn.dataset.origText = btn.textContent; btn.textContent = t('processing', '发布中…'); }
-            // 乐观更新：先在列表顶部插入新评论，让用户立即看到
+            // 乐观更新：立即把评论插入列表顶部，用临时 ID 标记，让用户秒级看到自己的发言
+            const tempId = '__optimistic_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             const optimisticComment = {
+                id: tempId,
+                _pending: true,
                 user_id: userId,
                 username: username,
                 category: category,
@@ -430,30 +455,34 @@
                 created_at: new Date().toISOString()
             };
             allComments.unshift(optimisticComment);
-            // 同步 profile 缓存（当前用户）
-            if (!commentProfiles[userId]) {
-                try {
-                    const me = await APEXON.DB.getProfile(userId);
-                    if (me) commentProfiles[userId] = me;
-                } catch (e) { /* ignore */ }
-            }
-            // 切换到对应分类并渲染（如果当前是 all 或相同分类则立即可见）
+            // 立即渲染（不等 profile 拉取，保证用户立刻看到评论）
             if (currentCommentFilter === 'all' || currentCommentFilter === category) {
                 currentCommentPage = 1;
                 renderComments();
             }
             textEl.value = '';
-            const res = await APEXON.DB.addComment(userId, username, trimmed, category);
+            // 同时发起：API 发布请求 + 当前用户 profile 拉取（并行，互不阻塞乐观 UI）
+            const [res] = await Promise.all([
+                APEXON.DB.addComment(userId, username, trimmed, category),
+                (async () => {
+                    if (!commentProfiles[userId]) {
+                        try {
+                            const me = await APEXON.DB.getProfile(userId);
+                            if (me) commentProfiles[userId] = me;
+                        } catch (e) { /* ignore */ }
+                    }
+                })()
+            ]);
             if (btn) { btn.disabled = false; if (btn.dataset.origText) btn.textContent = btn.dataset.origText; }
             if (!res || !res.success) {
-                // 发布失败：回滚乐观更新
+                // 请求失败：移除临时评论，显示错误 Toast
                 const idx = allComments.indexOf(optimisticComment);
                 if (idx >= 0) allComments.splice(idx, 1);
                 renderComments();
                 APEXON.UI.toast(res && res.error ? res.error : t('publishFailed', '发布失败'));
                 return;
             }
-            // 发布成功：静默刷新拿真实数据（含服务端时间戳）
+            // 请求成功：把临时 ID 替换为真实数据（静默刷新拿服务端真实 ID 与时间戳）
             loadComments();
         };
 
