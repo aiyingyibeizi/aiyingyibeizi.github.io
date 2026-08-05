@@ -1627,6 +1627,140 @@
       });
     },
 
+    initStylePicker() {
+      const styles = [
+        { id: 'scifi', name: '科幻深空', icon: '🚀' },
+        { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
+        { id: 'forest', name: '翡翠森林', icon: '🌲' },
+        { id: 'starry', name: '璀璨星空', icon: '✨' },
+        { id: 'anime', name: '梦幻二次元', icon: '🌸' },
+        { id: 'minimal', name: '极简纯白', icon: '⬜' },
+        { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
+        { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
+        { id: 'aurora', name: '极光之夜', icon: '🌌' },
+        { id: 'sunset', name: '日落暖霞', icon: '🌅' },
+        { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
+        { id: 'neon', name: '霓虹都市', icon: '🌃' }
+      ];
+
+      const applyStyle = (styleId) => {
+        if (styleId && styles.some(s => s.id === styleId)) {
+          document.documentElement.setAttribute('data-style', styleId);
+        } else {
+          document.documentElement.removeAttribute('data-style');
+        }
+        if (window.APEXON && APEXON.Particles && APEXON.Particles.refreshPalette) {
+          APEXON.Particles.refreshPalette();
+        }
+        document.dispatchEvent(new CustomEvent('apexon:stylechange', { detail: { style: styleId } }));
+      };
+
+      const savedStyle = localStorage.getItem('apex_style');
+      applyStyle(savedStyle);
+
+      this._renderStylePicker(styles);
+      this._bindStylePickerEvents(styles, applyStyle);
+    },
+
+    _renderStylePicker(styles) {
+      const containers = document.querySelectorAll('.apex-style-picker');
+      if (!containers.length) return;
+
+      containers.forEach((container) => {
+        if (container.dataset.rendered) return;
+        container.dataset.rendered = 'true';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'apex-style-toggle';
+        toggleBtn.title = '切换主题风格';
+        toggleBtn.innerHTML = '🎨';
+
+        const panel = document.createElement('div');
+        panel.className = 'apex-style-panel';
+
+        const title = document.createElement('div');
+        title.className = 'apex-style-panel__title';
+        title.textContent = '选择主题风格';
+
+        const grid = document.createElement('div');
+        grid.className = 'apex-style-grid';
+
+        styles.forEach((style) => {
+          const item = document.createElement('div');
+          item.className = 'apex-style-item';
+          item.dataset.style = style.id;
+          item.title = style.name;
+
+          const preview = document.createElement('div');
+          preview.className = 'apex-style-item__preview';
+
+          const name = document.createElement('span');
+          name.className = 'apex-style-item__name';
+          name.textContent = style.name;
+
+          item.appendChild(preview);
+          item.appendChild(name);
+          grid.appendChild(item);
+        });
+
+        panel.appendChild(title);
+        panel.appendChild(grid);
+        container.appendChild(toggleBtn);
+        container.appendChild(panel);
+      });
+    },
+
+    _bindStylePickerEvents(styles, applyStyle) {
+      const containers = document.querySelectorAll('.apex-style-picker');
+      containers.forEach((container) => {
+        const toggleBtn = container.querySelector('.apex-style-toggle');
+        const panel = container.querySelector('.apex-style-panel');
+        if (!toggleBtn || !panel) return;
+
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          panel.classList.toggle('is-open');
+          this._refreshStyleActive();
+        });
+
+        const items = panel.querySelectorAll('.apex-style-item');
+        items.forEach((item) => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const styleId = item.dataset.style;
+            if (styleId === 'default' || !styleId) {
+              localStorage.removeItem('apex_style');
+              applyStyle(null);
+            } else {
+              localStorage.setItem('apex_style', styleId);
+              applyStyle(styleId);
+            }
+            this._refreshStyleActive();
+            panel.classList.remove('is-open');
+          });
+        });
+      });
+
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.apex-style-panel.is-open').forEach((p) => {
+          p.classList.remove('is-open');
+        });
+      });
+
+      this._refreshStyleActive();
+    },
+
+    _refreshStyleActive() {
+      const currentStyle = document.documentElement.getAttribute('data-style');
+      document.querySelectorAll('.apex-style-item').forEach((item) => {
+        if (item.dataset.style === currentStyle || (!currentStyle && item.dataset.style === 'default')) {
+          item.classList.add('is-active');
+        } else {
+          item.classList.remove('is-active');
+        }
+      });
+    },
+
     injectAuthStyles() {
       if (document.getElementById('apex-auth-styles')) return;
       const style = document.createElement('style');
@@ -3191,7 +3325,33 @@
         for (const s of stars) s.color = accent();
       };
 
+      const refreshStylePalette = () => {
+        // 读取风格的粒子调色板 CSS 变量
+        try {
+          const styleParticles = getComputedStyle(document.documentElement).getPropertyValue('--style-particles').trim();
+          if (styleParticles) {
+            const stylePalette = styleParticles.split(',').map(c => c.trim()).filter(Boolean);
+            if (stylePalette.length >= 3) {
+              palette = stylePalette;
+              for (const p of particles) p.color = randColor();
+              for (const s of stars) s.color = accent();
+              return;
+            }
+          }
+        } catch (e) { /* ignore */ }
+        // 回退到默认明暗调色板
+        palette = colorPalette();
+        for (const p of particles) p.color = randColor();
+        for (const s of stars) s.color = accent();
+      };
+
       document.addEventListener('apexon:themechange', onThemeChange);
+      document.addEventListener('apexon:stylechange', refreshStylePalette);
+      // 初始化时应用风格调色板
+      setTimeout(refreshStylePalette, 50);
+
+      // 暴露 refreshPalette 方法
+      ParticleSystem.refreshPalette = refreshStylePalette;
       window.addEventListener('resize', Utils.debounce(onResize, 250));
       window.addEventListener('mousemove', onMouseMove, { passive: true });
       window.addEventListener('mouseleave', onMouseLeave);
@@ -3700,6 +3860,7 @@
     VisibilityManager.init();
     UI.initAccentPicker();
     UI.initTheme();
+    UI.initStylePicker();
     UI.bindPaletteButton();
     Auth.init();
     await Auth.validateSession();

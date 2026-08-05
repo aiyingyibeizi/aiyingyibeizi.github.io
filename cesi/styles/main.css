@@ -34,11 +34,13 @@ html {
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
-    radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%),
+    var(--style-bg-gradient,
+      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
+      radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
+      radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%)),
     var(--apex-bg);
   background-attachment: fixed;
+  transition: background 500ms ease, background-color 500ms ease, color 300ms ease;
   color: var(--apex-text);
   line-height: var(--line-height);
   min-height: 100vh;
@@ -4468,6 +4470,164 @@ canvas#testBox,
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  transition: opacity 500ms ease;
+}
+
+/* ============================================================================
+   Section: Style Picker - 多风格主题选择器
+   ============================================================================ */
+
+.apex-style-picker {
+  position: relative;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+}
+
+.apex-style-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 200ms ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.apex-style-toggle:hover {
+  transform: scale(1.08);
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 4px 20px var(--apex-glow-primary);
+}
+
+.apex-style-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 320px;
+  padding: 20px;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.apex-style-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.apex-style-panel__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--apex-text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apex-style-panel__title::before {
+  content: '🎨';
+  font-size: 16px;
+}
+
+.apex-style-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.apex-style-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 200ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.apex-style-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--apex-border-strong);
+}
+
+.apex-style-item.is-active {
+  border-color: var(--apex-primary);
+  box-shadow: 0 0 0 3px var(--apex-glow-primary);
+}
+
+.apex-style-item__preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.apex-style-item__name {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--apex-text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.apex-style-item.is-active .apex-style-item__name {
+  color: var(--apex-primary);
+  font-weight: 600;
+}
+
+/* 各风格预览色 */
+.apex-style-item[data-style="scifi"] .apex-style-item__preview { background: linear-gradient(135deg, #020617, #38bdf8); }
+.apex-style-item[data-style="cyberpunk"] .apex-style-item__preview { background: linear-gradient(135deg, #0a0014, #ec4899, #06b6d4); }
+.apex-style-item[data-style="forest"] .apex-style-item__preview { background: linear-gradient(135deg, #02110a, #10b981); }
+.apex-style-item[data-style="starry"] .apex-style-item__preview { background: linear-gradient(135deg, #030712, #fbbf24); }
+.apex-style-item[data-style="anime"] .apex-style-item__preview { background: linear-gradient(135deg, #0f0820, #c084fc); }
+.apex-style-item[data-style="minimal"] .apex-style-item__preview { background: linear-gradient(135deg, #fafafa, #18181b); }
+.apex-style-item[data-style="ocean"] .apex-style-item__preview { background: linear-gradient(135deg, #020e1a, #0ea5e9); }
+.apex-style-item[data-style="desert"] .apex-style-item__preview { background: linear-gradient(135deg, #140a00, #f59e0b); }
+.apex-style-item[data-style="aurora"] .apex-style-item__preview { background: linear-gradient(135deg, #05021a, #22c55e, #a855f7); }
+.apex-style-item[data-style="sunset"] .apex-style-item__preview { background: linear-gradient(135deg, #18061a, #fb923c, #f43f5e); }
+.apex-style-item[data-style="sakura"] .apex-style-item__preview { background: linear-gradient(135deg, #1a0812, #f9a8d4); }
+.apex-style-item[data-style="neon"] .apex-style-item__preview { background: linear-gradient(135deg, #050505, #f43f5e, #06b6d4); }
+
+/* 风格切换全局过渡 */
+html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
+  transition: background 400ms ease, background-color 400ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+
+/* 响应式适配 */
+@media (max-width: 640px) {
+  .apex-style-panel {
+    min-width: 280px;
+    right: -20px;
+  }
+
+  .apex-style-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ============================================================================
