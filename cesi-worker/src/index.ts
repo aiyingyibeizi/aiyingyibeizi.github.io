@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { createClient } from '@supabase/supabase-js';
 import { Redis } from '@upstash/redis/cloudflare';
 import { createRedis } from './db/redis';
 import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
-import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
-import { createSupabasePgPool, supabasePgMigrate, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
+// 已切换为仅使用 3 个 Turso 数据库（同厂商，延迟更低），Neon 和 Supabase 暂时注释掉
+// import { createClient } from '@supabase/supabase-js';
+// import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
+// import { createSupabasePgPool, supabasePgMigrate, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
 import { ShardService } from './services/shard';
 import { createAuthMiddleware } from './services/auth';
 import { uploadFile } from './services/storage';
@@ -50,9 +51,9 @@ async function buildShardService(env: Env): Promise<ShardService> {
   const tursoApexon1Client = createTursoClient(env.TURSO_URL_APEXON_1, env.TURSO_TOKEN_APEXON_1);
   const tursoApexon2Client = createTursoClient(env.TURSO_URL_APEXON_2, env.TURSO_TOKEN_APEXON_2);
 
-  // Reuse a single pg Pool per database
-  const neonPool = createNeonPool(env.NEON_DSN);
-  const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
+  // 已切换为仅使用 3 个 Turso 数据库，Neon 和 Supabase 连接池注释掉
+  // const neonPool = createNeonPool(env.NEON_DSN);
+  // const supabasePgPool = createSupabasePgPool(env.SUPABASE_DSN);
 
   const tursoApexon: DbConfig = {
     name: 'APEXON',
@@ -96,35 +97,36 @@ async function buildShardService(env: Env): Promise<ShardService> {
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon2Client, 'APEXON_2', 450 * 1024 * 1024, used),
   };
 
-  const neon: DbConfig = {
-    name: 'NEON',
-    maxBytes: 450 * 1024 * 1024,
-    type: 'postgres',
-    insert: (data) => neonInsert(neonPool, data),
-    selectByUser: (userId, limit) => neonSelectByUser(neonPool, userId, limit),
-    selectByType: (type, options) => neonSelectByType(neonPool, type, options),
-    selectById: (id) => neonSelectById(neonPool, id),
-    deleteById: (id) => neonDeleteById(neonPool, id),
-    countByType: (type) => neonCountByType(neonPool, type),
-    getMetaUsedBytes: () => neonGetMetaUsedBytes(neonPool, 'NEON'),
-    updateMetaUsedBytes: (used) => neonUpdateMetaUsedBytes(neonPool, 'NEON', 450 * 1024 * 1024, used),
-  };
+  // 已切换为仅使用 3 个 Turso 数据库，Neon 和 Supabase 配置注释掉
+  // const neon: DbConfig = {
+  //   name: 'NEON',
+  //   maxBytes: 450 * 1024 * 1024,
+  //   type: 'postgres',
+  //   insert: (data) => neonInsert(neonPool, data),
+  //   selectByUser: (userId, limit) => neonSelectByUser(neonPool, userId, limit),
+  //   selectByType: (type, options) => neonSelectByType(neonPool, type, options),
+  //   selectById: (id) => neonSelectById(neonPool, id),
+  //   deleteById: (id) => neonDeleteById(neonPool, id),
+  //   countByType: (type) => neonCountByType(neonPool, type),
+  //   getMetaUsedBytes: () => neonGetMetaUsedBytes(neonPool, 'NEON'),
+  //   updateMetaUsedBytes: (used) => neonUpdateMetaUsedBytes(neonPool, 'NEON', 450 * 1024 * 1024, used),
+  // };
+  // const supabasePg: DbConfig = {
+  //   name: 'SUPABASE',
+  //   maxBytes: 450 * 1024 * 1024,
+  //   type: 'postgres',
+  //   insert: (data) => supabasePgInsert(supabasePgPool, data),
+  //   selectByUser: (userId, limit) => supabasePgSelectByUser(supabasePgPool, userId, limit),
+  //   selectByType: (type, options) => supabasePgSelectByType(supabasePgPool, type, options),
+  //   selectById: (id) => supabasePgSelectById(supabasePgPool, id),
+  //   deleteById: (id) => supabasePgDeleteById(supabasePgPool, id),
+  //   countByType: (type) => supabasePgCountByType(supabasePgPool, type),
+  //   getMetaUsedBytes: () => supabasePgGetMetaUsedBytes(supabasePgPool, 'SUPABASE'),
+  //   updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(supabasePgPool, 'SUPABASE', 450 * 1024 * 1024, used),
+  // };
 
-  const supabasePg: DbConfig = {
-    name: 'SUPABASE',
-    maxBytes: 450 * 1024 * 1024,
-    type: 'postgres',
-    insert: (data) => supabasePgInsert(supabasePgPool, data),
-    selectByUser: (userId, limit) => supabasePgSelectByUser(supabasePgPool, userId, limit),
-    selectByType: (type, options) => supabasePgSelectByType(supabasePgPool, type, options),
-    selectById: (id) => supabasePgSelectById(supabasePgPool, id),
-    deleteById: (id) => supabasePgDeleteById(supabasePgPool, id),
-    countByType: (type) => supabasePgCountByType(supabasePgPool, type),
-    getMetaUsedBytes: () => supabasePgGetMetaUsedBytes(supabasePgPool, 'SUPABASE'),
-    updateMetaUsedBytes: (used) => supabasePgUpdateMetaUsedBytes(supabasePgPool, 'SUPABASE', 450 * 1024 * 1024, used),
-  };
-
-  cachedShardService = new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2, neon, supabasePg]);
+  // 仅使用 3 个 Turso 数据库（同厂商，延迟更低）
+  cachedShardService = new ShardService(redis, [tursoApexon, tursoApexon1, tursoApexon2]);
 
   // 同步执行迁移（带超时保护）。
   // 之前是后台异步执行，导致 write() 在迁移完成前就执行，insert 因缺 subtype 列而失败。
@@ -140,8 +142,8 @@ async function buildShardService(env: Env): Promise<ShardService> {
       withMigrateTimeout(tursoMigrate(tursoApexonClient), 'APEXON'),
       withMigrateTimeout(tursoMigrate(tursoApexon1Client), 'APEXON_1'),
       withMigrateTimeout(tursoMigrate(tursoApexon2Client), 'APEXON_2'),
-      withMigrateTimeout(neonMigrate(neonPool), 'NEON'),
-      withMigrateTimeout(supabasePgMigrate(supabasePgPool), 'SUPABASE'),
+      // withMigrateTimeout(neonMigrate(neonPool), 'NEON'),
+      // withMigrateTimeout(supabasePgMigrate(supabasePgPool), 'SUPABASE'),
     ]);
     results.forEach((r, i) => {
       if (r.status === 'rejected') {

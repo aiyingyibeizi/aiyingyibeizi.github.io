@@ -106,17 +106,27 @@ export class ShardService {
     const results = await Promise.allSettled(queries);
     const merged = results
       .filter((r): r is PromiseFulfilledResult<MixedData[]> => r.status === 'fulfilled')
-      .flatMap((r) => r.value)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .flatMap((r) => r.value);
+
+    // 去重：3 个数据库都写入了相同数据，按 id 去重避免重复记录
+    const seen = new Set<string>();
+    const deduped = merged.filter((row) => {
+      if (seen.has(row.id)) return false;
+      seen.add(row.id);
+      return true;
+    });
+
+    // 默认按创建时间倒序
+    deduped.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     if (options.orderByScore === 'asc') {
-      merged.sort((a, b) => (a.score_value ?? Infinity) - (b.score_value ?? Infinity));
+      deduped.sort((a, b) => (a.score_value ?? Infinity) - (b.score_value ?? Infinity));
     } else if (options.orderByScore === 'desc') {
-      merged.sort((a, b) => (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
+      deduped.sort((a, b) => (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
     }
 
     const limit = options.limit;
-    return limit && limit > 0 ? merged.slice(0, limit) : merged;
+    return limit && limit > 0 ? deduped.slice(0, limit) : deduped;
   }
 
   async readByUserAndType(userId: string, type: string, limit = 100): Promise<MixedData[]> {
@@ -158,9 +168,10 @@ export class ShardService {
       }
     });
     const results = await Promise.allSettled(queries);
+    // 3 个数据库数据相同，取最大值（而非求和），避免 3 倍计数
     return results
       .filter((r): r is PromiseFulfilledResult<number> => r.status === 'fulfilled')
-      .reduce((sum, r) => sum + r.value, 0);
+      .reduce((max, r) => Math.max(max, r.value), 0);
   }
 
   async countDistinctUsers(type: string): Promise<number> {
@@ -180,9 +191,10 @@ export class ShardService {
       }
     });
     const results = await Promise.allSettled(queries);
+    // 3 个数据库数据相同，取最大值（而非求和），避免 3 倍计数
     return results
       .filter((r): r is PromiseFulfilledResult<number> => r.status === 'fulfilled')
-      .reduce((sum, r) => sum + r.value, 0);
+      .reduce((max, r) => Math.max(max, r.value), 0);
   }
 
   private estimateSize(data: MixedData): number {

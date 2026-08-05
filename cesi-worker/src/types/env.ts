@@ -1,5 +1,6 @@
 export interface Env {
-  NEON_DSN: string;
+  // NEON_DSN 已注释掉，改为可选（仅使用 3 个 Turso 数据库）
+  NEON_DSN?: string;
 
   TURSO_URL_APEXON: string;
   TURSO_TOKEN_APEXON: string;
@@ -13,8 +14,8 @@ export interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
 
-  // Postgres connection string for Supabase SQL (required by pg).
-  SUPABASE_DSN: string;
+  // Postgres connection string for Supabase SQL (已注释掉，改为可选).
+  SUPABASE_DSN?: string;
 
   UPSTASH_REDIS_URL: string;
   UPSTASH_REDIS_TOKEN: string;
