@@ -106,9 +106,9 @@ function rewriteHtmlFile(srcPath, destPath, replacements) {
 
   const htmlReplacements = [
     // replace common.js references (various relative styles)
-    [ /(<script[^>]*src=[\"'])(?:\\.\\/)?(?:cesi\\/js\\/)?common(?:\\.optimizer)?\\.js([\"'][^>]*><\\/script>)/g, '$1cesi/js/common.bundle.js$2' ],
-    [ /cesi\\/js\\/common\\.js/g, 'cesi/js/common.bundle.js' ],
-    [ /cesi\\/js\\/common\\.optimizer\\.js/g, 'cesi/js/common.bundle.js' ]
+    [ /(<script[^>]*src=["'])(?:\.\/)?(?:cesi\/js\/)?common(?:\.optimizer)?\.js(["'][^>]*><\/script>)/g, '$1cesi/js/common.bundle.js$2' ],
+    [ /cesi\/js\/common\.js/g, 'cesi/js/common.bundle.js' ],
+    [ /cesi\/js\/common\.optimizer\.js/g, 'cesi/js/common.bundle.js' ]
   ];
 
   for (const src of all) {
