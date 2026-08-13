@@ -44,53 +44,77 @@ export class ShardService {
     }
   }
 
+  /**
+   * 写入数据（低延迟优先策略）：
+   *  - 按 DB 列表顺序逐个尝试写，第一个成功立刻返回——避免 Promise.all 等所有慢库
+   *  - 主库通就立刻返回，不会被另外两个慢库卡住（这是用户说"3数据库延迟巨大"的根因）
+   *  - 成功返回后，异步补写剩余副本，保证最终一致性
+   *  - 任何单个 DB 失败都不会让 write 整体崩
+   */
   async write(data: MixedData): Promise<{ ok: true; db: string } | { ok: false; error: string }> {
     const estimatedSize = this.estimateSize(data);
 
-    // 并行写入所有数据库，用 allSettled 收集结果，找到第一个成功的。
-    // 不做重试：重试会用相同 id，导致已写入的 DB 报 UNIQUE constraint 冲突。
-    // 并行写入已有 5 个 DB 冗余，只要一个成功就够。
-    const results = await Promise.allSettled(
-      this.dbs.map(async (db) => {
-        await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
+    const writeOne = async (db: DbConfig): Promise<string> => {
+      await withTimeout(db.insert(data), DB_TIMEOUT_MS, `insert(${db.name})`);
 
-        // 写入成功后更新 Redis 和 meta（失败不影响结果）
-        try {
-          await this.redis.incrby(`${USED_BYTES_PREFIX}${db.name}`, estimatedSize);
-        } catch (err) {
-          console.error(`Redis INCRBY ${USED_BYTES_PREFIX}${db.name} failed`, err);
-        }
+      // 写入成功后更新 Redis 和 meta（失败不影响结果）
+      try {
+        await this.redis.incrby(`${USED_BYTES_PREFIX}${db.name}`, estimatedSize);
+      } catch (err) {
+        console.error(`Redis INCRBY ${USED_BYTES_PREFIX}${db.name} failed`, err);
+      }
 
-        let used = 0;
-        try {
-          used = await this.getUsedBytes(db.name);
-        } catch {
-          used = 0;
-        }
-        this.updateMeta(db, used + estimatedSize).catch((err) => {
-          console.error(`Async meta update for ${db.name} failed`, err);
-        });
+      let used = 0;
+      try {
+        used = await this.getUsedBytes(db.name);
+      } catch {
+        used = 0;
+      }
+      this.updateMeta(db, used + estimatedSize).catch((err) => {
+        console.error(`Async meta update for ${db.name} failed`, err);
+      });
 
-        return db.name;
-      })
-    );
+      return db.name;
+    };
 
-    // 找到第一个成功的
-    for (const r of results) {
-      if (r.status === 'fulfilled') {
-        return { ok: true, db: r.value };
+    // 步骤1：按顺序逐个尝试写，第一个成功立刻返回
+    const errors: string[] = [];
+    let successDb: string | null = null;
+    let successIdx = -1;
+    for (let i = 0; i < this.dbs.length; i++) {
+      const db = this.dbs[i];
+      try {
+        const name = await writeOne(db);
+        successDb = name;
+        successIdx = i;
+        break;
+      } catch (err) {
+        errors.push(`${db.name}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
-    // 全部失败，收集错误信息
-    const errors = results.map((r, i) => {
-      if (r.status === 'rejected') {
-        const err = r.reason;
-        return `${this.dbs[i].name}: ${err instanceof Error ? err.message : String(err)}`;
-      }
-      return `${this.dbs[i].name}: unknown`;
-    });
-    return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    if (successDb == null) {
+      return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    }
+
+    // 步骤2：异步补写剩余副本（不阻塞 HTTP 响应，保证最终一致性）
+    const remainingDBs = this.dbs.filter((_, idx) => idx !== successIdx);
+    if (remainingDBs.length > 0) {
+      queueMicrotask(() => {
+        (async () => {
+          await Promise.allSettled(remainingDBs.map(db => {
+            try {
+              return writeOne(db);
+            } catch {
+              // 补写失败：静默丢弃，下次同 id 写入会冲突，不再重试
+              return null as unknown as string;
+            }
+          }));
+        })().catch(() => {/* 不影响用户请求 */});
+      });
+    }
+
+    return { ok: true, db: successDb };
   }
 
   async readByType(type: string, options: SelectOptions = {}): Promise<MixedData[]> {

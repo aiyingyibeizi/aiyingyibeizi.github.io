@@ -29,22 +29,26 @@ export function createAuthMiddleware(
     }
 
     // 2. Try Supabase Auth JWT (only for tokens that are not anon IDs).
+    //    Fully wrapped in try-catch to silently skip if SUPABASE env vars are missing
+    //    or createClient/getUser throws for any reason — must never crash the middleware.
     try {
-      const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY);
-      const { data, error } = await supabase.auth.getUser(token);
-      if (!error && data.user) {
-        c.set('userId', data.user.id);
-        await next();
-        return;
+      if (c.env.SUPABASE_URL && c.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY);
+        const { data, error } = await supabase.auth.getUser(token);
+        if (!error && data.user) {
+          c.set('userId', data.user.id);
+          await next();
+          return;
+        }
       }
-    } catch (err) {
-      console.error('Supabase auth error:', err);
+    } catch (_err) {
+      // Silently ignore — fall through to custom session token check.
     }
 
     // 3. Fall back to custom session token stored in mixed_data (type='account').
     try {
       const shard = await buildShardService(c.env);
-      const accounts = await shard.readByType('account', { limit: 1000 });
+      const accounts = await shard.readByType('account', { limit: 300 });
       const account = accounts.find((row) => {
         try {
           const payload = JSON.parse(row.payload);

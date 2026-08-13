@@ -185,12 +185,12 @@ app.get('/', (c) => c.text('APEXON Worker is running'));
 app.post('/api/auth/register', async (c) => {
   const { username, password } = await c.req.json<{ username?: string; password?: string }>();
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
-  if (username.length < 3 || username.length > 32) return c.json({ error: 'Username must be 3-32 characters' }, 400);
-  if (password.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
+  if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
+  if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
 
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and check username match
-  const existing = await shard.readByType('account', { limit: 500 });
+  const existing = await shard.readByType('account', { limit: 300 });
   const duplicate = existing.find((r) => {
     try {
       return JSON.parse(r.payload).username === username;
@@ -232,10 +232,12 @@ app.post('/api/auth/register', async (c) => {
 app.post('/api/auth/login', async (c) => {
   const { username, password } = await c.req.json<{ username?: string; password?: string }>();
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
+  if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
+  if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
 
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and find matching username
-  const accounts = await shard.readByType('account', { limit: 500 });
+  const accounts = await shard.readByType('account', { limit: 300 });
   const account = accounts.find((r) => {
     try {
       const p = JSON.parse(r.payload);

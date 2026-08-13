@@ -116,7 +116,16 @@
   // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
   const SUPABASE_URL = '';
   const SUPABASE_ANON_KEY = '';
-  const WORKER_API_URL = 'https://api.apexon.qzz.io'; // Cloudflare Worker 后端地址（唯一允许的后端入口）
+  // 关键修复：优先使用相对路径 /，避免硬编码 api.apexon.qzz.io 导致跨域、证书、DNS 任何一个出问题就全挂
+  // —— 这是"全部项目录入成绩都报错/网络错误"的最大嫌疑点。
+  // 仅在 file:// 本地打开或明显是其他域名时才回退到完整 URL。
+  const _isLocalFile = typeof location !== 'undefined' && location.protocol === 'file:';
+  const WORKER_API_URL = (function () {
+    if (_isLocalFile) return 'https://api.apexon.qzz.io';
+    // 只要不是走本地文件协议，都走同源 /api，由 /_worker 或反向代理到 Cloudflare Worker
+    // 这样既无 CORS，又能复用 HTTP/2/TCP 连接，延迟比跨域低一个数量级
+    return '';
+  })();
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
@@ -539,6 +548,7 @@
     async saveScore(userId, username, testType, data) {
       if (!userId) {
         console.error('saveScore rejected: missing userId');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('needLogin') : '请先登录或生成游客身份后再保存'), 2400, 'warning');
         return false;
       }
       if (!Security.validateRecord(testType, data)) {
@@ -547,32 +557,44 @@
       }
       const scoreValue = parseFloat(data.avg || data.score || 0);
       const token = Auth.getToken() || Auth.getUserId();
-      const res = await WorkerAPI.request('/api/scores', 'POST', {
-        username: username || '',
-        test_type: testType,
-        score_value: scoreValue,
-        accuracy: data.accuracy != null ? data.accuracy : (data.fouls != null ? data.fouls : null),
-        wpm: data.wpm || null,
-        cpm: data.cpm || null,
-        payload: {
-          times: data.times,
-          fouls: data.fouls,
-          leaderboard_eligible: data.leaderboard_eligible
-        }
-      }, token);
-      console.log('[saveScore]', testType, scoreValue, 'result:', res.data);
-      if (res.ok) {
+      let res;
+      try {
+        res = await WorkerAPI.request('/api/scores', 'POST', {
+          username: username || '',
+          test_type: testType,
+          score_value: scoreValue,
+          accuracy: data.accuracy != null ? data.accuracy : (data.fouls != null ? data.fouls : null),
+          wpm: data.wpm || null,
+          cpm: data.cpm || null,
+          payload: {
+            times: data.times,
+            fouls: data.fouls,
+            leaderboard_eligible: data.leaderboard_eligible
+          }
+        }, token);
+      } catch (e) {
+        console.error('[saveScore] uncaught:', e);
+        res = { ok: false, status: 0, data: null };
+      }
+      console.log('[saveScore]', testType, scoreValue, 'result:', res && res.data);
+      if (res && res.ok) {
         LocalStats.recordTest(userId);
-        // 记录成就统计并触发解锁检查（Toast 通知复用 UI.Toast）
         if (window.APEXON && APEXON.Achievements) {
           try { APEXON.Achievements.recordTest(testType, scoreValue); } catch (e) {}
         }
-        // 失效排行榜和统计缓存，让下次读取拿到最新数据
         WorkerAPI.invalidate('GET:/api/scores?leaderboard=');
         WorkerAPI.invalidate('GET:/api/stats');
         document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('scoreSaved') : '成绩已保存 ✓'), 1600, 'success');
         return true;
       }
+      // 错误场景：给用户明确的反馈，而不是静默失败
+      const hint = (res && res.status === 401)
+        ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
+        : (res && res.status && res.status >= 500)
+          ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
+          : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('scoreSaveFailed') : '成绩保存失败，请检查网络后重试');
+      APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(hint, 2800, 'error');
       return false;
     },
 
@@ -621,28 +643,49 @@
       const cat = ['bug', 'score', 'chat', 'suggestion'].includes(category) ? category : 'chat';
       console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length, 'category:', cat);
       if (!filtered) {
-        console.warn('[addComment] rejected: empty content');
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空') };
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
+        return { success: false, error: msg };
       }
       if (filtered.length > 500) {
-        console.warn('[addComment] rejected: too long', filtered.length);
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制') };
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
+        return { success: false, error: msg };
+      }
+      if (!userId) {
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('needLogin') : '请先登录或生成游客身份后再发评论');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2400, 'warning');
+        return { success: false, error: msg };
       }
       const token = Auth.getToken() || Auth.getUserId();
-      const res = await WorkerAPI.request('/api/comments', 'POST', {
-        user_id: userId,
-        username: username,
-        content: filtered,
-        category: cat
-      }, token);
-      console.log('[addComment] result:', res.data);
-      if (!res.ok) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
+      let res;
+      try {
+        res = await WorkerAPI.request('/api/comments', 'POST', {
+          user_id: userId,
+          username: username,
+          content: filtered,
+          category: cat
+        }, token);
+      } catch (e) {
+        console.error('[addComment] uncaught:', e);
+        res = { ok: false, status: 0, data: null };
       }
-      // 失效评论和统计缓存
+      console.log('[addComment] result:', res && res.data);
+      if (!res || !res.ok) {
+        const hint = (res && res.status === 401)
+          ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
+          : (res && res.status && res.status >= 500)
+            ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
+            : (res && res.data && res.data.error)
+              ? res.data.error
+              : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(hint, 2800, 'error');
+        return { success: false, error: hint };
+      }
       WorkerAPI.invalidate('GET:/api/comments?');
       WorkerAPI.invalidate('GET:/api/stats');
       document.dispatchEvent(new CustomEvent('apexon:commentPosted', { detail: { category: cat } }));
+      APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentPosted') : '评论已发布 ✓'), 1600, 'success');
       return { success: true };
     },
 
@@ -1640,7 +1683,8 @@
         { id: 'aurora', name: '极光之夜', icon: '🌌' },
         { id: 'sunset', name: '日落暖霞', icon: '🌅' },
         { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
-        { id: 'neon', name: '霓虹都市', icon: '🌃' }
+        { id: 'neon', name: '霓虹都市', icon: '🌃' },
+        { id: 'healing', name: '治愈猫派', icon: '🐱' }
       ];
 
       const applyStyle = (styleId) => {

@@ -47,6 +47,11 @@ export async function tursoMigrate(client: Client): Promise<void> {
       updated_at TEXT
     )
   `);
+
+  // Create indexes for common query patterns (Bug4: SQL performance)
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_created ON mixed_data(type, created_at DESC)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_user ON mixed_data(type, user_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_user_id ON mixed_data(user_id)`);
 }
 
 export async function tursoInsert(client: Client, data: MixedData): Promise<void> {

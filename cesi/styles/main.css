@@ -7555,3 +7555,257 @@ html[data-bw="true"] .game-canvas {
   color: var(--apex-primary);
 }
 
+/* ============================================================
+   覆盖修复：涟漪动画缩小 + 透明度降低
+   ============================================================ */
+.apex-ripple {
+  background: rgba(255, 255, 255, 0.18) !important;
+  animation-name: apex-ripple-spread-override !important;
+}
+.apex-ripple-wave {
+  opacity: 0.18 !important;
+  animation-name: apex-ripple-anim-override !important;
+}
+@keyframes apex-ripple-spread-override {
+  to { transform: scale(1.6); opacity: 0; }
+}
+@keyframes apex-ripple-anim-override {
+  to { transform: scale(2); opacity: 0; }
+}
+.reaction-click-area.apex-ripple-host .apex-ripple,
+#testBox.reaction-click-area .apex-ripple,
+.reaction-click-area .apex-ripple,
+#testBox.reaction-click-area.apex-ripple-host .apex-ripple-wave,
+.reaction-click-area.apex-ripple-host .apex-ripple-wave {
+  max-width: 220px !important;
+  max-height: 220px !important;
+}
+
+/* ============================================================
+   覆盖修复：反应测试 click-area 方块高度缩小
+   ============================================================ */
+#testBox.reaction-click-area,
+.reaction-click-area {
+  min-height: 240px !important;
+  padding: 16px !important;
+  font-size: clamp(1.1rem, 4vw, 1.7rem) !important;
+  border-radius: 14px !important;
+}
+@media (max-width: 767px) {
+  #testBox.reaction-click-area,
+  .reaction-click-area {
+    min-height: 180px !important;
+    padding: 12px !important;
+    font-size: clamp(0.95rem, 4.5vw, 1.2rem) !important;
+  }
+}
+
+/* ============================================================
+   基础：body 需要 relative 以承载 fixed 背景层
+   ============================================================ */
+body {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   修复6：降低全局昏暗感 - 默认亮色基础提亮
+   ============================================================ */
+:root {
+  --apex-bg: #FAFBFC;
+}
+
+/* ============================================================
+   修复3：治愈派(healing) = 写实小猫 AI 图背景
+   ============================================================ */
+html[data-style="healing"] {
+  --apex-bg: #FFF8F0;
+  --apex-surface: rgba(255,248,240,0.92);
+  --apex-primary: #F59E0B;
+  --apex-primary-rgb: 245, 158, 11;
+  --apex-text: #422006;
+  --apex-text-secondary: #78350F;
+  --apex-border-subtle: rgba(245,158,11,0.18);
+  --apex-card-bg: rgba(255,255,255,0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(245,158,11,0.12);
+}
+html[data-style="healing"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/healing-cat.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.32;
+  filter: saturate(1.1) brightness(1.02);
+}
+html[data-style="healing"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255,248,240,0.55) 0%, rgba(255,248,240,0.92) 100%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   修复4：二次元风格(anime) = 美少女 AI 插画背景
+   ============================================================ */
+html[data-style="anime"] {
+  --apex-bg: #FDF4FF;
+  --apex-surface: rgba(253,244,255,0.90);
+  --apex-primary: #C084FC;
+  --apex-primary-rgb: 192, 132, 252;
+  --apex-accent: #F472B6;
+  --apex-text: #3B0764;
+  --apex-text-secondary: #6B21A8;
+  --apex-border-subtle: rgba(192,132,252,0.22);
+  --apex-card-bg: rgba(255,255,255,0.88);
+  --apex-radius: 18px;
+  --apex-shadow-md: 0 8px 24px rgba(192,132,252,0.16);
+}
+html[data-style="anime"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/anime-girl.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  filter: saturate(1.05);
+}
+html[data-style="anime"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(253,244,255,0.55) 0%, rgba(253,244,255,0.92) 100%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   修复5：极光之夜(aurora) + 赛博朋克(cyberpunk) 升级
+   ============================================================ */
+html[data-style="aurora"] {
+  --apex-bg: #0A0E1A;
+  --apex-surface: rgba(15,23,42,0.88);
+  --apex-primary: #22D3EE;
+  --apex-primary-rgb: 34, 211, 238;
+  --apex-accent: #A78BFA;
+  --apex-text: #E0F2FE;
+  --apex-text-secondary: #BAE6FD;
+  --apex-border-subtle: rgba(34,211,238,0.22);
+  --apex-card-bg: rgba(15,23,42,0.82);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(34,211,238,0.18);
+}
+html[data-style="aurora"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/aurora.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.55;
+}
+html[data-style="aurora"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(10,14,26,0.35) 0%, rgba(10,14,26,0.88) 100%);
+  pointer-events: none;
+}
+html[data-style="aurora"] {
+  text-shadow: 0 0 8px rgba(34,211,238,0.35);
+}
+html[data-style="aurora"] h1,
+html[data-style="aurora"] h2,
+html[data-style="aurora"] h3,
+html[data-style="aurora"] .apex-primary-text {
+  text-shadow: 0 0 12px rgba(34,211,238,0.45), 0 0 24px rgba(167,139,250,0.25);
+}
+
+html[data-style="cyberpunk"] {
+  --apex-bg: #070012;
+  --apex-surface: rgba(12,0,30,0.90);
+  --apex-primary: #E879F9;
+  --apex-primary-rgb: 232, 121, 249;
+  --apex-accent: #22D3EE;
+  --apex-text: #F0ABFC;
+  --apex-text-secondary: #E879F9;
+  --apex-border-subtle: rgba(232,121,249,0.28);
+  --apex-card-bg: rgba(12,0,30,0.85);
+  --apex-radius: 12px;
+  --apex-shadow-md: 0 8px 30px rgba(232,121,249,0.22);
+}
+html[data-style="cyberpunk"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/cyberpunk.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+}
+html[data-style="cyberpunk"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(7,0,18,0.45) 0%, rgba(7,0,18,0.90) 100%);
+  pointer-events: none;
+}
+html[data-style="cyberpunk"] {
+  text-shadow: 0 0 6px rgba(232,121,249,0.35);
+}
+html[data-style="cyberpunk"] h1,
+html[data-style="cyberpunk"] h2,
+html[data-style="cyberpunk"] h3,
+html[data-style="cyberpunk"] .apex-primary-text {
+  text-shadow:
+    0 0 10px rgba(232,121,249,0.55),
+    0 0 20px rgba(34,211,238,0.35),
+    0 0 40px rgba(232,121,249,0.25);
+}
+
+/* ============================================================
+   修复7：手机端布局最简化
+   ============================================================ */
+@media (max-width: 767px) {
+  .apex-container, .container, main {
+    padding: 10px 12px !important;
+  }
+  .card, .item-card, .apex-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .btn {
+    min-height: 42px;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+  }
+  .score-grade {
+    font-size: clamp(2rem, 10vw, 2.75rem) !important;
+  }
+  .score-card {
+    padding: 16px 14px !important;
+  }
+  .apex-style-panel {
+    max-width: calc(100vw - 32px);
+  }
+  .apex-style-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
