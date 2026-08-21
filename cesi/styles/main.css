@@ -4613,6 +4613,21 @@ canvas#testBox,
 .apex-style-item[data-style="sakura"] .apex-style-item__preview { background: linear-gradient(135deg, #1a0812, #f9a8d4); }
 .apex-style-item[data-style="neon"] .apex-style-item__preview { background: linear-gradient(135deg, #050505, #f43f5e, #06b6d4); }
 
+/* 风格预览升级：真实背景图缩略图（直观所见即所得） */
+.apex-style-item[data-style="healing"] .apex-style-item__preview { background: url("../assets/styles/healing-cat.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="anime"] .apex-style-item__preview { background: url("../assets/styles/anime-girl.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="aurora"] .apex-style-item__preview { background: url("../assets/styles/aurora.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="cyberpunk"] .apex-style-item__preview { background: url("../assets/styles/cyberpunk.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="scifi"] .apex-style-item__preview { background: url("../assets/styles/scifi.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="forest"] .apex-style-item__preview { background: url("../assets/styles/forest.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="starry"] .apex-style-item__preview { background: url("../assets/styles/starry.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="minimal"] .apex-style-item__preview { background: url("../assets/styles/minimal.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="ocean"] .apex-style-item__preview { background: url("../assets/styles/ocean.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="desert"] .apex-style-item__preview { background: url("../assets/styles/desert.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="sunset"] .apex-style-item__preview { background: url("../assets/styles/sunset.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="sakura"] .apex-style-item__preview { background: url("../assets/styles/sakura.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="neon"] .apex-style-item__preview { background: url("../assets/styles/neon.jpg?v=1") center/cover no-repeat; }
+
 /* 风格切换全局过渡 */
 html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
   transition: background 400ms ease, background-color 400ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
@@ -7636,7 +7651,7 @@ html[data-style="healing"] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image: url("../assets/styles/healing-cat.jpg");
+  background-image: url("../assets/styles/healing-cat.jpg?v=2");
   background-size: cover;
   background-position: center;
   opacity: 0.32;
@@ -7673,7 +7688,7 @@ html[data-style="anime"] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image: url("../assets/styles/anime-girl.jpg");
+  background-image: url("../assets/styles/anime-girl.jpg?v=2");
   background-size: cover;
   background-position: center;
   opacity: 0.22;
@@ -7710,7 +7725,7 @@ html[data-style="aurora"] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image: url("../assets/styles/aurora.jpg");
+  background-image: url("../assets/styles/aurora.jpg?v=2");
   background-size: cover;
   background-position: center;
   opacity: 0.55;
@@ -7752,7 +7767,7 @@ html[data-style="cyberpunk"] body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image: url("../assets/styles/cyberpunk.jpg");
+  background-image: url("../assets/styles/cyberpunk.jpg?v=2");
   background-size: cover;
   background-position: center;
   opacity: 0.5;
@@ -7807,5 +7822,484 @@ html[data-style="cyberpunk"] .apex-primary-text {
   .apex-style-grid {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+}
+
+/* ============================================================
+   修复8：风格系统按钮可读性 + 导航栏协调
+   ------------------------------------------------------------
+   问题1：风格只覆盖了亮色 primary，未覆盖 text-inverse，
+          light 主题下白字配亮橙/亮紫/亮青底 → 字看不见
+   问题2：.apexon-header 写死深黑底，亮色风格下导航栏反差刺眼
+   问题3：.btn 阴影写死紫色，与风格主色冲突
+   ============================================================ */
+
+/* ---- 已有 4 风格补齐按钮三件套（inverse/dark/light） ---- */
+html[data-style="healing"] {
+  --apex-primary-dark: #D97706;
+  --apex-primary-light: #FBBF24;
+  --apex-text-inverse: #431407;
+}
+html[data-style="anime"] {
+  --apex-primary-dark: #A855F7;
+  --apex-primary-light: #E9D5FF;
+  --apex-text-inverse: #2E1065;
+}
+html[data-style="aurora"] {
+  --apex-primary-dark: #0EA5E9;
+  --apex-primary-light: #67E8F9;
+  --apex-text-inverse: #042F2E;
+}
+html[data-style="cyberpunk"] {
+  --apex-primary-dark: #D946EF;
+  --apex-primary-light: #F5D0FE;
+  --apex-text-inverse: #2E1065;
+}
+
+/* ---- 亮色风格组：导航栏变亮（白底 + 风格色边框） ---- */
+html[data-style="healing"] .apexon-header,
+html[data-style="anime"] .apexon-header,
+html[data-style="forest"] .apexon-header,
+html[data-style="minimal"] .apexon-header,
+html[data-style="desert"] .apexon-header,
+html[data-style="sunset"] .apexon-header,
+html[data-style="sakura"] .apexon-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--apex-border-subtle);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* 亮色风格组：登录区胶囊变白底 */
+html[data-style="healing"] .header-user-wrap,
+html[data-style="anime"] .header-user-wrap,
+html[data-style="forest"] .header-user-wrap,
+html[data-style="minimal"] .header-user-wrap,
+html[data-style="desert"] .header-user-wrap,
+html[data-style="sunset"] .header-user-wrap,
+html[data-style="sakura"] .header-user-wrap {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--apex-border-subtle);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.05);
+}
+html[data-style="healing"] .header-user-wrap:hover,
+html[data-style="anime"] .header-user-wrap:hover,
+html[data-style="forest"] .header-user-wrap:hover,
+html[data-style="minimal"] .header-user-wrap:hover,
+html[data-style="desert"] .header-user-wrap:hover,
+html[data-style="sunset"] .header-user-wrap:hover,
+html[data-style="sakura"] .header-user-wrap:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--apex-border);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.09);
+}
+
+/* 亮色风格组：用户名深色 + logo 去掉写死的紫青辉光 */
+html[data-style="healing"] .header-user-name,
+html[data-style="anime"] .header-user-name,
+html[data-style="forest"] .header-user-name,
+html[data-style="minimal"] .header-user-name,
+html[data-style="desert"] .header-user-name,
+html[data-style="sunset"] .header-user-name,
+html[data-style="sakura"] .header-user-name {
+  color: var(--apex-text-secondary);
+  text-shadow: none;
+}
+html[data-style="healing"] .apexon-header-logo span,
+html[data-style="anime"] .apexon-header-logo span,
+html[data-style="forest"] .apexon-header-logo span,
+html[data-style="minimal"] .apexon-header-logo span,
+html[data-style="desert"] .apexon-header-logo span,
+html[data-style="sunset"] .apexon-header-logo span,
+html[data-style="sakura"] .apexon-header-logo span {
+  filter: none;
+}
+
+/* 亮色风格组：按钮阴影从写死紫色改为中性 */
+html[data-style="healing"] .btn,
+html[data-style="anime"] .btn,
+html[data-style="forest"] .btn,
+html[data-style="minimal"] .btn,
+html[data-style="desert"] .btn,
+html[data-style="sunset"] .btn,
+html[data-style="sakura"] .btn {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+}
+html[data-style="healing"] .btn:hover,
+html[data-style="anime"] .btn:hover,
+html[data-style="forest"] .btn:hover,
+html[data-style="minimal"] .btn:hover,
+html[data-style="desert"] .btn:hover,
+html[data-style="sunset"] .btn:hover,
+html[data-style="sakura"] .btn:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+/* ---- 深色风格组：导航栏换成各自色调 ---- */
+html[data-style="scifi"] .apexon-header {
+  background: rgba(7, 11, 24, 0.85);
+  border-bottom: 1px solid rgba(96, 165, 250, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="starry"] .apexon-header {
+  background: rgba(11, 16, 38, 0.85);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.16);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="ocean"] .apexon-header {
+  background: rgba(8, 47, 73, 0.85);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.20);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+html[data-style="neon"] .apexon-header {
+  background: rgba(15, 10, 30, 0.88);
+  border-bottom: 1px solid rgba(244, 114, 182, 0.22);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+html[data-style="aurora"] .apexon-header {
+  background: rgba(10, 14, 26, 0.85);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="cyberpunk"] .apexon-header {
+  background: rgba(12, 0, 30, 0.88);
+  border-bottom: 1px solid rgba(232, 121, 249, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   修复9：补齐其余 9 个风格的完整视觉系统（此前选了毫无效果）
+   每个风格：全套变量 + AI 背景图 + 渐变遮罩
+   ============================================================ */
+
+/* ---- 科幻深空 scifi ---- */
+html[data-style="scifi"] {
+  --apex-bg: #070B18;
+  --apex-surface: rgba(15, 23, 42, 0.88);
+  --apex-primary: #60A5FA;
+  --apex-primary-rgb: 96, 165, 250;
+  --apex-primary-dark: #3B82F6;
+  --apex-primary-light: #93C5FD;
+  --apex-accent: #A78BFA;
+  --apex-text: #DBEAFE;
+  --apex-text-secondary: #93A8CC;
+  --apex-text-inverse: #0B1B3A;
+  --apex-border-subtle: rgba(96, 165, 250, 0.20);
+  --apex-card-bg: rgba(15, 23, 42, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(3, 7, 18, 0.55);
+}
+html[data-style="scifi"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/scifi.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+}
+html[data-style="scifi"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(7, 11, 24, 0.40) 0%, rgba(7, 11, 24, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 翡翠森林 forest（亮色治愈） ---- */
+html[data-style="forest"] {
+  --apex-bg: #F0FDF4;
+  --apex-surface: rgba(240, 253, 244, 0.92);
+  --apex-primary: #16A34A;
+  --apex-primary-rgb: 22, 163, 74;
+  --apex-primary-dark: #15803D;
+  --apex-primary-light: #4ADE80;
+  --apex-accent: #0D9488;
+  --apex-text: #14532D;
+  --apex-text-secondary: #166534;
+  --apex-text-inverse: #052E16;
+  --apex-border-subtle: rgba(22, 163, 74, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(22, 163, 74, 0.12);
+}
+html[data-style="forest"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/forest.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="forest"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.50) 0%, rgba(240, 253, 244, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 璀璨星空 starry ---- */
+html[data-style="starry"] {
+  --apex-bg: #0B1026;
+  --apex-surface: rgba(17, 24, 52, 0.88);
+  --apex-primary: #FBBF24;
+  --apex-primary-rgb: 251, 191, 36;
+  --apex-primary-dark: #F59E0B;
+  --apex-primary-light: #FDE68A;
+  --apex-accent: #818CF8;
+  --apex-text: #E0E7FF;
+  --apex-text-secondary: #A5B4FC;
+  --apex-text-inverse: #422006;
+  --apex-border-subtle: rgba(251, 191, 36, 0.18);
+  --apex-card-bg: rgba(17, 24, 52, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(5, 8, 20, 0.55);
+}
+html[data-style="starry"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/starry.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+}
+html[data-style="starry"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(11, 16, 38, 0.35) 0%, rgba(11, 16, 38, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 极简纯白 minimal（亮色） ---- */
+html[data-style="minimal"] {
+  --apex-bg: #FFFFFF;
+  --apex-surface: rgba(255, 255, 255, 0.95);
+  --apex-primary: #111827;
+  --apex-primary-rgb: 17, 24, 39;
+  --apex-primary-dark: #000000;
+  --apex-primary-light: #4B5563;
+  --apex-accent: #6B7280;
+  --apex-text: #111827;
+  --apex-text-secondary: #4B5563;
+  --apex-text-inverse: #FFFFFF;
+  --apex-border-subtle: rgba(17, 24, 39, 0.10);
+  --apex-card-bg: rgba(255, 255, 255, 0.94);
+  --apex-radius: 12px;
+  --apex-shadow-md: 0 6px 20px rgba(17, 24, 39, 0.07);
+}
+html[data-style="minimal"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/minimal.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+}
+html[data-style="minimal"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.95) 100%);
+  pointer-events: none;
+}
+
+/* ---- 深海幽蓝 ocean ---- */
+html[data-style="ocean"] {
+  --apex-bg: #082F49;
+  --apex-surface: rgba(8, 47, 73, 0.88);
+  --apex-primary: #38BDF8;
+  --apex-primary-rgb: 56, 189, 248;
+  --apex-primary-dark: #0EA5E9;
+  --apex-primary-light: #7DD3FC;
+  --apex-accent: #2DD4BF;
+  --apex-text: #E0F2FE;
+  --apex-text-secondary: #BAE6FD;
+  --apex-text-inverse: #082F49;
+  --apex-border-subtle: rgba(56, 189, 248, 0.22);
+  --apex-card-bg: rgba(8, 47, 73, 0.85);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 8px 28px rgba(2, 20, 35, 0.55);
+}
+html[data-style="ocean"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/ocean.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.50;
+}
+html[data-style="ocean"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(8, 47, 73, 0.35) 0%, rgba(8, 47, 73, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 暖金沙漠 desert（亮色） ---- */
+html[data-style="desert"] {
+  --apex-bg: #FFFBEB;
+  --apex-surface: rgba(255, 251, 235, 0.92);
+  --apex-primary: #D97706;
+  --apex-primary-rgb: 217, 119, 6;
+  --apex-primary-dark: #B45309;
+  --apex-primary-light: #FBBF24;
+  --apex-accent: #EA580C;
+  --apex-text: #451A03;
+  --apex-text-secondary: #78350F;
+  --apex-text-inverse: #451A03;
+  --apex-border-subtle: rgba(217, 119, 6, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(217, 119, 6, 0.12);
+}
+html[data-style="desert"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/desert.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="desert"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.50) 0%, rgba(255, 251, 235, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 日落暖霞 sunset（亮色） ---- */
+html[data-style="sunset"] {
+  --apex-bg: #FFF7ED;
+  --apex-surface: rgba(255, 247, 237, 0.92);
+  --apex-primary: #EA580C;
+  --apex-primary-rgb: 234, 88, 12;
+  --apex-primary-dark: #C2410C;
+  --apex-primary-light: #FB923C;
+  --apex-accent: #DB2777;
+  --apex-text: #431407;
+  --apex-text-secondary: #7C2D12;
+  --apex-text-inverse: #431407;
+  --apex-border-subtle: rgba(234, 88, 12, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(234, 88, 12, 0.12);
+}
+html[data-style="sunset"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/sunset.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="sunset"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 247, 237, 0.50) 0%, rgba(255, 247, 237, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 樱花烂漫 sakura（亮色） ---- */
+html[data-style="sakura"] {
+  --apex-bg: #FDF2F8;
+  --apex-surface: rgba(253, 242, 248, 0.92);
+  --apex-primary: #DB2777;
+  --apex-primary-rgb: 219, 39, 119;
+  --apex-primary-dark: #BE185D;
+  --apex-primary-light: #F472B6;
+  --apex-accent: #C084FC;
+  --apex-text: #500724;
+  --apex-text-secondary: #9D174D;
+  --apex-text-inverse: #500724;
+  --apex-border-subtle: rgba(219, 39, 119, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 18px;
+  --apex-shadow-md: 0 6px 20px rgba(219, 39, 119, 0.12);
+}
+html[data-style="sakura"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/sakura.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+}
+html[data-style="sakura"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(253, 242, 248, 0.50) 0%, rgba(253, 242, 248, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 霓虹都市 neon ---- */
+html[data-style="neon"] {
+  --apex-bg: #0F0A1E;
+  --apex-surface: rgba(20, 14, 40, 0.88);
+  --apex-primary: #F472B6;
+  --apex-primary-rgb: 244, 114, 182;
+  --apex-primary-dark: #EC4899;
+  --apex-primary-light: #F9A8D4;
+  --apex-accent: #818CF8;
+  --apex-text: #F3E8FF;
+  --apex-text-secondary: #D8B4FE;
+  --apex-text-inverse: #4A044E;
+  --apex-border-subtle: rgba(244, 114, 182, 0.22);
+  --apex-card-bg: rgba(20, 14, 40, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(10, 5, 25, 0.55);
+}
+html[data-style="neon"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/neon.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+}
+html[data-style="neon"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(15, 10, 30, 0.40) 0%, rgba(15, 10, 30, 0.88) 100%);
+  pointer-events: none;
 }
 
