@@ -19,4 +19,7 @@ export interface Env {
 
   UPSTASH_REDIS_URL: string;
   UPSTASH_REDIS_TOKEN: string;
+
+  // 管理接口（/api/admin/*）的访问令牌；未配置时管理接口直接禁用
+  ADMIN_TOKEN?: string;
 }

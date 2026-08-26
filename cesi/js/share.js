@@ -24,12 +24,19 @@
       box.className = 'apex-share-modal__box';
       box.style.position = 'relative';
 
+      // 统一关闭函数：移除模态框的同时清理 keydown 监听，防止监听器累积泄漏
+      let onKey = null;
+      const close = () => {
+        modal.remove();
+        if (onKey) document.removeEventListener('keydown', onKey);
+      };
+
       // 关闭按钮
       const closeBtn = document.createElement('button');
       closeBtn.className = 'apex-share-modal__close';
       closeBtn.setAttribute('aria-label', '关闭');
       closeBtn.textContent = '×';
-      closeBtn.addEventListener('click', () => modal.remove());
+      closeBtn.addEventListener('click', close);
 
       // 标题
       const title = document.createElement('h3');
@@ -65,14 +72,11 @@
 
       // 点击遮罩关闭
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
+        if (e.target === modal) close();
       });
       // Esc 关闭
-      const onKey = (e) => {
-        if (e.key === 'Escape') {
-          modal.remove();
-          document.removeEventListener('keydown', onKey);
-        }
+      onKey = (e) => {
+        if (e.key === 'Escape') close();
       };
       document.addEventListener('keydown', onKey);
 

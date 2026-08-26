@@ -579,6 +579,12 @@
       console.log('[saveScore]', testType, scoreValue, 'result:', res && res.data);
       if (res && res.ok) {
         LocalStats.recordTest(userId);
+        // 统一维护分享卡片所需的全局成绩数据（所有测试页共用，避免各页遗漏赋值导致分享卡片恒为 0 分）
+        try {
+          window.lastScore = scoreValue;
+          const g = APEXON.Utils && APEXON.Utils.getGrade ? APEXON.Utils.getGrade(scoreValue, testType) : null;
+          if (g) { window.lastGrade = g.grade; window.lastGradeColor = g.color; }
+        } catch (e) {}
         if (window.APEXON && APEXON.Achievements) {
           try { APEXON.Achievements.recordTest(testType, scoreValue); } catch (e) {}
         }

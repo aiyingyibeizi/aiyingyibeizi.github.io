@@ -47,10 +47,11 @@
       stats.completedTypes[testType] = (stats.completedTypes[testType] || 0) + 1;
       stats.uniqueTypes = Object.keys(stats.completedTypes).length;
 
-      // 更新最佳成绩
-      if (testType === 'reaction' || testType === 'aim') {
-        if (stats.bestReaction === null || (testType === 'reaction' && score < stats.bestReaction)) stats.bestReaction = score;
-        if (stats.bestAim === null || (testType === 'aim' && score < stats.bestAim)) stats.bestAim = score;
+      // 更新最佳成绩（按测试类型分别记录，避免串分：没玩过瞄准不会因反应成绩解锁神枪手成就）
+      if (testType === 'reaction') {
+        if (stats.bestReaction === null || score < stats.bestReaction) stats.bestReaction = score;
+      } else if (testType === 'aim') {
+        if (stats.bestAim === null || score < stats.bestAim) stats.bestAim = score;
       } else if (testType === 'number') {
         if (stats.bestNumber === null || score > stats.bestNumber) stats.bestNumber = score;
       }
