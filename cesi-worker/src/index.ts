@@ -2,13 +2,13 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { Redis } from '@upstash/redis/cloudflare';
 import { createRedis } from './db/redis';
-import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
+import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectLeaderboard, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
 // 已切换为仅使用 3 个 Turso 数据库（同厂商，延迟更低），Neon 和 Supabase 暂时注释掉
 // import { createClient } from '@supabase/supabase-js';
 // import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
 // import { createSupabasePgPool, supabasePgMigrate, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
 import { ShardService } from './services/shard';
-import { createAuthMiddleware } from './services/auth';
+import { createAuthMiddleware, cacheSession } from './services/auth';
 import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword } from './utils/password';
 import type { Env } from './types/env';
@@ -65,6 +65,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectById: (id) => tursoSelectById(tursoApexonClient, id),
     deleteById: (id) => tursoDeleteById(tursoApexonClient, id),
     countByType: (type) => tursoCountByType(tursoApexonClient, type),
+    selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexonClient, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexonClient, 'APEXON'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexonClient, 'APEXON', 450 * 1024 * 1024, used),
   };
@@ -79,6 +80,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectById: (id) => tursoSelectById(tursoApexon1Client, id),
     deleteById: (id) => tursoDeleteById(tursoApexon1Client, id),
     countByType: (type) => tursoCountByType(tursoApexon1Client, type),
+    selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon1Client, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon1Client, 'APEXON_1'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon1Client, 'APEXON_1', 450 * 1024 * 1024, used),
   };
@@ -93,6 +95,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectById: (id) => tursoSelectById(tursoApexon2Client, id),
     deleteById: (id) => tursoDeleteById(tursoApexon2Client, id),
     countByType: (type) => tursoCountByType(tursoApexon2Client, type),
+    selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon2Client, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon2Client, 'APEXON_2'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon2Client, 'APEXON_2', 450 * 1024 * 1024, used),
   };
@@ -190,7 +193,7 @@ app.post('/api/auth/register', async (c) => {
 
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and check username match
-  const existing = await shard.readByType('account', { limit: 300 });
+  const existing = await shard.readByType('account', { limit: 1000 });
   const duplicate = existing.find((r) => {
     try {
       return JSON.parse(r.payload).username === username;
@@ -224,7 +227,10 @@ app.post('/api/auth/register', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+
+  // 登录/注册成功后立即写入 Redis 会话缓存，后续请求不再扫库
+  await cacheSession(getRedis(c.env), sessionToken, userId, expiresAt);
 
   return c.json({ user_id: userId, username, token: sessionToken, expires_at: expiresAt });
 });
@@ -237,7 +243,7 @@ app.post('/api/auth/login', async (c) => {
 
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and find matching username
-  const accounts = await shard.readByType('account', { limit: 300 });
+  const accounts = await shard.readByType('account', { limit: 1000 });
   const account = accounts.find((r) => {
     try {
       const p = JSON.parse(r.payload);
@@ -280,15 +286,18 @@ app.post('/api/auth/login', async (c) => {
     file_url: null,
     created_at: account.created_at,
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
 
   if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
   await shard.deleteById(account.id);
 
+  // 登录成功后写入 Redis 会话缓存
+  await cacheSession(getRedis(c.env), sessionToken, account.user_id, expiresAt);
+
   return c.json({ user_id: account.user_id, username, token: sessionToken, expires_at: expiresAt });
 });
 
-app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService), async (c) => {
+app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedis), async (c) => {
   const userId = c.get('userId');
   const { anon_id } = await c.req.json<{ anon_id?: string }>();
   if (!anon_id || !anon_id.startsWith('anon_')) return c.json({ error: 'Invalid anon_id' }, 400);
@@ -296,7 +305,7 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService), async 
   const shard = await buildShardService(c.env);
   const anonScores = await shard.readByUserAndType(anon_id, 'score', 1000);
   for (const row of anonScores) {
-    await shard.write({ ...row, id: uuid(), user_id: userId, updated_at: new Date().toISOString() });
+    await shard.write({ ...row, id: uuid(), user_id: userId, updated_at: new Date().toISOString() }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
   }
 
   return c.json({ merged: anonScores.length });
@@ -321,7 +330,7 @@ app.post('/api/feedback', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
   if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
   return c.json({ ok: true });
 });
@@ -379,7 +388,7 @@ app.get('/api/stats', async (c) => {
 });
 
 // Protected API routes.
-app.use('/api/*', createAuthMiddleware(buildShardService));
+app.use('/api/*', createAuthMiddleware(buildShardService, getRedis));
 
 type FlatScore = {
   id: string;
@@ -431,36 +440,42 @@ app.get('/api/scores', async (c) => {
     }
 
     const order = LOWER_IS_BETTER.has(testType) ? 'asc' : 'desc';
-    const rows = await shard.readByType('score', { subtype: testType, limit: 1000, orderByScore: order });
 
-    // Filter out scores that are explicitly not leaderboard-eligible (e.g. reaction with 3+ fouls).
-    const eligibleRows = rows.filter((r) => {
-      try {
-        const payload = JSON.parse(r.payload);
-        return payload.leaderboardEligible !== false;
-      } catch {
-        return true;
-      }
-    });
+    // 优先使用数据库端排行榜聚合（每用户最佳成绩，SQL ROW_NUMBER + leaderboardEligible 过滤）
+    // 返回 null 时回退到旧的 readByType + 内存去重路径
+    const lbLimit = Math.min(Math.max(limit, 1), 1000);
+    let bestRows: MixedData[] | null = await shard.readLeaderboard(testType, order, lbLimit);
 
-    const bestByUser = new Map<string, MixedData>();
-    for (const row of eligibleRows) {
-      const existing = bestByUser.get(row.user_id);
-      if (!existing) {
-        bestByUser.set(row.user_id, row);
-        continue;
+    if (!bestRows) {
+      // 回退：DB 不支持 selectLeaderboard 时走旧路径
+      const rows = await shard.readByType('score', { subtype: testType, limit: 1000, orderByScore: order });
+      const eligibleRows = rows.filter((r) => {
+        try {
+          const payload = JSON.parse(r.payload);
+          return payload.leaderboardEligible !== false;
+        } catch {
+          return true;
+        }
+      });
+      const bestByUser = new Map<string, MixedData>();
+      for (const row of eligibleRows) {
+        const existing = bestByUser.get(row.user_id);
+        if (!existing) {
+          bestByUser.set(row.user_id, row);
+          continue;
+        }
+        const isBetter = LOWER_IS_BETTER.has(testType)
+          ? (row.score_value ?? Infinity) < (existing.score_value ?? Infinity)
+          : (row.score_value ?? -Infinity) > (existing.score_value ?? -Infinity);
+        if (isBetter) bestByUser.set(row.user_id, row);
       }
-      const isBetter = LOWER_IS_BETTER.has(testType)
-        ? (row.score_value ?? Infinity) < (existing.score_value ?? Infinity)
-        : (row.score_value ?? -Infinity) > (existing.score_value ?? -Infinity);
-      if (isBetter) bestByUser.set(row.user_id, row);
+      bestRows = Array.from(bestByUser.values());
+      bestRows.sort((a, b) => LOWER_IS_BETTER.has(testType)
+        ? (a.score_value ?? Infinity) - (b.score_value ?? Infinity)
+        : (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
+      bestRows = bestRows.slice(0, lbLimit);
     }
 
-    let bestRows = Array.from(bestByUser.values());
-    bestRows.sort((a, b) => LOWER_IS_BETTER.has(testType)
-      ? (a.score_value ?? Infinity) - (b.score_value ?? Infinity)
-      : (b.score_value ?? -Infinity) - (a.score_value ?? -Infinity));
-    bestRows = bestRows.slice(0, Math.min(Math.max(limit, 1), 1000));
     const body = { data: bestRows.map(flattenScore) };
     try {
       await redis.set(lbCacheKey, body, { ex: 30 });
@@ -495,7 +510,11 @@ app.post('/api/scores', async (c) => {
 
   const scoreValue = body.score_value != null ? Number(body.score_value) : null;
   const payload = body.payload || {};
-  if (body.leaderboard_eligible === false) payload.leaderboardEligible = false;
+  // 前端在 payload.leaderboard_eligible 里传该标记（snake_case），
+  // 也兼容直接在顶层传 body.leaderboard_eligible 的情况
+  if (payload.leaderboard_eligible === false || body.leaderboard_eligible === false) {
+    payload.leaderboardEligible = false;
+  }
 
   const shard = await buildShardService(c.env);
   const result = await shard.write({
@@ -516,7 +535,7 @@ app.post('/api/scores', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
   const redis = getRedis(c.env);
@@ -588,7 +607,7 @@ app.post('/api/comments', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
   const redis = getRedis(c.env);
@@ -677,7 +696,7 @@ app.post('/api/profiles', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
 
   if (!result.ok) return c.json({ error: result.error }, 503);
 
@@ -714,7 +733,7 @@ app.post('/api/profiles/username', async (c) => {
         updated_at: new Date().toISOString(),
       }),
       updated_at: new Date().toISOString(),
-    });
+    }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
     if (!result.ok) return c.json({ success: false, error: result.error }, 503);
   }
   return c.json({ success: true, username: newUsername });
@@ -739,7 +758,7 @@ app.post('/api/online_users', async (c) => {
       file_url: null,
       created_at: lastSeen,
       updated_at: lastSeen,
-    });
+    }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
     if (!result.ok) {
       console.warn('online_users write failed:', result.error);
       // 返回 200 而非 503，避免前端报错
@@ -773,7 +792,7 @@ app.post('/api/users', async (c) => {
     file_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
   if (!result.ok) return c.json({ ok: false, error: result.error }, 503);
   return c.json({ ok: true, db: result.db });
 });
@@ -797,7 +816,7 @@ app.post('/api/upload', async (c) => {
     file_url: fileUrl,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
 
   return c.json({ ok: true, url: fileUrl });
 });

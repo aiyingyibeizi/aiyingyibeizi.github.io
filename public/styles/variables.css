@@ -1044,6 +1044,41 @@ html[data-theme="light"] {
   --style-particles: #f9a8d4,#fbcfe8,#ec4899,#f472b6,#fce7f3,#fdf2f8;
 }
 
+/* 风格：治愈暖阳 (healing) - 奶油底 + 暖橙（与 main.css 的治愈派小猫背景配套） */
+:root[data-style="healing"] {
+  --apex-bg: #FFF8F0;
+  --apex-bg-elevated: #FFFDF9;
+  --apex-surface: rgba(255, 248, 240, 0.92);
+  --apex-surface-elevated: rgba(255, 255, 255, 0.95);
+  --apex-primary: #F59E0B;
+  --apex-primary-dark: #D97706;
+  --apex-primary-light: #FBBF24;
+  --apex-accent-cyan: #F59E0B;
+  --apex-accent-purple: #FBBF24;
+  --apex-text: #422006;
+  --apex-text-secondary: #78350F;
+  --apex-text-tertiary: #92400E;
+  --apex-text-inverse: #431407;
+  --apex-border: rgba(245, 158, 11, 0.18);
+  --apex-border-strong: rgba(217, 119, 6, 0.28);
+  --apex-border-subtle: rgba(245, 158, 11, 0.18);
+  --apex-glow-primary: rgba(245, 158, 11, 0.35);
+  --apex-glow-violet: rgba(251, 191, 36, 0.28);
+  --apex-shadow-glow: 0 0 32px rgba(245, 158, 11, 0.14), 0 0 56px rgba(251, 191, 36, 0.1);
+  --game-card-bg: linear-gradient(135deg, rgba(255, 251, 245, 0.92) 0%, rgba(254, 243, 199, 0.85) 100%);
+  --game-card-glow: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.06) 100%);
+  --game-card-border: rgba(245, 158, 11, 0.18);
+  --game-card-border-hover: rgba(217, 119, 6, 0.34);
+  --game-card-title: #422006;
+  --game-card-desc: #78350F;
+  --game-canvas-bg: rgba(255, 248, 240, 0.65);
+  --style-bg-gradient:
+    radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.04) 0%, transparent 60%);
+  --style-particles: #F59E0B,#FBBF24,#D97706,#FDE68A,#FFF7ED,#FCD34D;
+}
+
 /* 风格 12：霓虹都市 (neon) - 深黑 + 多彩霓虹 */
 :root[data-style="neon"] {
   --apex-bg: #050505;

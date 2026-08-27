@@ -24,12 +24,19 @@
       box.className = 'apex-share-modal__box';
       box.style.position = 'relative';
 
+      // 统一关闭函数：移除模态框的同时清理 keydown 监听，防止监听器累积泄漏
+      let onKey = null;
+      const close = () => {
+        modal.remove();
+        if (onKey) document.removeEventListener('keydown', onKey);
+      };
+
       // 关闭按钮
       const closeBtn = document.createElement('button');
       closeBtn.className = 'apex-share-modal__close';
       closeBtn.setAttribute('aria-label', '关闭');
       closeBtn.textContent = '×';
-      closeBtn.addEventListener('click', () => modal.remove());
+      closeBtn.addEventListener('click', close);
 
       // 标题
       const title = document.createElement('h3');
@@ -65,14 +72,11 @@
 
       // 点击遮罩关闭
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
+        if (e.target === modal) close();
       });
       // Esc 关闭
-      const onKey = (e) => {
-        if (e.key === 'Escape') {
-          modal.remove();
-          document.removeEventListener('keydown', onKey);
-        }
+      onKey = (e) => {
+        if (e.key === 'Escape') close();
       };
       document.addEventListener('keydown', onKey);
 
@@ -233,5 +237,23 @@
   }
 
   global.APEXON = global.APEXON || {};
-  global.APEXON.Share = Share;
+  // 关键：如果 common.js 已经注入了包含 buttonsHTML 的 Share，就做合并，而不是直接覆盖
+  // （否则会导致 APEXON.Share.buttonsHTML is not a function，整个成绩分享 UI 崩溃）
+  const existing = global.APEXON.Share;
+  if (existing && typeof existing === 'object') {
+    // 合并：share.js 提供 showCard / drawCard / download / copyImage / copyText / shareNative 等
+    // common.js 提供 buttonsHTML / initInline 等。保留双方所有方法。
+    Object.keys(Share).forEach((k) => {
+      if (!(k in existing) || typeof existing[k] !== 'function') {
+        existing[k] = Share[k];
+      }
+    });
+    // 反向：把 common.js 的方法也补到 Share（避免未来有人引用这份 Share 缺方法）
+    Object.keys(existing).forEach((k) => {
+      if (!(k in Share)) Share[k] = existing[k];
+    });
+    global.APEXON.Share = existing;
+  } else {
+    global.APEXON.Share = Share;
+  }
 })(window);

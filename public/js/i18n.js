@@ -984,7 +984,8 @@
     current: DEFAULT_LANG,
 
     init() {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      let saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { /* 隐私模式等场景下 localStorage 不可用 */ }
       const preferred = saved || this.detectBrowserLang();
       this.setLang(preferred, false);
       this.injectSelector();
@@ -1002,7 +1003,7 @@
       this.current = lang;
       const htmlLang = { zh: 'zh-CN', en: 'en', ja: 'ja', ko: 'ko', fr: 'fr', de: 'de', es: 'es', ru: 'ru', pt: 'pt', it: 'it' };
       document.documentElement.lang = htmlLang[lang] || 'en';
-      if (persist) localStorage.setItem(STORAGE_KEY, lang);
+      if (persist) { try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) { /* localStorage 不可用时静默跳过 */ } }
       this.apply();
       this.updateSelector();
       const loginModal = document.getElementById('apex-login-modal');

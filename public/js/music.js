@@ -395,7 +395,6 @@
       this.updateHeroUI();
       this.addToHistory(track);
       this.highlightPlaying();
-      this.applyGlow(track.image);
       this.currentLyrics = null;
       if (this.dom.lyricsPanel && this.dom.lyricsPanel.classList.contains('open')) {
         this.loadLyrics(track);
@@ -422,14 +421,6 @@
         this.dom.heroLikeBtn.textContent = this.liked.has(String(t.id)) ? '♥' : '♡';
         this.dom.heroLikeBtn.style.color = this.liked.has(String(t.id)) ? '#ff4757' : '#fff';
       }
-    },
-
-    applyGlow(imageUrl) {
-      if (!imageUrl) {
-        document.body.classList.remove('music-glow');
-        return;
-      }
-      document.body.classList.add('music-glow');
     },
 
     playPrev() {

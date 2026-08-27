@@ -20,7 +20,7 @@
     <title data-i18n="nbackTitle">N-Back 工作记忆测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=18">
+    <link rel="stylesheet" href="styles/main.css?v=19">
     <style>
         #testBox {
             flex-direction: column;
@@ -198,7 +198,7 @@
 
         <div class="btn-group">
             <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
-            <button class="btn" onclick="APEXON.Share.showCard({testType:'nback', testTitle:'N-Back工作记忆测试', score: window.lastScore || 0, scoreUnit:'-Back', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getUsername&&APEXON.Auth.getUsername())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'nback', testTitle:'N-Back工作记忆测试', score: window.lastScore || 0, scoreUnit:'-Back', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
             <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
         </div>
 
@@ -237,9 +237,10 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=12"></script>
-    <script src="js/common.js?v=26"></script>
-    <script src="js/share.js?v=1"></script>
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=30"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };

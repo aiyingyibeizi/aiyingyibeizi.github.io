@@ -20,7 +20,7 @@
     <title data-i18n="taskswitchTitle">Task Switching 多任务切换测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=18">
+    <link rel="stylesheet" href="styles/main.css?v=19">
     <style>
         #testBox {
             flex-direction: column;
@@ -214,9 +214,10 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=12"></script>
-    <script src="js/common.js?v=26"></script>
-    <script src="js/share.js?v=1"></script>
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=30"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -414,9 +415,7 @@
                     if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
                 });
             }
-            if (window.APEXON && APEXON.Achievements) {
-                APEXON.Achievements.recordTest('taskswitch', score);
-            }
+            // 成就统计已由 common.js saveScore 内部统一调用 recordTest，此处不再重复调用（避免双倍计数）
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();
 
