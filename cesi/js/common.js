@@ -1499,7 +1499,8 @@
         // reduced-motion 下跳过视觉涟漪
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const rect = el.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
+        // 剪小涟漪尺寸：取最小边 *0.6（不再用 max 导致宽按钮溢出成巨大圆），点击反馈更轻柔
+        const size = Math.round(Math.min(rect.width, rect.height) * 0.6);
         const ripple = document.createElement('span');
         ripple.className = 'apex-ripple';
         ripple.style.width = ripple.style.height = size + 'px';
@@ -2737,7 +2738,8 @@
       if (prefersReduced) return;
       el.addEventListener('pointerdown', function (e) {
         const rect = el.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
+        // 剪小涟漪尺寸：取最小边 *0.6，点击反馈更轻柔，避免宽按钮弹出大圆
+        const size = Math.round(Math.min(rect.width, rect.height) * 0.6);
         const wave = document.createElement('span');
         wave.className = 'apex-ripple-wave';
         wave.style.width = size + 'px';

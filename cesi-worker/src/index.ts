@@ -17,6 +17,16 @@ import type { MixedData, DbConfig } from './types/models';
 const DEFAULT_READ_LIMIT = 100;
 const LOWER_IS_BETTER = new Set(['reaction', 'type', 'aim']);
 
+/** 字符串字段统一收敛：非 string 置空、超长截断（防注入/超大 payload） */
+function str(v: unknown, maxLen: number): string {
+  return typeof v === 'string' ? v.slice(0, maxLen) : '';
+}
+/** 安全数值：仅接受有限数值，否则回退默认 */
+function num(v: unknown): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 let migrated = false;
 let cachedShardService: ShardService | null = null;
 let cachedRedis: Redis | null = null;
@@ -423,7 +433,7 @@ function flattenScore(r: MixedData): FlatScore {
 
 app.get('/api/scores', async (c) => {
   const userId = c.req.query('user_id');
-  const testType = c.req.query('test_type');
+  const testType = str(c.req.query('test_type'), 40).trim();
   const leaderboard = c.req.query('leaderboard') === '1';
   const limit = Number(c.req.query('limit') || DEFAULT_READ_LIMIT);
 
@@ -506,10 +516,13 @@ app.post('/api/scores', async (c) => {
     payload?: Record<string, unknown>;
   }>();
 
-  if (!body.test_type) return c.json({ error: 'test_type is required' }, 400);
+  const testType = str(body.test_type, 40).trim();
+  if (!testType || !/^[\w-]{1,40}$/.test(testType)) {
+    return c.json({ error: 'invalid test_type' }, 400);
+  }
 
-  const scoreValue = body.score_value != null ? Number(body.score_value) : null;
-  const payload = body.payload || {};
+  const scoreValue = num(body.score_value);
+  const payload = (body.payload && typeof body.payload === 'object') ? body.payload : {};
   // 前端在 payload.leaderboard_eligible 里传该标记（snake_case），
   // 也兼容直接在顶层传 body.leaderboard_eligible 的情况
   if (payload.leaderboard_eligible === false || body.leaderboard_eligible === false) {
@@ -521,15 +534,15 @@ app.post('/api/scores', async (c) => {
     id: uuid(),
     user_id: userId,
     type: 'score',
-    subtype: body.test_type,
+    subtype: testType,
     score_value: scoreValue,
     payload: JSON.stringify({
-      username: body.username || '',
-      test_type: body.test_type,
+      username: str(body.username, 60),
+      test_type: testType,
       score_value: scoreValue,
-      accuracy: body.accuracy ?? null,
-      wpm: body.wpm ?? null,
-      cpm: body.cpm ?? null,
+      accuracy: num(body.accuracy),
+      wpm: num(body.wpm),
+      cpm: num(body.cpm),
       ...payload,
     }),
     file_url: null,
@@ -540,7 +553,7 @@ app.post('/api/scores', async (c) => {
   if (!result.ok) return c.json({ error: result.error }, 503);
   const redis = getRedis(c.env);
   try {
-    await redis.del(`cache:lb:${body.test_type}`);
+    await redis.del(`cache:lb:${testType}`);
     await redis.del('cache:stats');
   } catch (err) {
     console.warn('scores cache invalidate failed:', err);
@@ -590,19 +603,22 @@ app.get('/api/comments', async (c) => {
 app.post('/api/comments', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<{ username?: string; content?: string; category?: string }>();
-  if (!body.content || !body.content.trim()) return c.json({ error: 'content is required' }, 400);
+  const content = str(body.content, 500).trim();
+  if (!content) return c.json({ error: 'content is required' }, 400);
+  const category = str(body.category, 30).trim() || 'chat';
+  if (!/^[\w-]{1,30}$/.test(category)) return c.json({ error: 'invalid category' }, 400);
 
   const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
     user_id: userId,
     type: 'comment',
-    subtype: body.category || 'chat',
+    subtype: category,
     score_value: null,
     payload: JSON.stringify({
-      username: body.username || userId,
-      content: body.content.trim(),
-      category: body.category || 'chat',
+      username: str(body.username, 60) || userId,
+      content,
+      category,
     }),
     file_url: null,
     created_at: new Date().toISOString(),
@@ -642,7 +658,8 @@ app.get('/api/profiles', async (c) => {
     };
   };
   if (userIdsQuery) {
-    const ids = userIdsQuery.split(',').map(s => s.trim()).filter(Boolean);
+    const ids = userIdsQuery.split(',').map(s => s.trim()).filter((s) => s && s.length <= 64).slice(0, 200);
+    if (!ids.length) return c.json({ data: [] });
     const rows = await shard.readByType('profile', { limit: Math.min(ids.length * 2, 1000) });
     const filtered = rows.filter(r => ids.includes(r.user_id));
     return c.json({ data: filtered.map(flattenProfile) });
@@ -683,6 +700,9 @@ app.get('/api/profiles/:userId', async (c) => {
 app.post('/api/profiles', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<Record<string, unknown>>();
+  // 限 profile 体积，防止注入超大 payload 拖垮存储
+  const serialized = JSON.stringify(body);
+  if (serialized.length > 8192) return c.json({ error: 'profile too large' }, 413);
   const shard = await buildShardService(c.env);
 
   // Atomic-ish: write new profile first, then delete old ones
@@ -743,9 +763,9 @@ app.post('/api/profiles/username', async (c) => {
 app.post('/api/online_users', async (c) => {
   try {
     const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
-    const userId = (body.user_id || c.get('userId') || '').toString().trim();
+    const userId = str(body.user_id || c.get('userId'), 64).trim();
     if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
-    const lastSeen = body.last_seen || new Date().toISOString();
+    const lastSeen = str(body.last_seen, 40) || new Date().toISOString();
     const shard = await buildShardService(c.env);
     // 直接写入，不做 read-then-delete（减少 DB 压力）
     const result = await shard.write({
@@ -774,7 +794,7 @@ app.post('/api/online_users', async (c) => {
 // users 表 upsert（syncUser：首次登录/注册时写基础资料）
 app.post('/api/users', async (c) => {
   const body = await c.req.json<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>();
-  const userId = (body.user_id || c.get('userId') || '').toString().trim();
+  const userId = str(body.user_id || c.get('userId'), 64).trim();
   if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
   const shard = await buildShardService(c.env);
   const existing = await shard.readByUserAndType(userId, 'user', 1);
@@ -786,8 +806,8 @@ app.post('/api/users', async (c) => {
     subtype: null,
     score_value: null,
     payload: JSON.stringify({
-      username: body.username || '',
-      email: body.email || '',
+      username: str(body.username, 60),
+      email: str(body.email, 120),
     }),
     file_url: null,
     created_at: new Date().toISOString(),
@@ -802,6 +822,9 @@ app.post('/api/upload', async (c) => {
   const formData = await c.req.formData();
   const file = formData.get('file');
   if (!file || typeof file === 'string') return c.json({ error: 'No file uploaded' }, 400);
+  // 限制上传体积（5MB），防止超大文件耗尽 Worker/存储资源
+  const size = (file as File).size || 0;
+  if (!size || size > 5 * 1024 * 1024) return c.json({ error: 'File too large (max 5MB)' }, 413);
 
   const fileUrl = await uploadFile(c.env, userId, file);
 
@@ -834,6 +857,17 @@ app.get('/api/admin/dbs', async (c) => {
     })
   );
   return c.json({ data: statuses });
+});
+
+// ===== 全局 404 与内部错误兜底（修复 4xx/5xx 大量堆积）=====
+// - 不存在的路由统一返回结构化 JSON 404，避免无效路径进数据库/耗 CPU
+// - 未捕获的接口异常统一记录日志并返回 500，杜绝 Worker 静默崩溃
+app.notFound((c) => {
+  return c.json({ success: false, error: 'Not found', path: c.req.path }, 404);
+});
+app.onError((err, c) => {
+  console.error(`[onError] ${c.req.method} ${c.req.path}`, err instanceof Error ? err.message : String(err));
+  return c.json({ success: false, error: 'Internal server error' }, 500);
 });
 
 export default app;

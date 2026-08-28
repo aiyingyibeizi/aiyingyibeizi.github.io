@@ -8303,3 +8303,47 @@ html[data-style="neon"] body::after {
   pointer-events: none;
 }
 
+/* ============================================================
+   触摸交互优化：抑制长按原声菜单 + 双击缩放延迟 + 跟手反馈
+   ------------------------------------------------------------
+   1. 长按"只是在犹豫"不再呼出系统菜单（touch-callout 关闭）；
+   2. tap-highlight 关闭安卓点击闪光；
+   3. touch-action: manipulation 让点击立即响应、上下滑动顺滑。
+   ============================================================ */
+.item-card,
+.apex-card--game,
+.btn,
+.apexon-menu-btn,
+.leaderboard-tab,
+.score-share__btn,
+.forum-btn,
+.forum-filter-btn,
+.forum-page-btn,
+.personal-card,
+.apex-style-item,
+.modal-close,
+.apex-login-submit,
+.apex-profile-submit {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 防止嵌套滚动穿透，移动端上下滑动质感更干净（不整页橡皮筋跳动） */
+html,
+body {
+  overscroll-behavior-y: auto;
+}
+
+/* 触屏按下给反馈：轻按即轻微下沉，不夸张超大 */
+@media (hover: none) and (pointer: coarse) {
+  .item-card:active,
+  .apex-card--game:active,
+  .btn:active {
+    transform: translateY(1px) scale(0.985);
+    transition: transform 90ms ease-out;
+  }
+}
+
