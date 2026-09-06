@@ -678,14 +678,15 @@
       }
       console.log('[addComment] result:', res && res.data);
       if (!res || !res.ok) {
+        // 原始后端错误只写控制台便于排查，不再直接弹给用户（避免出现一长串英文数据库报错）。
+        // 提示语统一用本地化文案；同时此方法不再自行弹 toast，由调用方（postComment）统一弹一次，避免双击弹两个失败提示。
+        const rawErr = (res && res.data && res.data.error) || null;
+        if (rawErr) console.error('[addComment] backend error:', res && res.status, rawErr);
         const hint = (res && res.status === 401)
           ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
           : (res && res.status && res.status >= 500)
             ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
-            : (res && res.data && res.data.error)
-              ? res.data.error
-              : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
-        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(hint, 2800, 'error');
+            : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
         return { success: false, error: hint };
       }
       WorkerAPI.invalidate('GET:/api/comments?');

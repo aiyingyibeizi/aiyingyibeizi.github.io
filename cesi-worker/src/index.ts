@@ -54,6 +54,17 @@ async function buildShardService(env: Env): Promise<ShardService> {
     return cachedShardService;
   }
 
+  // 诊断：列出缺少凭证的 Turso 库，便于定位"所有写入都失败"（Cloudflare Secret 未配置/已过期）
+  const requiredTurso: Array<{ name: string; url?: string; token?: string }> = [
+    { name: 'APEXON', url: env.TURSO_URL_APEXON, token: env.TURSO_TOKEN_APEXON },
+    { name: 'APEXON_1', url: env.TURSO_URL_APEXON_1, token: env.TURSO_TOKEN_APEXON_1 },
+    { name: 'APEXON_2', url: env.TURSO_URL_APEXON_2, token: env.TURSO_TOKEN_APEXON_2 },
+  ];
+  const missingTurso = requiredTurso.filter((d) => !d.url || !d.token).map((d) => d.name);
+  if (missingTurso.length) {
+    console.error(`[buildShardService] 缺失 Turso 凭证的库：${missingTurso.join(', ')}，请在 Cloudflare Worker 配置对应 Secret`);
+  }
+
   const redis = createRedis(env);
 
   // Reuse a single Turso client per database across requests
