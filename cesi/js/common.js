@@ -1678,20 +1678,22 @@
     },
 
     initStylePicker() {
+      // 背景统一为「黑白两套」（全局 data-bw 深色黑/明亮白开关），
+      // 原先的 13 个彩色照片主题全部注释掉，保留默认背景。
       const styles = [
-        { id: 'scifi', name: '科幻深空', icon: '🚀' },
-        { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
-        { id: 'forest', name: '翡翠森林', icon: '🌲' },
-        { id: 'starry', name: '璀璨星空', icon: '✨' },
-        { id: 'anime', name: '梦幻二次元', icon: '🌸' },
-        { id: 'minimal', name: '极简纯白', icon: '⬜' },
-        { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
-        { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
-        { id: 'aurora', name: '极光之夜', icon: '🌌' },
-        { id: 'sunset', name: '日落暖霞', icon: '🌅' },
-        { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
-        { id: 'neon', name: '霓虹都市', icon: '🌃' },
-        { id: 'healing', name: '治愈猫派', icon: '🐱' }
+        // { id: 'scifi', name: '科幻深空', icon: '🚀' },
+        // { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
+        // { id: 'forest', name: '翡翠森林', icon: '🌲' },
+        // { id: 'starry', name: '璀璨星空', icon: '✨' },
+        // { id: 'anime', name: '梦幻二次元', icon: '🌸' },
+        // { id: 'minimal', name: '极简纯白', icon: '⬜' },
+        // { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
+        // { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
+        // { id: 'aurora', name: '极光之夜', icon: '🌌' },
+        // { id: 'sunset', name: '日落暖霞', icon: '🌅' },
+        // { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
+        // { id: 'neon', name: '霓虹都市', icon: '🌃' },
+        // { id: 'healing', name: '治愈猫派', icon: '🐱' }
       ];
 
       const applyStyle = (styleId) => {
@@ -1729,33 +1731,36 @@
         const panel = document.createElement('div');
         panel.className = 'apex-style-panel';
 
-        const title = document.createElement('div');
-        title.className = 'apex-style-panel__title';
-        title.textContent = '选择主题风格';
+        // 无主题可选时（黑白两套由全局 data-bw 开关控制）隐藏风格选择区，只保留粒子背景设置
+        if (styles.length) {
+          const title = document.createElement('div');
+          title.className = 'apex-style-panel__title';
+          title.textContent = '选择主题风格';
 
-        const grid = document.createElement('div');
-        grid.className = 'apex-style-grid';
+          const grid = document.createElement('div');
+          grid.className = 'apex-style-grid';
 
-        styles.forEach((style) => {
-          const item = document.createElement('div');
-          item.className = 'apex-style-item';
-          item.dataset.style = style.id;
-          item.title = style.name;
+          styles.forEach((style) => {
+            const item = document.createElement('div');
+            item.className = 'apex-style-item';
+            item.dataset.style = style.id;
+            item.title = style.name;
 
-          const preview = document.createElement('div');
-          preview.className = 'apex-style-item__preview';
+            const preview = document.createElement('div');
+            preview.className = 'apex-style-item__preview';
 
-          const name = document.createElement('span');
-          name.className = 'apex-style-item__name';
-          name.textContent = style.name;
+            const name = document.createElement('span');
+            name.className = 'apex-style-item__name';
+            name.textContent = style.name;
 
-          item.appendChild(preview);
-          item.appendChild(name);
-          grid.appendChild(item);
-        });
+            item.appendChild(preview);
+            item.appendChild(name);
+            grid.appendChild(item);
+          });
 
-        panel.appendChild(title);
-        panel.appendChild(grid);
+          panel.appendChild(title);
+          panel.appendChild(grid);
+        }
 
         // 动态背景设置区域
         const bgSection = document.createElement('div');

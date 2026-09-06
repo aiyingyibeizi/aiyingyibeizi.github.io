@@ -7631,8 +7631,12 @@ body {
 }
 
 /* ============================================================
-   修复3：治愈派(healing) = 写实小猫 AI 图背景
+   黑白两套方案：以下彩色照片主题全部注释停用
+   背景统一由全局 data-bw「深色黑 / 明亮白」开关控制
+   停用：healing / anime / aurora / cyberpunk（原规则保留以便恢复）
    ============================================================ */
+/*
+-- 治愈派 healing（已停用） --
 html[data-style="healing"] {
   --apex-bg: #FFF8F0;
   --apex-surface: rgba(255,248,240,0.92);
@@ -7666,9 +7670,7 @@ html[data-style="healing"] body::after {
   pointer-events: none;
 }
 
-/* ============================================================
-   修复4：二次元风格(anime) = 美少女 AI 插画背景
-   ============================================================ */
+-- 二次元 anime（已停用） --
 html[data-style="anime"] {
   --apex-bg: #FDF4FF;
   --apex-surface: rgba(253,244,255,0.90);
@@ -7703,9 +7705,7 @@ html[data-style="anime"] body::after {
   pointer-events: none;
 }
 
-/* ============================================================
-   修复5：极光之夜(aurora) + 赛博朋克(cyberpunk) 升级
-   ============================================================ */
+-- 极光之夜 aurora（已停用） --
 html[data-style="aurora"] {
   --apex-bg: #0A0E1A;
   --apex-surface: rgba(15,23,42,0.88);
@@ -7748,6 +7748,7 @@ html[data-style="aurora"] .apex-primary-text {
   text-shadow: 0 0 12px rgba(34,211,238,0.45), 0 0 24px rgba(167,139,250,0.25);
 }
 
+-- 赛博朋克 cyberpunk（已停用） --
 html[data-style="cyberpunk"] {
   --apex-bg: #070012;
   --apex-surface: rgba(12,0,30,0.90);
@@ -7792,6 +7793,7 @@ html[data-style="cyberpunk"] .apex-primary-text {
     0 0 20px rgba(34,211,238,0.35),
     0 0 40px rgba(232,121,249,0.25);
 }
+*/
 
 /* ============================================================
    修复7：手机端布局最简化
