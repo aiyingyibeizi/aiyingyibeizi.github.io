@@ -116,16 +116,10 @@
   // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
   const SUPABASE_URL = '';
   const SUPABASE_ANON_KEY = '';
-  // 关键修复：优先使用相对路径 /，避免硬编码 api.apexon.qzz.io 导致跨域、证书、DNS 任何一个出问题就全挂
-  // —— 这是"全部项目录入成绩都报错/网络错误"的最大嫌疑点。
-  // 仅在 file:// 本地打开或明显是其他域名时才回退到完整 URL。
-  const _isLocalFile = typeof location !== 'undefined' && location.protocol === 'file:';
-  const WORKER_API_URL = (function () {
-    if (_isLocalFile) return 'https://api.apexon.qzz.io';
-    // 只要不是走本地文件协议，都走同源 /api，由 /_worker 或反向代理到 Cloudflare Worker
-    // 这样既无 CORS，又能复用 HTTP/2/TCP 连接，延迟比跨域低一个数量级
-    return '';
-  })();
+  // API 始终指向 Cloudflare Worker 域名（前端托管在 GitHub Pages / 其它静态站，
+  // 同源 /api 无法路由到 Worker，会导致全部接口 404/405、错误率飙升）。
+  // Worker 端已开启 CORS（任意来源），跨域调用不受限。
+  const WORKER_API_URL = 'https://api.apexon.qzz.io';
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
