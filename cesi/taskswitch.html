@@ -412,7 +412,7 @@
             // 保存成绩：切换成本越小越好（保存为正数绝对值）
             if (window.APEXON && APEXON.DB) {
                 APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'taskswitch', { score: score }).then(saved => {
-                    if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+                    
                 });
             }
             // 成就统计已由 common.js saveScore 内部统一调用 recordTest，此处不再重复调用（避免双倍计数）

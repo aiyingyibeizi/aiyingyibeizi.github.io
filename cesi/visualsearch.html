@@ -365,7 +365,7 @@
             APEXON.Share.bindShareEvents(result);
 
             APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'visualsearch', { score: avgTime, trialTimes: trialTimes, totalCorrect: totalCorrect }).then(saved => {
-                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+                
             });
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();

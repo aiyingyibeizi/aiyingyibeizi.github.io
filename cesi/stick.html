@@ -396,7 +396,7 @@
             APEXON.Share.bindShareEvents(result);
 
             const saved = await APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'stick', { score: score });
-            if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            
 
             if (APEXON.Audio) APEXON.Audio.playSuccess();
             if (navigator.vibrate) navigator.vibrate(50);

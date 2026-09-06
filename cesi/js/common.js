@@ -3937,7 +3937,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -4094,7 +4094,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount, leaderboard_eligible: foulCount < 3 });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
