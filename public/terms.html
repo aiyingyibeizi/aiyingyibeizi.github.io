@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="APEXON 服务条款，使用本站服务前请仔细阅读。">
+    <meta name="keywords" content="服务条款,APEXON,用户协议">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="服务条款 - APEXON">
+    <meta property="og:description" content="APEXON 服务条款，使用本站服务前请仔细阅读。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/terms.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="服务条款 - APEXON">
+    <meta name="twitter:description" content="APEXON 服务条款，使用本站服务前请仔细阅读。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title>服务条款 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>服务条款</h1>
+        <div class="legal-content">
+            <p>最后更新日期：2026 年 7 月 10 日</p>
+            <p>欢迎您访问和使用 APEXON（以下简称“本站”）。本服务条款（以下简称“本条款”）是您与本站之间关于使用本站服务所订立的协议。请您在使用本站前仔细阅读本条款。一旦您访问或使用本站任何服务，即表示您已阅读、理解并同意接受本条款的全部内容。如果您不同意本条款的任何部分，请立即停止使用本站。</p>
+
+            <h2>1. 接受条款</h2>
+            <p>访问或使用本站即表示您同意接受本服务条款的约束。本条款构成您与本站之间的有效合同。如果您代表某个组织或实体使用本站，则您声明并保证您有权代表该组织接受本条款。未成年人应在监护人指导下阅读并同意本条款后方可使用本站相关服务。</p>
+
+            <h2>2. 服务说明</h2>
+            <p>本站是一个免费在线认知能力测试与训练平台，提供反应速度测试、打字速度测试、持续注意力测试、数字记忆测试、单词记忆测试、视觉记忆测试、瞄准训练、序列记忆测试以及 APEXON Music 音乐播放等服务。所有测试成绩、排名和分析结果仅供娱乐、自我了解和训练参考，不构成任何医疗诊断、心理评估、职业能力鉴定或教育认证结论。如您有健康或专业评估需求，请咨询具有相应资质的专业人士。</p>
+            <p>本站保留随时修改、暂停或终止部分或全部服务的权利，且无需事先通知您。对于服务的变更、中断或终止，本站不承担由此给您或任何第三方造成的责任，除非法律另有规定。</p>
+
+            <h2>3. 账号与数据</h2>
+            <p>您可以选择以游客身份使用本站，也可以选择注册账号。注册账号时，您可能需要提供用户名、密码等基本信息。您应对账号安全负责，妥善保管密码，不得将账号转让、出租、出借或与他人共享。因您保管不善导致的账号被盗、信息泄露或其他损失，由您自行承担。</p>
+            <p>本站会保存您的测试成绩、评论、反馈和基本资料，以便提供排行榜、历史记录、个人统计和社区互动等功能。具体的数据收集、使用和保护规则请参阅我们的《隐私政策》。</p>
+
+            <h2>4. 用户行为</h2>
+            <p>使用本站时，您应遵守相关法律法规和社会公德，不得从事以下行为：</p>
+            <ul>
+                <li>发布、传播或存储任何违法、侵权、骚扰、歧视、淫秽、暴力、恐怖、虚假、恶意或侵犯他人合法权益的内容；</li>
+                <li>利用漏洞、脚本、爬虫、自动化工具或其他技术手段干扰、破坏本站服务或影响其他用户正常使用；</li>
+                <li>尝试未经授权访问本站系统、服务器、数据库或其他用户的账号和数据；</li>
+                <li>通过作弊、刷分、伪造数据或其他不正当方式影响排行榜或测试结果的公正性；</li>
+                <li>从事任何可能损害本站声誉、合法权益或第三方合法权益的活动。</li>
+            </ul>
+            <p>如您违反上述规定，本站有权根据情节轻重采取警告、删除内容、限制功能、封禁账号或追究法律责任等措施。</p>
+
+            <h2>5. 知识产权</h2>
+            <p>本站界面设计、前端与后端代码、标识、商标、文本内容、测试机制、视觉元素、音乐播放器界面以及其他相关素材（除第三方授权内容外）均归本站所有或合法使用，受著作权法、商标法及其他相关法律法规保护。未经授权，您不得复制、修改、翻译、传播、展示、演绎、反向工程、拆解或用于任何商业目的。</p>
+            <p>您在本站讨论区发布的内容，您仍保留相关权利，但同时授予本站免费的、非独占的、可转让的、全球性的许可，以便我们在提供、推广和改进服务时展示、分发和使用该内容。如您认为本站内容侵犯了您的知识产权，请通过本条款末尾的联系方式与我们联系。</p>
+
+            <h2>6. 免责声明</h2>
+            <p>本站按“现状”和“可获得”的状态提供服务，不保证服务始终 uninterrupted、及时、安全、无错误或无病毒，也不保证任何测试结果的准确性、完整性和适用性。您理解并同意，使用本站服务的风险由您自行承担。</p>
+            <p>在法律允许的最大范围内，本站不对因使用或无法使用本站服务而导致的任何直接、间接、附带、特殊或后果性损害承担责任，包括但不限于数据丢失、利润损失、商誉损失或其他无形损失。因网络、设备、第三方服务、不可抗力或本站合理控制范围以外的原因导致的服务中断、延迟或数据丢失，本站不承担责任。</p>
+
+            <h2>7. 第三方服务与链接</h2>
+            <p>本站可能包含指向第三方网站、服务或内容的链接（例如 Jamendo 音乐服务、社交媒体分享、外部统计工具等）。这些第三方服务由独立运营方提供，本站不对其内容、准确性、安全性或隐私政策负责。您与第三方服务之间的交易或互动应遵守该第三方的条款和政策，由此产生的任何争议或损失由您自行承担。</p>
+
+            <h2>8. 条款变更</h2>
+            <p>本站有权不时修改本条款，以适应法律法规变化、业务发展或运营需要。修改后的条款将在页面上公布，并注明最后更新日期。若修改内容涉及重大变更，我们可能会通过站内公告或其他适当方式通知您。您在条款更新后继续使用本站，视为您已阅读、理解并接受修改后的条款。</p>
+
+            <h2>9. 适用法律与争议解决</h2>
+            <p>本条款的订立、效力、解释、履行和争议解决均适用中华人民共和国法律（为本条款之目的，不包括香港特别行政区、澳门特别行政区及台湾地区法律）。因本条款或本站服务引起的任何争议，双方应首先通过友好协商解决；协商不成的，任何一方均可向本站运营方所在地有管辖权的人民法院提起诉讼。</p>
+
+            <h2>10. 联系我们</h2>
+            <p>如您对本条款有任何疑问、建议或投诉，请发送邮件至 luoyangmengjin2025@163.com。我们会在收到您的反馈后尽快进行处理和回复。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script>
+    (function () {
+        APEXON.Particles.init();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

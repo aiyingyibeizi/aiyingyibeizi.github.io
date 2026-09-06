@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="数字记忆广度测试，记住不断增长的数字序列，挑战大脑记忆极限。APEXON 免费在线数字记忆测试。">
+    <meta name="keywords" content="数字记忆,记忆广度,记忆力测试,工作记忆,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="数字记忆测试 - APEXON">
+    <meta property="og:description" content="数字记忆广度测试，记住不断增长的数字序列，挑战大脑记忆极限。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/number.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="数字记忆测试 - APEXON">
+    <meta name="twitter:description" content="数字记忆广度测试，记住不断增长的数字序列，挑战大脑记忆极限。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="numberTitle">数字记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 18px;
+            padding: 30px 24px;
+        }
+        #testBox .number-display {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            letter-spacing: 8px;
+            font-variant-numeric: tabular-nums;
+            color: var(--apex-text);
+        }
+        #testBox .number-input {
+            width: 100%;
+            max-width: 320px;
+            padding: 14px 18px;
+            border-radius: var(--apex-radius-sm);
+            border: 2px solid var(--apex-border);
+            background: var(--apex-surface);
+            color: var(--apex-text);
+            font-size: clamp(1.25rem, 4vw, 1.75rem);
+            text-align: center;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+        #testBox .number-input:focus {
+            border-color: var(--apex-primary);
+            box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.15);
+        }
+        #testBox .number-hint {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--apex-text-secondary);
+        }
+
+        /* 手机端：数字记忆测试更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 14px;
+                padding: 22px 16px;
+            }
+            #testBox .number-display {
+                font-size: clamp(1.5rem, 9vw, 2.5rem);
+                letter-spacing: 5px;
+            }
+            #testBox .number-input {
+                max-width: 260px;
+                padding: 12px 14px;
+                font-size: clamp(1rem, 5vw, 1.5rem);
+                letter-spacing: 3px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 12px;
+                padding: 18px 14px;
+            }
+            #testBox .number-display {
+                font-size: clamp(1.25rem, 9vw, 2rem);
+                letter-spacing: 4px;
+            }
+            #testBox .number-input {
+                max-width: 220px;
+                padding: 10px 12px;
+                font-size: clamp(0.9375rem, 5vw, 1.25rem);
+            }
+            #testBox .number-hint {
+                font-size: 0.8125rem;
+            }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="numberTitle">数字记忆测试</h1>
+
+        <div class="info-row" id="statusLine"><span data-i18n="currentDigits">当前位数：</span><span id="levelDisplay">3</span></div>
+
+        <div id="testBox" data-test-type="number"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'number', testTitle:'数字记忆测试', score: window.lastScore || 0, scoreUnit:'位', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>数字记忆测试：挑战你的工作记忆容量</h2>
+            <p>工作记忆是认知心理学的核心概念之一，指的是大脑在短时间内暂时保存和处理信息的能力。它就像大脑的"便签本"，容量有限但使用频繁——无论是记住电话号码、心算购物总价、跟随导航指示，还是理解一段复杂的对话，都离不开工作记忆的支持。数字记忆广度测试就是测量这个"便签本"容量的经典工具，因其操作简单、结果明确而被广泛应用于认知研究和日常训练中。</p>
+            <p>1956 年，心理学家乔治·米勒发表了著名的论文《神奇的数字 7±2》，指出成年人短时记忆的容量大约在 5 到 9 个信息单元之间。后来的研究进一步发现，这个容量可能更接近 4 个"组块"。所谓组块，就是把若干小信息单元组合成一个有意义的整体。例如，"1492"这四个数字对不了解历史的人来说是四个独立组块，但对知道哥伦布发现新大陆的人来说，它可以压缩成一个有意义的组块，从而释放更多工作记忆资源。</p>
+            <p>数字记忆测试的魅力在于它看似简单，却能深刻反映一个人的认知策略。同样的记忆容量，使用不同策略的人可能表现出截然不同的成绩。一个善于组块化和联想的人，往往能在不增加大脑负担的情况下记住更长的数字序列。因此，本测试不仅测量你的先天记忆容量，也间接反映了你的记忆策略和元认知能力。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>APEXON 数字记忆测试采用"广度递增"范式。测试从 3 位数字开始，系统会显示一串随机数字，玩家需要在数字消失后按正确顺序输入。如果回答正确，下一轮数字长度自动加一；如果回答错误，测试结束，最终能正确回忆的最大位数即为本次成绩。整个过程没有时间限制，但数字显示时间固定，因此玩家必须在有限时间内完成编码。</p>
+            <p>这种设计能够有效测量工作记忆的"跨度"——即在完全依赖短时记忆、无法进行反复复习的情况下，大脑一次能稳定保持多少信息。由于每位数字之间没有语义联系，测试难度会随着位数增加呈指数级上升。研究表明，普通人在这个任务上的上限通常在 7 位左右，而经过专业记忆训练的人可以突破到 10 位甚至更多。</p>
+            <h3>影响数字记忆表现的因素</h3>
+            <p>年龄是一个重要因素。儿童的工作记忆仍在发育中，青少年和青壮年通常表现最好，老年人的工作记忆容量则会随年龄增长而缓慢下降。认知策略同样关键：逐位死记硬背往往只能达到平均水平，而通过组块化、视觉化、韵律化等策略可以突破瓶颈。情绪状态也会影响表现，焦虑和压力会占用工作记忆资源，导致"明明记得却突然想不起来"的情况。此外，测试时的环境干扰、睡眠质量和动机水平都会对结果产生明显影响。</p>
+            <h3>提升数字记忆的高效策略</h3>
+            <ul>
+                <li><strong>组块化记忆</strong>：把长串数字拆分成更短的小组块，比如把 149162536 分成 14-91-62-536。组块大小可以根据个人习惯调整，通常为 2 到 4 位。</li>
+                <li><strong>视觉化联想</strong>：把数字转化为图像、形状或故事。例如，1 像铅笔，8 像葫芦，可以想象成"铅笔挑着葫芦"。生动的画面比抽象数字更容易记住。</li>
+                <li><strong>语音复述</strong>：在数字显示时小声或默念重复，可以延长信息在工作记忆中的保持时间。节奏感强的复述效果更佳。</li>
+                <li><strong>建立个人编码系统</strong>：比如把常用两位数组块赋予特定含义，形成长期记忆中的"钩子"。记忆运动员常使用 00 到 99 的数字编码表。</li>
+                <li><strong>规律训练</strong>：每天进行几轮训练，逐步扩展记忆跨度，但要注意适度休息，避免疲劳。训练后回顾自己的策略比单纯重复更有效。</li>
+                <li><strong>保持平静心态</strong>：紧张会占用工作记忆资源。测试前深呼吸几次，把注意力集中在当前数字上，而不是担心结果。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>数字记忆测试不仅是一个有趣的认知挑战，还具有实际应用价值。学生学习数学时需要临时记住多个数字和步骤，收银员需要心算找零，程序员调试代码时需要同时跟踪多个变量值，这些场景都依赖工作记忆。通过本测试，你可以了解自己的记忆基线，并通过针对性训练提升相关能力。对于中老年人来说，定期进行数字记忆训练也是保持认知活力的有效方式之一。</p>
+            <h3>温馨提示</h3>
+            <p>测试时请尽量排除干扰，在安静的环境中进行。如果连续多轮成绩不理想，可能是疲劳导致的暂时性下降，建议休息 10 到 15 分钟后再测。测试结果不能作为智力或诊断依据，仅供自我了解和训练参考。坚持科学训练，你会发现自己能够稳定回忆的数字位数在数周内就能有所提升。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🔢</div>' +
+                '<div class="apex-start-screen__title">' + t('numberStartTitle', '数字记忆挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('numberStartDesc', '记住屏幕上的数字序列，按正确顺序输入。每答对一次，数字会变长。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        // 粒子背景
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const statusLine = document.getElementById('statusLine');
+
+        let level = 3;
+        let currentNumber = '';
+        let state = 'idle';
+        let showTimer = null;
+
+        function generateNumber(len) {
+            let s = '';
+            for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
+            return s;
+        }
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'number', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ' + t('digitUnit', '位') + '</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function startRound() {
+            state = 'showing';
+            currentNumber = generateNumber(level);
+            levelDisplay.textContent = level;
+            testBox.innerHTML = '<div class="number-hint">' + t('numberHintRemember', '请记住这些数字') + '</div><div class="number-display">' + currentNumber + '</div>';
+            result.innerHTML = '';
+            showTimer = setTimeout(() => {
+                state = 'input';
+                testBox.innerHTML = '<div class="number-hint">' + t('numberHintInput', '请输入刚才的数字') + '</div><input type="tel" inputmode="numeric" class="number-input" id="numberInput" maxlength="' + level + '" autocomplete="off"><button class="btn" id="submitBtn" style="margin-top:6px">' + t('confirm', '确认') + '</button>';
+                const input = document.getElementById('numberInput');
+                const submitBtn = document.getElementById('submitBtn');
+                input.focus();
+                function check() {
+                    const val = input.value.trim();
+                    if (val.length < level) return;
+                    if (val === currentNumber) {
+                        playSuccess();
+                        level++;
+                        levelDisplay.textContent = level;
+                        testBox.innerHTML = '<div class="number-hint">' + t('numberCorrect', '回答正确！') + '</div>';
+                        setTimeout(startRound, 800);
+                    } else {
+                        playFail();
+                        endGame(level);
+                    }
+                }
+                submitBtn.addEventListener('click', check);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
+                input.addEventListener('input', () => {
+                    input.value = input.value.replace(/\D/g, '');
+                    if (input.value.length >= level) check();
+                });
+            }, 1000);
+        }
+
+        function endGame(score) {
+            state = 'ended';
+            clearTimeout(showTimer);
+            const grade = APEXON.Utils.getGrade(score, 'number');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('highestMemory', '最高记忆 {count} 位数字').replace('{count}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('digitCount', '位数') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('number', score, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'number', { score: score }).then(saved => {
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            level = 3;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            startRound();
+        }
+
+        window.restartTest = function () {
+            clearTimeout(showTimer);
+            state = 'idle';
+            level = 3;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            renderStartScreen();
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+            if (state === 'idle') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

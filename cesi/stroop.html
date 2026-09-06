@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Stroop 抑制控制测试，判断字体颜色而非文字含义，检验你的执行功能与抗干扰能力。APEXON 免费在线认知测试。">
+    <meta name="keywords" content="Stroop测试,抑制控制,执行功能,认知灵活性,注意力,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="Stroop 抑制控制测试 - APEXON">
+    <meta property="og:description" content="Stroop 抑制控制测试，判断字体颜色而非文字含义，检验你的执行功能与抗干扰能力。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/stroop.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stroop 抑制控制测试 - APEXON">
+    <meta name="twitter:description" content="Stroop 抑制控制测试，判断字体颜色而非文字含义，检验你的执行功能与抗干扰能力。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="stroopTitle">Stroop 抑制控制测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=21">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 24px;
+            padding: 36px 24px;
+        }
+        #testBox .stroop-word {
+            font-size: clamp(3rem, 12vw, 5.5rem);
+            font-weight: 800;
+            min-height: 1.2em;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 18px currentColor;
+            transition: transform var(--apex-transition-base), opacity var(--apex-transition-fast);
+        }
+        #testBox .stroop-word.stroop-pop {
+            animation: stroop-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes stroop-pop {
+            0% { transform: scale(0.6); opacity: 0; }
+            60% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #testBox .stroop-hint {
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+        #testBox .stroop-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #testBox .stroop-btn {
+            min-width: 120px;
+            padding: 16px 24px;
+            border-radius: var(--apex-radius);
+            border: 2px solid transparent;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast), opacity var(--apex-transition-fast);
+            box-shadow: var(--apex-shadow-sm);
+            -webkit-tap-highlight-color: transparent;
+        }
+        #testBox .stroop-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: var(--apex-shadow-md);
+        }
+        #testBox .stroop-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.96);
+        }
+        #testBox .stroop-btn:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+        #testBox .stroop-feedback {
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 1.4em;
+        }
+
+        @media (max-width: 767px) {
+            #testBox { gap: 18px; padding: 26px 18px; }
+            #testBox .stroop-word { font-size: clamp(2.5rem, 14vw, 4rem); }
+            #testBox .stroop-buttons { gap: 12px; }
+            #testBox .stroop-btn { min-width: 100px; padding: 14px 18px; font-size: 1.1rem; }
+        }
+        @media (max-width: 480px) {
+            #testBox { gap: 14px; padding: 22px 14px; }
+            #testBox .stroop-word { font-size: clamp(2rem, 14vw, 3rem); }
+            #testBox .stroop-buttons { gap: 10px; width: 100%; }
+            #testBox .stroop-btn { min-width: 0; flex: 1 1 calc(50% - 5px); padding: 12px 8px; font-size: 1rem; }
+            #testBox .stroop-hint, #testBox .stroop-feedback { font-size: 0.8125rem; }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="stroopTitle">Stroop 抑制控制测试</h1>
+
+        <div class="info-row"><span data-i18n="progressLabel">进度</span>：<span id="progressText">0 / 40</span>　<span data-i18n="correctCountLabel">正确：</span><span id="correctDisplay">0</span></div>
+
+        <div id="testBox" data-test-type="stroop"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'stroop', testTitle:'Stroop抑制控制测试', score: window.lastScore || 0, scoreUnit:'个', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>Stroop 抑制控制测试：探索你的执行功能</h2>
+            <p>Stroop 测试是认知心理学中最经典的范式之一，由美国心理学家 John Ridley Stroop 于 1935 年提出。它揭示了一个有趣的现象：当文字的含义与文字的显示颜色不一致时（例如"红"字用蓝色显示），人们说出字体颜色的反应会明显变慢、错误率上升。这种现象被称为"Stroop 干扰效应"，它直接反映了大脑前额叶皮层的执行控制能力，尤其是抑制优势反应的能力。</p>
+            <p>在日常生活中，抑制控制能力无处不在。当你需要在嘈杂环境中专注工作、抵制刷手机的冲动、在争吵中忍住脱口而出的气话、或在驾驶时忽略路边广告牌的干扰，依靠的都是这一能力。抑制控制是执行功能的核心组成部分，与自我调节、决策质量和冲动控制密切相关。研究表明，抑制控制能力较强的人在学业表现、职业成就和人际关系上都更具优势。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>本测试共 40 个试次。每次屏幕中央会呈现一个表示颜色的汉字（红、绿、蓝、黄），但字体颜色可能与字义一致，也可能不一致。你的任务是<strong>忽略文字含义，只判断字体的颜色</strong>，并点击对应的颜色按钮。约一半试次为"一致"条件（字义与颜色相同），另一半为"不一致"条件（字义与颜色不同）。系统记录你的正确数和平均反应时。</p>
+            <p>Stroop 干扰的本质是两条信息加工通路的竞争：阅读是高度自动化的过程，大脑会不由自主地提取文字含义；而颜色命名则需要刻意、受控的加工。当两者冲突时，大脑必须抑制自动化的阅读反应，才能正确完成颜色判断。这种"抑制优势反应"的过程正是前额叶执行功能的核心体现，因此 Stroop 测试被广泛用于评估执行功能、注意力控制和认知灵活性。</p>
+            <h3>影响 Stroop 表现的因素</h3>
+            <ul>
+                <li><strong>年龄</strong>：儿童和老年人的 Stroop 干扰效应更大，反映前额叶发育与衰老的规律。</li>
+                <li><strong>疲劳与睡眠</strong>：睡眠不足会显著削弱抑制控制能力，使干扰效应增大。</li>
+                <li><strong>情绪状态</strong>：焦虑和压力会占用认知资源，降低抑制效率。</li>
+                <li><strong>训练经验</strong>：双语者因经常在两种语言间切换抑制，往往表现更好。</li>
+                <li><strong>注意力分配</strong>：能否将注意力集中于颜色维度而非文字维度，是得分关键。</li>
+            </ul>
+            <h3>提升抑制控制的方法</h3>
+            <ul>
+                <li><strong>正念冥想</strong>：定期冥想可增强前额叶活动，提升注意力和抑制控制。</li>
+                <li><strong>有氧运动</strong>：跑步、游泳等有氧运动能改善前额叶功能，长期坚持效果显著。</li>
+                <li><strong>充足睡眠</strong>：保证 7-8 小时优质睡眠，让大脑清除代谢废物、恢复执行功能。</li>
+                <li><strong>认知训练</strong>：定期进行 Stroop、N-Back 等执行功能训练，强化神经回路。</li>
+                <li><strong>减少多任务</strong>：避免长期多任务切换，它会消耗执行资源并降低抑制效率。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>Stroop 测试在临床和科研中应用广泛：用于 ADHD（注意力缺陷多动障碍）的辅助评估、抑郁症和焦虑症的认知功能研究、脑损伤患者的执行功能筛查、以及药物和干预效果的客观测量。对于普通人，定期进行 Stroop 测试可以追踪自己执行功能的变化趋势，及时发现因压力、疲劳或衰老带来的认知波动。</p>
+            <h3>温馨提示</h3>
+            <p>测试时请尽量快速且准确地作答，但不要为了速度牺牲准确率。如果某次判断错误，不必纠结，继续专注下一题。Stroop 干扰是正常现象，即使犯错也不代表能力差——它恰恰说明你的大脑正在努力抑制优势反应。长期坚持练习，你会发现自己在不一致条件下的反应越来越快、错误越来越少，这就是执行功能提升的体现。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=32"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🎨</div>' +
+                '<div class="apex-start-screen__title">' + t('stroopStartTitle', 'Stroop 抑制挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('stroopStartDesc', '忽略文字含义，只判断字体颜色，考验你的抑制控制与抗干扰能力。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const progressText = document.getElementById('progressText');
+        const correctDisplay = document.getElementById('correctDisplay');
+
+        // 颜色定义：字义键 -> { label, color }
+        const COLORS = [
+            { key: 'red',    label: '红', color: '#ef4444' },
+            { key: 'green',  label: '绿', color: '#22c55e' },
+            { key: 'blue',   label: '蓝', color: '#3b82f6' },
+            { key: 'yellow', label: '黄', color: '#eab308' }
+        ];
+        const TOTAL = 40;
+
+        let sequence = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let trialStart = 0;
+        let rtSum = 0;
+        let state = 'idle';
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        function generateSequence() {
+            const seq = [];
+            for (let i = 0; i < TOTAL; i++) {
+                const wordIdx = Math.floor(Math.random() * COLORS.length);
+                // 50% 一致，50% 不一致
+                let inkIdx;
+                if (Math.random() < 0.5) {
+                    inkIdx = wordIdx; // 一致
+                } else {
+                    do { inkIdx = Math.floor(Math.random() * COLORS.length); } while (inkIdx === wordIdx);
+                }
+                seq.push({ word: COLORS[wordIdx], ink: COLORS[inkIdx] });
+            }
+            return seq;
+        }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'stroop', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ' + t('wordUnit', '个') + '</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function showCard() {
+            const item = sequence[currentIndex];
+            const ink = item.ink;
+            // 打乱按钮顺序，避免位置习惯
+            const shuffled = COLORS.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            testBox.innerHTML = '<div class="stroop-hint">' + t('stroopIndexLabel', '第 {index} / {total} 题').replace('{index}', currentIndex + 1).replace('{total}', TOTAL) + '</div>' +
+                '<div class="stroop-word stroop-pop" id="stroopWord" style="color:' + ink.color + '">' + item.word.label + '</div>' +
+                '<div class="stroop-hint">' + t('stroopRuleHint', '请点击字体的颜色，而不是字的意思') + '</div>' +
+                '<div class="stroop-buttons" id="stroopBtns">' +
+                    shuffled.map(c => '<button class="stroop-btn" data-color="' + c.key + '" style="background:' + c.color + '">' + c.label + '</button>').join('') +
+                '</div>' +
+                '<div class="stroop-feedback" id="feedback"></div>';
+            trialStart = performance.now();
+
+            const btns = testBox.querySelectorAll('.stroop-btn');
+            btns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btns.forEach(b => b.disabled = true);
+                    const chosen = btn.getAttribute('data-color');
+                    const isCorrect = chosen === ink.key;
+                    const rt = performance.now() - trialStart;
+                    const feedback = document.getElementById('feedback');
+                    if (isCorrect) {
+                        correctCount++;
+                        rtSum += rt;
+                        correctDisplay.textContent = correctCount;
+                        feedback.textContent = t('correctLabel', '正确') + ' · ' + Math.round(rt) + 'ms';
+                        feedback.style.color = 'var(--apex-success)';
+                        playSuccess();
+                    } else {
+                        feedback.textContent = t('wrongLabel', '错误');
+                        feedback.style.color = 'var(--apex-danger)';
+                        playFail();
+                    }
+                    currentIndex++;
+                    progressText.textContent = currentIndex + ' / ' + TOTAL;
+                    setTimeout(() => {
+                        if (currentIndex >= TOTAL) endGame();
+                        else showCard();
+                    }, 550);
+                });
+            });
+        }
+
+        function endGame() {
+            state = 'ended';
+            const avgRt = correctCount > 0 ? Math.round(rtSum / correctCount) : 0;
+            const grade = APEXON.Utils.getGrade(correctCount, 'stroop');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('stroopResult', '正确 {count} / {total} 题').replace('{count}', correctCount).replace('{total}', TOTAL) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + correctCount + '</div><div class="score-detail-label">' + t('correctLabel', '正确').replace('：', '') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + avgRt + 'ms</div><div class="score-detail-label">' + t('stroopAvgRt', '平均反应') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('stroop', correctCount, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'stroop', { score: correctCount }).then(saved => {
+                
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            state = 'running';
+            sequence = generateSequence();
+            currentIndex = 0;
+            correctCount = 0;
+            rtSum = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '1 / ' + TOTAL;
+            result.innerHTML = '';
+            showCard();
+        }
+
+        window.restartTest = function () {
+            state = 'idle';
+            sequence = [];
+            currentIndex = 0;
+            correctCount = 0;
+            rtSum = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '0 / ' + TOTAL;
+            result.innerHTML = '';
+            renderStartScreen();
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (state === 'idle') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。APEXON 免费在线视觉记忆测试。">
+    <meta name="keywords" content="视觉记忆,空间记忆,记忆力测试,认知训练,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="视觉记忆测试 - APEXON">
+    <meta property="og:description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/visual.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="视觉记忆测试 - APEXON">
+    <meta name="twitter:description" content="视觉记忆测试，记住亮起方块的位置与顺序，训练空间记忆能力。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="visualTitle">视觉记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+    <style>
+        #testBox {
+            display: grid;
+            gap: 8px;
+            justify-content: center;
+            align-content: center;
+            padding: 24px;
+            max-width: 420px;
+            margin: 0 auto;
+            min-height: 320px;
+        }
+        #testBox .visual-cell {
+            aspect-ratio: 1;
+            background: var(--apex-surface-elevated, #eef2ff);
+            border-radius: var(--apex-radius-sm);
+            cursor: pointer;
+            transition: transform var(--apex-transition-fast), background-color var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+            border: 1px solid var(--apex-border-subtle);
+        }
+        #testBox .visual-cell.lit {
+            background: var(--apex-primary);
+            box-shadow: 0 0 16px rgba(109, 93, 252, 0.45);
+            transform: scale(1.05);
+        }
+        #testBox .visual-cell.success {
+            background: var(--apex-success);
+            box-shadow: 0 0 16px rgba(52, 211, 153, 0.45);
+        }
+        #testBox .visual-cell.error {
+            background: var(--apex-danger);
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+        }
+        #testBox .visual-hint {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+
+        /* 手机端：视觉记忆网格更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 6px;
+                padding: 18px;
+                max-width: 320px;
+                min-height: 260px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 5px;
+                padding: 14px;
+                max-width: 280px;
+                min-height: 220px;
+            }
+            #testBox .visual-hint {
+                font-size: 0.8125rem;
+            }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="visualTitle">视觉记忆测试</h1>
+
+        <div class="info-row"><span data-i18n="currentLevel">当前关卡</span>：<span id="levelDisplay">1</span></div>
+
+        <div id="testBox" data-test-type="visual"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'visual', testTitle:'视觉记忆测试', score: window.lastScore || 0, scoreUnit:'关', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>视觉记忆测试：锻炼你的空间视觉能力</h2>
+            <p>视觉记忆是指个体对视觉信息进行编码、存储和再现的能力，它是我们认知系统中非常重要但常被忽视的一部分。从记住停车位置、识别朋友面孔，到学习图表、临摹画作、回忆房间布局，视觉记忆都在默默发挥作用。与语言记忆强调"是什么"不同，视觉记忆更强调"在哪里"和"长什么样"——它处理的是空间位置、颜色、形状、纹理等视觉特征信息。</p>
+            <p>大脑中负责视觉记忆的主要区域包括枕叶（负责初级视觉加工）、顶叶（负责空间定位）和海马体（负责记忆巩固）。当这些区域协同工作时，我们才能快速记住一幅画面的整体布局和关键细节。研究发现，艺术家的视觉记忆往往优于普通人，而长期玩动作游戏或策略游戏的人在视觉空间注意力和工作记忆方面也有明显优势。这说明视觉记忆虽然受先天因素影响，但后天的针对性训练能够带来实实在在的提升。</p>
+            <p>视觉记忆可以分为形象记忆和位置记忆两个层面。形象记忆关注物体的颜色、形状等外观特征，位置记忆则关注物体在空间中的相对位置。APEXON 视觉记忆测试同时考察这两个层面：你不仅要记住哪些方块亮过，还要记住它们出现的位置和顺序。这种双重加工要求使得测试比单纯的形状识别或位置判断更具挑战性，也更接近真实生活中的视觉记忆任务。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>测试开始后，系统会在一个网格中依次点亮若干方块。每个方块会短暂高亮显示，然后恢复原状。所有方块显示完毕后，玩家需要按照刚才看到的顺序，依次点击对应的位置。随着关卡提升，网格规模会扩大，需要记忆的方块数量也会增加，难度呈阶梯式上升。初始关卡使用 3×3 网格，后续会逐渐扩展到 4×4、5×5 等更大规模。</p>
+            <p>这个任务考察的是"视觉工作记忆"，也就是大脑在视觉信息消失后，仍能暂时保持其表征的能力。由于方块亮起的间隔很短，玩家无法依赖语言复述来辅助记忆，必须主要依靠视觉表象进行回忆。这使得测试对纯粹的视觉记忆能力提出了较高要求，同时也减少了对语言能力的依赖，让不同语言背景的用户都能在相对公平的条件下进行比较。</p>
+            <h3>影响视觉记忆表现的因素</h3>
+            <p>先天视觉空间能力是基础，但后天训练也能带来显著提升。注意力集中程度直接影响编码质量——如果观察时分心，记忆痕迹就会很浅。年龄因素也不容忽视，儿童视觉记忆仍在发展，成年人相对稳定，老年人则可能出现下降。此外，某些职业训练（如建筑设计、围棋、电子竞技、外科手术）可以显著增强视觉空间记忆能力。生活方式因素如睡眠质量、酒精摄入和视觉疲劳也会对测试结果产生短期影响。</p>
+            <h3>提升视觉记忆的训练技巧</h3>
+            <ul>
+                <li><strong>构建心理地图</strong>：把方块位置想象成熟悉空间中的物体，比如房间里的家具、街道上的地标或棋盘上的棋子。熟悉的参照物能显著提升记忆稳定性。</li>
+                <li><strong>分块记忆</strong>：把长序列分成 2 到 3 个小组块，逐个回忆，而不是试图一次记住全部。组块之间可以寻找空间上的规律或对称性。</li>
+                <li><strong>关注首尾和转折点</strong>：序列的开头和结尾通常更容易记住，抓住这些锚点可以降低整体难度。中间部分可以通过与前后的关系来推导。</li>
+                <li><strong>保持稳定注视</strong>：观察阶段尽量减少眨眼和头部移动，确保不错过任何关键信息。可以尝试用余光覆盖整个网格。</li>
+                <li><strong>多做视觉类训练</strong>：拼图、找不同、记忆翻牌、围棋、象棋、素描观察等活动都能有效锻炼视觉记忆。</li>
+                <li><strong>闭目回忆</strong>：方块显示结束后，先在脑海中"放映"一遍刚才的画面，再开始点击。这种心理复述能显著降低遗忘。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>视觉记忆测试适合设计师、画家、建筑师、棋手、运动员、驾驶员以及任何希望提升空间记忆和观察力的用户。在日常生活中，良好的视觉记忆可以帮助我们更快找到物品、更好记住路线、更高效地学习图表和图像信息。对于从事视觉相关职业的人来说，定期测试可以追踪训练效果；对于儿童来说，视觉记忆训练也有助于发展空间认知和学习能力。</p>
+            <h3>温馨提示</h3>
+            <p>测试时请选择光线适宜的环境，避免屏幕反光或眼睛疲劳影响观察。如果连续测试多轮，建议每轮之间让眼睛休息 20 到 30 秒。如果在某一轮感觉记忆模糊，可以凭直觉猜测，但不要过度犹豫，因为犹豫本身会占用工作记忆资源。坚持训练，你会发现自己能够记住的方块数量和序列长度都在逐步增加。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🟦</div>' +
+                '<div class="apex-start-screen__title">' + t('visualStartTitle', '视觉记忆挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('visualStartDesc', '观察方块亮起的顺序，然后按相同顺序点击复现。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        // 粒子背景
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const levelDisplay = document.getElementById('levelDisplay');
+
+        let level = 1;
+        let state = 'idle';
+        let sequence = [];
+        let clickIndex = 0;
+        let timers = [];
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        function clearTimers() {
+            timers.forEach(t => clearTimeout(t));
+            timers = [];
+        }
+
+        function gridSizeForLevel(l) { return 3 + Math.floor((l - 1) / 2); }
+        function countForLevel(l, n) { return Math.min(n * n, l + 2); }
+
+        function generateSequence(n, count) {
+            const indices = [];
+            while (indices.length < count) {
+                const idx = Math.floor(Math.random() * n * n);
+                if (!indices.includes(idx)) indices.push(idx);
+            }
+            return indices;
+        }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'visual', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + t('levelHistoryLabel', '第 {level} 关').replace('{level}', esc(h.score)) + '</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function buildGrid(n) {
+            testBox.innerHTML = '';
+            testBox.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+            for (let i = 0; i < n * n; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'visual-cell';
+                cell.dataset.index = i;
+                testBox.appendChild(cell);
+            }
+        }
+
+        function lightCell(cell) {
+            cell.classList.add('lit');
+            setTimeout(() => cell.classList.remove('lit'), 450);
+        }
+
+        function playSequence() {
+            state = 'showing';
+            const n = gridSizeForLevel(level);
+            const count = countForLevel(level, n);
+            sequence = generateSequence(n, count);
+            clickIndex = 0;
+            buildGrid(n);
+            const hint = document.createElement('div');
+            hint.className = 'visual-hint';
+            hint.textContent = t('visualHintObserve', '请注意观察亮起的方块');
+            testBox.appendChild(hint);
+
+            sequence.forEach((idx, i) => {
+                const timer = setTimeout(() => {
+                    const cell = testBox.querySelector('.visual-cell[data-index="' + idx + '"]');
+                    if (cell) lightCell(cell);
+                    if (i === sequence.length - 1) {
+                        timers.push(setTimeout(() => {
+                            state = 'input';
+                            hint.textContent = t('visualHintClick', '请按顺序点击亮过的位置');
+                        }, 600));
+                    }
+                }, 700 * i + 400);
+                timers.push(timer);
+            });
+        }
+
+        function handleCellClick(e) {
+            if (state !== 'input') return;
+            const cell = e.target.closest('.visual-cell');
+            if (!cell) return;
+            const idx = parseInt(cell.dataset.index, 10);
+            if (idx !== sequence[clickIndex]) {
+                cell.classList.add('error');
+                playFail();
+                endGame(level);
+                return;
+            }
+            cell.classList.add('success');
+            setTimeout(() => cell.classList.remove('success'), 250);
+            clickIndex++;
+            if (clickIndex >= sequence.length) {
+                state = 'transition';
+                playSuccess();
+                level++;
+                levelDisplay.textContent = level;
+                timers.push(setTimeout(() => playSequence(), 700));
+            }
+        }
+
+        function endGame(score) {
+            state = 'ended';
+            clearTimers();
+            const grade = APEXON.Utils.getGrade(score, 'visual');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('passLevel', '通过第 {level} 关').replace('{level}', score) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + score + '</div><div class="score-detail-label">' + t('levelLabel', '关卡') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('visual', score, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'visual', { score: score }).then(saved => {
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            level = 1;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            playSequence();
+        }
+
+        window.restartTest = function () {
+            clearTimers();
+            state = 'idle';
+            level = 1;
+            levelDisplay.textContent = level;
+            result.innerHTML = '';
+            renderStartScreen();
+            testBox.style.gridTemplateColumns = '';
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (state === 'idle') startTest();
+            else handleCellClick(e);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

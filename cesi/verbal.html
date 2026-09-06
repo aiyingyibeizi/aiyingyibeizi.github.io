@@ -20,7 +20,7 @@
     <title data-i18n="verbalTitle">单词记忆测试 - APEXON</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=18">
+    <link rel="stylesheet" href="styles/main.css?v=21">
     <style>
         #testBox {
             flex-direction: column;
@@ -136,10 +136,31 @@
                     <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
                     <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
                     <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
                     <a href="music.html" data-i18n="navMusic">Music</a>
                 </nav>
             </div>
-            <div class="header-actions"></div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -154,6 +175,7 @@
 
         <div class="btn-group">
             <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'verbal', testTitle:'单词记忆测试', score: window.lastScore || 0, scoreUnit:'个', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
             <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
         </div>
 
@@ -188,8 +210,10 @@
         </div>
     </div>
 
-    <script src="js/i18n.js?v=11"></script>
-    <script src="js/common.js?v=26"></script>
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=32"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
     <script>
     (function () {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
@@ -304,7 +328,7 @@
             APEXON.Share.bindShareEvents(result);
 
             APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'verbal', { score: correctCount }).then(saved => {
-                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+                
             });
             if (navigator.vibrate) navigator.vibrate(50);
             renderHistory();

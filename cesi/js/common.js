@@ -10,7 +10,11 @@
   // 全局菜单切换：下拉菜单与三条杠对齐，首页 Pill 始终保留
   global.toggleMenu = function () {
     const dropdown = document.getElementById('headerDropdown');
-    if (dropdown) dropdown.classList.toggle('open');
+    const btn = document.querySelector('.apexon-menu-btn');
+    if (dropdown) {
+      const isOpen = dropdown.classList.toggle('open');
+      if (btn) btn.setAttribute('aria-expanded', String(isOpen));
+    }
   };
 
   // 点击页面其他区域关闭菜单；点击菜单链接后自动收起
@@ -20,10 +24,14 @@
     if (!dropdown || !btn) return;
     if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
       dropdown.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
       return;
     }
     const link = e.target.closest('#headerDropdown a');
-    if (link) dropdown.classList.remove('open');
+    if (link) {
+      dropdown.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
   });
 
   // ===== 页面切换丝滑过渡 =====
@@ -42,12 +50,28 @@
       }
     }
 
+    let navigating = false;
     function navigateWithTransition(href) {
+      if (navigating) return;
+      navigating = true;
       overlay.classList.add('active');
       document.body.classList.remove('loaded');
-      setTimeout(() => {
-        location.href = href;
-      }, 260);
+      // 用 rAF 确保覆盖层动画启动后再跳转，避免视觉跳变
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          try { location.href = href; }
+          catch (e) { /* 导航被拦截，重置标志位避免后续点击全部失效 */ }
+          // 安全兜底：若 600ms 后仍在当前页（导航未触发），重置 navigating
+          // 避免 navigating 永远为 true 导致全站链接点击失效
+          setTimeout(() => {
+            if (navigating) {
+              navigating = false;
+              overlay.classList.remove('active');
+              document.body.classList.add('loaded');
+            }
+          }, 600);
+        }, 220);
+      });
     }
 
     document.addEventListener('click', (e) => {
@@ -57,14 +81,17 @@
       if (!isLocalLink(href)) return;
       // 排除需要直接下载或新标签的链接，以及 LOGO/菜单等已自身处理的导航
       if (link.target === '_blank' || link.getAttribute('download')) return;
+      // 修饰键点击（新标签/后台）交给浏览器原生行为
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       e.preventDefault();
       navigateWithTransition(href);
     });
 
-    // 页面加载完成后淡入
-    window.addEventListener('pageshow', () => {
+    // 页面加载完成后淡入（兼容 bfcache 前进/后退）
+    window.addEventListener('pageshow', (e) => {
       overlay.classList.remove('active', 'exit');
       document.body.classList.add('loaded');
+      navigating = false;
     });
 
     // 安全兜底：若过渡异常导致页面未显示，3s 后强制显示
@@ -89,7 +116,10 @@
   // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
   const SUPABASE_URL = '';
   const SUPABASE_ANON_KEY = '';
-  const WORKER_API_URL = 'https://api.apexon.qzz.io'; // Cloudflare Worker 后端地址（唯一允许的后端入口）
+  // API 始终指向 Cloudflare Worker 域名（前端托管在 GitHub Pages / 其它静态站，
+  // 同源 /api 无法路由到 Worker，会导致全部接口 404/405、错误率飙升）。
+  // Worker 端已开启 CORS（任意来源），跨域调用不受限。
+  const WORKER_API_URL = 'https://api.apexon.qzz.io';
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
@@ -143,7 +173,16 @@
       try {
         const res = await fetch(url, options);
         const text = await res.text();
-        const data = text ? JSON.parse(text) : {};
+        let data = {};
+        if (text) {
+          try { data = JSON.parse(text); }
+          catch (parseErr) {
+            // 服务端返回非 JSON（如 HTML 错误页）：保留真实 HTTP 状态码，避免误判为网络错误
+            console.error(`[WorkerAPI ${method}] ${path} JSON parse failed (status ${res.status}):`, text.slice(0, 200));
+            if (!res.ok) return { ok: false, status: res.status, data: null };
+            return { ok: true, status: res.status, data: { raw: text } };
+          }
+        }
         if (!res.ok) {
           console.error(`[WorkerAPI ${method}] ${path} ${res.status}:`, data);
           return { ok: false, status: res.status, data };
@@ -159,36 +198,36 @@
 
   // ===== 预设头像：30 张精选艺术风景 / 几何 / 木纹 / 专辑封面风格头像（本地文件，不占用数据库存储）=====
   const PRESET_AVATARS = [
-    { id: 0, url: 'assets/avatars/avatar_01.jpg?v=2' },
-    { id: 1, url: 'assets/avatars/avatar_02.jpg?v=2' },
-    { id: 2, url: 'assets/avatars/avatar_03.jpg?v=2' },
-    { id: 3, url: 'assets/avatars/avatar_04.jpg?v=2' },
-    { id: 4, url: 'assets/avatars/avatar_05.jpg?v=2' },
-    { id: 5, url: 'assets/avatars/avatar_06.jpg?v=2' },
-    { id: 6, url: 'assets/avatars/avatar_07.jpg?v=2' },
-    { id: 7, url: 'assets/avatars/avatar_08.jpg?v=2' },
-    { id: 8, url: 'assets/avatars/avatar_09.jpg?v=2' },
-    { id: 9, url: 'assets/avatars/avatar_10.jpg?v=2' },
-    { id: 10, url: 'assets/avatars/avatar_11.jpg?v=2' },
-    { id: 11, url: 'assets/avatars/avatar_12.jpg?v=2' },
-    { id: 12, url: 'assets/avatars/avatar_13.jpg?v=2' },
-    { id: 13, url: 'assets/avatars/avatar_14.jpg?v=2' },
-    { id: 14, url: 'assets/avatars/avatar_15.jpg?v=2' },
-    { id: 15, url: 'assets/avatars/avatar_16.jpg?v=2' },
-    { id: 16, url: 'assets/avatars/avatar_17.jpg?v=2' },
-    { id: 17, url: 'assets/avatars/avatar_18.jpg?v=2' },
-    { id: 18, url: 'assets/avatars/avatar_19.jpg?v=2' },
-    { id: 19, url: 'assets/avatars/avatar_20.jpg?v=2' },
-    { id: 20, url: 'assets/avatars/avatar_21.jpg?v=2' },
-    { id: 21, url: 'assets/avatars/avatar_22.jpg?v=2' },
-    { id: 22, url: 'assets/avatars/avatar_23.jpg?v=2' },
-    { id: 23, url: 'assets/avatars/avatar_24.jpg?v=2' },
-    { id: 24, url: 'assets/avatars/avatar_25.jpg?v=2' },
-    { id: 25, url: 'assets/avatars/avatar_26.jpg?v=2' },
-    { id: 26, url: 'assets/avatars/avatar_27.jpg?v=2' },
-    { id: 27, url: 'assets/avatars/avatar_28.jpg?v=2' },
-    { id: 28, url: 'assets/avatars/avatar_29.jpg?v=2' },
-    { id: 29, url: 'assets/avatars/avatar_30.jpg?v=2' }
+    { id: 0, url: 'assets/avatars/avatar_01.jpg?v=3' },
+    { id: 1, url: 'assets/avatars/avatar_02.jpg?v=3' },
+    { id: 2, url: 'assets/avatars/avatar_03.jpg?v=3' },
+    { id: 3, url: 'assets/avatars/avatar_04.jpg?v=3' },
+    { id: 4, url: 'assets/avatars/avatar_05.jpg?v=3' },
+    { id: 5, url: 'assets/avatars/avatar_06.jpg?v=3' },
+    { id: 6, url: 'assets/avatars/avatar_07.jpg?v=3' },
+    { id: 7, url: 'assets/avatars/avatar_08.jpg?v=3' },
+    { id: 8, url: 'assets/avatars/avatar_09.jpg?v=3' },
+    { id: 9, url: 'assets/avatars/avatar_10.jpg?v=3' },
+    { id: 10, url: 'assets/avatars/avatar_11.jpg?v=3' },
+    { id: 11, url: 'assets/avatars/avatar_12.jpg?v=3' },
+    { id: 12, url: 'assets/avatars/avatar_13.jpg?v=3' },
+    { id: 13, url: 'assets/avatars/avatar_14.jpg?v=3' },
+    { id: 14, url: 'assets/avatars/avatar_15.jpg?v=3' },
+    { id: 15, url: 'assets/avatars/avatar_16.jpg?v=3' },
+    { id: 16, url: 'assets/avatars/avatar_17.jpg?v=3' },
+    { id: 17, url: 'assets/avatars/avatar_18.jpg?v=3' },
+    { id: 18, url: 'assets/avatars/avatar_19.jpg?v=3' },
+    { id: 19, url: 'assets/avatars/avatar_20.jpg?v=3' },
+    { id: 20, url: 'assets/avatars/avatar_21.jpg?v=3' },
+    { id: 21, url: 'assets/avatars/avatar_22.jpg?v=3' },
+    { id: 22, url: 'assets/avatars/avatar_23.jpg?v=3' },
+    { id: 23, url: 'assets/avatars/avatar_24.jpg?v=3' },
+    { id: 24, url: 'assets/avatars/avatar_25.jpg?v=3' },
+    { id: 25, url: 'assets/avatars/avatar_26.jpg?v=3' },
+    { id: 26, url: 'assets/avatars/avatar_27.jpg?v=3' },
+    { id: 27, url: 'assets/avatars/avatar_28.jpg?v=3' },
+    { id: 28, url: 'assets/avatars/avatar_29.jpg?v=3' },
+    { id: 29, url: 'assets/avatars/avatar_30.jpg?v=3' }
   ];
 
   // ===== 0. 安全层 =====
@@ -206,9 +245,11 @@
 
     filterDangerous(input) {
       if (!input || typeof input !== 'string') return input;
-      const dangerousPattern = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/gi;
-      const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/gi;
-      const eventHandler = /on\w+\s*=/gi;
+      // 注意：去掉 g flag。带 g flag 的正则用 .test() 会记忆 lastIndex，
+      // 交替调用同一字符串时会漏检危险内容（安全漏洞）。
+      const dangerousPattern = /<(script|iframe|object|embed|applet|form|input|textarea|button|link|style|meta|base|svg|math|audio|video|source|track|canvas|map|area|frame|frameset|param|xml|xss)[\s>\/]/i;
+      const jsProtocol = /javascript:|data:|vbscript:|file:|about:|blob:/i;
+      const eventHandler = /on\w+\s*=/i;
       if (dangerousPattern.test(input) || jsProtocol.test(input) || eventHandler.test(input)) {
         return (window.APEXON && APEXON.i18n ? APEXON.i18n.t('contentFiltered', '[内容已过滤]') : '[内容已过滤]');
       }
@@ -250,6 +291,24 @@
       if (type === 'aim') {
         const avg = parseFloat(data.avg);
         if (isNaN(avg) || avg < 0 || avg > 100000) return false;
+        return true;
+      }
+      // Stroop 抑制控制：正确数（0-40）
+      if (type === 'stroop') {
+        const score = parseInt(data.score, 10);
+        if (isNaN(score) || score < 0 || score > 40) return false;
+        return true;
+      }
+      // N-Back 工作记忆：达到的 N 值（1-6）
+      if (type === 'nback') {
+        const score = parseInt(data.score, 10);
+        if (isNaN(score) || score < 1 || score > 10) return false;
+        return true;
+      }
+      // Visual Search 视觉搜索：平均搜索时间（越小越好，单位 ms）
+      if (type === 'visualsearch') {
+        const score = parseInt(data.score, 10);
+        if (isNaN(score) || score < 100 || score > 30000) return false;
         return true;
       }
       return false;
@@ -483,6 +542,7 @@
     async saveScore(userId, username, testType, data) {
       if (!userId) {
         console.error('saveScore rejected: missing userId');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('needLogin') : '请先登录或生成游客身份后再保存'), 2400, 'warning');
         return false;
       }
       if (!Security.validateRecord(testType, data)) {
@@ -491,36 +551,58 @@
       }
       const scoreValue = parseFloat(data.avg || data.score || 0);
       const token = Auth.getToken() || Auth.getUserId();
-      const res = await WorkerAPI.request('/api/scores', 'POST', {
-        username: username || '',
-        test_type: testType,
-        score_value: scoreValue,
-        accuracy: data.accuracy != null ? data.accuracy : (data.fouls != null ? data.fouls : null),
-        wpm: data.wpm || null,
-        cpm: data.cpm || null,
-        payload: {
-          times: data.times,
-          fouls: data.fouls,
-          leaderboard_eligible: data.leaderboard_eligible
-        }
-      }, token);
-      console.log('[saveScore]', testType, scoreValue, 'result:', res.data);
-      if (res.ok) {
+      let res;
+      try {
+        res = await WorkerAPI.request('/api/scores', 'POST', {
+          username: username || '',
+          test_type: testType,
+          score_value: scoreValue,
+          accuracy: data.accuracy != null ? data.accuracy : (data.fouls != null ? data.fouls : null),
+          wpm: data.wpm || null,
+          cpm: data.cpm || null,
+          payload: {
+            times: data.times,
+            fouls: data.fouls,
+            leaderboard_eligible: data.leaderboard_eligible
+          }
+        }, token);
+      } catch (e) {
+        console.error('[saveScore] uncaught:', e);
+        res = { ok: false, status: 0, data: null };
+      }
+      console.log('[saveScore]', testType, scoreValue, 'result:', res && res.data);
+      if (res && res.ok) {
         LocalStats.recordTest(userId);
-        // 失效排行榜和统计缓存，让下次读取拿到最新数据
+        // 统一维护分享卡片所需的全局成绩数据（所有测试页共用，避免各页遗漏赋值导致分享卡片恒为 0 分）
+        try {
+          window.lastScore = scoreValue;
+          const g = APEXON.Utils && APEXON.Utils.getGrade ? APEXON.Utils.getGrade(scoreValue, testType) : null;
+          if (g) { window.lastGrade = g.grade; window.lastGradeColor = g.color; }
+        } catch (e) {}
+        if (window.APEXON && APEXON.Achievements) {
+          try { APEXON.Achievements.recordTest(testType, scoreValue); } catch (e) {}
+        }
         WorkerAPI.invalidate('GET:/api/scores?leaderboard=');
         WorkerAPI.invalidate('GET:/api/stats');
         document.dispatchEvent(new CustomEvent('apexon:scoreSaved', { detail: { testType, scoreValue } }));
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('scoreSaved') : '成绩已保存 ✓'), 1600, 'success');
         return true;
       }
+      // 错误场景：给用户明确的反馈，而不是静默失败
+      const hint = (res && res.status === 401)
+        ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
+        : (res && res.status && res.status >= 500)
+          ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
+          : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('scoreSaveFailed') : '成绩保存失败，请检查网络后重试');
+      APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(hint, 2800, 'error');
       return false;
     },
 
     async deleteScore(id, userId) {
       if (!id) return false;
-      const extraHeaders = userId ? { 'x-user-id': userId } : undefined;
-      const result = await this.request('scores', 'DELETE', null, `id=${encodeURIComponent(id)}`, extraHeaders);
-      return !!result;
+      const token = Auth.getToken() || Auth.getUserId() || userId;
+      const res = await WorkerAPI.request(`/api/scores?id=${encodeURIComponent(id)}`, 'DELETE', null, token);
+      return !!(res && res.ok);
     },
 
     async getLeaderboard(testType, limit = 100) {
@@ -561,28 +643,50 @@
       const cat = ['bug', 'score', 'chat', 'suggestion'].includes(category) ? category : 'chat';
       console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length, 'category:', cat);
       if (!filtered) {
-        console.warn('[addComment] rejected: empty content');
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空') };
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
+        return { success: false, error: msg };
       }
       if (filtered.length > 500) {
-        console.warn('[addComment] rejected: too long', filtered.length);
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制') };
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
+        return { success: false, error: msg };
+      }
+      if (!userId) {
+        const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('needLogin') : '请先登录或生成游客身份后再发评论');
+        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2400, 'warning');
+        return { success: false, error: msg };
       }
       const token = Auth.getToken() || Auth.getUserId();
-      const res = await WorkerAPI.request('/api/comments', 'POST', {
-        user_id: userId,
-        username: username,
-        content: filtered,
-        category: cat
-      }, token);
-      console.log('[addComment] result:', res.data);
-      if (!res.ok) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试（详细错误请查看控制台）') };
+      let res;
+      try {
+        res = await WorkerAPI.request('/api/comments', 'POST', {
+          user_id: userId,
+          username: username,
+          content: filtered,
+          category: cat
+        }, token);
+      } catch (e) {
+        console.error('[addComment] uncaught:', e);
+        res = { ok: false, status: 0, data: null };
       }
-      // 失效评论和统计缓存
+      console.log('[addComment] result:', res && res.data);
+      if (!res || !res.ok) {
+        // 原始后端错误只写控制台便于排查，不再直接弹给用户（避免出现一长串英文数据库报错）。
+        // 提示语统一用本地化文案；同时此方法不再自行弹 toast，由调用方（postComment）统一弹一次，避免双击弹两个失败提示。
+        const rawErr = (res && res.data && res.data.error) || null;
+        if (rawErr) console.error('[addComment] backend error:', res && res.status, rawErr);
+        const hint = (res && res.status === 401)
+          ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
+          : (res && res.status && res.status >= 500)
+            ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
+            : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
+        return { success: false, error: hint };
+      }
       WorkerAPI.invalidate('GET:/api/comments?');
       WorkerAPI.invalidate('GET:/api/stats');
       document.dispatchEvent(new CustomEvent('apexon:commentPosted', { detail: { category: cat } }));
+      APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentPosted') : '评论已发布 ✓'), 1600, 'success');
       return { success: true };
     },
 
@@ -734,8 +838,10 @@
         this._extendSession();
         return true;
       }
+      // 会话校验失败（401/403 等）：清除本地会话并返回 false，
+      // 让调用方能正确感知"已登出"，而非误认为仍在线。
       this._clearSession();
-      return true;
+      return false;
     },
 
     isLoggedIn() {
@@ -1212,23 +1318,53 @@
 
   // ===== 7. 工具函数 =====
   const Utils = {
+    // 防抖：停止输入 delay 毫秒后才执行一次（用于搜索框等高频输入）
     debounce(fn, ms) {
-      let timer;
-      return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
+      let timer = null;
+      return function (...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+      };
     },
+    // 节流（leading + trailing）：首次立即触发，间隔内的最后一次调用延后补发，
+    // 既能防止快速点击连发请求，又能保证最终状态与用户最后一次操作一致（用于 tab/分类切换）
     throttle(fn, ms) {
-      let last = 0;
+      let lastCall = 0;
+      let timer = null;
       return function (...args) {
         const now = Date.now();
-        if (now - last >= ms) { last = now; fn.apply(this, args); }
+        const remaining = ms - (now - lastCall);
+        if (remaining <= 0) {
+          if (timer) { clearTimeout(timer); timer = null; }
+          lastCall = now;
+          fn.apply(this, args);
+        } else if (!timer) {
+          timer = setTimeout(() => {
+            lastCall = Date.now();
+            timer = null;
+            fn.apply(this, args);
+          }, remaining);
+        }
       };
     },
     vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); },
     reactionPenalty() {
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      return isTouch ? 30 : 10;
+      // 触屏设备输入延迟补偿。注意：触屏笔记本用鼠标点击时不应算作触屏，
+      // 用 pointer 事件类型 + 实际触摸点判断，避免误扣触屏笔记本鼠标用户。
+      // 若无法可靠判断（无最近 pointer 事件记录），则对触屏能力设备保留原 30ms 惩罚。
+      if (typeof PointerEvent !== 'undefined' && this._lastPointerType === 'mouse') return 10;
+      const isTouchCapable = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      return isTouchCapable ? 30 : 10;
+    },
+    // 记录最近一次 pointer 事件类型，供 reactionPenalty 区分触屏笔记本的鼠标点击
+    _lastPointerType: null,
+    _initPointerTracking() {
+      if (this._pointerTrackingBound) return;
+      this._pointerTrackingBound = true;
+      window.addEventListener('pointerdown', (e) => { this._lastPointerType = e.pointerType; }, { passive: true });
     },
     getGrade(val, type) {
+      // 反应时间类（越低越好，单位 ms）
       if (type === 'reaction') {
         if (val < 180) return { grade: 'S', color: '#FFD700' };
         if (val < 230) return { grade: 'A', color: '#FF6B6B' };
@@ -1236,6 +1372,7 @@
         if (val < 350) return { grade: 'C', color: '#95E1D3' };
         return { grade: 'D', color: '#aaa' };
       }
+      // 打字平均用时（越低越好，单位 s）
       if (type === 'type') {
         if (val < 20) return { grade: 'S', color: '#FFD700' };
         if (val < 30) return { grade: 'A', color: '#FF6B6B' };
@@ -1243,24 +1380,200 @@
         if (val < 50) return { grade: 'C', color: '#95E1D3' };
         return { grade: 'D', color: '#aaa' };
       }
+      // 瞄准训练平均点击耗时（越低越好，单位 ms）
+      if (type === 'aim') {
+        if (val < 350) return { grade: 'S', color: '#FFD700' };
+        if (val < 500) return { grade: 'A', color: '#FF6B6B' };
+        if (val < 700) return { grade: 'B', color: '#4ECDC4' };
+        if (val < 900) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // 数字记忆位数（越高越好）
+      if (type === 'number') {
+        if (val >= 12) return { grade: 'S', color: '#FFD700' };
+        if (val >= 9) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 7) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 5) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // 序列记忆 / 视觉记忆 关卡数（越高越好）
+      if (type === 'sequence' || type === 'visual') {
+        if (val >= 16) return { grade: 'S', color: '#FFD700' };
+        if (val >= 12) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 8) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 5) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // 单词记忆正确数（越高越好，满分 30）
+      if (type === 'verbal') {
+        if (val >= 27) return { grade: 'S', color: '#FFD700' };
+        if (val >= 22) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 17) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 12) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // 持续注意力 60s 得分（越高越好）
+      if (type === 'stick') {
+        if (val >= 200) return { grade: 'S', color: '#FFD700' };
+        if (val >= 150) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 100) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 50) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // Stroop 抑制控制正确数（越高越好，满分 40）
+      if (type === 'stroop') {
+        if (val >= 36) return { grade: 'S', color: '#FFD700' };
+        if (val >= 30) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 24) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 18) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // N-Back 工作记忆 N 值（越高越好）
+      if (type === 'nback') {
+        if (val >= 5) return { grade: 'S', color: '#FFD700' };
+        if (val >= 4) return { grade: 'A', color: '#FF6B6B' };
+        if (val >= 3) return { grade: 'B', color: '#4ECDC4' };
+        if (val >= 2) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
+      // Visual Search 视觉搜索平均时间（越低越好，单位 ms）
+      if (type === 'visualsearch') {
+        if (val <= 800) return { grade: 'S', color: '#FFD700' };
+        if (val <= 1500) return { grade: 'A', color: '#FF6B6B' };
+        if (val <= 2500) return { grade: 'B', color: '#4ECDC4' };
+        if (val <= 4000) return { grade: 'C', color: '#95E1D3' };
+        return { grade: 'D', color: '#aaa' };
+      }
       return { grade: '-', color: '#aaa' };
+    },
+    // 数字滚动动画：从 from 平滑增长到 to，常用于成绩揭晓、统计数字
+    // 用法：Utils.countUp(el, 0, 1234, { duration: 800, suffix: ' ms', decimals: 2 })
+    countUp(el, from, to, opts = {}) {
+      if (!el) return;
+      const duration = opts.duration || 800;
+      const suffix = opts.suffix || '';
+      const prefix = opts.prefix || '';
+      const decimals = opts.decimals != null ? opts.decimals : 0;
+      const start = performance.now();
+      const ease = (t) => 1 - Math.pow(1 - t, 3); // ease-out-cubic
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) {
+        el.textContent = prefix + Number(to).toFixed(decimals) + suffix;
+        return;
+      }
+      const step = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const val = from + (to - from) * ease(t);
+        el.textContent = prefix + val.toFixed(decimals) + suffix;
+        if (t < 1) requestAnimationFrame(step);
+        else el.textContent = prefix + Number(to).toFixed(decimals) + suffix;
+      };
+      requestAnimationFrame(step);
+    },
+    // 为一组 DOM 元素添加交错入场动画（stagger）
+    // 用法：Utils.stagger(nodeList, { delay: 60, baseDelay: 0 })
+    stagger(nodes, opts = {}) {
+      const per = opts.delay != null ? opts.delay : 60;
+      const base = opts.baseDelay || 0;
+      const cls = opts.className || 'apex-stagger-in';
+      const nodesArr = Array.from(nodes || []);
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      nodesArr.forEach((n, i) => {
+        if (!n) return;
+        if (prefersReduced) { n.classList.add(cls, 'apex-stagger-done'); return; }
+        n.style.animationDelay = (base + i * per) + 'ms';
+        n.classList.add(cls);
+      });
+    },
+    // 按钮涟漪效果：在点击点注入扩散波纹
+    // 用法：Utils.bindRipple(selectorOrElement)
+    bindRipple(target) {
+      const targets = typeof target === 'string' ? document.querySelectorAll(target) : (target.length != null ? target : [target]);
+      const handler = (e) => {
+        const el = e.currentTarget;
+        // reduced-motion 下跳过视觉涟漪
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const rect = el.getBoundingClientRect();
+        // 剪小涟漪尺寸：取最小边 *0.6（不再用 max 导致宽按钮溢出成巨大圆），点击反馈更轻柔
+        const size = Math.round(Math.min(rect.width, rect.height) * 0.6);
+        const ripple = document.createElement('span');
+        ripple.className = 'apex-ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        // pointerdown 有 offsetX/Y，click 也有；统一用相对位置
+        const x = (e.clientX != null ? e.clientX : rect.left + rect.width / 2) - rect.left - size / 2;
+        const y = (e.clientY != null ? e.clientY : rect.top + rect.height / 2) - rect.top - size / 2;
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        // 确保 host 元素定位上下文
+        const pos = getComputedStyle(el).position;
+        if (pos === 'static') el.style.position = 'relative';
+        el.appendChild(ripple);
+        setTimeout(() => { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 650);
+      };
+      Array.from(targets).forEach((t) => {
+        if (!t || t._apexRippleBound) return;
+        t._apexRippleBound = true;
+        t.classList.add('apex-ripple-host');
+        t.addEventListener('pointerdown', handler, { passive: true });
+      });
     }
   };
   APEXON.Utils = Utils;
 
   // ===== 7. UI 工具 =====
   const UI = {
-    toast(msg, duration = 2500) {
-      let el = document.getElementById('apex-toast');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'apex-toast';
-        el.className = 'toast';
-        document.body.appendChild(el);
+    // Toast 队列：支持类型变体（success/error/warning/info）、aria-live 播报、
+    // 多条堆叠（最多 3 条），快速连续调用不再互相覆盖。
+    _toastQueue: [],
+    _toastActive: 0,
+    _toastMax: 3,
+    toast(msg, duration = 2500, type = 'info') {
+      const validTypes = { success: 'success', error: 'error', warning: 'warning', info: 'info' };
+      const t = validTypes[type] || 'info';
+      this._toastQueue.push({ msg: String(msg), duration, type: t });
+      this._toastDrain();
+    },
+    _toastDrain() {
+      if (this._toastActive >= this._toastMax) return;
+      const item = this._toastQueue.shift();
+      if (!item) return;
+      this._toastActive++;
+      this._toastRender(item, () => {
+        this._toastActive--;
+        this._toastDrain();
+      });
+    },
+    _toastRender(item, done) {
+      const container = this._toastContainer();
+      const el = document.createElement('div');
+      el.className = 'toast apex-toast apex-toast--' + item.type;
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.textContent = item.msg;
+      container.appendChild(el);
+      // 触发入场动画
+      requestAnimationFrame(() => el.classList.add('show'));
+      const remove = () => {
+        el.classList.remove('show');
+        el.classList.add('leaving');
+        setTimeout(() => {
+          if (el.parentNode) el.parentNode.removeChild(el);
+          done && done();
+        }, 250);
+      };
+      setTimeout(remove, item.duration);
+      // 点击提前关闭
+      el.addEventListener('click', remove, { passive: true });
+    },
+    _toastContainer() {
+      let c = document.getElementById('apex-toast-container');
+      if (!c) {
+        c = document.createElement('div');
+        c.id = 'apex-toast-container';
+        c.className = 'apex-toast-container';
+        document.body.appendChild(c);
       }
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), duration);
+      return c;
     },
 
     initTheme() {
@@ -1295,13 +1608,314 @@
       }
     },
 
+    initAccentPicker() {
+      try {
+        const accents = ['cyan', 'emerald', 'amber', 'rose', 'indigo', 'coral', 'sunset', 'mint', 'crimson'];
+        const savedAccent = localStorage.getItem('apex_accent');
+        if (savedAccent && accents.indexOf(savedAccent) >= 0) {
+          document.documentElement.setAttribute('data-accent', savedAccent);
+        } else {
+          const today = new Date().toDateString();
+          const dayIndex = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+          const accent = accents[dayIndex % accents.length];
+          document.documentElement.setAttribute('data-accent', accent);
+        }
+      } catch (e) { /* ignore */ }
+    },
+
+    bindPaletteButton() {
+      const paletteBtn = document.querySelector('.apex-palette-btn');
+      const palettePanel = document.querySelector('.apex-palette-panel');
+      if (!paletteBtn || !palettePanel) return;
+
+      paletteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = palettePanel.hasAttribute('hidden');
+        if (isHidden) {
+          palettePanel.removeAttribute('hidden');
+          this._refreshPaletteActive();
+        } else {
+          palettePanel.setAttribute('hidden', '');
+        }
+      });
+
+      const swatches = palettePanel.querySelectorAll('.apex-palette-swatch');
+      swatches.forEach((swatch) => {
+        swatch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const accent = swatch.dataset.accent;
+          if (!accent) return;
+          document.documentElement.setAttribute('data-accent', accent);
+          localStorage.setItem('apex_accent', accent);
+          this._refreshPaletteActive();
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!palettePanel.contains(e.target) && !paletteBtn.contains(e.target)) {
+          palettePanel.setAttribute('hidden', '');
+        }
+      });
+
+      this._refreshPaletteActive();
+    },
+
+    _refreshPaletteActive() {
+      const currentAccent = document.documentElement.getAttribute('data-accent');
+      const swatches = document.querySelectorAll('.apex-palette-swatch');
+      swatches.forEach((swatch) => {
+        if (swatch.dataset.accent === currentAccent) {
+          swatch.classList.add('active');
+        } else {
+          swatch.classList.remove('active');
+        }
+      });
+    },
+
+    initStylePicker() {
+      // 背景统一为「黑白两套」（全局 data-bw 深色黑/明亮白开关），
+      // 原先的 13 个彩色照片主题全部注释掉，保留默认背景。
+      const styles = [
+        // { id: 'scifi', name: '科幻深空', icon: '🚀' },
+        // { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
+        // { id: 'forest', name: '翡翠森林', icon: '🌲' },
+        // { id: 'starry', name: '璀璨星空', icon: '✨' },
+        // { id: 'anime', name: '梦幻二次元', icon: '🌸' },
+        // { id: 'minimal', name: '极简纯白', icon: '⬜' },
+        // { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
+        // { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
+        // { id: 'aurora', name: '极光之夜', icon: '🌌' },
+        // { id: 'sunset', name: '日落暖霞', icon: '🌅' },
+        // { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
+        // { id: 'neon', name: '霓虹都市', icon: '🌃' },
+        // { id: 'healing', name: '治愈猫派', icon: '🐱' }
+      ];
+
+      const applyStyle = (styleId) => {
+        if (styleId && styles.some(s => s.id === styleId)) {
+          document.documentElement.setAttribute('data-style', styleId);
+        } else {
+          document.documentElement.removeAttribute('data-style');
+        }
+        if (window.APEXON && APEXON.Particles && APEXON.Particles.refreshPalette) {
+          APEXON.Particles.refreshPalette();
+        }
+        document.dispatchEvent(new CustomEvent('apexon:stylechange', { detail: { style: styleId } }));
+      };
+
+      const savedStyle = localStorage.getItem('apex_style');
+      applyStyle(savedStyle);
+
+      this._renderStylePicker(styles);
+      this._bindStylePickerEvents(styles, applyStyle);
+    },
+
+    _renderStylePicker(styles) {
+      const containers = document.querySelectorAll('.apex-style-picker');
+      if (!containers.length) return;
+
+      containers.forEach((container) => {
+        if (container.dataset.rendered) return;
+        container.dataset.rendered = 'true';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'apex-style-toggle';
+        toggleBtn.title = '切换主题风格';
+        toggleBtn.innerHTML = '🎨';
+
+        const panel = document.createElement('div');
+        panel.className = 'apex-style-panel';
+
+        // 无主题可选时（黑白两套由全局 data-bw 开关控制）隐藏风格选择区，只保留粒子背景设置
+        if (styles.length) {
+          const title = document.createElement('div');
+          title.className = 'apex-style-panel__title';
+          title.textContent = '选择主题风格';
+
+          const grid = document.createElement('div');
+          grid.className = 'apex-style-grid';
+
+          styles.forEach((style) => {
+            const item = document.createElement('div');
+            item.className = 'apex-style-item';
+            item.dataset.style = style.id;
+            item.title = style.name;
+
+            const preview = document.createElement('div');
+            preview.className = 'apex-style-item__preview';
+
+            const name = document.createElement('span');
+            name.className = 'apex-style-item__name';
+            name.textContent = style.name;
+
+            item.appendChild(preview);
+            item.appendChild(name);
+            grid.appendChild(item);
+          });
+
+          panel.appendChild(title);
+          panel.appendChild(grid);
+        }
+
+        // 动态背景设置区域
+        const bgSection = document.createElement('div');
+        bgSection.className = 'apex-bg-settings';
+        bgSection.style.cssText = 'margin-top:16px;padding-top:16px;border-top:1px solid var(--apex-border-subtle);';
+
+        const bgTitle = document.createElement('div');
+        bgTitle.className = 'apex-style-panel__title';
+        bgTitle.style.cssText = 'font-size:13px;margin-bottom:12px;';
+        bgTitle.textContent = '动态背景设置';
+        bgSection.appendChild(bgTitle);
+
+        // 速度滑块
+        const speedRow = document.createElement('div');
+        speedRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+        const speedLabel = document.createElement('label');
+        speedLabel.style.cssText = 'font-size:12px;color:var(--apex-text-secondary);min-width:60px;';
+        speedLabel.textContent = '速度';
+        const speedSlider = document.createElement('input');
+        speedSlider.type = 'range';
+        speedSlider.min = '0.1';
+        speedSlider.max = '3';
+        speedSlider.step = '0.1';
+        speedSlider.value = ParticleSystem.settings.speed;
+        speedSlider.style.cssText = 'flex:1;accent-color:var(--apex-primary);';
+        const speedVal = document.createElement('span');
+        speedVal.style.cssText = 'font-size:11px;color:var(--apex-text-tertiary);min-width:32px;text-align:right;';
+        speedVal.textContent = ParticleSystem.settings.speed.toFixed(1) + 'x';
+        speedSlider.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          ParticleSystem.settings.speed = v;
+          speedVal.textContent = v.toFixed(1) + 'x';
+        });
+        speedRow.appendChild(speedLabel);
+        speedRow.appendChild(speedSlider);
+        speedRow.appendChild(speedVal);
+        bgSection.appendChild(speedRow);
+
+        // 颜色强度滑块
+        const intRow = document.createElement('div');
+        intRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+        const intLabel = document.createElement('label');
+        intLabel.style.cssText = 'font-size:12px;color:var(--apex-text-secondary);min-width:60px;';
+        intLabel.textContent = '强度';
+        const intSlider = document.createElement('input');
+        intSlider.type = 'range';
+        intSlider.min = '0.2';
+        intSlider.max = '2';
+        intSlider.step = '0.1';
+        intSlider.value = ParticleSystem.settings.intensity;
+        intSlider.style.cssText = 'flex:1;accent-color:var(--apex-primary);';
+        const intVal = document.createElement('span');
+        intVal.style.cssText = 'font-size:11px;color:var(--apex-text-tertiary);min-width:32px;text-align:right;';
+        intVal.textContent = (ParticleSystem.settings.intensity * 100).toFixed(0) + '%';
+        intSlider.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          ParticleSystem.settings.intensity = v;
+          intVal.textContent = (v * 100).toFixed(0) + '%';
+        });
+        intRow.appendChild(intLabel);
+        intRow.appendChild(intSlider);
+        intRow.appendChild(intVal);
+        bgSection.appendChild(intRow);
+
+        // 开关行
+        const toggleRow = document.createElement('div');
+        toggleRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;';
+
+        const makeToggle = (label, key) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const active = ParticleSystem.settings[key];
+          btn.style.cssText = `flex:1;min-width:100px;padding:6px 10px;border-radius:8px;border:1px solid ${active ? 'var(--apex-primary)' : 'var(--apex-border)'};background:${active ? 'var(--apex-primary)' : 'transparent'};color:${active ? '#fff' : 'var(--apex-text-secondary)'};font-size:12px;cursor:pointer;transition:all 0.2s;`;
+          btn.textContent = label;
+          btn.addEventListener('click', () => {
+            const newVal = !ParticleSystem.settings[key];
+            ParticleSystem.settings[key] = newVal;
+            btn.style.background = newVal ? 'var(--apex-primary)' : 'transparent';
+            btn.style.color = newVal ? '#fff' : 'var(--apex-text-secondary)';
+            btn.style.borderColor = newVal ? 'var(--apex-primary)' : 'var(--apex-border)';
+          });
+          return btn;
+        };
+
+        toggleRow.appendChild(makeToggle('动态背景', 'animated'));
+        toggleRow.appendChild(makeToggle('省电模式', 'subtle'));
+        bgSection.appendChild(toggleRow);
+
+        panel.appendChild(bgSection);
+
+        container.appendChild(toggleBtn);
+        container.appendChild(panel);
+      });
+    },
+
+    _bindStylePickerEvents(styles, applyStyle) {
+      const containers = document.querySelectorAll('.apex-style-picker');
+      containers.forEach((container) => {
+        const toggleBtn = container.querySelector('.apex-style-toggle');
+        const panel = container.querySelector('.apex-style-panel');
+        if (!toggleBtn || !panel) return;
+
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          panel.classList.toggle('is-open');
+          this._refreshStyleActive();
+        });
+
+        const items = panel.querySelectorAll('.apex-style-item');
+        items.forEach((item) => {
+          item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const styleId = item.dataset.style;
+            if (styleId === 'default' || !styleId) {
+              localStorage.removeItem('apex_style');
+              applyStyle(null);
+            } else {
+              localStorage.setItem('apex_style', styleId);
+              applyStyle(styleId);
+            }
+            this._refreshStyleActive();
+            panel.classList.remove('is-open');
+          });
+        });
+      });
+
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.apex-style-panel.is-open').forEach((p) => {
+          p.classList.remove('is-open');
+        });
+      });
+
+      this._refreshStyleActive();
+    },
+
+    _refreshStyleActive() {
+      const currentStyle = document.documentElement.getAttribute('data-style');
+      document.querySelectorAll('.apex-style-item').forEach((item) => {
+        if (item.dataset.style === currentStyle || (!currentStyle && item.dataset.style === 'default')) {
+          item.classList.add('is-active');
+        } else {
+          item.classList.remove('is-active');
+        }
+      });
+    },
+
     injectAuthStyles() {
       if (document.getElementById('apex-auth-styles')) return;
       const style = document.createElement('style');
       style.id = 'apex-auth-styles';
       style.textContent = `
-        .apex-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--apex-surface); color: var(--apex-text); padding: 10px 18px; border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid var(--apex-border-subtle); z-index: 2000; }
-        .apex-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .apex-toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center; gap: 8px; z-index: 2000; pointer-events: none; }
+        .apex-toast { position: relative; background: var(--apex-surface); color: var(--apex-text); padding: 10px 18px 10px 16px; border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: auto; transform: translateY(20px) scale(0.96); transition: opacity .25s ease, transform .25s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid var(--apex-border-subtle); cursor: pointer; max-width: 86vw; }
+        .apex-toast.show { opacity: 1; transform: translateY(0) scale(1); }
+        .apex-toast.leaving { opacity: 0; transform: translateY(8px) scale(0.98); }
+        .apex-toast::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 60%; border-radius: 0 4px 4px 0; background: var(--apex-info, #8b7efc); }
+        .apex-toast--success::before { background: var(--apex-success, #34d399); }
+        .apex-toast--error::before { background: var(--apex-danger, #f87171); }
+        .apex-toast--warning::before { background: var(--apex-warning, #f59e0b); }
+        .apex-toast--info::before { background: var(--apex-info, #8b7efc); }
         .apex-user-menu { display: flex; align-items: center; margin-left: 12px; position: relative; }
         .apex-login-btn {
           border: none; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600;
@@ -1460,6 +2074,104 @@
         }
       `;
       document.head.appendChild(style);
+    },
+
+    // 无障碍：注入 skip-to-content 链接，键盘用户按 Tab 第一项即可跳过导航
+    injectSkipLink() {
+      if (document.getElementById('apex-skip-link')) return;
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : (k, fb) => fb;
+      const link = document.createElement('a');
+      link.id = 'apex-skip-link';
+      link.href = '#main-content';
+      link.className = 'apex-skip-link';
+      link.textContent = t('skipToContent', '跳到主内容');
+      // 给主内容容器加 id（若不存在），让锚点生效
+      const main = document.querySelector('.container') || document.querySelector('main');
+      if (main && !main.id) main.id = 'main-content';
+      if (main) {
+        main.setAttribute('tabindex', '-1');
+      }
+      document.body.insertBefore(link, document.body.firstChild);
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById('main-content');
+        if (target) { target.focus(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    },
+
+    // 注入页脚
+    injectFooter() {
+      if (document.querySelector('.apexon-footer')) return;
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : (k, fb) => fb;
+      const footer = document.createElement('footer');
+      footer.className = 'apexon-footer';
+      footer.innerHTML = `
+        <div class="apexon-footer__inner">
+          <a href="index.html" class="apexon-footer__logo">
+            <img src="assets/favicon.png" alt="APEXON">
+            <span>APEXON</span>
+          </a>
+          <nav class="apexon-footer__nav" aria-label="页脚导航">
+            <a href="about.html">${t('footerAboutUs', '关于本站')}</a>
+            <a href="privacy.html">${t('footerPrivacy', '隐私政策')}</a>
+            <a href="terms.html">${t('footerTerms', '服务条款')}</a>
+            <a href="https://github.com/aiyingyibeizi/aiyingyibeizi.github.io" target="_blank" rel="noopener">GitHub</a>
+          </nav>
+        </div>
+        <div class="apexon-footer__bottom">
+          <span class="apexon-footer__copyright">© ${new Date().getFullYear()} APEXON. ${t('footerRights', '保留所有权利。')}</span>
+          <a href="https://github.com/aiyingyibeizi/aiyingyibeizi.github.io" target="_blank" rel="noopener" class="apexon-footer__github" aria-label="GitHub">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+        </div>
+      `;
+      // 插入到 body 末尾，在 script 标签之前
+      const lastScript = document.querySelector('body > script:last-of-type');
+      if (lastScript) {
+        document.body.insertBefore(footer, lastScript);
+      } else {
+        document.body.appendChild(footer);
+      }
+    },
+
+    // 无障碍：全局 Escape 关闭顶栏下拉菜单与语言选择器
+    bindGlobalEscape() {
+      if (this._globalEscapeBound) return;
+      this._globalEscapeBound = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        // 关闭顶栏下拉菜单
+        const dropdown = document.getElementById('headerDropdown');
+        if (dropdown && dropdown.classList.contains('open')) {
+          dropdown.classList.remove('open');
+          const btn = document.querySelector('.apexon-menu-btn');
+          if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+          e.preventDefault();
+          return;
+        }
+        // 关闭语言选择器下拉（i18n.js 用 is-open 类）
+        const langList = document.querySelector('.apexon-lang-selector__list');
+        if (langList && langList.classList.contains('is-open')) {
+          langList.classList.remove('is-open');
+          const langBtn = document.querySelector('.apexon-lang-selector__btn');
+          if (langBtn) { langBtn.setAttribute('aria-expanded', 'false'); langBtn.focus(); }
+          e.preventDefault();
+        }
+      });
+    },
+
+    // 微交互：为关键按钮自动绑定涟漪效果（.btn / .item-card / .leaderboard-tab / .apex-login-btn 等）
+    bindGlobalRipple() {
+      if (this._rippleBound) return;
+      this._rippleBound = true;
+      const sel = '.btn, .item-card, .leaderboard-tab, .apex-login-btn, .apex-login-submit, .apex-profile-submit, .forum-btn, .search-box button';
+      const bind = () => Utils.bindRipple(document.querySelectorAll(sel));
+      // 初始绑定 + DOM 变化后重新绑定（动态渲染的按钮也能享受涟漪）
+      bind();
+      if (window.MutationObserver) {
+        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        mo.observe(document.body, { childList: true, subtree: true });
+      }
     },
 
     mountUserButton() {
@@ -1623,6 +2335,54 @@
       document.addEventListener('click', this._dropdownCloser);
     },
 
+    // 统一模态可访问性：ARIA 角色、Escape 关闭、Tab 焦点陷阱、关闭后还原焦点
+    // 用法：const cleanup = this._setupModalA11y(modalEl, { closeBtn, backdrop, onClean })
+    _setupModalA11y(modal, opts = {}) {
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : (k, fb) => fb;
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      const labelId = modal.getAttribute('aria-labelledby');
+      if (!labelId) {
+        // 找第一个标题作为 aria-labelledby
+        const heading = modal.querySelector('.apex-profile-name, .apex-login-subtitle, h2, h3');
+        if (heading) {
+          if (!heading.id) heading.id = 'apex-modal-title-' + Math.random().toString(36).slice(2, 9);
+          modal.setAttribute('aria-labelledby', heading.id);
+        }
+      }
+      // 关闭按钮 aria-label
+      const closeBtn = opts.closeBtn || modal.querySelector('.apex-profile-close, .apex-login-close');
+      if (closeBtn && !closeBtn.getAttribute('aria-label')) {
+        closeBtn.setAttribute('aria-label', t('close', '关闭'));
+      }
+      const previouslyFocused = document.activeElement;
+      const focusableSel = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const focusFirst = () => {
+        const focusable = modal.querySelector(focusableSel);
+        if (focusable) { try { focusable.focus(); } catch (e) {} }
+        else { try { modal.setAttribute('tabindex', '-1'); modal.focus(); } catch (e) {} }
+      };
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); opts.onClean && opts.onClean(); }
+        else if (e.key === 'Tab') {
+          const focusable = Array.from(modal.querySelectorAll(focusableSel)).filter(el => !el.disabled && el.offsetParent !== null);
+          if (!focusable.length) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      document.addEventListener('keydown', onKeydown);
+      // 延迟一帧聚焦，等 modal 内容渲染完
+      setTimeout(focusFirst, 60);
+      const cleanup = () => {
+        document.removeEventListener('keydown', onKeydown);
+        if (previouslyFocused && previouslyFocused.focus) { try { previouslyFocused.focus(); } catch (e) {} }
+      };
+      return cleanup;
+    },
+
     showProfileModal(mode, userId) {
       if (!userId) return;
       const isEdit = mode === 'edit' && userId === APEXON.Auth.getUserId();
@@ -1632,17 +2392,17 @@
       modal = document.createElement('div');
       modal.id = 'apex-profile-modal';
       modal.className = 'apex-profile-modal';
-      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexProfileClose">×</button><div id="apexProfileBody"></div></div>';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexProfileClose" aria-label="关闭">×</button><div id="apexProfileBody"></div></div>';
       document.body.appendChild(modal);
 
+      let a11yCleanup = null;
       const close = () => {
         modal.classList.remove('show');
+        if (a11yCleanup) a11yCleanup();
         setTimeout(() => { if (modal && modal.parentNode) modal.remove(); }, 300);
       };
       modal.querySelector('#apexProfileClose').addEventListener('click', (e) => { e.stopPropagation(); close(); });
       modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
-      const onKey = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); close(); } };
-      document.addEventListener('keydown', onKey);
 
       const load = async () => {
         const profile = await DB.getProfile(userId);
@@ -1655,6 +2415,7 @@
           body.innerHTML = this._buildProfileViewHTML(profile, username);
         }
         requestAnimationFrame(() => modal.classList.add('show'));
+        a11yCleanup = this._setupModalA11y(modal, { closeBtn: modal.querySelector('#apexProfileClose'), onClean: close });
       };
       load();
     },
@@ -1758,12 +2519,13 @@
       modal = document.createElement('div');
       modal.id = 'apex-username-modal';
       modal.className = 'apex-profile-modal';
-      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexUsernameClose">×</button><div class="apex-profile-header"><div class="apex-profile-name">' + t('changeUsernameTitle', '修改用户名') + '</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">' + t('currentUsername', '当前用户名') + '</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getUser()) + '</div></div><input type="text" id="apexNewUsername" placeholder="' + t('newUsernamePlaceholder', '新用户名') + '" maxlength="30"><div class="apex-hint" id="apexNewUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap" style="margin-top:12px;"><input type="password" id="apexUsernamePassword" placeholder="' + t('currentPasswordPlaceholder', '当前密码') + '" maxlength="64"></div><div class="apex-profile-error" id="apexUsernameError"></div><button class="apex-profile-submit" id="apexUsernameSubmit">' + t('confirmChange', '确认修改') + '</button></div></div>';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexUsernameClose" aria-label="关闭">×</button><div class="apex-profile-header"><div class="apex-profile-name">' + t('changeUsernameTitle', '修改用户名') + '</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">' + t('currentUsername', '当前用户名') + '</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getUser()) + '</div></div><input type="text" id="apexNewUsername" placeholder="' + t('newUsernamePlaceholder', '新用户名') + '" maxlength="30"><div class="apex-hint" id="apexNewUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap" style="margin-top:12px;"><input type="password" id="apexUsernamePassword" placeholder="' + t('currentPasswordPlaceholder', '当前密码') + '" maxlength="64"></div><div class="apex-profile-error" id="apexUsernameError"></div><button class="apex-profile-submit" id="apexUsernameSubmit">' + t('confirmChange', '确认修改') + '</button></div></div>';
       document.body.appendChild(modal);
 
-      const close = () => modal.classList.remove('show');
+      const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
       modal.querySelector('#apexUsernameClose').addEventListener('click', close);
       modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
+      let a11yCleanup = null;
 
       const nameInput = modal.querySelector('#apexNewUsername');
       const hint = modal.querySelector('#apexNewUsernameHint');
@@ -1785,8 +2547,8 @@
         const result = await APEXON.Auth.changeUsername(newName, password);
         submit.disabled = false;
         if (result.success) {
-          UI.toast(t('usernameChanged', '用户名已修改'));
-          modal.classList.remove('show');
+          UI.toast(t('usernameChanged', '用户名已修改'), 2500, 'success');
+          close();
           this.updateUserDisplay();
         } else {
           errorEl.textContent = result.error || t('changeFailed', '修改失败');
@@ -1794,6 +2556,7 @@
       });
 
       requestAnimationFrame(() => modal.classList.add('show'));
+      a11yCleanup = this._setupModalA11y(modal, { closeBtn: modal.querySelector('#apexUsernameClose'), onClean: close });
       validate();
     },
 
@@ -1807,8 +2570,11 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose" aria-label="关闭">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-password-wrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
       document.body.appendChild(modal);
+
+      let a11yCleanup = null;
+      const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
 
       const tabs = modal.querySelectorAll('.apex-login-tab');
       const submitBtn = modal.querySelector('#apexLoginSubmit');
@@ -1880,11 +2646,12 @@
       };
 
       tabs.forEach(t => t.addEventListener('click', () => setMode(t.dataset.tab)));
-      modal.querySelector('#apexLoginClose').addEventListener('click', () => modal.classList.remove('show'));
-      modal.querySelector('.apex-login-backdrop').addEventListener('click', () => modal.classList.remove('show'));
+      modal.querySelector('#apexLoginClose').addEventListener('click', close);
+      modal.querySelector('.apex-login-backdrop').addEventListener('click', close);
       usernameInput.addEventListener('input', validate);
       passwordInput.addEventListener('input', validate);
       toggleBtn.addEventListener('click', togglePassword);
+      a11yCleanup = this._setupModalA11y(modal, { closeBtn: modal.querySelector('#apexLoginClose'), onClean: close });
 
       const doSubmit = async () => {
         const u = usernameInput.value.trim();
@@ -1898,9 +2665,9 @@
           : await APEXON.Auth.register(u, p, rememberMe.checked, getGender());
         submitBtn.disabled = false;
         if (result.success) {
-          modal.classList.remove('show');
+          close();
           this.updateUserDisplay();
-          this.toast(mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功'));
+          this.toast(mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功'), 2500, 'success');
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
         } else {
           submitBtn.textContent = mode === 'login' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册');
@@ -1928,6 +2695,154 @@
       setTimeout(() => { location.href = 'index.html'; }, 300);
     }
   };
+
+  // ===== 追加：UI.Toast 模块（全新 apex- 前缀样式） =====
+  UI.Toast = {
+    show(msg, type = 'info', duration = 2800) {
+      let wrap = document.querySelector('.apex-toast-wrap');
+      if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.className = 'apex-toast-wrap';
+        document.body.appendChild(wrap);
+      }
+      const toast = document.createElement('div');
+      const validTypes = ['success', 'error', 'warn', 'info'];
+      const t = validTypes.indexOf(type) !== -1 ? type : 'info';
+      toast.className = 'apex-toast ' + t;
+      toast.textContent = String(msg);
+      wrap.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('leaving');
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+          if (wrap && wrap.childNodes.length === 0 && wrap.parentNode) {
+            wrap.parentNode.removeChild(wrap);
+          }
+        }, 240);
+      }, duration);
+    }
+  };
+
+  // ===== 追加：UI.bindGlobalRipple（给 .btn / .item-card 加 apex-ripple class + pointerdown 涟漪） =====
+  const origBindGlobalRipple = UI.bindGlobalRipple;
+  UI.bindGlobalRipple = function () {
+    if (typeof origBindGlobalRipple === 'function') {
+      try { origBindGlobalRipple.call(this); } catch (e) {}
+    }
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const nodes = document.querySelectorAll('.btn, .item-card');
+    Array.prototype.forEach.call(nodes, function (el) {
+      if (el._apexGlobalRippleBound) return;
+      el._apexGlobalRippleBound = true;
+      el.classList.add('apex-ripple-host');
+      if (prefersReduced) return;
+      el.addEventListener('pointerdown', function (e) {
+        const rect = el.getBoundingClientRect();
+        // 剪小涟漪尺寸：取最小边 *0.6，点击反馈更轻柔，避免宽按钮弹出大圆
+        const size = Math.round(Math.min(rect.width, rect.height) * 0.6);
+        const wave = document.createElement('span');
+        wave.className = 'apex-ripple-wave';
+        wave.style.width = size + 'px';
+        wave.style.height = size + 'px';
+        const x = (e.clientX != null ? e.clientX : rect.left + rect.width / 2) - rect.left - size / 2;
+        const y = (e.clientY != null ? e.clientY : rect.top + rect.height / 2) - rect.top - size / 2;
+        wave.style.left = x + 'px';
+        wave.style.top = y + 'px';
+        el.appendChild(wave);
+        setTimeout(function () {
+          if (wave.parentNode) wave.parentNode.removeChild(wave);
+        }, 650);
+      }, { passive: true });
+    });
+  };
+
+  // ===== 追加：UI.countUp（数字滚动动画，requestAnimationFrame + easeOutCubic，IntersectionObserver 懒触发） =====
+  UI.countUp = function (el, target, options) {
+    if (!el) return;
+    // 防止重复执行：已计数过的元素直接跳过
+    if (el.getAttribute('data-counted') === 'true') return;
+    const opts = Object.assign({ duration: 1200, decimals: 0, prefix: '', suffix: '' }, options || {});
+    const targetNum = Number(target) || 0;
+    const decimals = Math.max(0, parseInt(opts.decimals, 10) || 0);
+
+    // easeOutCubic 缓动：前期快、后期慢，适合数字归位
+    const easeOutCubic = function (t) { return 1 - Math.pow(1 - t, 3); };
+    const formatVal = function (v) {
+      return opts.prefix + Number(v).toFixed(decimals) + opts.suffix;
+    };
+
+    // 先填起始值 0，避免视口外时显示原始占位
+    el.textContent = formatVal(0);
+
+    const run = function () {
+      if (el.getAttribute('data-counted') === 'true') return;
+      const start = performance.now();
+      const step = function (now) {
+        const p = Math.min(1, (now - start) / opts.duration);
+        const v = targetNum * easeOutCubic(p);
+        el.textContent = formatVal(v);
+        if (p < 1) {
+          requestAnimationFrame(step);
+        } else {
+          // 终值精确归位，避免浮点误差
+          el.textContent = formatVal(targetNum);
+          el.setAttribute('data-counted', 'true');
+        }
+      };
+      requestAnimationFrame(step);
+    };
+
+    // IntersectionObserver 懒触发：元素进入视口时才开始滚动
+    if (typeof IntersectionObserver !== 'undefined') {
+      const io = new IntersectionObserver(function (entries) {
+        Array.prototype.forEach.call(entries, function (entry) {
+          if (entry.isIntersecting) {
+            io.unobserve(el);
+            run();
+          }
+        });
+      }, { threshold: 0.2 });
+      io.observe(el);
+    } else {
+      // 降级：直接执行
+      run();
+    }
+  };
+
+  // ===== 追加：UI.staggerList（列表交错进入动画，IntersectionObserver 懒触发） =====
+  UI.staggerList = function (container, selector, delayStep) {
+    if (!container) return;
+    const sel = selector || '> *';
+    // querySelectorAll 不支持以 '>' 开头的裸选择器，自动补 :scope
+    const fullSel = sel.charAt(0) === '>' ? ':scope ' + sel : sel;
+    const step = (typeof delayStep === 'number' && delayStep >= 0) ? delayStep : 60;
+    const items = Array.prototype.slice.call(container.querySelectorAll(fullSel));
+
+    const apply = function () {
+      items.forEach(function (item, i) {
+        item.classList.add('apex-stagger-item');
+        // 第 i 个子项的 animation-delay = i * delayStep
+        item.style.animationDelay = (i * step) + 'ms';
+      });
+    };
+
+    // IntersectionObserver 懒触发：容器进入视口时才交错入场
+    if (typeof IntersectionObserver !== 'undefined') {
+      const io = new IntersectionObserver(function (entries) {
+        Array.prototype.forEach.call(entries, function (entry) {
+          if (entry.isIntersecting) {
+            io.unobserve(container);
+            apply();
+          }
+        });
+      }, { threshold: 0.1 });
+      io.observe(container);
+    } else {
+      // 降级：直接应用
+      apply();
+    }
+  };
+
   APEXON.UI = UI;
 
   // ===== 8. 粒子背景系统 =====
@@ -1942,7 +2857,40 @@
       mobileCount: 16,
       connectionDistance: 120,
       mouseDistance: 150,
-      speed: 0.38
+      speed: 0.38,
+      // 高级动态背景配置
+      intensity: 1.0,           // 颜色强度 0.2 - 2.0
+      cloudCount: 6,            // 云朵数量
+      scanlineCount: 3,         // 霓虹扫描线数量
+      enableNoise: true,        // 启用流铁噪声背景
+      enableClouds: true,       // 启用云朵
+      enableScanlines: true,    // 启用霓虹扫描线
+      subtleMode: false,        // 微动特效模式（省电）
+      animated: true            // 动态/静态切换
+    },
+
+    // 用户可调参数（通过 localStorage 持久化）
+    settings: {
+      get speed() {
+        const v = parseFloat(localStorage.getItem('apexon_bg_speed'));
+        return isNaN(v) ? 1.0 : Math.max(0.1, Math.min(3.0, v));
+      },
+      set speed(v) { localStorage.setItem('apexon_bg_speed', String(v)); },
+      get intensity() {
+        const v = parseFloat(localStorage.getItem('apexon_bg_intensity'));
+        return isNaN(v) ? 1.0 : Math.max(0.2, Math.min(2.0, v));
+      },
+      set intensity(v) { localStorage.setItem('apexon_bg_intensity', String(v)); },
+      get animated() {
+        const v = localStorage.getItem('apexon_bg_animated');
+        return v === null ? true : v === 'true';
+      },
+      set animated(v) { localStorage.setItem('apexon_bg_animated', String(v)); },
+      get subtle() {
+        const v = localStorage.getItem('apexon_bg_subtle');
+        return v === null ? false : v === 'true';
+      },
+      set subtle(v) { localStorage.setItem('apexon_bg_subtle', String(v)); }
     },
 
     init(options = {}) {
@@ -1955,15 +2903,20 @@
       const offCtx = offscreen.getContext('2d');
       let w, h, particles = [], stars = [], bursts = [];
       let packets = [], scanLines = [], glyphs = [], rings = [];
+      let clouds = [], neonLines = [];
       let mouse = { x: null, y: null, active: false };
       let frameId = null;
       let isActive = true;
       let frameCount = 0;
+      let time = 0;
+      let lastFrameTime = performance.now();
 
-      const isLight = () =>
-        document.documentElement.getAttribute('data-bw') === 'true' ||
+      // 缓存主题判断结果，避免每帧数十次 DOM 读取（getAttribute/classList）
+      // 仅在 apexon:themechange 事件时刷新
+      let cachedLight = (document.documentElement.getAttribute('data-bw') === 'true' ||
         document.documentElement.getAttribute('data-theme') === 'light' ||
-        document.body.classList.contains('theme-light');
+        (document.body && document.body.classList.contains('theme-light')));
+      const isLight = () => cachedLight;
       const colorPalette = () => isLight() ? config.lightPalette : config.darkPalette;
       let palette = colorPalette();
       const accent = () => palette[0];
@@ -2008,7 +2961,8 @@
         canvas.style.width = cw + 'px';
         canvas.style.height = ch + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawHexGridToOffscreen();
+        // 注：drawHexGridToOffscreen() 的结果从未被 drawHexGrid 绘制到主 canvas（死代码），
+        // 每次 resize 调用只是浪费一次全屏六边形离屏绘制，已移除。
       };
 
       const randColor = () => palette[Math.floor(Math.random() * palette.length)];
@@ -2035,6 +2989,46 @@
             pulseSpeed: Math.random() * 0.04 + 0.02,
             core: isCore,
             ring: Math.random() * Math.PI * 2
+          });
+        }
+      };
+
+      // 创建云朵粒子（大而柔和的半透明团块，缓慢飘动）
+      const createClouds = () => {
+        clouds = [];
+        const isMobile = window.innerWidth < 768;
+        const count = isMobile ? 3 : config.cloudCount;
+        for (let i = 0; i < count; i++) {
+          const ww = window.innerWidth;
+          const wh = window.innerHeight;
+          clouds.push({
+            x: Math.random() * ww,
+            y: Math.random() * wh * 0.8,
+            vx: (Math.random() * 0.15 + 0.05) * (Math.random() > 0.5 ? 1 : -1),
+            vy: (Math.random() - 0.5) * 0.03,
+            radius: Math.random() * 120 + 80,
+            alpha: Math.random() * 0.06 + 0.03,
+            colorIdx: Math.floor(Math.random() * 3),
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      };
+
+      // 创建霓虹扫描线（柔和的垂直光带，缓慢横向移动）
+      const createNeonLines = () => {
+        neonLines = [];
+        const isMobile = window.innerWidth < 768;
+        const count = isMobile ? 1 : config.scanlineCount;
+        for (let i = 0; i < count; i++) {
+          neonLines.push({
+            x: Math.random() * window.innerWidth,
+            y: 0,
+            vx: (Math.random() * 0.4 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+            width: Math.random() * 200 + 100,
+            height: window.innerHeight,
+            alpha: Math.random() * 0.08 + 0.04,
+            phase: Math.random() * Math.PI * 2,
+            colorIdx: i % 3
           });
         }
       };
@@ -2169,6 +3163,127 @@
         }
       };
 
+      // 更新云朵位置
+      const updateClouds = () => {
+        const speedMul = ParticleSystem.settings.speed;
+        const subtle = ParticleSystem.settings.subtle;
+        for (const c of clouds) {
+          c.x += c.vx * speedMul * (subtle ? 0.3 : 1);
+          c.y += c.vy * speedMul * (subtle ? 0.3 : 1);
+          c.phase += 0.002 * speedMul;
+          // 边界环绕
+          if (c.x < -c.radius * 2) c.x = window.innerWidth + c.radius;
+          if (c.x > window.innerWidth + c.radius * 2) c.x = -c.radius;
+          if (c.y < -c.radius) c.y = window.innerHeight + c.radius;
+          if (c.y > window.innerHeight + c.radius) c.y = -c.radius;
+        }
+      };
+
+      // 更新霓虹扫描线
+      const updateNeonLines = () => {
+        const speedMul = ParticleSystem.settings.speed;
+        const subtle = ParticleSystem.settings.subtle;
+        for (const n of neonLines) {
+          n.x += n.vx * speedMul * (subtle ? 0.3 : 1);
+          n.phase += 0.015 * speedMul;
+          // 边界环绕
+          if (n.x < -n.width) n.x = window.innerWidth + n.width;
+          if (n.x > window.innerWidth + n.width) n.x = -n.width;
+        }
+      };
+
+      // 绘制流铁噪声背景（柔和渐变 + 伪噪声）
+      const drawNoiseBackground = () => {
+        if (!config.enableNoise) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        const ww = window.innerWidth;
+        const wh = window.innerHeight;
+
+        // 大尺度柔和渐变（类似流动的霓虹光）
+        const t = time * 0.0003 * ParticleSystem.settings.speed;
+        const grad = ctx.createRadialGradient(
+          ww * (0.3 + 0.15 * Math.sin(t)), wh * (0.4 + 0.1 * Math.cos(t * 1.3)), 0,
+          ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.8
+        );
+        const col1 = palette[0] || '#22d3ee';
+        const col2 = palette[2] || '#818cf8';
+        const col3 = palette[4] || '#c084fc';
+        grad.addColorStop(0, hexToRgba(col1, 0.06 * intensity * (subtle ? 0.4 : 1)));
+        grad.addColorStop(0.5, hexToRgba(col2, 0.04 * intensity * (subtle ? 0.4 : 1)));
+        grad.addColorStop(1, hexToRgba(col3, 0.02 * intensity * (subtle ? 0.4 : 1)));
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, ww, wh);
+
+        // 第二个渐变层（流动的铁质感）
+        const t2 = time * 0.0002 * ParticleSystem.settings.speed;
+        const grad2 = ctx.createRadialGradient(
+          ww * (0.7 + 0.2 * Math.cos(t2 * 0.8)), wh * (0.6 + 0.15 * Math.sin(t2)), 0,
+          ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.7
+        );
+        grad2.addColorStop(0, hexToRgba(col2, 0.05 * intensity * (subtle ? 0.4 : 1)));
+        grad2.addColorStop(0.6, hexToRgba(col3, 0.03 * intensity * (subtle ? 0.4 : 1)));
+        grad2.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, ww, wh);
+      };
+
+      // 辅助：hex 转 rgba
+      const hexToRgba = (hex, alpha) => {
+        if (!hex) return `rgba(255,255,255,${alpha})`;
+        const h = hex.replace('#', '');
+        if (h.length === 3) {
+          const r = parseInt(h[0] + h[0], 16);
+          const g = parseInt(h[1] + h[1], 16);
+          const b = parseInt(h[2] + h[2], 16);
+          return `rgba(${r},${g},${b},${alpha})`;
+        }
+        const r = parseInt(h.substring(0, 2), 16);
+        const g = parseInt(h.substring(2, 4), 16);
+        const b = parseInt(h.substring(4, 6), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      };
+
+      // 绘制云朵
+      const drawClouds = () => {
+        if (!config.enableClouds) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        for (const c of clouds) {
+          const pulseR = c.radius + Math.sin(c.phase) * 12;
+          const col = palette[c.colorIdx % palette.length] || palette[0];
+          const grad = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, pulseR);
+          grad.addColorStop(0, hexToRgba(col, c.alpha * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(0.6, hexToRgba(col, c.alpha * 0.5 * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, pulseR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
+      // 绘制霓虹扫描线
+      const drawNeonLines = () => {
+        if (!config.enableScanlines) return;
+        const intensity = ParticleSystem.settings.intensity;
+        const subtle = ParticleSystem.settings.subtle;
+        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        for (const n of neonLines) {
+          const flicker = 0.7 + Math.sin(n.phase) * 0.3;
+          const col = palette[n.colorIdx % palette.length] || palette[0];
+          const grad = ctx.createLinearGradient(n.x - n.width / 2, 0, n.x + n.width / 2, 0);
+          grad.addColorStop(0, 'transparent');
+          grad.addColorStop(0.5, hexToRgba(col, n.alpha * flicker * intensity * (subtle ? 0.4 : 1)));
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.fillRect(n.x - n.width / 2, 0, n.width, window.innerHeight);
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      };
+
       const updateBursts = () => {
         for (let i = bursts.length - 1; i >= 0; i--) {
           const b = bursts[i];
@@ -2224,33 +3339,62 @@
       };
 
       const drawConnections = () => {
+        // 性能优化：
+        // 1) 复用 buildConnectionList 每 4 帧预计算的 links，避免每帧重复 O(n²)
+        // 2) 按颜色批量合并 path（同色线条共用一次 stroke），把 ~56 次 stroke 降到 ~7 次
         const maxDist = config.connectionDistance;
-        const maxLinks = 2;
         const boost = lightBoost();
         ctx.lineWidth = isLight() ? 1.6 : 1.4;
         ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        // 按颜色分桶：{ color: [{x1,y1,x2,y2,alpha}, ...] }
+        const buckets = new Map();
         for (let i = 0; i < particles.length; i++) {
           const p1 = particles[i];
-          let links = 0;
-          for (let j = i + 1; j < particles.length; j++) {
-            const p2 = particles[j];
+          const links = p1.links;
+          if (!links || !links.length) continue;
+          for (const link of links) {
+            // links 双向存储，只画 i < idx 的方向，避免重复
+            if (link.idx <= i) continue;
+            const p2 = particles[link.idx];
+            if (!p2) continue;
+            // link.dist 是 4 帧前算的，可能略过时；用平方距离快速校验
             const dx = p1.x - p2.x;
             const dy = p1.y - p2.y;
             const d2 = dx * dx + dy * dy;
-            if (d2 < maxDist * maxDist) {
-              const dist = Math.sqrt(d2);
-              const alpha = (1 - dist / maxDist) * 0.28 * boost;
-              ctx.strokeStyle = p1.color;
-              ctx.globalAlpha = alpha;
-              ctx.beginPath();
-              ctx.moveTo(p1.x, p1.y);
-              ctx.lineTo(p2.x, p2.y);
-              ctx.stroke();
-              links++;
-              if (links >= maxLinks) break;
-            }
+            if (d2 > maxDist * maxDist) continue;
+            const dist = Math.sqrt(d2);
+            const alpha = (1 - dist / maxDist) * 0.28 * boost;
+            let arr = buckets.get(p1.color);
+            if (!arr) { arr = []; buckets.set(p1.color, arr); }
+            arr.push(p1.x, p1.y, p2.x, p2.y, alpha);
           }
         }
+        // 每种颜色合并为单条 path，逐线段 moveTo/lineTo，再统一一次 stroke
+        // 注意：alpha 不同时无法完全合并（globalAlpha 是全局的），
+        // 因此按 alpha 量化到 4 档，减少 stroke 次数同时保留层次感
+        buckets.forEach((segs, color) => {
+          ctx.strokeStyle = color;
+          // 按 alpha 量化分批
+          const alphaBuckets = [[], [], [], []]; // 0~0.1, 0.1~0.2, 0.2~0.3, 0.3+
+          for (let k = 0; k < segs.length; k += 5) {
+            const a = segs[k + 4];
+            const idx = a < 0.1 ? 0 : (a < 0.2 ? 1 : (a < 0.3 ? 2 : 3));
+            alphaBuckets[idx].push(segs[k], segs[k + 1], segs[k + 2], segs[k + 3], a);
+          }
+          for (let b = 0; b < 4; b++) {
+            const ab = alphaBuckets[b];
+            if (!ab.length) continue;
+            // 用该桶内平均 alpha 绘制（量化误差 < 0.1，肉眼不可辨）
+            const avg = (ab[4] + ab[ab.length - 1]) / 2;
+            ctx.globalAlpha = avg;
+            ctx.beginPath();
+            for (let k = 0; k < ab.length; k += 5) {
+              ctx.moveTo(ab[k], ab[k + 1]);
+              ctx.lineTo(ab[k + 2], ab[k + 3]);
+            }
+            ctx.stroke();
+          }
+        });
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
       };
@@ -2499,10 +3643,28 @@
       const draw = () => {
         if (!isActive) return;
         frameCount++;
+        const now = performance.now();
+        const delta = now - lastFrameTime;
+        lastFrameTime = now;
+
+        if (ParticleSystem.settings.animated) {
+          time += delta;
+          updateParticles();
+          updateClouds();
+          updateNeonLines();
+          // 连接列表每 4 帧重建一次（O(n²) 操作），其余帧复用上次结果，大幅降低 CPU 开销
+          if (frameCount % 4 === 0) buildConnectionList();
+          updateBursts();
+        }
+
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        updateParticles();
-        buildConnectionList();
-        updateBursts();
+
+        // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
+        if (ParticleSystem.settings.animated) {
+          drawNoiseBackground();
+          drawClouds();
+          drawNeonLines();
+        }
         drawConnections();
         drawParticles();
         drawBursts();
@@ -2510,7 +3672,7 @@
         frameId = requestAnimationFrame(draw);
       };
 
-      const onResize = () => { resize(); createParticles(); };
+      const onResize = () => { resize(); createParticles(); createClouds(); createNeonLines(); };
       const onMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; };
       const onMouseLeave = () => { mouse.active = false; };
       const onTouchMove = (e) => {
@@ -2545,12 +3707,42 @@
         }
       };
       const onThemeChange = () => {
+        // 刷新缓存的明暗主题判断（避免每帧 DOM 读取）
+        cachedLight = (document.documentElement.getAttribute('data-bw') === 'true' ||
+          document.documentElement.getAttribute('data-theme') === 'light' ||
+          (document.body && document.body.classList.contains('theme-light')));
+        palette = colorPalette();
+        for (const p of particles) p.color = randColor();
+        for (const s of stars) s.color = accent();
+      };
+
+      const refreshStylePalette = () => {
+        // 读取风格的粒子调色板 CSS 变量
+        try {
+          const styleParticles = getComputedStyle(document.documentElement).getPropertyValue('--style-particles').trim();
+          if (styleParticles) {
+            const stylePalette = styleParticles.split(',').map(c => c.trim()).filter(Boolean);
+            if (stylePalette.length >= 3) {
+              palette = stylePalette;
+              for (const p of particles) p.color = randColor();
+              for (const s of stars) s.color = accent();
+              return;
+            }
+          }
+        } catch (e) { /* ignore */ }
+        // 回退到默认明暗调色板
         palette = colorPalette();
         for (const p of particles) p.color = randColor();
         for (const s of stars) s.color = accent();
       };
 
       document.addEventListener('apexon:themechange', onThemeChange);
+      document.addEventListener('apexon:stylechange', refreshStylePalette);
+      // 初始化时应用风格调色板
+      setTimeout(refreshStylePalette, 50);
+
+      // 暴露 refreshPalette 方法
+      ParticleSystem.refreshPalette = refreshStylePalette;
       window.addEventListener('resize', Utils.debounce(onResize, 250));
       window.addEventListener('mousemove', onMouseMove, { passive: true });
       window.addEventListener('mouseleave', onMouseLeave);
@@ -2562,6 +3754,8 @@
 
       resize();
       createParticles();
+      createClouds();
+      createNeonLines();
       draw();
     }
   };
@@ -2737,7 +3931,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -2894,7 +4088,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount, leaderboard_eligible: foulCount < 3 });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -3057,15 +4251,10 @@
   // ===== 12. 初始化 =====
   async function boot() {
     VisibilityManager.init();
-    // 随机选择强调色（6 套配色轮换，避免审美疲劳），每天换一次
-    try {
-      const accents = ['cyan', 'emerald', 'amber', 'rose', 'indigo', 'coral'];
-      const today = new Date().toDateString();
-      const dayIndex = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-      const accent = accents[dayIndex % accents.length];
-      document.documentElement.setAttribute('data-accent', accent);
-    } catch (e) { /* ignore */ }
+    UI.initAccentPicker();
     UI.initTheme();
+    UI.initStylePicker();
+    UI.bindPaletteButton();
     Auth.init();
     await Auth.validateSession();
     const userId = Auth.getUserId();
@@ -3075,9 +4264,22 @@
     UI.relayoutHeader();
     Stats.init();
     initTextProtection();
+    // 启用 pointer 类型追踪（供 reactionPenalty 区分触屏笔记本的鼠标点击）
+    Utils._initPointerTracking();
+    // 无障碍：注入 skip-to-content 链接，键盘用户可跳过导航直达主内容
+    UI.injectSkipLink();
+    // 无障碍：全局 Escape 关闭顶栏下拉菜单（toggleMenu 打开的 #headerDropdown）
+    UI.bindGlobalEscape();
+    // 注入页脚
+    UI.injectFooter();
+    // 微交互：为关键按钮自动绑定涟漪效果
+    UI.bindGlobalRipple();
     document.addEventListener('apexon:langchange', () => {
       UI.updateUserDisplay();
     });
+    // 页面切换过渡：给主内容容器 .container 添加淡入 class（若存在）
+    const apexPageContainer = document.querySelector('.container');
+    if (apexPageContainer) apexPageContainer.classList.add('apex-page-enter');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

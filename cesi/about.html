@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="关于 APEXON — 免费在线认知能力测试平台，提供反应速度、打字、注意力、记忆力、瞄准训练等多项科学测试，支持多语言、多主题、成就系统。">
+    <meta name="keywords" content="关于本站,关于我们,APEXON,认知测试,反应测试,记忆力训练,注意力测试,打字测试,在线测试,免费平台">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="关于本站 - APEXON">
+    <meta property="og:description" content="APEXON 是一个免费的在线认知能力测试与训练平台，提供 12 项科学测试、多语言支持、个性化主题和成就系统。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/about.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="关于本站 - APEXON">
+    <meta name="twitter:description" content="APEXON 是一个免费的在线认知能力测试与训练平台。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title>关于本站 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=21">
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>关于本站</h1>
+        <div class="legal-content">
+            <p class="about-lead">APEXON 是一个面向全球用户的<strong>免费在线认知能力测试与训练平台</strong>，致力于通过科学设计的测试项目，帮助每一位用户了解、追踪并提升自己的认知表现。无论您是想测试反应速度、锻炼记忆力、提升打字效率，还是仅仅想在闲暇时间挑战一下自己的大脑，APEXON 都能为您提供专业、有趣、零门槛的使用体验。</p>
+
+            <h2>一、我们的使命与愿景</h2>
+            <p>在当今快节奏的数字时代，人们的注意力持续时间在缩短，大脑的认知能力面临着前所未有的挑战。我们相信，<strong>认知能力如同肌肉一样，可以通过科学的训练得到提升</strong>。APEXON 的使命，就是让每一个人都能轻松获得高质量的认知训练工具，不论年龄、地域、语言或背景。</p>
+            <p>我们的愿景是：打造一个<strong>开放、免费、科学严谨</strong>的在线认知训练生态，让认知测试与训练变得像日常健身一样普及，帮助全球用户在数字时代保持清醒的头脑、敏锐的反应和强大的记忆。</p>
+
+            <h2>二、平台功能概览</h2>
+            <p>APEXON 提供覆盖多个认知维度的测试与训练项目，所有功能完全免费，无需注册即可使用（注册后可解锁更多个性化功能）。以下是我们的核心功能模块：</p>
+
+            <h3>2.1 反应速度测试</h3>
+            <p>反应速度是衡量认知能力的基础指标之一。我们的反应测试通过随机出现的视觉信号，精确测量您从看到信号到做出操作之间的毫秒级延迟。测试结果会根据您的历史表现给出评级，并与全球用户进行对比排名。无论是电竞选手、驾驶员还是普通用户，了解自己的反应速度都具有重要的参考价值。</p>
+
+            <h3>2.2 打字速度测试</h3>
+            <p>在文字工作日益增多的今天，打字效率直接影响工作与学习效率。APEXON 的打字测试提供多种语言的文本样本，测量您的每分钟字数（WPM）、正确率和字符速度。测试支持多次尝试，系统会记录您的最佳成绩并追踪进步趋势。无论您是学生、程序员、写手还是办公族，都能通过打字测试发现自己的提升空间。</p>
+
+            <h3>2.3 注意力与专注力测试</h3>
+            <p>注意力是一切认知活动的基础。我们提供多种注意力训练项目，包括持续注意力测试、选择性注意力测试和分散注意力测试等。通过精心设计的交互任务，帮助您了解自己的专注时长、抗干扰能力和注意力分配效率。长期坚持训练，可以有效提升学习和工作中的专注度。</p>
+
+            <h3>2.4 记忆力训练系列</h3>
+            <p>记忆力是认知能力的核心组成部分。APEXON 提供多种类型的记忆测试与训练：</p>
+            <ul>
+                <li><strong>数字记忆：</strong>测试您对数字序列的短期记忆能力，难度随位数递增自动调节。</li>
+                <li><strong>单词记忆：</strong>通过词汇学习-回忆的模式，测试语言记忆能力，同时帮助您积累词汇。</li>
+                <li><strong>视觉记忆：</strong>通过图形、色块和空间位置的记忆任务，训练视觉空间记忆能力。</li>
+                <li><strong>序列记忆：</strong>测试您对事件发生顺序的记忆能力，锻炼工作记忆和时序推理。</li>
+                <li><strong>N-Back 测试：</strong>经典的工作记忆训练范式，科学研究表明其对提升流体智力具有潜在帮助。</li>
+            </ul>
+
+            <h3>2.5 瞄准与手眼协调训练</h3>
+            <p>手眼协调能力在游戏、运动和日常操作中都至关重要。APEXON 的瞄准训练通过动态目标追踪和精准点击任务，测试并提升您的手眼协调能力、追踪精度和反应准确性。无论您是电竞爱好者、运动玩家还是希望提升精细动作能力的用户，这项训练都能为您带来实质性的帮助。</p>
+
+            <h3>2.6 认知灵活性测试</h3>
+            <p>认知灵活性是指大脑在不同概念或任务之间快速切换的能力。APEXON 提供 Stroop 测试、Task Switching 等经典认知心理学范式，帮助您了解自己的认知控制能力和思维灵活性。这些测试不仅具有学术研究的坚实基础，也在职业评估和临床诊断中被广泛应用。</p>
+
+            <h3>2.7 视觉搜索与感知测试</h3>
+            <p>视觉搜索能力决定了您在复杂环境中快速定位目标的效率。APEXON 的视觉搜索测试模拟真实世界中的信息检索场景，测量您的搜索速度、准确率和感知策略。这一能力在阅读、驾驶、数据检索和日常决策中都扮演着重要角色。</p>
+
+            <h3>2.8 音乐播放器</h3>
+            <p>为了营造更好的训练氛围，APEXON 内置了在线音乐播放器，提供来自 Jamendo 等开放音乐平台的高质量背景音乐。您可以在测试或训练的同时播放自己喜欢的音乐，让认知训练变得更加愉悦。音乐播放器支持播放列表、音量控制和播放进度记忆等功能。</p>
+
+            <h2>三、核心特色</h2>
+
+            <h3>3.1 完全免费，无隐藏付费</h3>
+            <p>APEXON 所有核心功能永久免费，没有付费墙、没有订阅制、没有 VIP 等级。我们相信，认知能力的提升不应该是少数人的特权，而应该是每一个人都能享有的公共服务。您无需支付任何费用，即可体验全部测试项目、查看完整成绩报告和使用所有个性化功能。</p>
+
+            <h3>3.2 无需注册，即刻使用</h3>
+            <p>我们尊重您的时间和隐私。APEXON 支持匿名使用，您无需填写任何个人信息或注册账号，即可立即开始所有测试。当然，如果您希望保存历史成绩、参与全球排行榜、设置个人资料或获得成就徽章，也可以选择免费注册——整个过程仅需数十秒。</p>
+
+            <h3>3.3 多语言支持</h3>
+            <p>APEXON 面向全球用户，目前已支持包括简体中文、英语、日语、韩语、法语、德语、西班牙语、俄语、葡萄牙语、意大利语等在内的多种语言。界面翻译工作由专业译者和社区贡献者共同完成，我们会持续扩展语言支持范围。无论您来自哪个国家或地区，都能以最熟悉的语言使用 APEXON。</p>
+
+            <h3>3.4 个性化主题与视觉风格</h3>
+            <p>我们相信，美观的界面是良好用户体验的重要组成部分。APEXON 提供多种视觉风格主题，包括但不限于：</p>
+            <ul>
+                <li><strong>默认深色主题：</strong>护眼的深色界面，适合长时间使用。</li>
+                <li><strong>明亮浅色主题：</strong>清新明亮的浅色界面，适合日间使用。</li>
+                <li><strong>赛博朋克风格：</strong>霓虹闪烁的未来感设计，视觉冲击力十足。</li>
+                <li><strong>极光渐变风格：</strong>柔和流动的色彩过渡，带来宁静舒适的视觉体验。</li>
+                <li><strong>森林自然风格：</strong>以绿色为主色调，带来大自然的清新气息。</li>
+                <li><strong>极简纯白风格：</strong>干净利落的极简设计，专注内容本身。</li>
+            </ul>
+            <p>此外，我们还提供十几种强调色配色方案，您可以根据个人喜好自由组合，打造专属于自己的视觉体验。</p>
+
+            <h3>3.5 动态背景与视觉动效</h3>
+            <p>APEXON 采用先进的 Canvas 粒子系统技术，为您呈现流畅精美的动态背景效果。飘动的粒子、流动的光影、柔和的霓虹渐变——每一处细节都经过精心调校，在保证 60 帧流畅体验的同时，也提供了微动特效模式以节省设备电量。您可以自由调节动画速度和颜色强度，打造属于自己的视觉盛宴。</p>
+
+            <h3>3.6 成就与徽章系统</h3>
+            <p>为了让训练更有动力，APEXON 设计了丰富的成就徽章系统。无论是首次突破某个成绩门槛、连续使用多少天，还是在某个测试项目中达到卓越评级，您都能获得相应的成就徽章。这些徽章不仅是对您努力的肯定，也能激励您持续进步。</p>
+
+            <h3>3.7 全球排行榜</h3>
+            <p>想知道自己的认知能力在全球用户中处于什么水平？APEXON 的全球排行榜功能可以给您答案。排行榜按测试项目分类，展示全球用户的最佳成绩分布。您可以看到自己的百分位排名，了解与顶尖用户的差距，也可以将排行榜作为激励自己不断进步的参考。</p>
+
+            <h3>3.8 讨论社区</h3>
+            <p>APEXON 内置了轻量级的讨论社区，用户可以在其中分享训练心得、提出改进建议、交流认知科学相关知识，或者仅仅是与志同道合的朋友们闲聊。我们鼓励友善、尊重、包容的社区氛围，欢迎每一位用户的参与。</p>
+
+            <h2>四、科学基础</h2>
+            <p>APEXON 的测试设计建立在扎实的认知科学和心理测量学基础之上。我们参考了大量学术文献和经典实验范式，确保每一项测试都具有良好的效度（能够测量到我们想要测量的认知能力）和信度（测量结果具有稳定性和一致性）。</p>
+            <p>例如，反应速度测试采用了认知心理学中经典的 simple reaction time 范式；N-Back 测试被广泛用于工作记忆和流体智力的研究；Stroop 测试是认知控制和注意力研究中的经典工具。我们对每项测试都进行了大量的调试和校准，力求在保证科学性的同时，提供友好有趣的用户体验。</p>
+            <p>需要说明的是，APEXON 的测试结果仅供自我参考和娱乐，不能替代专业的临床诊断或医学评估。如有认知障碍相关的疑虑，请咨询专业医疗机构。</p>
+
+            <h2>五、技术架构</h2>
+            <p>APEXON 采用纯前端技术架构，所有测试逻辑在用户本地浏览器中运行，无需依赖后端服务器即可正常工作。这一设计带来了诸多优势：</p>
+            <ul>
+                <li><strong>极速响应：</strong>所有操作在本地执行，无需等待网络请求，测试计时精确到毫秒级。</li>
+                <li><strong>离线可用：</strong>在首次加载完成后，即使断网也能继续使用大部分功能。</li>
+                <li><strong>隐私保护：</strong>敏感数据（如测试成绩、个人资料）默认存储在本地，您完全掌握自己的数据。</li>
+                <li><strong>成本低廉：</strong>无需维护昂贵的服务器集群，这也是我们能够永久免费提供服务的重要原因之一。</li>
+            </ul>
+            <p>在技术栈方面，我们使用原生 HTML5、CSS3 和 JavaScript 构建，不依赖重型前端框架，保证了页面的轻量和快速加载。Canvas 2D 用于动态背景渲染，localStorage 和 IndexedDB 用于本地数据存储，Service Worker 用于提供离线访问能力。</p>
+
+            <h2>六、隐私保护承诺</h2>
+            <p>隐私保护是 APEXON 的核心价值观之一。我们设计产品时始终遵循<strong>"隐私优先"</strong>（Privacy by Design）的原则，在每一个功能环节都充分考虑用户的数据安全。以下是我们的隐私保护承诺要点：</p>
+            <ul>
+                <li><strong>最小必要原则：</strong>仅收集提供服务所必需的最少信息。</li>
+                <li><strong>本地存储优先：</strong>大部分数据默认存储在您的设备本地，而非上传至服务器。</li>
+                <li><strong>密码哈希存储：</strong>即使您选择注册，密码也仅以不可逆哈希形式存储，我们无法看到您的原始密码。</li>
+                <li><strong>不售卖数据：</strong>我们永远不会将您的个人信息出售或出租给任何第三方。</li>
+                <li><strong>透明开放：</strong>我们的隐私政策以简明易懂的语言撰写，没有晦涩的法律术语。</li>
+            </ul>
+            <p>关于隐私保护的更多详情，请阅读我们的<a href="privacy.html">隐私政策</a>页面。</p>
+
+            <h2>七、用户支持与反馈</h2>
+            <p>我们非常重视每一位用户的声音。如果您在使用过程中遇到任何问题、有改进建议，或者仅仅是想和我们打个招呼，都可以通过以下方式与我们取得联系：</p>
+            <ul>
+                <li>通过站内讨论区发帖留言</li>
+                <li>通过 GitHub 提交 Issue 或 Pull Request</li>
+                <li>通过社交媒体与我们互动</li>
+            </ul>
+            <p>我们的团队会认真阅读每一条反馈，并尽可能在后续版本中采纳合理的建议。APEXON 的持续进步，离不开广大用户的支持与贡献。</p>
+
+            <h2>八、开源与社区</h2>
+            <p>APEXON 是一个开源项目，我们的代码托管在 GitHub 上。我们欢迎所有感兴趣的开发者参与贡献，无论是修复 Bug、优化性能、添加新功能、改进翻译，还是完善文档，都是对项目的宝贵支持。</p>
+            <p>开源不仅意味着代码的开放，更意味着社区的共建。我们相信，通过全球开发者的共同努力，APEXON 能够不断进化，为更多用户带来价值。如果您有兴趣为项目贡献代码，请访问我们的 GitHub 仓库了解详情。</p>
+
+            <h2>九、发展历程</h2>
+            <p>APEXON 的诞生源于一个简单的想法：<strong>为什么不能有一个既专业又好玩的免费认知测试平台？</strong>带着这个问题，我们的创始团队开始了漫长的开发之旅。</p>
+            <p>从最初只有几个基础测试的原型，到如今拥有十二项测试、多语言支持、个性化主题和成就系统的成熟平台，APEXON 经历了无数次迭代与优化。每一次功能更新、每一处界面调整、每一个 Bug 修复，都凝聚着团队的心血和用户的反馈。</p>
+            <p>未来，我们将继续深耕认知训练领域，计划引入更多科学测试项目、更智能的个性化训练方案、更丰富的社交互动功能，以及更完善的数据可视化报告。我们的目标是让 APEXON 成为全球最受用户信赖的在线认知训练品牌。</p>
+
+            <h2>十、写在最后</h2>
+            <p>在人工智能和自动化日益普及的今天，人类的认知能力反而显得更加珍贵。快速的反应、清晰的思维、强大的记忆、灵活的判断——这些都是我们应对未来挑战的核心竞争力。APEXON 希望成为您认知能力提升道路上的忠实伙伴。</p>
+            <p>无论您是想了解自己的认知水平、追踪能力的变化趋势，还是只是想找一个有趣的方式锻炼大脑，APEXON 都在这里，随时为您服务。</p>
+            <p>感谢您选择 APEXON。让我们一起，探索大脑的无限可能。</p>
+
+            <p style="margin-top: 32px; text-align: center; color: var(--apex-text-tertiary); font-size: 14px;">— APEXON 团队</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=32"></script>
+    <script>
+    (function () {
+        APEXON.Particles.init();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

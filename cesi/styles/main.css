@@ -34,11 +34,13 @@ html {
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
-    radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
-    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%),
+    var(--style-bg-gradient,
+      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
+      radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
+      radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%)),
     var(--apex-bg);
   background-attachment: fixed;
+  transition: background 500ms ease, background-color 500ms ease, color 300ms ease;
   color: var(--apex-text);
   line-height: var(--line-height);
   min-height: 100vh;
@@ -3059,6 +3061,70 @@ html[data-theme="light"] .apex-card--game:hover {
   color: var(--apex-text-inverse);
 }
 
+/* ============================================================================
+   Section: Skeleton Loading Screens
+   ============================================================================ */
+@keyframes apex-skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-bar,
+.skeleton-circle {
+  background: linear-gradient(
+    90deg,
+    var(--apex-border-subtle) 25%,
+    var(--apex-border) 50%,
+    var(--apex-border-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: apex-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  display: inline-block;
+  height: 12px;
+}
+
+.skeleton-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-row {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.skeleton-row .skeleton-bar,
+.skeleton-row .skeleton-circle {
+  margin-right: 8px;
+}
+
+.skeleton-card {
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.skeleton-card .skeleton-bar {
+  display: block;
+}
+
+.skeleton-forum {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.skeleton-forum .skeleton-bar {
+  display: block;
+}
+
+.skeleton-forum .forum-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .leaderboard-row {
   display: flex;
   align-items: center;
@@ -4404,6 +4470,179 @@ canvas#testBox,
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  transition: opacity 500ms ease;
+}
+
+/* ============================================================================
+   Section: Style Picker - 多风格主题选择器
+   ============================================================================ */
+
+.apex-style-picker {
+  position: relative;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+}
+
+.apex-style-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--apex-border);
+  background: var(--apex-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 200ms ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.apex-style-toggle:hover {
+  transform: scale(1.08);
+  border-color: var(--apex-border-strong);
+  box-shadow: 0 4px 20px var(--apex-glow-primary);
+}
+
+.apex-style-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 320px;
+  padding: 20px;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.apex-style-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.apex-style-panel__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--apex-text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apex-style-panel__title::before {
+  content: '🎨';
+  font-size: 16px;
+}
+
+.apex-style-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.apex-style-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 200ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.apex-style-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--apex-border-strong);
+}
+
+.apex-style-item.is-active {
+  border-color: var(--apex-primary);
+  box-shadow: 0 0 0 3px var(--apex-glow-primary);
+}
+
+.apex-style-item__preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.apex-style-item__name {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--apex-text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.apex-style-item.is-active .apex-style-item__name {
+  color: var(--apex-primary);
+  font-weight: 600;
+}
+
+/* 各风格预览色 */
+.apex-style-item[data-style="scifi"] .apex-style-item__preview { background: linear-gradient(135deg, #020617, #38bdf8); }
+.apex-style-item[data-style="cyberpunk"] .apex-style-item__preview { background: linear-gradient(135deg, #0a0014, #ec4899, #06b6d4); }
+.apex-style-item[data-style="forest"] .apex-style-item__preview { background: linear-gradient(135deg, #02110a, #10b981); }
+.apex-style-item[data-style="starry"] .apex-style-item__preview { background: linear-gradient(135deg, #030712, #fbbf24); }
+.apex-style-item[data-style="anime"] .apex-style-item__preview { background: linear-gradient(135deg, #0f0820, #c084fc); }
+.apex-style-item[data-style="minimal"] .apex-style-item__preview { background: linear-gradient(135deg, #fafafa, #18181b); }
+.apex-style-item[data-style="ocean"] .apex-style-item__preview { background: linear-gradient(135deg, #020e1a, #0ea5e9); }
+.apex-style-item[data-style="desert"] .apex-style-item__preview { background: linear-gradient(135deg, #140a00, #f59e0b); }
+.apex-style-item[data-style="aurora"] .apex-style-item__preview { background: linear-gradient(135deg, #05021a, #22c55e, #a855f7); }
+.apex-style-item[data-style="sunset"] .apex-style-item__preview { background: linear-gradient(135deg, #18061a, #fb923c, #f43f5e); }
+.apex-style-item[data-style="sakura"] .apex-style-item__preview { background: linear-gradient(135deg, #1a0812, #f9a8d4); }
+.apex-style-item[data-style="neon"] .apex-style-item__preview { background: linear-gradient(135deg, #050505, #f43f5e, #06b6d4); }
+
+/* 风格预览升级：真实背景图缩略图（直观所见即所得） */
+.apex-style-item[data-style="healing"] .apex-style-item__preview { background: url("../assets/styles/healing-cat.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="anime"] .apex-style-item__preview { background: url("../assets/styles/anime-girl.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="aurora"] .apex-style-item__preview { background: url("../assets/styles/aurora.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="cyberpunk"] .apex-style-item__preview { background: url("../assets/styles/cyberpunk.jpg?v=2") center/cover no-repeat; }
+.apex-style-item[data-style="scifi"] .apex-style-item__preview { background: url("../assets/styles/scifi.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="forest"] .apex-style-item__preview { background: url("../assets/styles/forest.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="starry"] .apex-style-item__preview { background: url("../assets/styles/starry.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="minimal"] .apex-style-item__preview { background: url("../assets/styles/minimal.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="ocean"] .apex-style-item__preview { background: url("../assets/styles/ocean.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="desert"] .apex-style-item__preview { background: url("../assets/styles/desert.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="sunset"] .apex-style-item__preview { background: url("../assets/styles/sunset.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="sakura"] .apex-style-item__preview { background: url("../assets/styles/sakura.jpg?v=1") center/cover no-repeat; }
+.apex-style-item[data-style="neon"] .apex-style-item__preview { background: url("../assets/styles/neon.jpg?v=1") center/cover no-repeat; }
+
+/* 风格切换全局过渡 */
+html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
+  transition: background 400ms ease, background-color 400ms ease, color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+
+/* 响应式适配 */
+@media (max-width: 640px) {
+  .apex-style-panel {
+    min-width: 280px;
+    right: -20px;
+  }
+
+  .apex-style-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ============================================================================
@@ -6609,3 +6848,1504 @@ html[data-bw="true"] .game-canvas {
     font-size: 0.75rem;
   }
 }
+
+/* ============================================================================
+   Section: Apex 动效与无障碍增强系统（v19 新增）
+   - 数字滚动 / 列表交错 / 按钮涟漪 / 模态关键帧
+   - skip-link / 焦点可见性 / reduced-motion 全覆盖
+   - 骨架→内容 crossfade / 滚动揭示 JS 降级
+   ============================================================================ */
+
+/* ---- skip-to-content 链接：默认不可见，键盘聚焦时显现 ---- */
+.apex-skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 18px;
+  background: var(--apex-primary);
+  color: #fff;
+  border-radius: 0 0 12px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--apex-shadow-md);
+  transition: top 0.2s ease;
+}
+.apex-skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--apex-warning, #f59e0b);
+  outline-offset: 2px;
+}
+
+/* ---- 列表交错入场 ---- */
+@keyframes apex-stagger-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.apex-stagger-in {
+  opacity: 0;
+  animation: apex-stagger-in 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.apex-stagger-done { opacity: 1; }
+
+/* ---- 按钮涟漪 ---- */
+.apex-ripple-host { position: relative; overflow: hidden; }
+.apex-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(0);
+  animation: apex-ripple-spread 0.6s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes apex-ripple-spread {
+  to { transform: scale(2.4); opacity: 0; }
+}
+
+/* ---- 成绩揭晓动画（数字 scale+fade） ---- */
+@keyframes apex-score-reveal {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.score-card.apex-reveal { animation: apex-score-reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.score-grade.apex-reveal { animation: apex-score-reveal 0.7s 0.1s both cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ---- 模态框入场关键帧（card scale+fade，backdrop 单独 fade） ---- */
+@keyframes apex-modal-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes apex-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.apex-profile-modal.show .apex-profile-card,
+.apex-login-modal.show .apex-login-card {
+  animation: apex-modal-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.apex-profile-modal.show .apex-profile-backdrop,
+.apex-login-modal.show .apex-login-backdrop {
+  animation: apex-backdrop-in 0.25s ease;
+}
+
+/* ---- 排行榜行入场（冠军/亚军/季军高亮） ---- */
+@keyframes apex-row-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.leaderboard-row { animation: apex-row-in 0.35s ease both; }
+@keyframes apex-podium-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.35); }
+}
+.leaderboard-row.gold { animation: apex-row-in 0.35s ease both, apex-podium-glow 2.4s 0.4s ease-in-out infinite; }
+
+/* ---- 骨架屏 → 真实内容 crossfade ---- */
+.apex-fade-in { animation: apex-fade-in 0.4s ease both; }
+@keyframes apex-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- 滚动揭示 JS 降级（IntersectionObserver 触发） ---- */
+.apex-reveal-hidden { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.apex-reveal-shown { opacity: 1; transform: translateY(0); }
+
+/* ---- 加载 spinner ---- */
+@keyframes apex-spin { to { transform: rotate(360deg); } }
+.apex-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: apex-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+/* ---- 空状态美化（图标 + CTA + 重试） ---- */
+.apex-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 20px;
+  text-align: center;
+}
+.apex-empty-state__icon {
+  font-size: 40px;
+  line-height: 1;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.apex-empty-state__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--apex-text-secondary);
+}
+.apex-empty-state__desc {
+  font-size: 13px;
+  color: var(--apex-text-tertiary);
+  max-width: 320px;
+  line-height: 1.5;
+}
+.apex-empty-state__cta {
+  margin-top: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: var(--apex-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.apex-empty-state__cta:hover { transform: translateY(-1px); box-shadow: var(--apex-shadow-md); }
+
+/* ---- Stroop / N-Back 测试专用样式 ---- */
+.stroop-stimulus {
+  font-size: clamp(48px, 12vw, 96px);
+  font-weight: 800;
+  text-align: center;
+  margin: 24px 0;
+  letter-spacing: 2px;
+  user-select: none;
+}
+.stroop-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.stroop-choice {
+  min-width: 84px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 2px solid var(--apex-border-strong);
+  background: var(--apex-surface);
+  color: var(--apex-text);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.stroop-choice:hover { transform: translateY(-2px); border-color: var(--apex-primary); box-shadow: var(--apex-shadow-sm); }
+.stroop-choice:active { transform: scale(0.97); }
+
+.nback-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 360px;
+  margin: 20px auto;
+  aspect-ratio: 1;
+}
+.nback-cell {
+  background: var(--apex-surface-elevated);
+  border: 2px solid var(--apex-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.nback-cell.active {
+  background: var(--apex-primary);
+  border-color: var(--apex-primary-light);
+  box-shadow: 0 0 24px var(--apex-glow-primary);
+  transform: scale(0.96);
+}
+.nback-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 18px 0;
+}
+.nback-btn {
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nback-btn--match { background: var(--apex-success); color: #fff; }
+.nback-btn--nomatch { background: var(--apex-surface-elevated); color: var(--apex-text); border: 2px solid var(--apex-border-strong); }
+.nback-btn:hover { transform: translateY(-2px); box-shadow: var(--apex-shadow-sm); }
+.nback-btn:active { transform: scale(0.97); }
+.nback-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ---- reduced-motion 全覆盖：禁用所有动画/过渡，仅保留功能性变化 ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .apex-ripple { display: none !important; }
+  .apex-stagger-in { opacity: 1 !important; animation: none !important; }
+  .apex-reveal-hidden { opacity: 1 !important; transform: none !important; }
+}
+
+/* ---- 焦点可见性增强：键盘用户清晰可见的 outline ---- */
+:focus-visible {
+  outline: 2px solid var(--apex-primary-light, #a5a2fd);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* 鼠标点击时不显示 outline（仅键盘导航显示） */
+:focus:not(:focus-visible) { outline: none; }
+
+/* 主题调色板选择器 */
+.apex-palette-btn {
+  width: 40px; height: 40px; border-radius: 14px;
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  color: var(--apex-text); cursor: pointer;
+  transition: transform var(--apex-transition-fast), box-shadow var(--apex-transition-fast);
+}
+.apex-palette-btn:hover { transform: translateY(-2px); box-shadow: var(--apex-shadow-sm); }
+.apex-palette-panel {
+  position: absolute; right: 0; top: 56px; z-index: 200;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius);
+  padding: 14px; box-shadow: var(--apex-shadow-lg);
+  width: 240px; backdrop-filter: blur(14px);
+}
+.apex-palette-panel h6 {
+  margin: 0 0 10px; font-size: 12px; font-weight: 600;
+  color: var(--apex-text-secondary);
+}
+.apex-palette-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+}
+.apex-palette-swatch {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform var(--apex-transition-bounce);
+}
+.apex-palette-swatch:hover { transform: scale(1.15); }
+.apex-palette-swatch.active {
+  border-color: var(--apex-text);
+  box-shadow: 0 0 0 3px var(--apex-glow-primary);
+}
+
+/* ============================================================================
+   Section: 全站基础动效 - 卡片悬停 / 按钮 / Tab
+   ============================================================================ */
+
+/* 卡片悬停动效：上移 4px + 发光阴影 + 边框增强 */
+.item-card {
+  transition:
+    transform var(--apex-transition-base),
+    box-shadow var(--apex-transition-base),
+    border-color var(--apex-transition-base);
+}
+.item-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    var(--apex-shadow-md),
+    var(--apex-shadow-glow);
+  border-color: var(--game-card-border-hover);
+}
+
+/* 按钮按下缩放效果 */
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* leaderboard-tab active 下划线动画 */
+.leaderboard-tab {
+  position: relative;
+}
+.leaderboard-tab::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--apex-primary) 0%, var(--apex-accent-cyan) 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+}
+.leaderboard-tab.active::after {
+  width: 72%;
+  opacity: 1;
+}
+
+/* ============================================================================
+   Section: 涟漪点击效果
+   ============================================================================ */
+
+/* 按钮涟漪效果 */
+.apex-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.apex-ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: scale(0);
+  animation: apex-ripple-anim 600ms ease-out forwards;
+  background: currentColor;
+  opacity: 0.25;
+}
+@keyframes apex-ripple-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   Section: Toast 通知系统
+   ============================================================================ */
+
+/* Toast 通知 */
+.apex-toast-wrap {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.apex-toast {
+  min-width: 240px;
+  max-width: 360px;
+  padding: 12px 18px;
+  border-radius: var(--apex-radius);
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  box-shadow: var(--apex-shadow-lg);
+  color: var(--apex-text);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: apex-toast-in 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.apex-toast.success {
+  border-left: 4px solid var(--apex-success);
+}
+.apex-toast.error {
+  border-left: 4px solid var(--apex-danger);
+}
+.apex-toast.warn {
+  border-left: 4px solid var(--apex-warning);
+}
+.apex-toast.info {
+  border-left: 4px solid var(--apex-info);
+}
+.apex-toast.leaving {
+  animation: apex-toast-out 220ms ease-in forwards;
+}
+@keyframes apex-toast-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes apex-toast-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+/* ============================================================================
+   Section: 骨架屏 shimmer
+   ============================================================================ */
+
+/* 骨架屏 shimmer */
+.apex-skeleton {
+  background: linear-gradient(90deg,
+    var(--apex-surface) 0%,
+    var(--apex-surface-hover) 50%,
+    var(--apex-surface) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--apex-radius-sm);
+  animation: apex-shimmer 1400ms ease-in-out infinite;
+}
+@keyframes apex-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.apex-skeleton-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.apex-skeleton-line {
+  height: 14px;
+}
+
+/* 成就系统 */
+.apex-ach-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.apex-ach-title { font-size: 18px; font-weight: 700; color: var(--apex-text); }
+.apex-ach-count { font-size: 14px; color: var(--apex-text-secondary); font-weight: 600; }
+.apex-ach-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.apex-ach-badge {
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius);
+  padding: 14px 10px; text-align: center;
+  transition: transform var(--apex-transition-base), box-shadow var(--apex-transition-base);
+}
+.apex-ach-badge.unlocked {
+  border-color: var(--apex-primary);
+  box-shadow: 0 0 12px var(--apex-glow-primary);
+}
+.apex-ach-badge.unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--apex-shadow-md), 0 0 16px var(--apex-glow-primary);
+}
+.apex-ach-badge.locked { opacity: 0.5; filter: grayscale(0.6); }
+.apex-ach-icon { font-size: 28px; margin-bottom: 6px; }
+.apex-ach-name { font-size: 13px; font-weight: 600; color: var(--apex-text); margin-bottom: 2px; }
+.apex-ach-desc { font-size: 11px; color: var(--apex-text-tertiary); line-height: 1.4; }
+
+/* 成就解锁动画 */
+@keyframes apex-ach-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.apex-ach-badge.unlocked .apex-ach-icon {
+  animation: apex-ach-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================================
+   Section: 列表交错进入动画 & 页面切换过渡
+   ============================================================================ */
+
+/* 列表交错进入动画 */
+.apex-stagger-item {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: apex-stagger-in 480ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes apex-stagger-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 页面主内容淡入 */
+.apex-page-enter {
+  animation: apex-page-fade-in 360ms ease-out;
+}
+@keyframes apex-page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 成绩分享卡片模态框 */
+.apex-share-modal {
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: apex-fade-in 240ms ease-out;
+}
+.apex-share-modal__box {
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border);
+  border-radius: var(--apex-radius-lg);
+  padding: 24px; max-width: 880px; width: 100%;
+  box-shadow: var(--apex-shadow-lg);
+  animation: apex-zoom-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.apex-share-modal__title {
+  font-size: 18px; font-weight: 700; color: var(--apex-text);
+  margin: 0 0 16px;
+}
+.apex-share-modal__preview {
+  width: 100%; border-radius: var(--apex-radius);
+  border: 1px solid var(--apex-border);
+}
+.apex-share-modal__actions {
+  display: flex; gap: 12px; margin-top: 16px;
+  flex-wrap: wrap;
+}
+.apex-share-modal__close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--apex-surface-hover); border: none;
+  color: var(--apex-text); cursor: pointer; font-size: 18px;
+}
+@keyframes apex-fade-in { from {opacity:0} to {opacity:1} }
+@keyframes apex-zoom-in { from {opacity:0; transform:scale(0.92)} to {opacity:1; transform:scale(1)} }
+
+/* ============================================================================
+   Section: Footer 页脚
+   ============================================================================ */
+
+.apexon-footer {
+  margin-top: 64px;
+  padding: 28px 20px 22px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.08) 100%);
+  border-top: 1px solid var(--apex-border-subtle);
+  position: relative;
+  z-index: 5;
+}
+
+.apexon-footer__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+}
+
+.apexon-footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--apex-text);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.apexon-footer__logo img {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+
+.apexon-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+}
+
+.apexon-footer__nav a {
+  font-size: 13px;
+  color: var(--apex-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.apexon-footer__nav a:hover {
+  color: var(--apex-primary);
+}
+
+.apexon-footer__bottom {
+  max-width: 1100px;
+  margin: 18px auto 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--apex-border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.apexon-footer__copyright {
+  font-size: 11px;
+  color: var(--apex-text-tertiary);
+  letter-spacing: 0.01em;
+}
+
+.apexon-footer__github {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--apex-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.apexon-footer__github:hover {
+  background: var(--apex-surface-hover);
+  color: var(--apex-primary);
+  transform: translateY(-1px);
+}
+
+/* ---- 手机端适配 ---- */
+@media (max-width: 768px) {
+  .apexon-footer {
+    margin-top: 40px;
+    padding: 20px 14px 16px;
+  }
+  .apexon-footer__inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+  }
+  .apexon-footer__nav {
+    justify-content: center;
+    gap: 6px 16px;
+  }
+  .apexon-footer__nav a {
+    font-size: 12px;
+  }
+  .apexon-footer__bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .apexon-footer {
+    margin-top: 32px;
+    padding: 16px 12px 14px;
+  }
+  .apexon-footer__logo {
+    font-size: 14px;
+  }
+  .apexon-footer__logo img {
+    width: 22px;
+    height: 22px;
+  }
+  .apexon-footer__nav {
+    gap: 4px 12px;
+  }
+  .apexon-footer__nav a {
+    font-size: 11.5px;
+  }
+  .apexon-footer__copyright {
+    font-size: 10.5px;
+  }
+  .apexon-footer__github {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* 关于页面特色样式 */
+.about-lead {
+  font-size: 16px;
+  line-height: 1.8;
+  padding: 20px 24px;
+  border-left: 3px solid var(--apex-primary);
+  background: var(--apex-surface);
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 28px;
+}
+.about-lead strong {
+  color: var(--apex-primary);
+}
+
+/* ============================================================
+   覆盖修复：涟漪动画缩小 + 透明度降低
+   ============================================================ */
+.apex-ripple {
+  background: rgba(255, 255, 255, 0.18) !important;
+  animation-name: apex-ripple-spread-override !important;
+}
+.apex-ripple-wave {
+  opacity: 0.18 !important;
+  animation-name: apex-ripple-anim-override !important;
+}
+@keyframes apex-ripple-spread-override {
+  to { transform: scale(1.6); opacity: 0; }
+}
+@keyframes apex-ripple-anim-override {
+  to { transform: scale(2); opacity: 0; }
+}
+.reaction-click-area.apex-ripple-host .apex-ripple,
+#testBox.reaction-click-area .apex-ripple,
+.reaction-click-area .apex-ripple,
+#testBox.reaction-click-area.apex-ripple-host .apex-ripple-wave,
+.reaction-click-area.apex-ripple-host .apex-ripple-wave {
+  max-width: 220px !important;
+  max-height: 220px !important;
+}
+
+/* ============================================================
+   覆盖修复：反应测试 click-area 方块高度缩小
+   ============================================================ */
+#testBox.reaction-click-area,
+.reaction-click-area {
+  min-height: 240px !important;
+  padding: 16px !important;
+  font-size: clamp(1.1rem, 4vw, 1.7rem) !important;
+  border-radius: 14px !important;
+}
+@media (max-width: 767px) {
+  #testBox.reaction-click-area,
+  .reaction-click-area {
+    min-height: 180px !important;
+    padding: 12px !important;
+    font-size: clamp(0.95rem, 4.5vw, 1.2rem) !important;
+  }
+}
+
+/* ============================================================
+   基础：body 需要 relative 以承载 fixed 背景层
+   ============================================================ */
+body {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   修复6：降低全局昏暗感 - 默认亮色基础提亮
+   ============================================================ */
+:root {
+  --apex-bg: #FAFBFC;
+}
+
+/* ============================================================
+   黑白两套方案：以下彩色照片主题全部注释停用
+   背景统一由全局 data-bw「深色黑 / 明亮白」开关控制
+   停用：healing / anime / aurora / cyberpunk（原规则保留以便恢复）
+   ============================================================ */
+/*
+-- 治愈派 healing（已停用） --
+html[data-style="healing"] {
+  --apex-bg: #FFF8F0;
+  --apex-surface: rgba(255,248,240,0.92);
+  --apex-primary: #F59E0B;
+  --apex-primary-rgb: 245, 158, 11;
+  --apex-text: #422006;
+  --apex-text-secondary: #78350F;
+  --apex-border-subtle: rgba(245,158,11,0.18);
+  --apex-card-bg: rgba(255,255,255,0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(245,158,11,0.12);
+}
+html[data-style="healing"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/healing-cat.jpg?v=2");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.32;
+  filter: saturate(1.1) brightness(1.02);
+}
+html[data-style="healing"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255,248,240,0.55) 0%, rgba(255,248,240,0.92) 100%);
+  pointer-events: none;
+}
+
+-- 二次元 anime（已停用） --
+html[data-style="anime"] {
+  --apex-bg: #FDF4FF;
+  --apex-surface: rgba(253,244,255,0.90);
+  --apex-primary: #C084FC;
+  --apex-primary-rgb: 192, 132, 252;
+  --apex-accent: #F472B6;
+  --apex-text: #3B0764;
+  --apex-text-secondary: #6B21A8;
+  --apex-border-subtle: rgba(192,132,252,0.22);
+  --apex-card-bg: rgba(255,255,255,0.88);
+  --apex-radius: 18px;
+  --apex-shadow-md: 0 8px 24px rgba(192,132,252,0.16);
+}
+html[data-style="anime"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/anime-girl.jpg?v=2");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  filter: saturate(1.05);
+}
+html[data-style="anime"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(253,244,255,0.55) 0%, rgba(253,244,255,0.92) 100%);
+  pointer-events: none;
+}
+
+-- 极光之夜 aurora（已停用） --
+html[data-style="aurora"] {
+  --apex-bg: #0A0E1A;
+  --apex-surface: rgba(15,23,42,0.88);
+  --apex-primary: #22D3EE;
+  --apex-primary-rgb: 34, 211, 238;
+  --apex-accent: #A78BFA;
+  --apex-text: #E0F2FE;
+  --apex-text-secondary: #BAE6FD;
+  --apex-border-subtle: rgba(34,211,238,0.22);
+  --apex-card-bg: rgba(15,23,42,0.82);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(34,211,238,0.18);
+}
+html[data-style="aurora"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/aurora.jpg?v=2");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.55;
+}
+html[data-style="aurora"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(10,14,26,0.35) 0%, rgba(10,14,26,0.88) 100%);
+  pointer-events: none;
+}
+html[data-style="aurora"] {
+  text-shadow: 0 0 8px rgba(34,211,238,0.35);
+}
+html[data-style="aurora"] h1,
+html[data-style="aurora"] h2,
+html[data-style="aurora"] h3,
+html[data-style="aurora"] .apex-primary-text {
+  text-shadow: 0 0 12px rgba(34,211,238,0.45), 0 0 24px rgba(167,139,250,0.25);
+}
+
+-- 赛博朋克 cyberpunk（已停用） --
+html[data-style="cyberpunk"] {
+  --apex-bg: #070012;
+  --apex-surface: rgba(12,0,30,0.90);
+  --apex-primary: #E879F9;
+  --apex-primary-rgb: 232, 121, 249;
+  --apex-accent: #22D3EE;
+  --apex-text: #F0ABFC;
+  --apex-text-secondary: #E879F9;
+  --apex-border-subtle: rgba(232,121,249,0.28);
+  --apex-card-bg: rgba(12,0,30,0.85);
+  --apex-radius: 12px;
+  --apex-shadow-md: 0 8px 30px rgba(232,121,249,0.22);
+}
+html[data-style="cyberpunk"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/cyberpunk.jpg?v=2");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+}
+html[data-style="cyberpunk"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(7,0,18,0.45) 0%, rgba(7,0,18,0.90) 100%);
+  pointer-events: none;
+}
+html[data-style="cyberpunk"] {
+  text-shadow: 0 0 6px rgba(232,121,249,0.35);
+}
+html[data-style="cyberpunk"] h1,
+html[data-style="cyberpunk"] h2,
+html[data-style="cyberpunk"] h3,
+html[data-style="cyberpunk"] .apex-primary-text {
+  text-shadow:
+    0 0 10px rgba(232,121,249,0.55),
+    0 0 20px rgba(34,211,238,0.35),
+    0 0 40px rgba(232,121,249,0.25);
+}
+*/
+
+/* ============================================================
+   修复7：手机端布局最简化
+   ============================================================ */
+@media (max-width: 767px) {
+  .apex-container, .container, main {
+    padding: 10px 12px !important;
+  }
+  .card, .item-card, .apex-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .btn {
+    min-height: 42px;
+    padding: 8px 14px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+  }
+  .score-grade {
+    font-size: clamp(2rem, 10vw, 2.75rem) !important;
+  }
+  .score-card {
+    padding: 16px 14px !important;
+  }
+  .apex-style-panel {
+    max-width: calc(100vw - 32px);
+  }
+  .apex-style-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* ============================================================
+   修复8：风格系统按钮可读性 + 导航栏协调
+   ------------------------------------------------------------
+   问题1：风格只覆盖了亮色 primary，未覆盖 text-inverse，
+          light 主题下白字配亮橙/亮紫/亮青底 → 字看不见
+   问题2：.apexon-header 写死深黑底，亮色风格下导航栏反差刺眼
+   问题3：.btn 阴影写死紫色，与风格主色冲突
+   ============================================================ */
+
+/* ---- 已有 4 风格补齐按钮三件套（inverse/dark/light） ---- */
+html[data-style="healing"] {
+  --apex-primary-dark: #D97706;
+  --apex-primary-light: #FBBF24;
+  --apex-text-inverse: #431407;
+}
+html[data-style="anime"] {
+  --apex-primary-dark: #A855F7;
+  --apex-primary-light: #E9D5FF;
+  --apex-text-inverse: #2E1065;
+}
+html[data-style="aurora"] {
+  --apex-primary-dark: #0EA5E9;
+  --apex-primary-light: #67E8F9;
+  --apex-text-inverse: #042F2E;
+}
+html[data-style="cyberpunk"] {
+  --apex-primary-dark: #D946EF;
+  --apex-primary-light: #F5D0FE;
+  --apex-text-inverse: #2E1065;
+}
+
+/* ---- 亮色风格组：导航栏变亮（白底 + 风格色边框） ---- */
+html[data-style="healing"] .apexon-header,
+html[data-style="anime"] .apexon-header,
+html[data-style="forest"] .apexon-header,
+html[data-style="minimal"] .apexon-header,
+html[data-style="desert"] .apexon-header,
+html[data-style="sunset"] .apexon-header,
+html[data-style="sakura"] .apexon-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--apex-border-subtle);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* 亮色风格组：登录区胶囊变白底 */
+html[data-style="healing"] .header-user-wrap,
+html[data-style="anime"] .header-user-wrap,
+html[data-style="forest"] .header-user-wrap,
+html[data-style="minimal"] .header-user-wrap,
+html[data-style="desert"] .header-user-wrap,
+html[data-style="sunset"] .header-user-wrap,
+html[data-style="sakura"] .header-user-wrap {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--apex-border-subtle);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.05);
+}
+html[data-style="healing"] .header-user-wrap:hover,
+html[data-style="anime"] .header-user-wrap:hover,
+html[data-style="forest"] .header-user-wrap:hover,
+html[data-style="minimal"] .header-user-wrap:hover,
+html[data-style="desert"] .header-user-wrap:hover,
+html[data-style="sunset"] .header-user-wrap:hover,
+html[data-style="sakura"] .header-user-wrap:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--apex-border);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.09);
+}
+
+/* 亮色风格组：用户名深色 + logo 去掉写死的紫青辉光 */
+html[data-style="healing"] .header-user-name,
+html[data-style="anime"] .header-user-name,
+html[data-style="forest"] .header-user-name,
+html[data-style="minimal"] .header-user-name,
+html[data-style="desert"] .header-user-name,
+html[data-style="sunset"] .header-user-name,
+html[data-style="sakura"] .header-user-name {
+  color: var(--apex-text-secondary);
+  text-shadow: none;
+}
+html[data-style="healing"] .apexon-header-logo span,
+html[data-style="anime"] .apexon-header-logo span,
+html[data-style="forest"] .apexon-header-logo span,
+html[data-style="minimal"] .apexon-header-logo span,
+html[data-style="desert"] .apexon-header-logo span,
+html[data-style="sunset"] .apexon-header-logo span,
+html[data-style="sakura"] .apexon-header-logo span {
+  filter: none;
+}
+
+/* 亮色风格组：按钮阴影从写死紫色改为中性 */
+html[data-style="healing"] .btn,
+html[data-style="anime"] .btn,
+html[data-style="forest"] .btn,
+html[data-style="minimal"] .btn,
+html[data-style="desert"] .btn,
+html[data-style="sunset"] .btn,
+html[data-style="sakura"] .btn {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
+}
+html[data-style="healing"] .btn:hover,
+html[data-style="anime"] .btn:hover,
+html[data-style="forest"] .btn:hover,
+html[data-style="minimal"] .btn:hover,
+html[data-style="desert"] .btn:hover,
+html[data-style="sunset"] .btn:hover,
+html[data-style="sakura"] .btn:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+/* ---- 深色风格组：导航栏换成各自色调 ---- */
+html[data-style="scifi"] .apexon-header {
+  background: rgba(7, 11, 24, 0.85);
+  border-bottom: 1px solid rgba(96, 165, 250, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="starry"] .apexon-header {
+  background: rgba(11, 16, 38, 0.85);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.16);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="ocean"] .apexon-header {
+  background: rgba(8, 47, 73, 0.85);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.20);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+html[data-style="neon"] .apexon-header {
+  background: rgba(15, 10, 30, 0.88);
+  border-bottom: 1px solid rgba(244, 114, 182, 0.22);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+html[data-style="aurora"] .apexon-header {
+  background: rgba(10, 14, 26, 0.85);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+html[data-style="cyberpunk"] .apexon-header {
+  background: rgba(12, 0, 30, 0.88);
+  border-bottom: 1px solid rgba(232, 121, 249, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   修复9：补齐其余 9 个风格的完整视觉系统（此前选了毫无效果）
+   每个风格：全套变量 + AI 背景图 + 渐变遮罩
+   ============================================================ */
+
+/* ---- 科幻深空 scifi ---- */
+html[data-style="scifi"] {
+  --apex-bg: #070B18;
+  --apex-surface: rgba(15, 23, 42, 0.88);
+  --apex-primary: #60A5FA;
+  --apex-primary-rgb: 96, 165, 250;
+  --apex-primary-dark: #3B82F6;
+  --apex-primary-light: #93C5FD;
+  --apex-accent: #A78BFA;
+  --apex-text: #DBEAFE;
+  --apex-text-secondary: #93A8CC;
+  --apex-text-inverse: #0B1B3A;
+  --apex-border-subtle: rgba(96, 165, 250, 0.20);
+  --apex-card-bg: rgba(15, 23, 42, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(3, 7, 18, 0.55);
+}
+html[data-style="scifi"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/scifi.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+}
+html[data-style="scifi"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(7, 11, 24, 0.40) 0%, rgba(7, 11, 24, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 翡翠森林 forest（亮色治愈） ---- */
+html[data-style="forest"] {
+  --apex-bg: #F0FDF4;
+  --apex-surface: rgba(240, 253, 244, 0.92);
+  --apex-primary: #16A34A;
+  --apex-primary-rgb: 22, 163, 74;
+  --apex-primary-dark: #15803D;
+  --apex-primary-light: #4ADE80;
+  --apex-accent: #0D9488;
+  --apex-text: #14532D;
+  --apex-text-secondary: #166534;
+  --apex-text-inverse: #052E16;
+  --apex-border-subtle: rgba(22, 163, 74, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(22, 163, 74, 0.12);
+}
+html[data-style="forest"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/forest.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="forest"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.50) 0%, rgba(240, 253, 244, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 璀璨星空 starry ---- */
+html[data-style="starry"] {
+  --apex-bg: #0B1026;
+  --apex-surface: rgba(17, 24, 52, 0.88);
+  --apex-primary: #FBBF24;
+  --apex-primary-rgb: 251, 191, 36;
+  --apex-primary-dark: #F59E0B;
+  --apex-primary-light: #FDE68A;
+  --apex-accent: #818CF8;
+  --apex-text: #E0E7FF;
+  --apex-text-secondary: #A5B4FC;
+  --apex-text-inverse: #422006;
+  --apex-border-subtle: rgba(251, 191, 36, 0.18);
+  --apex-card-bg: rgba(17, 24, 52, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(5, 8, 20, 0.55);
+}
+html[data-style="starry"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/starry.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+}
+html[data-style="starry"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(11, 16, 38, 0.35) 0%, rgba(11, 16, 38, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 极简纯白 minimal（亮色） ---- */
+html[data-style="minimal"] {
+  --apex-bg: #FFFFFF;
+  --apex-surface: rgba(255, 255, 255, 0.95);
+  --apex-primary: #111827;
+  --apex-primary-rgb: 17, 24, 39;
+  --apex-primary-dark: #000000;
+  --apex-primary-light: #4B5563;
+  --apex-accent: #6B7280;
+  --apex-text: #111827;
+  --apex-text-secondary: #4B5563;
+  --apex-text-inverse: #FFFFFF;
+  --apex-border-subtle: rgba(17, 24, 39, 0.10);
+  --apex-card-bg: rgba(255, 255, 255, 0.94);
+  --apex-radius: 12px;
+  --apex-shadow-md: 0 6px 20px rgba(17, 24, 39, 0.07);
+}
+html[data-style="minimal"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/minimal.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+}
+html[data-style="minimal"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.95) 100%);
+  pointer-events: none;
+}
+
+/* ---- 深海幽蓝 ocean ---- */
+html[data-style="ocean"] {
+  --apex-bg: #082F49;
+  --apex-surface: rgba(8, 47, 73, 0.88);
+  --apex-primary: #38BDF8;
+  --apex-primary-rgb: 56, 189, 248;
+  --apex-primary-dark: #0EA5E9;
+  --apex-primary-light: #7DD3FC;
+  --apex-accent: #2DD4BF;
+  --apex-text: #E0F2FE;
+  --apex-text-secondary: #BAE6FD;
+  --apex-text-inverse: #082F49;
+  --apex-border-subtle: rgba(56, 189, 248, 0.22);
+  --apex-card-bg: rgba(8, 47, 73, 0.85);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 8px 28px rgba(2, 20, 35, 0.55);
+}
+html[data-style="ocean"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/ocean.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.50;
+}
+html[data-style="ocean"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(8, 47, 73, 0.35) 0%, rgba(8, 47, 73, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ---- 暖金沙漠 desert（亮色） ---- */
+html[data-style="desert"] {
+  --apex-bg: #FFFBEB;
+  --apex-surface: rgba(255, 251, 235, 0.92);
+  --apex-primary: #D97706;
+  --apex-primary-rgb: 217, 119, 6;
+  --apex-primary-dark: #B45309;
+  --apex-primary-light: #FBBF24;
+  --apex-accent: #EA580C;
+  --apex-text: #451A03;
+  --apex-text-secondary: #78350F;
+  --apex-text-inverse: #451A03;
+  --apex-border-subtle: rgba(217, 119, 6, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(217, 119, 6, 0.12);
+}
+html[data-style="desert"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/desert.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="desert"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.50) 0%, rgba(255, 251, 235, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 日落暖霞 sunset（亮色） ---- */
+html[data-style="sunset"] {
+  --apex-bg: #FFF7ED;
+  --apex-surface: rgba(255, 247, 237, 0.92);
+  --apex-primary: #EA580C;
+  --apex-primary-rgb: 234, 88, 12;
+  --apex-primary-dark: #C2410C;
+  --apex-primary-light: #FB923C;
+  --apex-accent: #DB2777;
+  --apex-text: #431407;
+  --apex-text-secondary: #7C2D12;
+  --apex-text-inverse: #431407;
+  --apex-border-subtle: rgba(234, 88, 12, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 16px;
+  --apex-shadow-md: 0 6px 20px rgba(234, 88, 12, 0.12);
+}
+html[data-style="sunset"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/sunset.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+html[data-style="sunset"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 247, 237, 0.50) 0%, rgba(255, 247, 237, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 樱花烂漫 sakura（亮色） ---- */
+html[data-style="sakura"] {
+  --apex-bg: #FDF2F8;
+  --apex-surface: rgba(253, 242, 248, 0.92);
+  --apex-primary: #DB2777;
+  --apex-primary-rgb: 219, 39, 119;
+  --apex-primary-dark: #BE185D;
+  --apex-primary-light: #F472B6;
+  --apex-accent: #C084FC;
+  --apex-text: #500724;
+  --apex-text-secondary: #9D174D;
+  --apex-text-inverse: #500724;
+  --apex-border-subtle: rgba(219, 39, 119, 0.18);
+  --apex-card-bg: rgba(255, 255, 255, 0.90);
+  --apex-radius: 18px;
+  --apex-shadow-md: 0 6px 20px rgba(219, 39, 119, 0.12);
+}
+html[data-style="sakura"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/sakura.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+}
+html[data-style="sakura"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(253, 242, 248, 0.50) 0%, rgba(253, 242, 248, 0.90) 100%);
+  pointer-events: none;
+}
+
+/* ---- 霓虹都市 neon ---- */
+html[data-style="neon"] {
+  --apex-bg: #0F0A1E;
+  --apex-surface: rgba(20, 14, 40, 0.88);
+  --apex-primary: #F472B6;
+  --apex-primary-rgb: 244, 114, 182;
+  --apex-primary-dark: #EC4899;
+  --apex-primary-light: #F9A8D4;
+  --apex-accent: #818CF8;
+  --apex-text: #F3E8FF;
+  --apex-text-secondary: #D8B4FE;
+  --apex-text-inverse: #4A044E;
+  --apex-border-subtle: rgba(244, 114, 182, 0.22);
+  --apex-card-bg: rgba(20, 14, 40, 0.85);
+  --apex-radius: 14px;
+  --apex-shadow-md: 0 8px 28px rgba(10, 5, 25, 0.55);
+}
+html[data-style="neon"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("../assets/styles/neon.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+}
+html[data-style="neon"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(15, 10, 30, 0.40) 0%, rgba(15, 10, 30, 0.88) 100%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   触摸交互优化：抑制长按原声菜单 + 双击缩放延迟 + 跟手反馈
+   ------------------------------------------------------------
+   1. 长按"只是在犹豫"不再呼出系统菜单（touch-callout 关闭）；
+   2. tap-highlight 关闭安卓点击闪光；
+   3. touch-action: manipulation 让点击立即响应、上下滑动顺滑。
+   ============================================================ */
+.item-card,
+.apex-card--game,
+.btn,
+.apexon-menu-btn,
+.leaderboard-tab,
+.score-share__btn,
+.forum-btn,
+.forum-filter-btn,
+.forum-page-btn,
+.personal-card,
+.apex-style-item,
+.modal-close,
+.apex-login-submit,
+.apex-profile-submit {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 防止嵌套滚动穿透，移动端上下滑动质感更干净（不整页橡皮筋跳动） */
+html,
+body {
+  overscroll-behavior-y: auto;
+}
+
+/* 触屏按下给反馈：轻按即轻微下沉，不夸张超大 */
+@media (hover: none) and (pointer: coarse) {
+  .item-card:active,
+  .apex-card--game:active,
+  .btn:active {
+    transform: translateY(1px) scale(0.985);
+    transition: transform 90ms ease-out;
+  }
+}
+

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="在线打字速度测试，统计 WPM、准确率与错误率，提升你的输入效率。APEXON 免费在线打字测试。">
+    <meta name="keywords" content="打字测试,打字速度,WPM,盲打测试,输入效率,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="打字速度测试 - APEXON">
+    <meta property="og:description" content="在线打字速度测试，统计 WPM、准确率与错误率，提升你的输入效率。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/type.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="打字速度测试 - APEXON">
+    <meta name="twitter:description" content="在线打字速度测试，统计 WPM、准确率与错误率，提升你的输入效率。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="typeTitle">打字速度测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="typeTitle">打字训练测试</h1>
+
+        <div class="progress-wrap">
+            <div class="progress-label"><span data-i18n="progressLabel">进度</span><span id="progressText">0 / 5</span></div>
+            <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+        </div>
+
+        <div class="live-stats" id="liveStats">
+            <div class="live-stat-item"><div class="live-stat-value" id="liveWpm">0</div><div class="live-stat-label" data-i18n="wpmLabel">WPM</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveCpm">0</div><div class="live-stat-label" data-i18n="cpmLabel">CPM</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveAcc">0%</div><div class="live-stat-label" data-i18n="accuracyLabel">正确率</div></div>
+            <div class="live-stat-item"><div class="live-stat-value" id="liveTime">0.0s</div><div class="live-stat-label" data-i18n="timeLabel">用时</div></div>
+        </div>
+
+        <div class="type-hint-bar" id="typeHint" data-i18n="readyStart">准备开始</div>
+        <div id="testBox" class="type-test-area"></div>
+        <textarea id="inputArea" data-i18n-placeholder="typeHerePlaceholder" placeholder="在这里打字..."></textarea>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="restart">重新开始</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'type', testTitle:'打字训练测试', score: window.lastScore || 0, scoreUnit:'WPM', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>打字速度测试：让手指跟上你的思维</h2>
+            <p>在信息时代，打字已经成为一种与说话、书写同等重要的基础技能。无论是撰写论文、编写代码、回复邮件、整理会议纪要，还是在社交软件上快速交流，高效的打字能力都能让我们把想法更顺畅地转化为文字。打字速度测试正是衡量这种能力的有效工具，它不仅关注你一分钟能打多少字，更关注你在速度之外的准确性、稳定性和节奏感。</p>
+            <p>打字速度通常用 WPM（Words Per Minute，每分钟字数）和 CPM（Characters Per Minute，每分钟字符数）来表示。在英文语境中，一个"word"通常被定义为 5 个字符；而在中文语境中，WPM 的计算可能因输入法不同而有所差异，但核心逻辑是一致的：单位时间内正确输入的字符数量。除了速度，准确率同样重要——一个每分钟打 100 字但错误率高达 20% 的打字员，实际工作效率可能不如一个每分钟 60 字但几乎零错误的打字员，因为修改错误会打断思维 flow 并消耗额外时间。</p>
+            <p>普通人的打字速度大约在 40 WPM 左右，经过专业训练的文员可以达到 60 到 80 WPM，顶尖速录员甚至能突破 120 WPM。对于程序员和作家来说，稳定的中等速度往往比极限速度更有价值，因为他们需要一边输入一边思考，而不是单纯追求击键频率。事实上，很多高效创作者更注重"不打断思维的输入"，即让打字速度刚好匹配思考速度，而不是盲目求快。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>APEXON 打字速度测试采用随机句子作为测试文本，玩家需要在输入框中尽可能快速且准确地复现屏幕上的内容。与逐字显示的题目不同，整句显示更接近真实写作场景，要求玩家具备一定的"前瞻性阅读"能力：即在输入当前字词的同时，目光已经提前扫视后面的内容。这种"超前注视"技巧是专业打字员与普通用户之间的重要差异之一。</p>
+            <p>本测试在用户点击"开始测试"并出现文本后，从第一次键盘输入开始计时，直到正确输入完整句话为止。系统会实时统计用时、正确字符数、错误字符数，并计算 WPM、CPM、准确率和错误率。为了避免作弊，测试禁止复制粘贴，并会在用户切换标签页时暂停测试。最终成绩以完成整句话的时间为基准，确保结果能够反映真实的连续输入能力，而非单字突击速度。</p>
+            <h3>影响打字速度的关键因素</h3>
+            <p>首先是指法基础。标准的盲打指法要求双手食指分别放在 F 和 J 键的凸起上，十个手指分管各自的键位区域。没有经过指法训练的人往往只能使用两三个手指"啄字"，速度上限很低，且容易疲劳。其次是肌肉记忆。当常用词汇和键位组合形成自动化反应后，大脑不需要逐字思考手指该按哪里，打字就能进入"心流"状态，速度和质量都会显著提升。</p>
+            <p>输入法的选择和熟悉程度也会影响中文输入效率。拼音输入法的优势是门槛低，但重码率高；五笔、郑码等形码输入法重码率低，但需要记忆字根；双拼则是两者之间的折中方案。无论使用哪种输入法，熟练掌握其简拼、联想、自定义词库、云输入等功能，都能显著提升输入效率。此外，键盘的键程、触发力度、布局以及桌面高度也会直接影响长时间输入的舒适度和速度。</p>
+            <h3>系统提升打字速度的训练方法</h3>
+            <ul>
+                <li><strong>从正确指法开始</strong>：即使初期速度很慢，也要坚持标准指法，这是长期提速的基础。可以先用键位练习软件巩固手指分工。</li>
+                <li><strong>优先保证准确率</strong>：先做到不看键盘、少出错，速度会随着练习自然提升。盲目追求速度只会增加修改成本并固化错误动作。</li>
+                <li><strong>进行专项突破</strong>：针对自己常错的键位或字母组合进行反复练习，比如"th""ing""tion"等英文组合，或某些容易混淆的拼音。</li>
+                <li><strong>善用输入法功能</strong>：整理个人词库、学习简拼和双打规则，可以让中文输入事半功倍。定期清理错误自造词也很重要。</li>
+                <li><strong>坚持每天短时间练习</strong>：每天 15 到 20 分钟的专注训练，效果远好于偶尔一两个小时的突击练习。持续性的少量重复是形成肌肉记忆的最佳方式。</li>
+                <li><strong>进行节奏训练</strong>：尝试以稳定的节奏输入，而不是忽快忽慢。均匀的击键节奏有助于减少错误并延长高效输入时间。</li>
+            </ul>
+            <h3>适用人群与使用建议</h3>
+            <p>打字速度测试适合学生、办公人员、程序员、作家、翻译、客服以及任何需要大量文字输入的人群。对于正在学习盲打的人来说，可以通过测试看到自己的进步；对于已经具备一定基础的人来说，可以用来寻找薄弱环节并进行针对性训练。建议每周固定时间测试一次，记录 WPM 和准确率的变化曲线，这样更容易发现长期趋势而不是被单次波动误导。</p>
+            <h3>温馨提示</h3>
+            <p>测试时请保持正确的坐姿，手腕不要过度弯曲，前臂与键盘保持水平，避免长时间练习导致腱鞘炎或腕管综合征。如果感到手指酸痛、手腕僵硬，应及时休息并做手部拉伸。测试结果会受键盘手感、设备性能、输入法状态和网络延迟等因素影响，建议多次测试取平均值，并在相似的设备和环境下进行比较，以获得更准确的参考。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        // 粒子背景
+        APEXON.Particles.init();
+
+        // 初始化打字测试引擎
+        if (APEXON.Tests && APEXON.Tests.Type && typeof APEXON.Tests.Type.init === 'function') {
+            APEXON.Tests.Type.init();
+        } else {
+            document.getElementById('result').textContent = t('engineLoadFailed', '测试引擎加载失败，请刷新页面重试。');
+        }
+
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

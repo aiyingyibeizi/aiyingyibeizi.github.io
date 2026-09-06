@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Task Switching 多任务切换测试，测量认知灵活性与切换成本。APEXON 免费在线认知测试。">
+    <meta name="keywords" content="Task Switching,任务切换,认知灵活性,切换成本,执行功能,工作记忆,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="Task Switching 多任务切换测试 - APEXON">
+    <meta property="og:description" content="Task Switching 多任务切换测试，测量认知灵活性与切换成本。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/taskswitch.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Task Switching 多任务切换测试 - APEXON">
+    <meta name="twitter:description" content="Task Switching 多任务切换测试，测量认知灵活性与切换成本。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="taskswitchTitle">Task Switching 多任务切换测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 24px;
+            padding: 36px 24px;
+        }
+        .taskswitch-task-hint {
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+            min-height: 1.4em;
+        }
+        .taskswitch-stim {
+            font-size: clamp(3rem, 12vw, 5.5rem);
+            font-weight: 800;
+            min-height: 1.2em;
+            color: var(--apex-text);
+            letter-spacing: 0.05em;
+            transition: transform var(--apex-transition-base), color var(--apex-transition-fast);
+        }
+        .taskswitch-stim.taskswitch-pop {
+            animation: taskswitch-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes taskswitch-pop {
+            0% { transform: scale(0.6); opacity: 0; }
+            60% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .taskswitch-stim.taskswitch-correct { color: var(--apex-success); }
+        .taskswitch-stim.taskswitch-wrong { color: var(--apex-danger); }
+        .taskswitch-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .taskswitch-buttons .btn {
+            min-width: 100px;
+        }
+        #testBox .taskswitch-feedback {
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 1.4em;
+        }
+
+        @media (max-width: 767px) {
+            #testBox { gap: 18px; padding: 26px 18px; }
+            .taskswitch-stim { font-size: clamp(2.5rem, 14vw, 4rem); }
+            .taskswitch-buttons { gap: 12px; }
+            .taskswitch-buttons .btn { min-width: 90px; padding: 14px 18px; font-size: 1.1rem; }
+        }
+        @media (max-width: 480px) {
+            #testBox { gap: 14px; padding: 22px 14px; }
+            .taskswitch-stim { font-size: clamp(2rem, 14vw, 3rem); }
+            .taskswitch-buttons { gap: 10px; width: 100%; }
+            .taskswitch-buttons .btn { min-width: 0; flex: 1 1 calc(50% - 5px); padding: 12px 8px; font-size: 1rem; }
+            .taskswitch-task-hint, #testBox .taskswitch-feedback { font-size: 0.8125rem; }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="taskswitchTitle">Task Switching 多任务切换测试</h1>
+
+        <div class="info-row"><span data-i18n="progressLabel">进度</span>：<span id="progressText">0 / 40</span></div>
+
+        <div id="testBox" data-test-type="taskswitch">
+            <div class="taskswitch-task-hint" id="taskHint" data-i18n="tsReadyHint">点击开始</div>
+            <div class="taskswitch-stim" id="stimulus">▶</div>
+            <div class="taskswitch-buttons" id="responseButtons" style="display:none">
+                <button class="btn" onclick="handleResponse('even')" data-i18n="tsEven">偶数</button>
+                <button class="btn" onclick="handleResponse('odd')" data-i18n="tsOdd">奇数</button>
+                <button class="btn" onclick="handleResponse('vowel')" data-i18n="tsVowel">元音</button>
+                <button class="btn" onclick="handleResponse('consonant')" data-i18n="tsConsonant">辅音</button>
+            </div>
+            <div class="taskswitch-feedback" id="feedback"></div>
+            <button class="btn btn-primary" id="startBtn" onclick="startTest()" data-i18n="startTest">开始测试</button>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'taskswitch', testTitle:'Task Switching 多任务切换测试', score: window.lastScore||0, scoreUnit:'ms', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>Task Switching 多任务切换测试：探索你的认知灵活性</h2>
+            <p>认知灵活性（Cognitive Flexibility）是人类执行功能的核心成分之一，指在不同任务、规则或心理状态之间快速切换的能力。它由前额叶皮层主导，决定了我们在多变环境中能否迅速调整策略、重新分配注意资源。Task Switching 范式正是测量这一能力的经典实验任务：被试需要在两种或多种任务规则之间反复切换，研究者通过比较"切换试次"与"重复试次"的反应时差异，量化出"切换成本"（Switch Cost）。切换成本越小，说明你的认知灵活性越强、任务集重新配置的效率越高。</p>
+            <p>在日常生活中，认知灵活性几乎无处不在。当你在写代码时突然被同事打断要回复消息、开车时遇到陌生路口需要重新规划路线、聊天时在两种语言之间自由切换、或在不同软件工具之间频繁切换操作，依靠的都是这一能力。研究表明，认知灵活性强的人在多任务处理、创造性问题解决、适应新环境和学习新技能方面更具优势；反之，认知灵活性下降是 ADHD、抑郁症、精神分裂症以及前额叶老化的重要标志之一。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>本测试共 40 个试次，刺激为数字或字母。当刺激是<strong>数字</strong>时，你需要判断它是奇数还是偶数；当刺激是<strong>字母</strong>时，你需要判断它是元音还是辅音。刺激按"重复-切换"交替的块状序列呈现（RRSSRRSS... 模式，每块 2 个试次），即在每两个试次后切换任务规则。系统会分别记录"切换试次"（块的第一试次，需要重新激活任务集）与"重复试次"（块的第二试次，沿用上一试次的任务集）的反应时，两者之差即为切换成本。</p>
+            <p>切换成本的产生源于"任务集重新配置"（Task-Set Reconfiguration）过程。当任务重复时，相关任务集已经处于激活状态，反应只需调用既有规则；当任务切换时，大脑必须先<strong>抑制旧任务集</strong>、<strong>激活新任务集</strong>，这一重组过程消耗额外的时间与认知资源。fMRI 研究发现，切换试次会显著激活背外侧前额叶皮层（DLPFC）和前扣带回（ACC），这两个区域正是执行控制与冲突监测的核心。切换成本通常在 100-300ms 之间，反映了大脑"重置任务集"所需的最低时间。</p>
+            <h3>影响 Task Switching 表现的因素</h3>
+            <ul>
+                <li><strong>年龄</strong>：儿童与老年人的切换成本明显增大，反映前额叶发育与老化的规律。</li>
+                <li><strong>疲劳与睡眠</strong>：睡眠剥夺会显著削弱任务集重组能力，使切换成本大幅上升。</li>
+                <li><strong>情绪与压力</strong>：焦虑与慢性压力占用执行资源，降低切换效率。</li>
+                <li><strong>训练经验</strong>：双语者因长期在两种语言间切换抑制，通常具有更小的切换成本。</li>
+                <li><strong>刺激-规则映射的强度</strong>：规则越自动化，切换越困难（"韧性"现象）。</li>
+                <li><strong>准备时间</strong>：切换前的准备时间越长，切换成本越小（任务集可提前重配置）。</li>
+            </ul>
+            <h3>提升认知灵活性的方法</h3>
+            <ul>
+                <li><strong>多任务训练</strong>：定期进行 Task Switching、Dual-task 等切换训练，强化前额叶神经回路。</li>
+                <li><strong>双语学习</strong>：学习并使用第二语言，长期训练可显著提升任务切换能力。</li>
+                <li><strong>正念冥想</strong>：定期冥想可增强前额叶活动与默认网络调控，提升认知灵活性。</li>
+                <li><strong>有氧运动</strong>：跑步、游泳等有氧运动改善前额叶功能与神经可塑性。</li>
+                <li><strong>切换场景练习</strong>：刻意在不同类型工作间切换（如阅读-写作-计算），训练快速重配置能力。</li>
+                <li><strong>充足睡眠</strong>：保证 7-8 小时优质睡眠，让前额叶清除代谢废物、恢复执行功能。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>Task Switching 测试在临床和科研中应用广泛：用于 ADHD、抑郁症、精神分裂症、帕金森病的执行功能评估；用于监测前额叶损伤患者的康复进程；也是抗精神病药物、认知训练干预效果的客观测量工具。在职业筛选方面，飞行员、空中交通管制员、应急调度员等需要频繁切换任务的高要求岗位，都会用到类似的切换范式。对于普通人，定期测试可以追踪自己认知灵活性的变化趋势，及时发现因压力、疲劳或衰老带来的认知波动。</p>
+            <h3>温馨提示</h3>
+            <p>测试时请尽量快速且准确地作答，但不要为了速度牺牲准确率。每次刺激呈现最长 2.5 秒，超时会自动记为错误。判断规则要牢记：数字判奇偶（1=奇，2=偶），字母判元音/辅音（AEIOU=元音，其余=辅音）。如果某题答错，不必纠结，立即将注意力切换到下一题——这本身就是对认知灵活性的训练。切换成本是正常现象，即使经验丰富的被试也存在 100ms 以上的切换成本。坚持练习，你会发现自己在切换试次上的反应越来越接近重复试次，这就是认知灵活性提升的体现。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const progressText = document.getElementById('progressText');
+        const taskHint = document.getElementById('taskHint');
+        const stimEl = document.getElementById('stimulus');
+        const feedback = document.getElementById('feedback');
+        const responseButtons = document.getElementById('responseButtons');
+        const startBtn = document.getElementById('startBtn');
+
+        // 刺激素材
+        const DIGITS = [1,2,3,4,6,7,8,9]; // 排除 5 避免歧义
+        const VOWELS = ['A','E','I','O','U'];
+        const CONSONANTS = ['B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Y','Z'];
+        const TOTAL_TRIALS = 40;
+        const INTER_TRIAL_MS = 1200;   // 试次间隔参考值
+        const STIMULUS_MS = 2500;      // 刺激最长展示时间
+        const FEEDBACK_MS = 300;      // 反馈展示时长
+
+        let sequence = [];
+        let currentIndex = 0;
+        let results = []; // {taskType, isSwitch, correct, rt}
+        let testStartTime = 0;
+        let stimulusStartTime = 0;
+        let awaitingResponse = false;
+        let currentTrialTimeout = null;
+        let feedbackTimeout = null;
+        let state = 'idle';
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        // 生成序列：RRSS 模式（每块 2 个试次，块间切换任务）
+        function generateSequence() {
+            const seq = [];
+            let currentTask = Math.random() < 0.5 ? 'number' : 'letter';
+            const blockLength = 2;
+
+            for (let i = 0; i < TOTAL_TRIALS; i++) {
+                const inBlockPos = i % blockLength;
+                if (inBlockPos === 0 && i > 0) {
+                    currentTask = currentTask === 'number' ? 'letter' : 'number';
+                }
+                const isSwitch = inBlockPos === 0 && i > 0;
+
+                let stimulus;
+                if (currentTask === 'number') {
+                    stimulus = DIGITS[Math.floor(Math.random() * DIGITS.length)];
+                } else {
+                    // 元音 30%，辅音 70%
+                    if (Math.random() < 0.3) {
+                        stimulus = VOWELS[Math.floor(Math.random() * VOWELS.length)];
+                    } else {
+                        stimulus = CONSONANTS[Math.floor(Math.random() * CONSONANTS.length)];
+                    }
+                }
+
+                seq.push({
+                    taskType: currentTask,
+                    stimulus: stimulus,
+                    isSwitch: isSwitch,
+                    correctAnswer: currentTask === 'number'
+                        ? (stimulus % 2 === 0 ? 'even' : 'odd')
+                        : (VOWELS.includes(stimulus) ? 'vowel' : 'consonant')
+                });
+            }
+            return seq;
+        }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'taskswitch', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ms</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            state = 'running';
+            sequence = generateSequence();
+            currentIndex = 0;
+            results = [];
+            testStartTime = Date.now();
+            result.innerHTML = '';
+            feedback.textContent = '';
+            feedback.style.color = '';
+            // 显示响应按钮，隐藏开始按钮
+            responseButtons.style.display = 'flex';
+            startBtn.style.display = 'none';
+            showNextStimulus();
+        }
+
+        function showNextStimulus() {
+            if (currentIndex >= TOTAL_TRIALS) {
+                endTest();
+                return;
+            }
+            const trial = sequence[currentIndex];
+            stimulusStartTime = Date.now();
+            awaitingResponse = true;
+            feedback.textContent = '';
+            feedback.style.color = '';
+
+            // 显示刺激
+            stimEl.textContent = trial.stimulus;
+            stimEl.className = 'taskswitch-stim taskswitch-pop';
+            // 显示当前任务提示
+            taskHint.textContent = trial.taskType === 'number' ? t('tsTaskNumber', '判断奇偶') : t('tsTaskLetter', '判断元音/辅音');
+            progressText.textContent = (currentIndex + 1) + ' / ' + TOTAL_TRIALS;
+
+            // 超时自动记为错误
+            currentTrialTimeout = setTimeout(() => {
+                if (awaitingResponse) {
+                    awaitingResponse = false;
+                    results.push({ taskType: trial.taskType, isSwitch: trial.isSwitch, correct: false, rt: STIMULUS_MS });
+                    feedback.textContent = t('tsTimeout', '超时未答');
+                    feedback.style.color = 'var(--apex-warning)';
+                    playFail();
+                    feedbackTimeout = setTimeout(() => {
+                        stimEl.classList.remove('taskswitch-correct', 'taskswitch-wrong', 'taskswitch-pop');
+                        currentIndex++;
+                        showNextStimulus();
+                    }, FEEDBACK_MS);
+                }
+            }, STIMULUS_MS);
+        }
+
+        function handleResponse(answer) {
+            if (!awaitingResponse) return;
+            clearTimeout(currentTrialTimeout);
+            awaitingResponse = false;
+            const trial = sequence[currentIndex];
+            const rt = Date.now() - stimulusStartTime;
+            const correct = answer === trial.correctAnswer;
+            results.push({ taskType: trial.taskType, isSwitch: trial.isSwitch, correct: correct, rt: rt });
+
+            // 短暂反馈
+            stimEl.classList.add(correct ? 'taskswitch-correct' : 'taskswitch-wrong');
+            if (correct) {
+                feedback.textContent = t('correctLabel', '正确') + ' · ' + Math.round(rt) + 'ms';
+                feedback.style.color = 'var(--apex-success)';
+                playSuccess();
+            } else {
+                feedback.textContent = t('wrongLabel', '错误');
+                feedback.style.color = 'var(--apex-danger)';
+                playFail();
+            }
+
+            feedbackTimeout = setTimeout(() => {
+                stimEl.classList.remove('taskswitch-correct', 'taskswitch-wrong', 'taskswitch-pop');
+                currentIndex++;
+                showNextStimulus();
+            }, FEEDBACK_MS);
+        }
+
+        function endTest() {
+            state = 'ended';
+            if (currentTrialTimeout) { clearTimeout(currentTrialTimeout); currentTrialTimeout = null; }
+            if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+            // 计算结果
+            const switchTrials = results.filter(r => r.isSwitch);
+            const repeatTrials = results.filter(r => !r.isSwitch);
+            const switchRt = switchTrials.length > 0 ? switchTrials.reduce((s, r) => s + r.rt, 0) / switchTrials.length : 0;
+            const repeatRt = repeatTrials.length > 0 ? repeatTrials.reduce((s, r) => s + r.rt, 0) / repeatTrials.length : 0;
+            const switchCost = Math.round(switchRt - repeatRt);
+            const accuracy = results.length > 0 ? results.filter(r => r.correct).length / results.length : 0;
+
+            // 成绩：切换成本越小越好（保存为正数绝对值，越小越好）
+            const score = Math.abs(switchCost);
+            window.lastScore = score;
+
+            // 等级
+            const grade = (window.APEXON && APEXON.Utils) ? APEXON.Utils.getGrade(score, 'taskswitch') : { grade: '-', color: '#aaa' };
+            window.lastGrade = grade.grade;
+            window.lastGradeColor = grade.color;
+
+            // 显示结果
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('tsResult', '切换成本 {cost} ms').replace('{cost}', switchCost) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + Math.abs(switchCost) + ' ms</div><div class="score-detail-label">' + t('tsSwitchCost', '切换成本') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + Math.round(repeatRt) + ' ms</div><div class="score-detail-label">' + t('tsRepeatRt', '重复 RT') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + Math.round(switchRt) + ' ms</div><div class="score-detail-label">' + t('tsSwitchRt', '切换 RT') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + (accuracy * 100).toFixed(1) + '%</div><div class="score-detail-label">' + t('tsAccuracy', '正确率') + '</div></div></div></div>';
+
+            // 保存成绩：切换成本越小越好（保存为正数绝对值）
+            if (window.APEXON && APEXON.DB) {
+                APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'taskswitch', { score: score }).then(saved => {
+                    if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+                });
+            }
+            // 成就统计已由 common.js saveScore 内部统一调用 recordTest，此处不再重复调用（避免双倍计数）
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+
+            // 恢复初始 UI
+            responseButtons.style.display = 'none';
+            startBtn.style.display = '';
+            taskHint.textContent = t('tsFinished', '测试结束，查看你的成绩');
+            stimEl.textContent = '▶';
+            stimEl.className = 'taskswitch-stim';
+        }
+
+        window.startTest = startTest;
+        window.handleResponse = handleResponse;
+
+        window.restartTest = function () {
+            if (currentTrialTimeout) { clearTimeout(currentTrialTimeout); currentTrialTimeout = null; }
+            if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+            state = 'idle';
+            sequence = [];
+            currentIndex = 0;
+            results = [];
+            awaitingResponse = false;
+            progressText.textContent = '0 / ' + TOTAL_TRIALS;
+            result.innerHTML = '';
+            feedback.textContent = '';
+            feedback.style.color = '';
+            // 恢复初始 UI
+            responseButtons.style.display = 'none';
+            startBtn.style.display = '';
+            taskHint.textContent = t('tsReadyHint', '点击开始');
+            stimEl.textContent = '▶';
+            stimEl.className = 'taskswitch-stim';
+            renderHistory();
+        };
+
+        // 键盘快捷键：1/2 = 偶/奇；3/4 = 元音/辅音；R = 重新开始
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (state === 'running' && awaitingResponse) {
+                const k = e.key.toLowerCase();
+                if (k === '1' || k === 'e') { e.preventDefault(); handleResponse('even'); }
+                else if (k === '2' || k === 'o') { e.preventDefault(); handleResponse('odd'); }
+                else if (k === '3' || k === 'v') { e.preventDefault(); handleResponse('vowel'); }
+                else if (k === '4' || k === 'c') { e.preventDefault(); handleResponse('consonant'); }
+            }
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

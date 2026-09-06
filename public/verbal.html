@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="单词记忆测试，快速记忆随机英文单词，检验你的语言记忆能力。APEXON 免费在线单词记忆测试。">
+    <meta name="keywords" content="单词记忆,语言记忆,词汇记忆,记忆力测试,APEXON">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="单词记忆测试 - APEXON">
+    <meta property="og:description" content="单词记忆测试，快速记忆随机英文单词，检验你的语言记忆能力。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/verbal.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="单词记忆测试 - APEXON">
+    <meta name="twitter:description" content="单词记忆测试，快速记忆随机英文单词，检验你的语言记忆能力。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="verbalTitle">单词记忆测试 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=8">
+    <link rel="stylesheet" href="styles/main.css?v=20">
+    <style>
+        #testBox {
+            flex-direction: column;
+            gap: 24px;
+            padding: 36px 24px;
+        }
+        #testBox .verbal-word {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 700;
+            color: var(--apex-text);
+            min-height: 1.4em;
+        }
+        #testBox .verbal-hint {
+            font-size: 0.875rem;
+            color: var(--apex-text-secondary);
+            font-weight: 500;
+        }
+        #testBox .verbal-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #testBox .verbal-buttons .btn {
+            min-width: 140px;
+        }
+        #testBox .verbal-feedback {
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 1.4em;
+        }
+
+        /* 手机端：单词记忆测试更紧凑 */
+        @media (max-width: 767px) {
+            #testBox {
+                gap: 18px;
+                padding: 26px 18px;
+            }
+            #testBox .verbal-word {
+                font-size: clamp(1.5rem, 9vw, 2.5rem);
+            }
+            #testBox .verbal-buttons {
+                gap: 12px;
+            }
+            #testBox .verbal-buttons .btn {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #testBox {
+                gap: 14px;
+                padding: 22px 14px;
+            }
+            #testBox .verbal-word {
+                font-size: clamp(1.25rem, 9vw, 2rem);
+            }
+            #testBox .verbal-buttons {
+                gap: 10px;
+                width: 100%;
+            }
+            #testBox .verbal-buttons .btn {
+                min-width: 0;
+                flex: 1 1 calc(50% - 5px);
+            }
+            #testBox .verbal-hint,
+            #testBox .verbal-feedback {
+                font-size: 0.8125rem;
+            }
+        }
+    </style>
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="verbalTitle">单词记忆测试</h1>
+
+        <div class="info-row"><span data-i18n="progressLabel">进度</span>：<span id="progressText">0 / 30</span>　<span data-i18n="correctCountLabel">正确：</span><span id="correctDisplay">0</span></div>
+
+        <div id="testBox" data-test-type="verbal"></div>
+
+        <div class="result" id="result"></div>
+
+        <div class="btn-group">
+            <button class="btn" onclick="restartTest()" data-i18n="testAgain">再来一次</button>
+            <button class="btn" onclick="APEXON.Share.showCard({testType:'verbal', testTitle:'单词记忆测试', score: window.lastScore || 0, scoreUnit:'个', grade: window.lastGrade || '', gradeColor: window.lastGradeColor || '', username: (window.APEXON&&APEXON.Auth&&APEXON.Auth.getDisplayUser&&APEXON.Auth.getDisplayUser())||'Guest', date: new Date().toLocaleDateString('zh-CN')})" data-i18n="shareScore">分享成绩</button>
+            <button class="btn" onclick="backHome()" data-i18n="backHome">返回主界面</button>
+        </div>
+
+        <div class="history-list" style="margin-top:24px">
+            <div class="history-title" data-i18n="recentRecords">最近记录</div>
+            <div id="historyContent" data-i18n="noRecords">还没有记录</div>
+        </div>
+
+        <div class="long-article">
+            <h2>单词记忆测试：探索你的言语记忆能力</h2>
+            <p>言语记忆是人类记忆系统中专门负责处理语言信息的模块，它让我们能够记住新学到的词汇、理解刚刚读过的句子、回想起昨天对话的内容，并在需要时准确提取合适的词语进行表达。与视觉记忆或空间记忆不同，言语记忆更依赖于左半球大脑的语言中枢，包括负责语言产出的布罗卡区、负责语言理解的韦尼克区，以及连接两者的弓状束等关键结构。APEXON 单词记忆测试通过"再认判断"任务，帮助你了解自己的言语工作记忆水平。</p>
+            <p>在日常生活中，言语记忆无处不在。学习外语时需要记住大量新单词，阅读时需要保持前后文的连贯性，社交时需要记住人名和约定事项，演讲时需要快速调用恰当的词汇。良好的言语记忆能力可以显著提升学习效率，而言语记忆下降则可能是正常衰老、睡眠不足、慢性压力或某些神经系统疾病的早期信号。因此，关注和训练言语记忆对各个年龄段的人都有重要意义。</p>
+            <p>心理学研究把记忆分为编码、存储和提取三个阶段。单词记忆测试主要考察的是"再认"能力，即判断一个刺激是否曾经出现过。再认通常比回忆更容易，因为回忆需要从记忆中主动生成信息，而再认只需要在面对选项时做出"是"或"否"的判断。不过，当干扰项不断增加、时间压力加大时，再认的难度也会大幅上升，因为它要求你准确区分"真实记忆"和"仅仅是熟悉感"。</p>
+            <h3>测试机制与科学原理</h3>
+            <p>本测试从常用英文单词词库中随机抽取 30 个单词依次呈现。每个单词只会出现一次或重复出现，玩家需要在单词出现时快速判断它是"新词"还是"见过"。正确识别重复词和新词都会计入得分，最终根据正确数量评定等级。测试过程没有时间限制，但要求你在每个单词出现时立即做出判断，以模拟真实语言加工中的即时性。</p>
+            <p>测试过程中，大脑需要不断更新"已见过单词列表"，同时抵抗"虚假熟悉感"的干扰。所谓虚假熟悉感，是指某些新词可能因为与已见过的词在拼写、发音或语义上相似，或者恰好是你生活中常用的词，而让你产生"好像见过"的错觉。能够快速区分真实记忆和熟悉感，是本测试得分高低的关键。这种能力在学习新语言时尤为重要，因为它能帮助你避免混淆形近词或近义词。</p>
+            <h3>影响单词记忆表现的因素</h3>
+            <p>词汇量是基础因素之一。如果你认识的英文单词越多，对新词的加工就越顺畅，也越容易发现重复词，因为你不需要把认知资源浪费在解码单词本身。注意力集中度同样重要：如果测试时走神，很可能错过当前单词，导致后续判断错误。此外，编码深度也会影响记忆效果。有研究表明，对单词进行语义加工（比如思考它的含义、用法或联想一个场景）比进行浅层加工（比如只关注字母形状或读音）能产生更持久、更稳定的记忆痕迹。</p>
+            <h3>提升言语记忆的有效方法</h3>
+            <ul>
+                <li><strong>建立语义网络</strong>：把新词与已知词、图片或个人经历联系起来，而不是孤立记忆。一个嵌入知识网络的单词比孤立的单词更容易被提取。</li>
+                <li><strong>使用主动回忆</strong>：学习后先尝试自己回忆，再对照答案，比单纯重复阅读效果更好。主动回忆能强化记忆痕迹并暴露薄弱环节。</li>
+                <li><strong>分散练习</strong>：把学习时间分散到多天，利用"间隔重复"效应巩固记忆。集中突击的效果往往不如长期分散学习持久。</li>
+                <li><strong>多渠道输入</strong>：结合听、说、读、写多种方式接触单词，可以形成更丰富的记忆痕迹。多种感官参与能提高记忆的冗余度和稳定性。</li>
+                <li><strong>保证睡眠</strong>：睡眠期间大脑会对白天学到的信息进行整理和巩固，熬夜学习往往事倍功半。尤其是学习新词汇后的第一个夜晚睡眠尤为关键。</li>
+                <li><strong>情境化学习</strong>：在句子或对话中学习单词，而不是只背单词表。情境能提供更多提取线索，让记忆更容易被激活。</li>
+            </ul>
+            <h3>应用场景与参考价值</h3>
+            <p>单词记忆测试适用于语言学习者评估记忆效率、学生备考词汇、老年人进行认知健康自检，以及研究人员进行言语记忆相关实验。通过定期测试，你可以追踪自己的记忆变化趋势，并据此调整学习策略。对于备考托福、雅思、GRE 等语言考试的学生来说，本测试可以作为评估词汇记忆策略效果的辅助工具。</p>
+            <h3>温馨提示</h3>
+            <p>本测试使用英文单词，如果你的英语水平有限，成绩可能会受到词汇量影响，而不仅仅是记忆能力。测试时请以自然速度作答，不要过度纠结某个单词。即使不确定，也可以根据第一印象快速判断，因为过度分析反而可能增加错误。长期坚持练习，结合科学的记忆方法，你的言语记忆能力会得到稳步提升。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=13"></script>
+    <script src="js/common.js?v=31"></script>
+    <script src="js/achievements.js?v=2"></script>
+    <script src="js/share.js?v=3"></script>
+    <script>
+    (function () {
+        const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
+
+        function renderStartScreen() {
+            testBox.innerHTML = '<div class="apex-start-screen">' +
+                '<div class="apex-start-screen__icon">🧩</div>' +
+                '<div class="apex-start-screen__title">' + t('verbalStartTitle', '单词记忆挑战') + '</div>' +
+                '<div class="apex-start-screen__desc">' + t('verbalStartDesc', '判断每个单词是第一次出现还是已经见过，考验你的言语记忆。') + '</div>' +
+                '<div class="apex-start-screen__btn" data-i18n="clickStart">' + t('clickStart', '点击开始') + '</div>' +
+                '</div>';
+        }
+
+        // 粒子背景
+        APEXON.Particles.init();
+
+        const testBox = document.getElementById('testBox');
+        const result = document.getElementById('result');
+        const historyContent = document.getElementById('historyContent');
+        const progressText = document.getElementById('progressText');
+        const correctDisplay = document.getElementById('correctDisplay');
+
+        const WORD_POOL = [
+            'apple','table','river','house','music','garden','bridge','window','flower','school',
+            'market','orange','planet','rocket','coffee','summer','winter','forest','danger','silent',
+            'friend','family','travel','camera','bottle','pillow','blanket','mirror','closet','guitar',
+            'pencil','rabbit','turtle','monkey','giraffe','penguin','dolphin','island','desert','ocean',
+            'castle','village','station','library','theater','museum','stationery','weather','morning','evening'
+        ];
+        const TOTAL = 30;
+
+        let sequence = [];
+        let currentIndex = 0;
+        let correctCount = 0;
+        let state = 'idle';
+
+        function playSuccess() { if (APEXON.Audio) APEXON.Audio.playSuccess(); }
+        function playFail() { if (APEXON.Audio) APEXON.Audio.playFail(); }
+
+        function generateSequence() {
+            const pool = WORD_POOL.slice();
+            const used = new Set();
+            const seen = [];
+            const seq = [];
+            for (let i = 0; i < TOTAL; i++) {
+                const canRepeat = seen.length >= 2 && Math.random() < 0.45;
+                if (canRepeat) {
+                    const word = seen[Math.floor(Math.random() * seen.length)];
+                    seq.push({ word: word, isRepeated: true });
+                } else {
+                    const available = pool.filter(w => !used.has(w));
+                    const word = available[Math.floor(Math.random() * available.length)];
+                    used.add(word);
+                    seen.push(word);
+                    seq.push({ word: word, isRepeated: false });
+                }
+            }
+            return seq;
+        }
+
+        function renderHistory() {
+            APEXON.DB.getHistoryByUserAndType(APEXON.Auth.getUserId(), 'verbal', 5).then(history => {
+                const esc = APEXON.Security.escapeHtml;
+                if (!history.length) {
+                    historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('noRecords', '还没有记录') + '</div>';
+                    return;
+                }
+                historyContent.innerHTML = history.map(h => '<div class="history-item"><span class="history-date">' + esc(h.date || new Date(h.timestamp).toLocaleDateString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</span><span class="history-score">' + esc(h.score) + ' ' + t('wordUnit', '个') + '</span></div>').join('');
+            }).catch(() => {
+                historyContent.innerHTML = '<div style="color:var(--apex-text-tertiary);font-size:13px">' + t('loadRecordsFailed', '加载记录失败') + '</div>';
+            });
+        }
+
+        function showCard() {
+            const item = sequence[currentIndex];
+            const isRepeated = item.isRepeated;
+            testBox.innerHTML = '<div class="verbal-hint">' + t('verbalIndexLabel', '第 {index} / {total} 个').replace('{index}', currentIndex + 1).replace('{total}', TOTAL) + '</div><div class="verbal-word">' + item.word + '</div><div class="verbal-buttons"><button class="btn" id="seenBtn">' + t('seen', '见过') + '</button><button class="btn" id="newBtn">' + t('newWord', '新词') + '</button></div><div class="verbal-feedback" id="feedback"></div>';
+            const seenBtn = document.getElementById('seenBtn');
+            const newBtn = document.getElementById('newBtn');
+
+            function answer(chosenSeen) {
+                seenBtn.disabled = true;
+                newBtn.disabled = true;
+                const isCorrect = chosenSeen === isRepeated;
+                const feedback = document.getElementById('feedback');
+                if (isCorrect) {
+                    correctCount++;
+                    correctDisplay.textContent = correctCount;
+                    feedback.textContent = t('correctLabel', '正确');
+                    feedback.style.color = 'var(--apex-success)';
+                    playSuccess();
+                } else {
+                    feedback.textContent = t('wrongLabel', '错误');
+                    feedback.style.color = 'var(--apex-danger)';
+                    playFail();
+                }
+                currentIndex++;
+                progressText.textContent = currentIndex + ' / ' + TOTAL;
+                setTimeout(() => {
+                    if (currentIndex >= TOTAL) endGame();
+                    else showCard();
+                }, 600);
+            }
+            seenBtn.addEventListener('click', () => answer(true));
+            newBtn.addEventListener('click', () => answer(false));
+        }
+
+        function endGame() {
+            state = 'ended';
+            const grade = APEXON.Utils.getGrade(correctCount, 'verbal');
+            result.innerHTML = '<div class="score-card"><div class="score-grade" style="color:' + grade.color + '">' + grade.grade + '</div><div class="score-label">' + t('correctMemory', '正确记忆 {count} / {total} 个单词').replace('{count}', correctCount).replace('{total}', TOTAL) + '</div><div class="score-details"><div class="score-detail-item"><div class="score-detail-value">' + correctCount + '</div><div class="score-detail-label">' + t('correctCountLabel', '正确：').replace('：', '') + '</div></div><div class="score-detail-item"><div class="score-detail-value">' + grade.grade + '</div><div class="score-detail-label">' + t('gradeLabel', '等级') + '</div></div></div>' + APEXON.Share.buttonsHTML('verbal', correctCount, grade.grade) + '</div>';
+            APEXON.Share.bindShareEvents(result);
+
+            APEXON.DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'verbal', { score: correctCount }).then(saved => {
+                if (!saved) APEXON.UI.toast(t('saveScoreFailed', '数据保存失败，请重试'));
+            });
+            if (navigator.vibrate) navigator.vibrate(50);
+            renderHistory();
+        }
+
+        function startTest() {
+            if (state !== 'idle') return;
+            state = 'running';
+            sequence = generateSequence();
+            currentIndex = 0;
+            correctCount = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '1 / ' + TOTAL;
+            result.innerHTML = '';
+            showCard();
+        }
+
+        window.restartTest = function () {
+            state = 'idle';
+            sequence = [];
+            currentIndex = 0;
+            correctCount = 0;
+            correctDisplay.textContent = '0';
+            progressText.textContent = '0 / ' + TOTAL;
+            result.innerHTML = '';
+            renderStartScreen();
+            renderHistory();
+        };
+
+        testBox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (state === 'idle') startTest();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.key === ' ' || e.key === 'Enter') && state === 'idle') { e.preventDefault(); startTest(); }
+            if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) restartTest();
+        });
+
+        renderStartScreen();
+        renderHistory();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
