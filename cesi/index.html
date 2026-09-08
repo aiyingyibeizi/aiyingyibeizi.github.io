@@ -20,7 +20,7 @@
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=21">
+    <link rel="stylesheet" href="styles/main.css?v=22">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -177,6 +177,7 @@
 
         <div class="leaderboard" id="leaderboard">
             <div class="leaderboard-title" data-i18n="leaderboardTitle">🏆 排行榜</div>
+            <div class="leaderboard-diag" id="lbDiag" style="display:none"></div>
             <div class="leaderboard-tabs">
                 <button class="leaderboard-tab active" onclick="showLb('reaction')" data-i18n="lbReaction">反应</button>
                 <button class="leaderboard-tab" onclick="showLb('type')" data-i18n="lbType">打字</button>
@@ -232,8 +233,8 @@
 
     </div>
 
-    <script src="js/i18n.js?v=13"></script>
-    <script src="js/common.js?v=34"></script>
+    <script src="js/i18n.js?v=14"></script>
+    <script src="js/common.js?v=35"></script>
     <script src="js/achievements.js?v=2"></script>
     <script src="js/search.js?v=1"></script>
     <script>
@@ -311,12 +312,27 @@
                 APEXON.DB.getLeaderboard(type, 100).catch(() => {});
             }, { passive: true });
         });
+        // 数据诊断：记录最近一次排行榜清洗前后的数量（用于向用户证明"水军/占位数据"已被清除，而非数据丢失）
+        let lbDiag = null;
+        window.APEXON = window.APEXON || {};
+        APEXON.__setLbDiag = function (d) { lbDiag = d; const s = document.getElementById('lbDiag'); if (s) { renderLbDiag(); } };
+        function renderLbDiag() {
+            const s = document.getElementById('lbDiag');
+            if (!s) return;
+            if (!lbDiag || (lbDiag.dropped <= 0 && lbDiag.kept === 0)) { s.style.display = 'none'; return; }
+            s.style.display = '';
+            const tpl = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('lbDiagClean', '已过滤 {n} 条占位/测试数据（保留 {m} 条）') : '已过滤 {n} 条占位/测试数据（保留 {m} 条）');
+            s.innerHTML = '🛡 ' + tpl.replace('{n}', lbDiag.dropped).replace('{m}', lbDiag.kept);
+        }
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
             const lbEl = document.getElementById('lbContent');
+            const diagEl = document.getElementById('lbDiag');
+            if (diagEl) diagEl.style.display = 'none';
             // 骨架屏：立即展示占位，避免空白闪烁
             if (lbEl) lbEl.innerHTML = Array.from({length: 6}, () => '<div class="leaderboard-row skeleton-row"><div class="skeleton-bar" style="width:28px"></div><div class="skeleton-circle"></div><div class="skeleton-bar" style="width:90px"></div><div class="skeleton-bar" style="width:50px;margin-left:auto"></div></div>').join('');
             const entries = await APEXON.DB.getLeaderboard(type, 100);
+            renderLbDiag();
             if (!entries.length) {
                 document.getElementById('lbContent').innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">🏆</div><div class="apex-empty-state__title">' + t('lbEmptyTitle', '暂无榜单数据') + '</div><div class="apex-empty-state__desc">' + t('lbEmptyFirst', '还没有人上榜，快来成为第一个！') + '</div></div>';
                 return;

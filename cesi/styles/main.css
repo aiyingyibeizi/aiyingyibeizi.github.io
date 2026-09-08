@@ -525,7 +525,7 @@ body.loaded .apexon-page {
 .apexon-header-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 18px);
   left: 0;
   width: 220px;
   flex-direction: column;
@@ -543,9 +543,9 @@ body.loaded .apexon-page {
   gap: 2px;
   overflow: hidden;
   transform-origin: top left;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-8px) scale(0.97);
   opacity: 0;
-  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 260ms ease, transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .apexon-header-dropdown.open {
@@ -944,7 +944,7 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   }
 
   .apexon-header-dropdown {
-    top: calc(100% + 0.5rem);
+    top: calc(100% + 1.1rem);
     left: 0;
     right: auto;
     width: min(15rem, calc(100vw - var(--container-padding) * 2));
@@ -1059,10 +1059,10 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   background: linear-gradient(135deg, #05070d 0%, #0a0e1c 50%, #110a22 100%);
   opacity: 0;
   pointer-events: none;
-  transform: scale(1.04);
+  transform: scale(1.05);
   transition:
-    opacity 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    transform 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity 460ms cubic-bezier(0.65, 0, 0.35, 1),
+    transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 html[data-bw="true"] .apex-page-transition,
@@ -1079,14 +1079,16 @@ body.theme-light .apex-page-transition {
 
 .apex-page-transition.exit {
   opacity: 0;
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 body {
   opacity: 0;
+  transform: translateY(10px);
   background: linear-gradient(135deg, #05070d 0%, #0a0e1c 50%, #110a22 100%);
   transition:
-    opacity 320ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 560ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1),
     background 400ms ease;
 }
 
@@ -1098,6 +1100,7 @@ body.theme-light {
 
 body.loaded {
   opacity: 1;
+  transform: translateY(0);
 }
 
 /* 右侧用户区：头像 + 名字胶囊（整体触发 Clerk UserButton） */
@@ -3407,6 +3410,17 @@ html[data-theme="light"] .apex-card--game:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.leaderboard-diag {
+  font-size: 0.75rem;
+  color: var(--apex-text-tertiary, rgba(255,255,255,0.5));
+  background: var(--apex-surface, rgba(255,255,255,0.04));
+  border: 1px dashed var(--apex-border, rgba(255,255,255,0.1));
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: -10px 0 14px;
+  line-height: 1.5;
 }
 
 .forum-input-wrap {
@@ -6920,20 +6934,29 @@ html[data-bw="true"] .game-canvas {
   top: calc(100% + 0.4rem);
   left: 0;
   right: auto;
-  min-width: 8rem;
-  display: none;
+  min-width: 9.5rem;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.35rem;
-  background: var(--apex-surface);
-  border: 1px solid var(--apex-border);
-  border-radius: 0.7rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  gap: 0.2rem;
+  padding: 0.4rem;
+  background: var(--apex-surface-elevated, var(--apex-surface));
+  border: 1px solid var(--apex-border-strong, var(--apex-border));
+  border-radius: 0.85rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.18);
   z-index: 1000;
+  opacity: 0;
+  transform-origin: top center;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  display: flex;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .apexon-lang-selector__dropdown.is-open {
-  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .apexon-lang-selector__item {
@@ -6973,6 +6996,22 @@ html[data-bw="true"] .game-canvas {
   }
   .apexon-lang-selector__arrow {
     display: none;
+  }
+  /* 移动端语言下拉改为右对齐，避免被右侧视口截断；弹出动画更细腻 */
+  .apexon-lang-selector__dropdown {
+    left: auto;
+    right: 0;
+    min-width: 9rem;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+    transform-origin: top right;
+    transition:
+      opacity 240ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .apexon-lang-selector__dropdown.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

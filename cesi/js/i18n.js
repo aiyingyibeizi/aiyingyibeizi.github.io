@@ -125,6 +125,7 @@
       forumPublish: '发布',
       guestCanComment: '游客模式可发表评论，登录后可修改用户名与资料',
       lbEmptyFirst: '还没有人上榜，快来成为第一个！',
+      lbDiagClean: '已过滤 {n} 条占位/测试数据（保留 {m} 条）',
       lbEmptyTitle: '暂无榜单数据', personalGuestTitle: '游客模式', forumEmptyTitle: '暂无讨论', startTestCta: '开始测试',
       guestRecordTip: '登录或游客模式均可记录成绩',
       guestPrefix: '游客',
@@ -222,6 +223,7 @@
       forumPublish: 'Post',
       guestCanComment: 'Guests can comment. Log in to edit username and profile.',
       lbEmptyFirst: 'No scores yet. Be the first!',
+      lbDiagClean: 'Filtered {n} placeholder/test entries (kept {m})',
       lbEmptyTitle: 'No leaderboard data', personalGuestTitle: 'Guest mode', forumEmptyTitle: 'No discussions', startTestCta: 'Start test',
       guestRecordTip: 'Scores are saved in guest or logged-in mode',
       guestPrefix: 'Guest',
@@ -318,6 +320,7 @@
       forumPublish: '投稿',
       guestCanComment: 'ゲストでもコメント可能。ログインするとユーザー名とプロフィールを編集できます。',
       lbEmptyFirst: 'まだランキングデータがありません。最初の記録を残しましょう！',
+      lbDiagClean: 'プレースホルダー・テストデータ {n} 件を除外しました（残り {m} 件）',
       lbEmptyTitle: 'ランキングデータなし', personalGuestTitle: 'ゲストモード', forumEmptyTitle: '投稿なし', startTestCta: 'テスト開始',
       guestRecordTip: 'ゲストまたはログイン状態で記録が保存されます',
       guestPrefix: 'ゲスト',
@@ -414,6 +417,7 @@
       forumPublish: '게시',
       guestCanComment: '게스트도 댓글 작성 가능. 로그인하면 사용자명과 프로필 수정 가능.',
       lbEmptyFirst: '아직 순위 데이터가 없습니다. 첫 번째 기록을 남겨보세요!',
+      lbDiagClean: '플레이스홀더·테스트 데이터 {n}개를 걸러냈습니다 (남은 것 {m}개)',
       lbEmptyTitle: '순위 데이터 없음', personalGuestTitle: '게스트 모드', forumEmptyTitle: '게시글 없음', startTestCta: '테스트 시작',
       guestRecordTip: '게스트 또는 로그인 상태에서 기록이 저장됩니다',
       guestPrefix: '게스트',
@@ -510,6 +514,7 @@
       forumPublish: 'Publier',
       guestCanComment: 'Les invités peuvent commenter. Connectez-vous pour modifier le pseudo et le profil.',
       lbEmptyFirst: 'Aucun score pour le moment. Soyez le premier !',
+      lbDiagClean: '{n} données de test/placeholders filtrées ({m} conservées)',
       lbEmptyTitle: 'Aucune donnée', personalGuestTitle: 'Mode invité', forumEmptyTitle: 'Aucune discussion', startTestCta: 'Commencer le test',
       guestRecordTip: 'Les scores sont enregistrés en mode invité ou connecté',
       guestPrefix: 'Invité',
@@ -606,6 +611,7 @@
       forumPublish: 'Veröffentlichen',
       guestCanComment: 'Gäste können kommentieren. Melde dich an, um Benutzernamen und Profil zu bearbeiten.',
       lbEmptyFirst: 'Noch keine Einträge. Sei der Erste!',
+      lbDiagClean: '{n} Platzhalter-/Testdaten gefiltert ({m} beibehalten)',
       lbEmptyTitle: 'Keine Daten', personalGuestTitle: 'Gastmodus', forumEmptyTitle: 'Keine Diskussionen', startTestCta: 'Test starten',
       guestRecordTip: 'Ergebnisse werden im Gast- oder Anmeldemodus gespeichert',
       guestPrefix: 'Gast',
@@ -702,6 +708,7 @@
       forumPublish: 'Publicar',
       guestCanComment: 'Los invitados pueden comentar. Inicia sesión para editar usuario y perfil.',
       lbEmptyFirst: 'Aún no hay puntuaciones. ¡Sé el primero!',
+      lbDiagClean: '{n} datos de prueba/placeholder filtrados ({m} conservados)',
       lbEmptyTitle: 'Sin datos', personalGuestTitle: 'Modo invitado', forumEmptyTitle: 'Sin discusiones', startTestCta: 'Iniciar test',
       guestRecordTip: 'Las puntuaciones se guardan en modo invitado o iniciado',
       guestPrefix: 'Invitado',
@@ -798,6 +805,7 @@
       forumPublish: 'Опубликовать',
       guestCanComment: 'Гости могут комментировать. Войдите, чтобы редактировать имя и профиль.',
       lbEmptyFirst: 'Пока нет рекордов. Будьте первым!',
+      lbDiagClean: 'Отфильтровано {n} тестовых/заглушечных записей (осталось {m})',
       lbEmptyTitle: 'Нет данных', personalGuestTitle: 'Гостевой режим', forumEmptyTitle: 'Нет обсуждений', startTestCta: 'Начать тест',
       guestRecordTip: 'Результаты сохраняются в гостевом или авторизованном режиме',
       guestPrefix: 'Гость',
@@ -894,6 +902,7 @@
       forumPublish: 'Publicar',
       guestCanComment: 'Convidados podem comentar. Faça login para editar usuário e perfil.',
       lbEmptyFirst: 'Ainda não há pontuações. Seja o primeiro!',
+      lbDiagClean: '{n} dados de teste/placeholder filtrados ({m} mantidos)',
       lbEmptyTitle: 'Sem dados', personalGuestTitle: 'Modo convidado', forumEmptyTitle: 'Sem discussões', startTestCta: 'Iniciar teste',
       guestRecordTip: 'Pontuações são salvas no modo convidado ou logado',
       guestPrefix: 'Convidado',
@@ -990,6 +999,7 @@
       forumPublish: 'Pubblica',
       guestCanComment: 'Gli ospiti possono commentare. Accedi per modificare nome utente e profilo.',
       lbEmptyFirst: 'Ancora nessun punteggio. Sii il primo!',
+      lbDiagClean: 'Filtrati {n} dati di test/placeholder (conservati {m})',
       lbEmptyTitle: 'Nessun dato', personalGuestTitle: 'Modalità ospite', forumEmptyTitle: 'Nessuna discussione', startTestCta: 'Inizia test',
       guestRecordTip: 'I punteggi vengono salvati in modalità ospite o logata',
       guestPrefix: 'Ospite',
@@ -1004,18 +1014,75 @@
     current: DEFAULT_LANG,
 
     init() {
+      // 页面级翻译注入：允许每个静态页通过 window.APEXON_PAGE_I18N 附带自己的 10 语言字典，
+      // 在 apply 之前合并进全局，使静态内容页（关于/隐私/条款/404/音乐）也能跟随当前语言切换。
+      if (global.APEXON_PAGE_I18N && typeof global.APEXON_PAGE_I18N === 'object') {
+        Object.keys(global.APEXON_PAGE_I18N).forEach((pgLang) => {
+          if (!TRANSLATIONS[pgLang]) TRANSLATIONS[pgLang] = {};
+          Object.assign(TRANSLATIONS[pgLang], global.APEXON_PAGE_I18N[pgLang]);
+        });
+      }
       let saved = null;
       try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { /* 隐私模式等场景下 localStorage 不可用 */ }
       const preferred = saved || this.detectBrowserLang();
       this.setLang(preferred, false);
       this.injectSelector();
       this.apply();
+
+      // 若用户从未手动选择语言，则异步按 IP 所在国家自动推断语言；
+      // 不重复保存，避免覆盖用户的后续选择，也不阻塞首屏渲染。
+      if (!saved) {
+        this.detectByIP().then((ipLang) => {
+          if (ipLang && ipLang !== this.current && !localStorage.getItem(STORAGE_KEY)) {
+            this.setLang(ipLang, true);
+          }
+        });
+      }
     },
 
     detectBrowserLang() {
       const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      const map = { 'zh': 'zh', 'zh-cn': 'zh', 'zh-tw': 'zh', 'zh-hk': 'zh', 'en': 'en', 'en-us': 'en', 'en-gb': 'en', 'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de', 'es': 'es', 'ru': 'ru', 'pt': 'pt', 'it': 'it' };
+      const map = { 'zh': 'zh', 'zh-cn': 'zh', 'zh-tw': 'zh', 'zh-hk': 'zh', 'zh-mo': 'zh', 'zh-sg': 'zh', 'en': 'en', 'en-us': 'en', 'en-gb': 'en', 'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de', 'es': 'es', 'ru': 'ru', 'pt': 'pt', 'it': 'it' };
       return map[lang] || DEFAULT_LANG;
+    },
+
+    // 根据用户 IP 所在国家推断可能的语言。为纯静态站，采用免鉴权的 IP 地理查询，
+    // 仅在用户此前从未手动选择语言时才启用，避免覆盖用户明确选择。
+    COUNTRY_LANG: {
+      CN: 'zh', TW: 'zh', HK: 'zh', MO: 'zh', SG: 'zh', MY: 'zh',
+      US: 'en', GB: 'en', AU: 'en', CA: 'en', IE: 'en', NZ: 'en', IN: 'en', PH: 'en', NG: 'en', ZA: 'en',
+      JP: 'ja', KR: 'ko',
+      FR: 'fr', BE: 'fr', CH: 'fr', LU: 'fr',
+      DE: 'de', AT: 'de', 'DE-CH': 'de',
+      ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es', VE: 'es', EC: 'es', GT: 'es', CU: 'es', BO: 'es', DO: 'es', HN: 'es', PY: 'es', SV: 'es', NI: 'es', CR: 'es', PA: 'es', PR: 'es', UY: 'es',
+      RU: 'ru', BY: 'ru', KZ: 'ru', UA: 'ru',
+      BR: 'pt', PT: 'pt', AO: 'pt', MZ: 'pt',
+      IT: 'it', SM: 'it', VA: 'it'
+    },
+
+    detectByIP() {
+      // 已有用户明确选择，不再用 IP 干预
+      let saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+      if (saved) return Promise.resolve(null);
+
+      const urls = [
+        'https://ipwho.is/',
+        'https://ipapi.co/json/'
+      ];
+      const tryUrl = (url) => {
+        return fetch(url, { mode: 'cors' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+      };
+      const seq = urls.reduce((p, u) => p.then(m => m || tryUrl(u)), Promise.resolve(null));
+
+      return Promise.race([
+        seq,
+        new Promise(res => setTimeout(() => res(null), 4000))
+      ]).then((data) => {
+        if (!data) return null;
+        const code = (data.country_code || data.alpha2 || data.country || '').toUpperCase();
+        return this.COUNTRY_LANG[code] || null;
+      });
     },
 
     setLang(lang, persist = true) {
@@ -1215,7 +1282,13 @@
       musicRecentTitle: '最近播放', musicRecentSub: '你刚刚听过的音乐', musicRecentSubAll: '最近 200 首播放记录',
       musicLikedTitle: '我喜欢的音乐', musicLikedSub: '你收藏的所有歌曲', musicViewAll: '查看全部',
       musicLyrics: '歌词', musicLyricsEmpty: '播放歌曲即可查看歌词',
-      musicModeTitle: '循环模式', musicPrevTitle: '上一首', musicPlayPauseTitle: '播放/暂停', musicNextTitle: '下一首', musicLikeTitle: '收藏'
+      musicModeTitle: '循环模式', musicPrevTitle: '上一首', musicPlayPauseTitle: '播放/暂停', musicNextTitle: '下一首', musicLikeTitle: '收藏',
+      musPlayFirst: '请先播放一首歌曲', musLoadFailed: '音频加载失败，请检查网络或稍后重试', musPlayMode: '播放模式：{mode}',
+      musModeLoop: '列表循环', musModeSingle: '单曲循环', musModeRandom: '随机播放', musPlayFailed: '播放失败，可能是网络或音频链接失效',
+      musUnliked: '已取消喜欢', musLikedMsg: '已添加到「我喜欢」', musLyricsSearching: '正在搜索歌词...', musLyricsNotFound: '未找到该歌曲的歌词', musLyricsNone: '暂无歌词',
+      musSearchTitle: '搜索：{q}', musSearching: '正在搜索...', musSearchEmpty: '没有找到相关歌曲', musSearchEmptyTip: '换个关键词试试，或者检查一下 Jamendo client_id 是否已配置。',
+      musRecentEmpty: '暂无最近播放', musRecentEmptyTip: '点击任意歌曲开始收听', musLikedEmpty: '暂无喜欢的歌曲', musLikedEmptyTip: '点击 ♡ 收藏喜欢的音乐',
+      musColSong: '歌曲', musColArtist: '艺人', musColDuration: '时长', musColAction: '操作', musNoDownload: '暂不提供下载', musActionNoDownload: '暂不提供下载'
     },
     en: {
       genderMale: 'Male', genderFemale: 'Female', genderSecret: 'Secret', genderLabel: 'Gender',
@@ -1273,7 +1346,13 @@
       musicRecentTitle: 'Recently Played', musicRecentSub: 'Music you just listened to', musicRecentSubAll: 'Last 200 plays',
       musicLikedTitle: 'Liked Music', musicLikedSub: 'All your bookmarked songs', musicViewAll: 'View All',
       musicLyrics: 'Lyrics', musicLyricsEmpty: 'Play a song to view lyrics',
-      musicModeTitle: 'Loop Mode', musicPrevTitle: 'Previous', musicPlayPauseTitle: 'Play/Pause', musicNextTitle: 'Next', musicLikeTitle: 'Like'
+      musicModeTitle: 'Loop Mode', musicPrevTitle: 'Previous', musicPlayPauseTitle: 'Play/Pause', musicNextTitle: 'Next', musicLikeTitle: 'Like',
+      musPlayFirst: 'Please play a song first', musLoadFailed: 'Failed to load audio, please check your network or try again later', musPlayMode: 'Play mode: {mode}',
+      musModeLoop: 'List loop', musModeSingle: 'Single loop', musModeRandom: 'Shuffle', musPlayFailed: 'Playback failed, the network or audio link may be invalid',
+      musUnliked: 'Removed from favorites', musLikedMsg: 'Added to your favorites', musLyricsSearching: 'Searching lyrics...', musLyricsNotFound: 'No lyrics found for this song', musLyricsNone: 'No lyrics',
+      musSearchTitle: 'Search: {q}', musSearching: 'Searching...', musSearchEmpty: 'No matching songs found', musSearchEmptyTip: 'Try a different keyword, or check whether the Jamendo client_id is configured.',
+      musRecentEmpty: 'No recent plays', musRecentEmptyTip: 'Click any song to start listening', musLikedEmpty: 'No liked songs', musLikedEmptyTip: 'Click ♡ to favorite the music you like',
+      musColSong: 'Song', musColArtist: 'Artist', musColDuration: 'Duration', musColAction: 'Actions', musNoDownload: 'Download not available', musActionNoDownload: 'Download not available'
     },
     ja: {
       genderMale: '男性', genderFemale: '女性', genderSecret: '秘密', genderLabel: '性別',
@@ -1331,7 +1410,13 @@
       musicRecentTitle: '最近再生', musicRecentSub: '先ほど聴いた曲', musicRecentSubAll: '最近 200 曲の再生履歴',
       musicLikedTitle: 'いいねした音楽', musicLikedSub: 'お気に入り登録したすべての曲', musicViewAll: 'すべて見る',
       musicLyrics: '歌詞', musicLyricsEmpty: '曲を再生すると歌詞を表示します',
-      musicModeTitle: 'ループモード', musicPrevTitle: '前へ', musicPlayPauseTitle: '再生/一時停止', musicNextTitle: '次へ', musicLikeTitle: 'お気に入り'
+      musicModeTitle: 'ループモード', musicPrevTitle: '前へ', musicPlayPauseTitle: '再生/一時停止', musicNextTitle: '次へ', musicLikeTitle: 'お気に入り',
+      musPlayFirst: '先に曲を再生してください', musLoadFailed: '音声の読み込みに失敗しました。ネットワークを確認するか、後でもう一度お試しください', musPlayMode: '再生モード：{mode}',
+      musModeLoop: 'リストループ', musModeSingle: '単曲リピート', musModeRandom: 'シャッフル再生', musPlayFailed: '再生に失敗しました。ネットワークまたは音声リンクが無効な可能性があります',
+      musUnliked: 'お気に入りを解除しました', musLikedMsg: '「お気に入り」に追加しました', musLyricsSearching: '歌詞を検索中...', musLyricsNotFound: 'この曲の歌詞が見つかりません', musLyricsNone: '歌詞はありません',
+      musSearchTitle: '検索：{q}', musSearching: '検索中...', musSearchEmpty: '関連する曲が見つかりません', musSearchEmptyTip: '別のキーワードをお試しください。Jamendo の client_id が設定されているかもご確認ください。',
+      musRecentEmpty: '最近の再生はありません', musRecentEmptyTip: '任意の曲をクリックして再生を開始', musLikedEmpty: 'お気に入りの曲はありません', musLikedEmptyTip: '♡ をクリックして好きな音楽を登録',
+      musColSong: '曲', musColArtist: 'アーティスト', musColDuration: '時間', musColAction: '操作', musNoDownload: 'ダウンロードは提供していません', musActionNoDownload: 'ダウンロードは提供していません'
     },
     ko: {
       genderMale: '남성', genderFemale: '여성', genderSecret: '비공개', genderLabel: '성별',
@@ -1389,7 +1474,13 @@
       musicRecentTitle: '최근 재생', musicRecentSub: '방금 들었던 음악', musicRecentSubAll: '최근 200곡 재생 기록',
       musicLikedTitle: '좋아하는 음악', musicLikedSub: '저장한 모든 노래', musicViewAll: '모두 보기',
       musicLyrics: '가사', musicLyricsEmpty: '노래를 재생하면 가사가 표시됩니다',
-      musicModeTitle: '반복 모드', musicPrevTitle: '이전 곡', musicPlayPauseTitle: '재생/일시정지', musicNextTitle: '다음 곡', musicLikeTitle: '좋아요'
+      musicModeTitle: '반복 모드', musicPrevTitle: '이전 곡', musicPlayPauseTitle: '재생/일시정지', musicNextTitle: '다음 곡', musicLikeTitle: '좋아요',
+      musPlayFirst: '먼저 노래를 재생해 주세요', musLoadFailed: '오디오를 불러오지 못했습니다. 네트워크를 확인하거나 나중에 다시 시도해 주세요', musPlayMode: '재생 모드: {mode}',
+      musModeLoop: '목록 반복', musModeSingle: '한 곡 반복', musModeRandom: '랜덤 재생', musPlayFailed: '재생에 실패했습니다. 네트워크 또는 오디오 링크가 유효하지 않을 수 있습니다',
+      musUnliked: '좋아요를 취소했습니다', musLikedMsg: '「좋아요」에 추가했습니다', musLyricsSearching: '가사를 검색 중...', musLyricsNotFound: '이 노래의 가사를 찾을 수 없습니다', musLyricsNone: '가사가 없습니다',
+      musSearchTitle: '검색: {q}', musSearching: '검색 중...', musSearchEmpty: '관련 노래를 찾지 못했습니다', musSearchEmptyTip: '다른 키워드로 시도하거나 Jamendo client_id가 설정되어 있는지 확인해 주세요.',
+      musRecentEmpty: '최근 재생이 없습니다', musRecentEmptyTip: '아무 노래나 클릭하여 감상을 시작하세요', musLikedEmpty: '좋아하는 노래가 없습니다', musLikedEmptyTip: '♡을 클릭하여 좋아하는 음악을 등록하세요',
+      musColSong: '노래', musColArtist: '아티스트', musColDuration: '시간', musColAction: '작업', musNoDownload: '다운로드를 제공하지 않습니다', musActionNoDownload: '다운로드를 제공하지 않습니다'
     },
     fr: {
       genderMale: 'Homme', genderFemale: 'Femme', genderSecret: 'Secret', genderLabel: 'Genre',
@@ -1447,7 +1538,13 @@
       musicRecentTitle: 'Lecture récente', musicRecentSub: 'La musique que vous venez d\'écouter', musicRecentSubAll: '200 dernières écoutes',
       musicLikedTitle: 'Musique aimée', musicLikedSub: 'Toutes les chansons que vous avez enregistrées', musicViewAll: 'Tout voir',
       musicLyrics: 'Paroles', musicLyricsEmpty: 'Écoutez un morceau pour voir les paroles',
-      musicModeTitle: 'Mode de boucle', musicPrevTitle: 'Précédent', musicPlayPauseTitle: 'Lecture/Pause', musicNextTitle: 'Suivant', musicLikeTitle: 'Aimer'
+      musicModeTitle: 'Mode de boucle', musicPrevTitle: 'Précédent', musicPlayPauseTitle: 'Lecture/Pause', musicNextTitle: 'Suivant', musicLikeTitle: 'Aimer',
+      musPlayFirst: 'Veuillez d\'abord écouter une chanson', musLoadFailed: 'Échec du chargement audio, vérifiez votre réseau ou réessayez plus tard', musPlayMode: 'Mode de lecture : {mode}',
+      musModeLoop: 'Boucle de liste', musModeSingle: 'Répétition de piste', musModeRandom: 'Lecture aléatoire', musPlayFailed: 'Échec de la lecture, le réseau ou le lien audio est peut-être invalide',
+      musUnliked: 'Retiré des favoris', musLikedMsg: 'Ajouté à « Mes favoris »', musLyricsSearching: 'Recherche des paroles...', musLyricsNotFound: 'Aucune parole trouvée pour cette chanson', musLyricsNone: 'Aucune parole',
+      musSearchTitle: 'Recherche : {q}', musSearching: 'Recherche...', musSearchEmpty: 'Aucune chanson trouvée', musSearchEmptyTip: 'Essayez un autre mot-clé ou vérifiez que le client_id de Jamendo est configuré.',
+      musRecentEmpty: 'Aucune lecture récente', musRecentEmptyTip: 'Cliquez sur une chanson pour commencer à écouter', musLikedEmpty: 'Aucune chanson aimée', musLikedEmptyTip: 'Cliquez sur ♡ pour aimer de la musique',
+      musColSong: 'Chanson', musColArtist: 'Artiste', musColDuration: 'Durée', musColAction: 'Actions', musNoDownload: 'Téléchargement non disponible', musActionNoDownload: 'Téléchargement non disponible'
     },
     de: {
       genderMale: 'Männlich', genderFemale: 'Weiblich', genderSecret: 'Geheim', genderLabel: 'Geschlecht',
@@ -1505,7 +1602,13 @@
       musicRecentTitle: 'Zuletzt gehört', musicRecentSub: 'Musik, die du gerade gehört hast', musicRecentSubAll: 'Letzte 200 Wiedergaben',
       musicLikedTitle: 'Gefällt mir Musik', musicLikedSub: 'Alle gespeicherten Songs', musicViewAll: 'Alle ansehen',
       musicLyrics: 'Liedtext', musicLyricsEmpty: 'Spiele einen Song, um die Liedtexte zu sehen',
-      musicModeTitle: 'Wiederholungsmodus', musicPrevTitle: 'Vorheriger', musicPlayPauseTitle: 'Abspielen/Pause', musicNextTitle: 'Nächster', musicLikeTitle: 'Gefällt mir'
+      musicModeTitle: 'Wiederholungsmodus', musicPrevTitle: 'Vorheriger', musicPlayPauseTitle: 'Abspielen/Pause', musicNextTitle: 'Nächster', musicLikeTitle: 'Gefällt mir',
+      musPlayFirst: 'Bitte spielen Sie zuerst einen Song ab', musLoadFailed: 'Audio konnte nicht geladen werden. Prüfen Sie die Netzwerkverbindung oder versuchen Sie es später erneut', musPlayMode: 'Wiedergabemodus: {mode}',
+      musModeLoop: 'Liste wiederholen', musModeSingle: 'Einzelnen Titel wiederholen', musModeRandom: 'Zufallswiedergabe', musPlayFailed: 'Wiedergabe fehlgeschlagen, Netzwerk oder Audio-Link ist möglicherweise ungültig',
+      musUnliked: 'Aus den Favoriten entfernt', musLikedMsg: 'Zu „Meine Favoriten" hinzugefügt', musLyricsSearching: 'Liedtexte werden gesucht...', musLyricsNotFound: 'Keine Liedtexte für dieses Lied gefunden', musLyricsNone: 'Keine Liedtexte',
+      musSearchTitle: 'Suche: {q}', musSearching: 'Suche läuft...', musSearchEmpty: 'Keine passenden Lieder gefunden', musSearchEmptyTip: 'Probieren Sie einen anderen Suchbegriff oder prüfen Sie, ob die Jamendo client_id konfiguriert ist.',
+      musRecentEmpty: 'Keine letzten Wiedergaben', musRecentEmptyTip: 'Klicken Sie auf einen beliebigen Song, um mit dem Hören zu beginnen', musLikedEmpty: 'Keine gemochten Lieder', musLikedEmptyTip: 'Klicken Sie auf ♡, um Musik zu markieren',
+      musColSong: 'Song', musColArtist: 'Interpret', musColDuration: 'Dauer', musColAction: 'Aktion', musNoDownload: 'Download nicht verfügbar', musActionNoDownload: 'Download nicht verfügbar'
     },
     es: {
       genderMale: 'Hombre', genderFemale: 'Mujer', genderSecret: 'Secreto', genderLabel: 'Género',
@@ -1563,7 +1666,13 @@
       musicRecentTitle: 'Reproducidos recientemente', musicRecentSub: 'La música que acabas de escuchar', musicRecentSubAll: 'Últimas 200 reproducciones',
       musicLikedTitle: 'Música que me gusta', musicLikedSub: 'Todas las canciones que has guardado', musicViewAll: 'Ver todo',
       musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduce una canción para ver la letra',
-      musicModeTitle: 'Modo de bucle', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproducir/Pausar', musicNextTitle: 'Siguiente', musicLikeTitle: 'Me gusta'
+      musicModeTitle: 'Modo de bucle', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproducir/Pausar', musicNextTitle: 'Siguiente', musicLikeTitle: 'Me gusta',
+      musPlayFirst: 'Primero reproduce una canción', musLoadFailed: 'Error al cargar el audio, comprueba tu red o inténtalo de nuevo más tarde', musPlayMode: 'Modo de reproducción: {mode}',
+      musModeLoop: 'Repetir lista', musModeSingle: 'Repetir una canción', musModeRandom: 'Reproducción aleatoria', musPlayFailed: 'Error al reproducir, la red o el enlace de audio pueden no ser válidos',
+      musUnliked: 'Eliminado de favoritos', musLikedMsg: 'Añadido a «Mis favoritos»', musLyricsSearching: 'Buscando la letra...', musLyricsNotFound: 'No se encontró la letra de esta canción', musLyricsNone: 'Sin letra',
+      musSearchTitle: 'Buscar: {q}', musSearching: 'Buscando...', musSearchEmpty: 'No se encontraron canciones relacionadas', musSearchEmptyTip: 'Prueba con otra palabra clave o comprueba si el client_id de Jamendo está configurado.',
+      musRecentEmpty: 'Sin reproducciones recientes', musRecentEmptyTip: 'Haz clic en cualquier canción para empezar a escuchar', musLikedEmpty: 'Sin canciones favoritas', musLikedEmptyTip: 'Haz clic en ♡ para guardar la música que te gusta',
+      musColSong: 'Canción', musColArtist: 'Artista', musColDuration: 'Duración', musColAction: 'Acción', musNoDownload: 'Descarga no disponible', musActionNoDownload: 'Descarga no disponible'
     },
     ru: {
       genderMale: 'Мужской', genderFemale: 'Женский', genderSecret: 'Секрет', genderLabel: 'Пол',
@@ -1621,7 +1730,13 @@
       musicRecentTitle: 'Недавнее', musicRecentSub: 'Музыка, которую вы только что слушали', musicRecentSubAll: 'Последние 200 треков',
       musicLikedTitle: 'Понравившаяся музыка', musicLikedSub: 'Все сохраненные песни', musicViewAll: 'Смотреть все',
       musicLyrics: 'Текст песни', musicLyricsEmpty: 'Воспроизведите песню, чтобы увидеть текст',
-      musicModeTitle: 'Режим повтора', musicPrevTitle: 'Предыдущий', musicPlayPauseTitle: 'Играть/Пауза', musicNextTitle: 'Следующий', musicLikeTitle: 'Нравится'
+      musicModeTitle: 'Режим повтора', musicPrevTitle: 'Предыдущий', musicPlayPauseTitle: 'Играть/Пауза', musicNextTitle: 'Следующий', musicLikeTitle: 'Нравится',
+      musPlayFirst: 'Сначала воспроизведите песню', musLoadFailed: 'Не удалось загрузить аудио. Проверьте сеть или повторите позже', musPlayMode: 'Режим воспроизведения: {mode}',
+      musModeLoop: 'Повтор списка', musModeSingle: 'Повтор одной песни', musModeRandom: 'Случайное воспроизведение', musPlayFailed: 'Не удалось воспроизвести. Возможно, сети или аудио-ссылка недоступны',
+      musUnliked: 'Убрано из избранного', musLikedMsg: 'Добавлено в «Мне нравится»', musLyricsSearching: 'Поиск текста песни...', musLyricsNotFound: 'Текст для этой песни не найден', musLyricsNone: 'Нет текста',
+      musSearchTitle: 'Поиск: {q}', musSearching: 'Поиск...', musSearchEmpty: 'Подходящие песни не найдены', musSearchEmptyTip: 'Попробуйте другой запрос или проверьте, задан ли client_id Jamendo.',
+      musRecentEmpty: 'Нет недавних воспроизведений', musRecentEmptyTip: 'Нажмите на любую песню, чтобы начать прослушивание', musLikedEmpty: 'Нет понравившихся песен', musLikedEmptyTip: 'Нажмите ♡, чтобы добавить музыку в избранное',
+      musColSong: 'Песня', musColArtist: 'Исполнитель', musColDuration: 'Длительность', musColAction: 'Действие', musNoDownload: 'Скачивание недоступно', musActionNoDownload: 'Скачивание недоступно'
     },
     pt: {
       genderMale: 'Masculino', genderFemale: 'Feminino', genderSecret: 'Secreto', genderLabel: 'Gênero',
@@ -1679,7 +1794,13 @@
       musicRecentTitle: 'Reproduzidas recentemente', musicRecentSub: 'A música que você acabou de ouvir', musicRecentSubAll: 'Últimas 200 reproduções',
       musicLikedTitle: 'Música curtida', musicLikedSub: 'Todas as músicas que você salvou', musicViewAll: 'Ver tudo',
       musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduza uma música para ver a letra',
-      musicModeTitle: 'Modo de repetição', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproduzir/Pausar', musicNextTitle: 'Próxima', musicLikeTitle: 'Curtir'
+      musicModeTitle: 'Modo de repetição', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproduzir/Pausar', musicNextTitle: 'Próxima', musicLikeTitle: 'Curtir',
+      musPlayFirst: 'Reproduza uma música primeiro', musLoadFailed: 'Falha ao carregar o áudio. Verifique sua rede ou tente novamente mais tarde', musPlayMode: 'Modo de reprodução: {mode}',
+      musModeLoop: 'Repetir lista', musModeSingle: 'Repetir uma música', musModeRandom: 'Reprodução aleatória', musPlayFailed: 'Falha na reprodução. A rede ou o link de áudio pode estar inválido',
+      musUnliked: 'Removido dos favoritos', musLikedMsg: 'Adicionado aos favoritos', musLyricsSearching: 'Buscando a letra...', musLyricsNotFound: 'Letra não encontrada para esta música', musLyricsNone: 'Sem letra',
+      musSearchTitle: 'Busca: {q}', musSearching: 'Buscando...', musSearchEmpty: 'Nenhuma música relacionada encontrada', musSearchEmptyTip: 'Tente outra palavra-chave ou verifique se o client_id do Jamendo está configurado.',
+      musRecentEmpty: 'Sem reproduções recentes', musRecentEmptyTip: 'Clique em qualquer música para começar a ouvir', musLikedEmpty: 'Sem músicas favoritas', musLikedEmptyTip: 'Clique em ♡ para favoritar a música que você gosta',
+      musColSong: 'Música', musColArtist: 'Artista', musColDuration: 'Duração', musColAction: 'Ação', musNoDownload: 'Download não disponível', musActionNoDownload: 'Download não disponível'
     },
     it: {
       genderMale: 'Uomo', genderFemale: 'Donna', genderSecret: 'Segreto', genderLabel: 'Genere',
@@ -1737,7 +1858,13 @@
       musicRecentTitle: 'Ascoltati di recente', musicRecentSub: 'La musica che hai appena ascoltato', musicRecentSubAll: 'Ultime 200 riproduzioni',
       musicLikedTitle: 'Musica che mi piace', musicLikedSub: 'Tutte le canzoni salvate', musicViewAll: 'Vedi tutto',
       musicLyrics: 'Testo', musicLyricsEmpty: 'Riproduci un brano per vedere il testo',
-      musicModeTitle: 'Modalità di ripetizione', musicPrevTitle: 'Precedente', musicPlayPauseTitle: 'Riproduci/Pausa', musicNextTitle: 'Successivo', musicLikeTitle: 'Mi piace'
+      musicModeTitle: 'Modalità di ripetizione', musicPrevTitle: 'Precedente', musicPlayPauseTitle: 'Riproduci/Pausa', musicNextTitle: 'Successivo', musicLikeTitle: 'Mi piace',
+      musPlayFirst: 'Riproduci prima una canzone', musLoadFailed: 'Caricamento audio non riuscito. Controlla la rete o riprova più tardi', musPlayMode: 'Modalità di riproduzione: {mode}',
+      musModeLoop: 'Ripeti lista', musModeSingle: 'Ripeti singolo brano', musModeRandom: 'Riproduzione casuale', musPlayFailed: 'Riproduzione non riuscita. La rete o il link audio potrebbe essere non valido',
+      musUnliked: 'Rimosso dai preferiti', musLikedMsg: 'Aggiunto a «I miei preferiti»', musLyricsSearching: 'Ricerca del testo...', musLyricsNotFound: 'Testo non trovato per questo brano', musLyricsNone: 'Nessun testo',
+      musSearchTitle: 'Cerca: {q}', musSearching: 'Ricerca in corso...', musSearchEmpty: 'Nessun brano correlato trovato', musSearchEmptyTip: 'Prova un\'altra parola chiave o verifica che il client_id di Jamendo sia configurato.',
+      musRecentEmpty: 'Nessuna riproduzione recente', musRecentEmptyTip: 'Fai clic su un brano per iniziare ad ascoltare', musLikedEmpty: 'Nessun brano preferito', musLikedEmptyTip: 'Fai clic su ♡ per aggiungere ai preferiti la musica che ti piace',
+      musColSong: 'Brano', musColArtist: 'Artista', musColDuration: 'Durata', musColAction: 'Azione', musNoDownload: 'Download non disponibile', musActionNoDownload: 'Download non disponibile'
     }
   };
 

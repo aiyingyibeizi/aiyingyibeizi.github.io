@@ -672,12 +672,19 @@
 
       // P2-14: 清理排行榜中的测试账号数据（testuser/stress/perf/e2e/diag 等压测占位账号）
       // 并按键去重，避免同一账号重复占位。测试账号由服务器压测注入，正式环境不应展示给用户。
-      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder)[_\-\w]*$|realtest/i;
+      // 额外识别常见垃圾/水军名（纯数字、占位占位、重复字符、乱码）与异常分数（NaN/Infinity）。
+      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder|guest|anonymous|systest|automation)[_\-\w]*$|realtest/i;
+      const GARBAGE_NAME_RE = /^(x{3,}|z{3,}|q{3,}|ad{2,}|tt{2,}|去{3,}|测试|垃圾|灌水)/i;
+      const PURE_DIGITS_RE = /^\d+$/;
       const seen = new Set();
       const list = [];
       for (const r of rows) {
         const name = (r.username || '').trim();
         if (!name || TEST_ACCOUNT_RE.test(name)) continue;
+        if (GARBAGE_NAME_RE.test(name)) continue;
+        if (PURE_DIGITS_RE.test(name) && name.length >= 6) continue; // 纯数字长名多为占位
+        const rawScore = Number(r.score_value);
+        if (!Number.isFinite(rawScore)) continue;
         const uid = r.user_id;
         if (!uid || seen.has(uid)) continue; // 去重：保留服务器返回次序中靠前（更优）的一条
         seen.add(uid);
@@ -687,6 +694,10 @@
           score_value: r.score_value,
           created_at: r.created_at
         });
+      }
+      // 数据诊断：供页内"排行榜数据"面板展示清洗前后数量，便于排查脏数据与"数据丢失"
+      if (window.APEXON && APEXON.__setLbDiag) {
+        APEXON.__setLbDiag({ testType, total: rows.length, kept: list.length, dropped: rows.length - list.length });
       }
       return list;
     },
