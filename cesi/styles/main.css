@@ -1799,6 +1799,149 @@ html[data-bw="true"] .hero-stat-chip {
 }
 
 /* ============================================================================
+   Section: In-Site Search（站内搜索：即时建议下拉 + 结果页）
+   ============================================================================ */
+.search-box {
+  position: relative;
+}
+.search-suggest-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border-strong);
+  border-radius: var(--apex-radius);
+  box-shadow: var(--apex-shadow-lg);
+  padding: 8px;
+  display: none;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+.search-suggest-panel.show {
+  display: block;
+  animation: searchFadeIn 160ms ease;
+}
+@keyframes searchFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.search-suggest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--apex-radius-sm);
+  color: var(--apex-text);
+  font-size: 0.9rem;
+  transition: background-color var(--apex-transition-fast);
+}
+.search-suggest:hover {
+  background: var(--apex-surface-hover);
+}
+.search-suggest__icon {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+.search-suggest__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-suggest--more {
+  margin-top: 4px;
+  border-top: 1px solid var(--apex-border-subtle);
+  padding-top: 9px;
+  color: var(--apex-primary-light);
+  font-weight: 600;
+}
+
+.search-results-wrap {
+  min-height: 40vh;
+}
+.search-results__meta {
+  color: var(--apex-text-secondary);
+  font-size: 0.9rem;
+  margin: 18px 0;
+}
+.search-group {
+  margin-bottom: 26px;
+}
+.search-group__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--apex-text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: var(--apex-radius);
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border-subtle);
+  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast), background-color var(--apex-transition-fast);
+}
+.search-result:hover {
+  transform: translateY(-1px);
+  border-color: var(--apex-border-strong);
+  background: var(--apex-surface-elevated);
+}
+.search-result__icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--apex-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: var(--apex-surface-hover);
+}
+.search-result__body {
+  flex: 1;
+  min-width: 0;
+}
+.search-result__title {
+  color: var(--apex-text);
+  font-weight: 600;
+  font-size: 0.98rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-result__desc {
+  color: var(--apex-text-secondary);
+  font-size: 0.82rem;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-result__arrow {
+  flex: 0 0 auto;
+  color: var(--apex-text-tertiary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 767px) {
+  .search-result {
+    padding: 12px 14px;
+  }
+  .search-result__icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+}
+
+/* ============================================================================
    Section: Cards Grid & Item Cards
    ============================================================================ */
 
@@ -3123,6 +3266,42 @@ html[data-theme="light"] .apex-card--game:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* 全屏加载遮罩 */
+.apexon-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: color-mix(in srgb, var(--apex-bg) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: apex-overlay-fade 180ms ease;
+}
+.apexon-loading-overlay__spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--apex-border);
+  border-top-color: var(--apex-accent, #a5a2fd);
+  border-right-color: var(--apex-accent, #a5a2fd);
+  border-radius: 50%;
+  animation: apex-overlay-spin 0.8s linear infinite;
+}
+.apexon-loading-overlay__text {
+  color: var(--apex-text-secondary);
+  font-size: 0.9rem;
+}
+@keyframes apex-overlay-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes apex-overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .leaderboard-row {

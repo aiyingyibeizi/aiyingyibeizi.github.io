@@ -106,9 +106,10 @@
             </div>
         </div>
 
-        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
-            <input name="q" data-i18n-placeholder="searchPlaceholder" placeholder="输入关键词，搜索全世界" required>
+        <form class="search-box" id="siteSearchForm" role="search" onsubmit="event.preventDefault(); var q=document.getElementById('siteSearchInput').value.trim(); if(q) location.href='search.html?q='+encodeURIComponent(q);">
+            <input id="siteSearchInput" name="q" data-i18n-placeholder="searchPlaceholder" placeholder="搜索测试、页面与音乐" required autocomplete="off">
             <button type="submit" data-i18n="searchButton">搜索</button>
+            <div class="search-suggest-panel" id="siteSearchPanel" aria-live="polite"></div>
         </form>
 
         <div class="cards-grid">
@@ -234,12 +235,21 @@
     <script src="js/i18n.js?v=13"></script>
     <script src="js/common.js?v=34"></script>
     <script src="js/achievements.js?v=2"></script>
+    <script src="js/search.js?v=1"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
 
         // ===== 粒子背景 =====
         APEXON.Particles.init();
+
+        // ===== 站内搜索：即时建议 =====
+        if (window.APEXON && APEXON.Search) {
+            APEXON.Search.attachLive(
+                document.getElementById('siteSearchInput'),
+                document.getElementById('siteSearchPanel')
+            );
+        }
 
         // ===== 渲染成就墙 =====
         if (window.APEXON && APEXON.Achievements) {

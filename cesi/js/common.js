@@ -444,6 +444,66 @@
   };
   APEXON.LocalStats = LocalStats;
 
+  // ===== 全局骨架屏 / 加载状态组件 =====
+  // 用法：APEXON.Loading.block(containerEl, 'row'|'card'|'line', count)
+  //       APEXON.Loading.clear(containerEl)
+  //       const hide = APEXON.Loading.overlay('正在加载…'); hide();
+  const Loading = {
+    bar(w, extra) {
+      return '<div class="skeleton-bar" style="width:' + w + ';' + (extra || '') + '"></div>';
+    },
+    // 排行榜行骨架
+    blockRow(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="leaderboard-row skeleton-row">' + this.bar('28px') + '<div class="skeleton-circle"></div>' + this.bar('90px') + this.bar('50px', 'margin-left:auto') + '</div>';
+      }
+      return h;
+    },
+    // 卡片网格骨架
+    blockCard(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="personal-card skeleton-card"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:28px;margin-top:12px"></div><div class="skeleton-bar" style="width:50%;height:12px;margin-top:8px"></div></div>';
+      }
+      return h;
+    },
+    // 图文行 / 段落骨架
+    blockLine(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="apex-skeleton">' + this.bar('100%', 'height:14px') + this.bar('92%', 'height:14px;margin-top:8px') + this.bar('64%', 'height:14px;margin-top:8px') + '</div>';
+      }
+      return h;
+    },
+    // 用骨架填充一个容器
+    block(container, type, count) {
+      if (!container) return;
+      const builder = type === 'card' ? 'blockCard' : type === 'line' ? 'blockLine' : 'blockRow';
+      container.innerHTML = this[builder](count);
+    },
+    // 移除骨架占位（置空，通常由调用方随后渲染真实内容）
+    clear(container) {
+      if (container) container.innerHTML = '';
+    },
+    // 全屏加载遮罩（返回关闭函数）；重复调用会复用同一个遮罩避免堆叠
+    overlay(text) {
+      let el = document.getElementById('apexon-loading-overlay');
+      if (el) return function () { if (el && el.parentNode) el.remove(); };
+      el = document.createElement('div');
+      el.id = 'apexon-loading-overlay';
+      el.className = 'apexon-loading-overlay';
+      el.innerHTML = '<div class="apexon-loading-overlay__spinner"></div>' + (text ? '<div class="apexon-loading-overlay__text"></div>' : '');
+      if (text) el.querySelector('.apexon-loading-overlay__text').textContent = text;
+      document.body.appendChild(el);
+      return function () { if (el && el.parentNode) el.remove(); };
+    }
+  };
+  APEXON.Loading = Loading;
+
   // ===== 1. Supabase 数据库 =====
   const DB = {
     async request(table, method, body, query, extraHeaders) {
