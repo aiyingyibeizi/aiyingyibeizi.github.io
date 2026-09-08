@@ -39,7 +39,7 @@
     zh: {
       siteTitle: 'APEXON — 全能能力测试',
       navHome: '首页', navMusic: 'APEXON Music', navReaction: '反应测试', navType: '打字测试', navStick: '注意力测试',
-      navNumber: '数字记忆', navVerbal: '单词记忆', navVisual: '视觉记忆', navAim: '瞄准训练', navSequence: '序列记忆', navStroop: 'Stroop 测试', navNback: 'N-Back 测试',
+      navNumber: '数字记忆', navVerbal: '单词记忆', navVisual: '视觉记忆', navAim: '瞄准训练', navSequence: '序列记忆', navStroop: 'Stroop 测试', navNback: 'N-Back 测试', navTaskswitch: '任务切换测试', navVisualsearch: '视觉搜索测试',
       menuOpen: '打开菜单', themeToggle: '切换主题', langSelector: '选择语言',
       heroTitle: 'APEXON', heroTagline: '全能能力测试系统 · 挑战人类极限',
       statOnline: '在线人数', statTotalUsers: '总玩家数量', statTotalTests: '总测试数',
@@ -54,8 +54,10 @@
       cardSequenceTitle: '序列记忆测试', cardSequenceDesc: '复现闪烁顺序，训练短时序列记忆',
       cardStroopTitle: 'Stroop 抑制控制测试', cardStroopDesc: '忽略文字含义只判字体颜色，测抑制控制',
       cardNbackTitle: 'N-Back 工作记忆测试', cardNbackDesc: '判断是否与 N 步前相同，测工作记忆更新',
+      visualsearchTitle: '视觉搜索测试',
+      cardVisualsearchTitle: '视觉搜索测试', cardVisualsearchDesc: '在干扰项中快速找到目标，从 4×4 到 8×8 网格递增难度，测量视觉搜索效率与注意力分配能力',
       leaderboardTitle: '🏆 排行榜', lbReaction: '反应', lbType: '打字', lbStick: '注意力', lbNumber: '数字',
-      lbVerbal: '单词', lbVisual: '视觉', lbAim: '瞄准', lbSequence: '序列', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: '还没有人上榜',
+      lbVerbal: '单词', lbVisual: '视觉', lbAim: '瞄准', lbSequence: '序列', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '视觉搜索', lbEmpty: '还没有人上榜',
       discussionTitle: '💬 玩家讨论区', discussionEmpty: '还没有讨论，来做第一个发言的人吧',
       myScoresTitle: '📊 我的成绩', myScoresEmpty: '暂无成绩，快去测试一下吧',
       loading: '加载中...', online: '在线', offline: '离线', submit: '提交', cancel: '取消', confirm: '确认', close: '关闭',
@@ -134,7 +136,7 @@
     en: {
       siteTitle: 'APEXON — Cognitive Ability Tests',
       navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reaction', navType: 'Typing', navStick: 'Attention',
-      navNumber: 'Number Memory', navVerbal: 'Verbal Memory', navVisual: 'Visual Memory', navAim: 'Aim Training', navSequence: 'Sequence Memory', navStroop: 'Stroop Test', navNback: 'N-Back Test',
+      navNumber: 'Number Memory', navVerbal: 'Verbal Memory', navVisual: 'Visual Memory', navAim: 'Aim Training', navSequence: 'Sequence Memory', navStroop: 'Stroop Test', navNback: 'N-Back Test', navTaskswitch: 'Task Switch', navVisualsearch: 'Visual Search',
       menuOpen: 'Open menu', themeToggle: 'Toggle theme', langSelector: 'Select language',
       heroTitle: 'APEXON', heroTagline: 'All-in-One Cognitive Ability Testing System',
       statOnline: 'Online', statTotalUsers: 'Players', statTotalTests: 'Tests',
@@ -149,8 +151,10 @@
       cardSequenceTitle: 'Sequence Memory Test', cardSequenceDesc: 'Reproduce flashing sequences',
       cardStroopTitle: 'Stroop Inhibition Test', cardStroopDesc: 'Judge ink color, ignore word meaning',
       cardNbackTitle: 'N-Back Working Memory Test', cardNbackDesc: 'Match stimulus N steps back, train updating',
+      visualsearchTitle: 'Visual Search Test',
+      cardVisualsearchTitle: 'Visual Search Test', cardVisualsearchDesc: 'Find the target among distractors fast, from 4×4 to 8×8 grids, measuring visual search efficiency and attention allocation',
       leaderboardTitle: '🏆 Leaderboard', lbReaction: 'Reaction', lbType: 'Typing', lbStick: 'Attention', lbNumber: 'Number',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Aim', lbSequence: 'Sequence', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'No scores yet. Be the first!',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Aim', lbSequence: 'Sequence', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Visual Search', lbEmpty: 'No scores yet. Be the first!',
       discussionTitle: '💬 Discussion', discussionEmpty: 'No comments yet. Start the conversation!',
       myScoresTitle: '📊 My Scores', myScoresEmpty: 'No scores yet. Take a test!',
       loading: 'Loading...', online: 'Online', offline: 'Offline', submit: 'Submit', cancel: 'Cancel', confirm: 'Confirm', close: 'Close',
@@ -229,7 +233,7 @@
     ja: {
       siteTitle: 'APEXON — 総合能力テスト',
       navHome: 'ホーム', navMusic: 'APEXON Music', navReaction: '反応速度', navType: 'タイピング', navStick: '注意力',
-      navNumber: '数字記憶', navVerbal: '単語記憶', navVisual: '視覚記憶', navAim: 'エイム練習', navSequence: '順序記憶', navStroop: 'Stroop テスト', navNback: 'N-Back テスト',
+      navNumber: '数字記憶', navVerbal: '単語記憶', navVisual: '視覚記憶', navAim: 'エイム練習', navSequence: '順序記憶', navStroop: 'Stroop テスト', navNback: 'N-Back テスト', navTaskswitch: 'タスクスイッチテスト', navVisualsearch: '視覚探索テスト',
       menuOpen: 'メニューを開く', themeToggle: 'テーマ切替', langSelector: '言語を選択',
       heroTitle: 'APEXON', heroTagline: '総合能力テストシステム · 人間の限界に挑戦',
       statOnline: 'オンライン', statTotalUsers: 'プレイヤー数', statTotalTests: 'テスト数',
@@ -244,8 +248,10 @@
       cardSequenceTitle: '順序記憶テスト', cardSequenceDesc: '光る順序を再現する',
       cardStroopTitle: 'Stroop 抑制制御テスト', cardStroopDesc: '文字の意味を無視して色を判定',
       cardNbackTitle: 'N-Back ワーキングメモリテスト', cardNbackDesc: 'N 歩前と同じか判定',
+      visualsearchTitle: '視覚探索テスト',
+      cardVisualsearchTitle: '視覚探索テスト', cardVisualsearchDesc: '妨害刺激の中から素早く目標を見つけ、4×4 から 8×8 のグリッドへ難易度が上昇',
       leaderboardTitle: '🏆 ランキング', lbReaction: '反応', lbType: 'タイピング', lbStick: '注意力', lbNumber: '数字',
-      lbVerbal: '単語', lbVisual: '視覚', lbAim: 'エイム', lbSequence: '順序', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'まだランキングデータがありません',
+      lbVerbal: '単語', lbVisual: '視覚', lbAim: 'エイム', lbSequence: '順序', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '視覚探索', lbEmpty: 'まだランキングデータがありません',
       discussionTitle: '💬 ディスカッション', discussionEmpty: 'まだコメントがありません。最初の投稿者になりましょう！',
       myScoresTitle: '📊 マイスコア', myScoresEmpty: 'まだ記録がありません。テストを受けましょう！',
       loading: '読み込み中...', online: 'オンライン', offline: 'オフライン', submit: '送信', cancel: 'キャンセル', confirm: '確認', close: '閉じる',
@@ -323,7 +329,7 @@
     ko: {
       siteTitle: 'APEXON — 종합 능력 테스트',
       navHome: '홈', navMusic: 'APEXON Music', navReaction: '반응 속도', navType: '타이핑', navStick: '주의력',
-      navNumber: '숫자 기억', navVerbal: '단어 기억', navVisual: '시각 기억', navAim: '조준 연습', navSequence: '순서 기억', navStroop: 'Stroop 테스트', navNback: 'N-Back 테스트',
+      navNumber: '숫자 기억', navVerbal: '단어 기억', navVisual: '시각 기억', navAim: '조준 연습', navSequence: '순서 기억', navStroop: 'Stroop 테스트', navNback: 'N-Back 테스트', navTaskswitch: '작업 전환 테스트', navVisualsearch: '시각 탐색 테스트',
       menuOpen: '메뉴 열기', themeToggle: '테마 전환', langSelector: '언어 선택',
       heroTitle: 'APEXON', heroTagline: '종합 능력 테스트 시스템 · 인간의 한계에 도전',
       statOnline: '온라인', statTotalUsers: '플레이어 수', statTotalTests: '테스트 수',
@@ -338,8 +344,10 @@
       cardSequenceTitle: '순서 기억 테스트', cardSequenceDesc: '깜박이는 순서를 재현',
       cardStroopTitle: 'Stroop 억제 통제 테스트', cardStroopDesc: '글자 뜻 무시하고 색 판단',
       cardNbackTitle: 'N-Back 작업 기억 테스트', cardNbackDesc: 'N 단계 전과 같은지 판단',
+      visualsearchTitle: '시각 탐색 테스트',
+      cardVisualsearchTitle: '시각 탐색 테스트', cardVisualsearchDesc: '방해 항목 속에서 목표를 빠르게 찾아 4×4~8×8 그리드로 난이도가 상승합니다',
       leaderboardTitle: '🏆 순위표', lbReaction: '반응', lbType: '타이핑', lbStick: '주의력', lbNumber: '숫자',
-      lbVerbal: '단어', lbVisual: '시각', lbAim: '조준', lbSequence: '순서', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: '아직 순위 데이터가 없습니다',
+      lbVerbal: '단어', lbVisual: '시각', lbAim: '조준', lbSequence: '순서', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '시각 탐색', lbEmpty: '아직 순위 데이터가 없습니다',
       discussionTitle: '💬 토론', discussionEmpty: '아직 댓글이 없습니다. 첫 번째 작성자가 되어보세요!',
       myScoresTitle: '📊 내 점수', myScoresEmpty: '아직 기록이 없습니다. 테스트를 합시다!',
       loading: '로딩 중...', online: '온라인', offline: '오프라인', submit: '제출', cancel: '취소', confirm: '확인', close: '닫기',
@@ -417,7 +425,7 @@
     fr: {
       siteTitle: 'APEXON — Tests de capacités',
       navHome: 'Accueil', navMusic: 'APEXON Music', navReaction: 'Réaction', navType: 'Dactylo', navStick: 'Attention',
-      navNumber: 'Mémoire numérique', navVerbal: 'Mémoire verbale', navVisual: 'Mémoire visuelle', navAim: 'Visée', navSequence: 'Mémoire séquentielle', navStroop: 'Test Stroop', navNback: 'Test N-Back',
+      navNumber: 'Mémoire numérique', navVerbal: 'Mémoire verbale', navVisual: 'Mémoire visuelle', navAim: 'Visée', navSequence: 'Mémoire séquentielle', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test de commutation', navVisualsearch: 'Recherche visuelle',
       menuOpen: 'Ouvrir le menu', themeToggle: 'Changer de thème', langSelector: 'Choisir la langue',
       heroTitle: 'APEXON', heroTagline: 'Système de tests complets des capacités cognitives',
       statOnline: 'En ligne', statTotalUsers: 'Joueurs', statTotalTests: 'Tests',
@@ -432,8 +440,10 @@
       cardSequenceTitle: 'Test de mémoire séquentielle', cardSequenceDesc: 'Reproduisez les séquences clignotantes',
       cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorer le sens, juger la couleur',
       cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Comparer au stimulus N étapes avant',
+      visualsearchTitle: 'Test de recherche visuelle',
+      cardVisualsearchTitle: 'Test de recherche visuelle', cardVisualsearchDesc: 'Trouvez la cible parmi les distracteurs, du damier 4×4 au 8×8 pour mesurer l\'efficacité de la recherche visuelle',
       leaderboardTitle: '🏆 Classement', lbReaction: 'Réaction', lbType: 'Dactylo', lbStick: 'Attention', lbNumber: 'Numérique',
-      lbVerbal: 'Verbal', lbVisual: 'Visuel', lbAim: 'Visée', lbSequence: 'Séquence', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'Aucun score pour le moment',
+      lbVerbal: 'Verbal', lbVisual: 'Visuel', lbAim: 'Visée', lbSequence: 'Séquence', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Recherche visuelle', lbEmpty: 'Aucun score pour le moment',
       discussionTitle: '💬 Discussions', discussionEmpty: 'Aucun commentaire. Soyez le premier !',
       myScoresTitle: '📊 Mes scores', myScoresEmpty: 'Aucun score. Faites un test !',
       loading: 'Chargement...', online: 'En ligne', offline: 'Hors ligne', submit: 'Envoyer', cancel: 'Annuler', confirm: 'Confirmer', close: 'Fermer',
@@ -511,7 +521,7 @@
     de: {
       siteTitle: 'APEXON — Fähigkeitstests',
       navHome: 'Startseite', navMusic: 'APEXON Music', navReaction: 'Reaktion', navType: 'Tippen', navStick: 'Aufmerksamkeit',
-      navNumber: 'Zahlengedächtnis', navVerbal: 'Wortgedächtnis', navVisual: 'Visuelles Gedächtnis', navAim: 'Zielübung', navSequence: 'Sequenzgedächtnis', navStroop: 'Stroop-Test', navNback: 'N-Back-Test',
+      navNumber: 'Zahlengedächtnis', navVerbal: 'Wortgedächtnis', navVisual: 'Visuelles Gedächtnis', navAim: 'Zielübung', navSequence: 'Sequenzgedächtnis', navStroop: 'Stroop-Test', navNback: 'N-Back-Test', navTaskswitch: 'Aufgabenwechsel-Test', navVisualsearch: 'Visuelle Suche',
       menuOpen: 'Menü öffnen', themeToggle: 'Thema wechseln', langSelector: 'Sprache wählen',
       heroTitle: 'APEXON', heroTagline: 'All-in-One-System für kognitive Fähigkeitstests',
       statOnline: 'Online', statTotalUsers: 'Spieler', statTotalTests: 'Tests',
@@ -526,8 +536,10 @@
       cardSequenceTitle: 'Sequenzgedächtnistest', cardSequenceDesc: 'Reproduzieren Sie blinkende Sequenzen',
       cardStroopTitle: 'Stroop-Inhibitionstest', cardStroopDesc: 'Wortbedeutung ignorieren, Farbe beurteilen',
       cardNbackTitle: 'N-Back-Arbeitsgedächtnistest', cardNbackDesc: 'Mit Reiz vor N Schritten vergleichen',
+      visualsearchTitle: 'Test der visuellen Suche',
+      cardVisualsearchTitle: 'Test der visuellen Suche', cardVisualsearchDesc: 'Finde das Ziel unter Ablenkern, von 4×4 bis 8×8, und messe die Effizienz der visuellen Suche',
       leaderboardTitle: '🏆 Rangliste', lbReaction: 'Reaktion', lbType: 'Tippen', lbStick: 'Aufmerksamkeit', lbNumber: 'Zahlen',
-      lbVerbal: 'Wörter', lbVisual: 'Visuell', lbAim: 'Ziel', lbSequence: 'Sequenz', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'Noch keine Einträge',
+      lbVerbal: 'Wörter', lbVisual: 'Visuell', lbAim: 'Ziel', lbSequence: 'Sequenz', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Visuelle Suche', lbEmpty: 'Noch keine Einträge',
       discussionTitle: '💬 Diskussion', discussionEmpty: 'Noch keine Kommentare. Seien Sie der Erste!',
       myScoresTitle: '📊 Meine Ergebnisse', myScoresEmpty: 'Noch keine Ergebnisse. Machen Sie einen Test!',
       loading: 'Laden...', online: 'Online', offline: 'Offline', submit: 'Senden', cancel: 'Abbrechen', confirm: 'Bestätigen', close: 'Schließen',
@@ -605,7 +617,7 @@
     es: {
       siteTitle: 'APEXON — Tests de habilidades',
       navHome: 'Inicio', navMusic: 'APEXON Music', navReaction: 'Reacción', navType: 'Mecanografía', navStick: 'Atención',
-      navNumber: 'Memoria numérica', navVerbal: 'Memoria verbal', navVisual: 'Memoria visual', navAim: 'Puntería', navSequence: 'Memoria secuencial', navStroop: 'Test Stroop', navNback: 'Test N-Back',
+      navNumber: 'Memoria numérica', navVerbal: 'Memoria verbal', navVisual: 'Memoria visual', navAim: 'Puntería', navSequence: 'Memoria secuencial', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test de cambio de tarea', navVisualsearch: 'Búsqueda visual',
       menuOpen: 'Abrir menú', themeToggle: 'Cambiar tema', langSelector: 'Seleccionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema integral de tests de habilidades cognitivas',
       statOnline: 'En línea', statTotalUsers: 'Jugadores', statTotalTests: 'Tests',
@@ -620,8 +632,10 @@
       cardSequenceTitle: 'Test de memoria secuencial', cardSequenceDesc: 'Reproduce las secuencias brillantes',
       cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorar el significado, juzgar el color',
       cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Comparar con el estímulo de hace N pasos',
+      visualsearchTitle: 'Test de búsqueda visual',
+      cardVisualsearchTitle: 'Test de búsqueda visual', cardVisualsearchDesc: 'Encuentra el objetivo entre distractores, de 4×4 a 8×8, para medir la eficiencia de la búsqueda visual',
       leaderboardTitle: '🏆 Clasificación', lbReaction: 'Reacción', lbType: 'Mecanografía', lbStick: 'Atención', lbNumber: 'Números',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Puntería', lbSequence: 'Secuencia', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'Aún no hay puntuaciones',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Puntería', lbSequence: 'Secuencia', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Búsqueda visual', lbEmpty: 'Aún no hay puntuaciones',
       discussionTitle: '💬 Discusión', discussionEmpty: 'Aún no hay comentarios. ¡Sé el primero!',
       myScoresTitle: '📊 Mis puntuaciones', myScoresEmpty: 'Aún no hay puntuaciones. ¡Haz un test!',
       loading: 'Cargando...', online: 'En línea', offline: 'Desconectado', submit: 'Enviar', cancel: 'Cancelar', confirm: 'Confirmar', close: 'Cerrar',
@@ -699,7 +713,7 @@
     ru: {
       siteTitle: 'APEXON — Тесты способностей',
       navHome: 'Главная', navMusic: 'APEXON Music', navReaction: 'Реакция', navType: 'Печать', navStick: 'Внимание',
-      navNumber: 'Числовая память', navVerbal: 'Словесная память', navVisual: 'Зрительная память', navAim: 'Прицел', navSequence: 'Память последовательностей', navStroop: 'Тест Струпа', navNback: 'Тест N-Back',
+      navNumber: 'Числовая память', navVerbal: 'Словесная память', navVisual: 'Зрительная память', navAim: 'Прицел', navSequence: 'Память последовательностей', navStroop: 'Тест Струпа', navNback: 'Тест N-Back', navTaskswitch: 'Тест переключения задач', navVisualsearch: 'Визуальный поиск',
       menuOpen: 'Открыть меню', themeToggle: 'Сменить тему', langSelector: 'Выбрать язык',
       heroTitle: 'APEXON', heroTagline: 'Система комплексного тестирования когнитивных способностей',
       statOnline: 'Онлайн', statTotalUsers: 'Игроки', statTotalTests: 'Тесты',
@@ -714,8 +728,10 @@
       cardSequenceTitle: 'Тест памяти последовательностей', cardSequenceDesc: 'Воспроизводите мигающие последовательности',
       cardStroopTitle: 'Тест Струпа', cardStroopDesc: 'Игнорировать смысл, оценивать цвет',
       cardNbackTitle: 'Тест N-Back', cardNbackDesc: 'Сравнить со стимулом N шагов назад',
+      visualsearchTitle: 'Тест визуального поиска',
+      cardVisualsearchTitle: 'Тест визуального поиска', cardVisualsearchDesc: 'Найдите цель среди отвлекающих стимулов в сетках от 4×4 до 8×8 — измерение эффективности визуального поиска',
       leaderboardTitle: '🏆 Рейтинг', lbReaction: 'Реакция', lbType: 'Печать', lbStick: 'Внимание', lbNumber: 'Числа',
-      lbVerbal: 'Слова', lbVisual: 'Зрительно', lbAim: 'Прицел', lbSequence: 'Последовательность', lbStroop: 'Струп', lbNback: 'N-Back', lbEmpty: 'Пока нет рекордов',
+      lbVerbal: 'Слова', lbVisual: 'Зрительно', lbAim: 'Прицел', lbSequence: 'Последовательность', lbStroop: 'Струп', lbNback: 'N-Back', lbVisualsearch: 'Визуальный поиск', lbEmpty: 'Пока нет рекордов',
       discussionTitle: '💬 Обсуждения', discussionEmpty: 'Пока нет комментариев. Будьте первым!',
       myScoresTitle: '📊 Мои результаты', myScoresEmpty: 'Пока нет результатов. Пройдите тест!',
       loading: 'Загрузка...', online: 'Онлайн', offline: 'Офлайн', submit: 'Отправить', cancel: 'Отмена', confirm: 'Подтвердить', close: 'Закрыть',
@@ -793,7 +809,7 @@
     pt: {
       siteTitle: 'APEXON — Testes de habilidades',
       navHome: 'Início', navMusic: 'APEXON Music', navReaction: 'Reação', navType: 'Digitação', navStick: 'Atenção',
-      navNumber: 'Memória numérica', navVerbal: 'Memória verbal', navVisual: 'Memória visual', navAim: 'Mira', navSequence: 'Memória sequencial', navStroop: 'Teste Stroop', navNback: 'Teste N-Back',
+      navNumber: 'Memória numérica', navVerbal: 'Memória verbal', navVisual: 'Memória visual', navAim: 'Mira', navSequence: 'Memória sequencial', navStroop: 'Teste Stroop', navNback: 'Teste N-Back', navTaskswitch: 'Teste de troca de tarefa', navVisualsearch: 'Busca visual',
       menuOpen: 'Abrir menu', themeToggle: 'Alternar tema', langSelector: 'Selecionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo de testes de habilidades cognitivas',
       statOnline: 'Online', statTotalUsers: 'Jogadores', statTotalTests: 'Testes',
@@ -808,8 +824,10 @@
       cardSequenceTitle: 'Teste de memória sequencial', cardSequenceDesc: 'Reproduza as sequências piscantes',
       cardStroopTitle: 'Teste Stroop', cardStroopDesc: 'Ignorar o significado, julgar a cor',
       cardNbackTitle: 'Teste N-Back', cardNbackDesc: 'Comparar com o estímulo de N passos atrás',
+      visualsearchTitle: 'Teste de busca visual',
+      cardVisualsearchTitle: 'Teste de busca visual', cardVisualsearchDesc: 'Encontre o alvo entre distratores, de 4×4 a 8×8, para medir a eficiência da busca visual',
       leaderboardTitle: '🏆 Ranking', lbReaction: 'Reação', lbType: 'Digitação', lbStick: 'Atenção', lbNumber: 'Números',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Mira', lbSequence: 'Sequência', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'Ainda não há pontuações',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Mira', lbSequence: 'Sequência', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Busca visual', lbEmpty: 'Ainda não há pontuações',
       discussionTitle: '💬 Discussão', discussionEmpty: 'Ainda não há comentários. Seja o primeiro!',
       myScoresTitle: '📊 Minhas pontuações', myScoresEmpty: 'Ainda não há pontuações. Faça um teste!',
       loading: 'Carregando...', online: 'Online', offline: 'Offline', submit: 'Enviar', cancel: 'Cancelar', confirm: 'Confirmar', close: 'Fechar',
@@ -887,7 +905,7 @@
     it: {
       siteTitle: 'APEXON — Test di abilità',
       navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reazione', navType: 'Battitura', navStick: 'Attenzione',
-      navNumber: 'Memoria numerica', navVerbal: 'Memoria verbale', navVisual: 'Memoria visiva', navAim: 'Mira', navSequence: 'Memoria sequenziale', navStroop: 'Test Stroop', navNback: 'Test N-Back',
+      navNumber: 'Memoria numerica', navVerbal: 'Memoria verbale', navVisual: 'Memoria visiva', navAim: 'Mira', navSequence: 'Memoria sequenziale', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test di cambio compito', navVisualsearch: 'Ricerca visiva',
       menuOpen: 'Apri menu', themeToggle: 'Cambia tema', langSelector: 'Seleziona lingua',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo di test delle abilità cognitive',
       statOnline: 'Online', statTotalUsers: 'Giocatori', statTotalTests: 'Test',
@@ -902,8 +920,10 @@
       cardSequenceTitle: 'Test di memoria sequenziale', cardSequenceDesc: 'Riproduci le sequenze lampeggianti',
       cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorare il significato, giudicare il colore',
       cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Confronta con lo stimolo di N passi fa',
+      visualsearchTitle: 'Test di ricerca visiva',
+      cardVisualsearchTitle: 'Test di ricerca visiva', cardVisualsearchDesc: 'Trova il bersaglio tra i distrattori, dal 4×4 all\'8×8, per misurare l\'efficienza della ricerca visiva',
       leaderboardTitle: '🏆 Classifica', lbReaction: 'Reazione', lbType: 'Battitura', lbStick: 'Attenzione', lbNumber: 'Numeri',
-      lbVerbal: 'Verbale', lbVisual: 'Visiva', lbAim: 'Mira', lbSequence: 'Sequenza', lbStroop: 'Stroop', lbNback: 'N-Back', lbEmpty: 'Ancora nessun punteggio',
+      lbVerbal: 'Verbale', lbVisual: 'Visiva', lbAim: 'Mira', lbSequence: 'Sequenza', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Ricerca visiva', lbEmpty: 'Ancora nessun punteggio',
       discussionTitle: '💬 Discussioni', discussionEmpty: 'Ancora nessun commento. Sii il primo!',
       myScoresTitle: '📊 I miei punteggi', myScoresEmpty: 'Ancora nessun punteggio. Fai un test!',
       loading: 'Caricamento...', online: 'Online', offline: 'Offline', submit: 'Invia', cancel: 'Annulla', confirm: 'Conferma', close: 'Chiudi',
@@ -1083,6 +1103,16 @@
         e.stopPropagation();
         const expanded = dropdown.classList.toggle('is-open');
         btn.setAttribute('aria-expanded', expanded);
+        if (expanded) {
+          // 互斥：打开语言面板时关闭其余顶栏设置面板
+          document.querySelectorAll('.apex-style-panel.is-open').forEach(p => p.classList.remove('is-open'));
+          const pp = document.querySelector('.apex-palette-panel');
+          if (pp) pp.setAttribute('hidden', '');
+          const ud = document.getElementById('apexUserDropdown');
+          if (ud) ud.classList.remove('show');
+          const hd = document.getElementById('headerDropdown');
+          if (hd) hd.classList.remove('open');
+        }
       });
 
       document.addEventListener('click', () => {
@@ -1171,7 +1201,21 @@
       engineLoadFailed: '测试引擎加载失败，请刷新页面重试。',
       feedbackNameRequired: '请填写姓名', feedbackEmailRequired: '请填写邮箱', feedbackEmailInvalid: '邮箱格式不正确', feedbackContentRequired: '请填写反馈内容', feedbackSubmitFailed: '提交失败，请重试',
       feedbackSubject: 'APEXON 反馈', feedbackNameLabel: '姓名：', feedbackEmailLabel: '邮箱：', feedbackBodyLabel: '反馈内容：', feedbackOpeningClient: '正在打开邮件客户端，请发送邮件…',
-      aimOverlayStart: '点击开始'
+      aimOverlayStart: '点击开始',
+      // 音乐页
+      musicDiscover: '发现', musicDailyRecom: '今日推荐', musicHotRecom: '热门推荐', musicSearch: '搜索音乐',
+      musicMyMusic: '我的音乐', musicLiked: '我喜欢', musicRecent: '最近播放',
+      musicHeroDaily: '每日推荐', musicHeroTitle: '发现无版权独立音乐',
+      musicHeroDesc: 'APEXON Music 汇聚来自全球独立音乐人的 Creative Commons 授权作品，所有曲目均可免费在线收听，无需担心版权风险。你可以通过智能搜索快速找到心仪歌曲，也可以按电子、摇滚、流行、爵士、古典、氛围等分类标签探索新音乐；遇到喜欢的作品，一键收藏到"我喜欢"，随时在"最近播放"中找回听过的旋律。播放器配备底部常驻控制栏，支持进度拖拽、音量调节与列表循环、单曲循环、随机播放三种模式，无论是在能力测试后放松身心，还是在工作学习时寻找节奏陪伴，APEXON Music 都能为你带来流畅、沉浸的高品质音乐体验。',
+      musicPlayNow: '立即播放',
+      musicSearchPlaceholder: '搜索歌曲、艺人、专辑...', musicSearchResults: '搜索结果',
+      musicCatAll: '全部', musicCatElectronic: '电子', musicCatRock: '摇滚', musicCatPop: '流行',
+      musicCatJazz: '爵士', musicCatClassical: '古典', musicCatAmbient: '氛围',
+      musicHotRecomTitle: '热门推荐', musicHotRecomSub: '本周最受欢迎的独立音乐', musicHotChartSub: '全网独立音乐热门榜单',
+      musicRecentTitle: '最近播放', musicRecentSub: '你刚刚听过的音乐', musicRecentSubAll: '最近 200 首播放记录',
+      musicLikedTitle: '我喜欢的音乐', musicLikedSub: '你收藏的所有歌曲', musicViewAll: '查看全部',
+      musicLyrics: '歌词', musicLyricsEmpty: '播放歌曲即可查看歌词',
+      musicModeTitle: '循环模式', musicPrevTitle: '上一首', musicPlayPauseTitle: '播放/暂停', musicNextTitle: '下一首', musicLikeTitle: '收藏'
     },
     en: {
       genderMale: 'Male', genderFemale: 'Female', genderSecret: 'Secret', genderLabel: 'Gender',
@@ -1215,7 +1259,21 @@
       engineLoadFailed: 'Test engine failed to load. Please refresh the page and try again.',
       feedbackNameRequired: 'Please enter your name', feedbackEmailRequired: 'Please enter your email', feedbackEmailInvalid: 'Invalid email format', feedbackContentRequired: 'Please enter your feedback', feedbackSubmitFailed: 'Submission failed, please try again',
       feedbackSubject: 'APEXON Feedback', feedbackNameLabel: 'Name: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Opening email client…',
-      aimOverlayStart: 'Click to start'
+      aimOverlayStart: 'Click to start',
+      // Music page
+      musicDiscover: 'Discover', musicDailyRecom: 'Daily Picks', musicHotRecom: 'Trending', musicSearch: 'Search Music',
+      musicMyMusic: 'My Music', musicLiked: 'Liked', musicRecent: 'Recently Played',
+      musicHeroDaily: 'Daily Picks', musicHeroTitle: 'Discover License-Free Indie Music',
+      musicHeroDesc: 'APEXON Music brings together Creative Commons licensed works from independent artists around the globe. Every track is free to stream online with no copyright worries. Use smart search to quickly find the song you want, or explore new music through genre tags such as Electronic, Rock, Pop, Jazz, Classical and Ambient. Like a track and bookmark it to "Liked" in one click, and revisit any melody in "Recently Played" anytime. The player features a docked control bar with seek, volume and three play modes: list loop, single loop and shuffle. Whether you relax after a skill test or seek a rhythm to accompany work and study, APEXON Music delivers a smooth, immersive, high-quality audio experience.',
+      musicPlayNow: 'Play Now',
+      musicSearchPlaceholder: 'Search songs, artists, albums...', musicSearchResults: 'Search Results',
+      musicCatAll: 'All', musicCatElectronic: 'Electronic', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classical', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Trending', musicHotRecomSub: 'Most Popular Indie Music This Week', musicHotChartSub: 'Top Chart of Indie Music',
+      musicRecentTitle: 'Recently Played', musicRecentSub: 'Music you just listened to', musicRecentSubAll: 'Last 200 plays',
+      musicLikedTitle: 'Liked Music', musicLikedSub: 'All your bookmarked songs', musicViewAll: 'View All',
+      musicLyrics: 'Lyrics', musicLyricsEmpty: 'Play a song to view lyrics',
+      musicModeTitle: 'Loop Mode', musicPrevTitle: 'Previous', musicPlayPauseTitle: 'Play/Pause', musicNextTitle: 'Next', musicLikeTitle: 'Like'
     },
     ja: {
       genderMale: '男性', genderFemale: '女性', genderSecret: '秘密', genderLabel: '性別',
@@ -1259,7 +1317,21 @@
       engineLoadFailed: 'テストエンジンの読み込みに失敗しました。ページを更新して再試行してください。',
       feedbackNameRequired: '名前を入力してください', feedbackEmailRequired: 'メールアドレスを入力してください', feedbackEmailInvalid: 'メールアドレスの形式が正しくありません', feedbackContentRequired: 'フィードバック内容を入力してください', feedbackSubmitFailed: '送信に失敗しました',
       feedbackSubject: 'APEXON フィードバック', feedbackNameLabel: '名前：', feedbackEmailLabel: 'メール：', feedbackBodyLabel: 'フィードバック内容：', feedbackOpeningClient: 'メールクライアントを開いています…',
-      aimOverlayStart: 'クリックして開始'
+      aimOverlayStart: 'クリックして開始',
+      // 音楽ページ
+      musicDiscover: '発見', musicDailyRecom: '今日のおすすめ', musicHotRecom: '人気', musicSearch: '音楽を検索',
+      musicMyMusic: 'マイミュージック', musicLiked: 'いいね', musicRecent: '最近再生',
+      musicHeroDaily: 'デイリーピック', musicHeroTitle: '著作権フリーのインディーズ音楽を発見',
+      musicHeroDesc: 'APEXON Music は世界中のインディーズアーティストによる Creative Commons ライセンス作品を集めています。全曲を無料でオンライン再生でき、著作権の心配は不要です。スマート検索でお気に入りの曲をすぐに見つけられ、エレクトロニック、ロック、ポップ、ジャズ、クラシック、アンビエントなどのカテゴリタグで新しい音楽を探索できます。気に入った曲はワンクリックで「いいね」に保存し、「最近再生」からいつでもメロディを再確認できます。プレイヤーには下部常駐コントロールバーがあり、シーク、音量調整、リストリピート、シングルリピート、シャッフルの3つの再生モードに対応しています。能力テスト後のリラックスにも、仕事や勉強のリズム伴奏としても、APEXON Music はなめらかで臨場感のある高品質な音楽体験をお届けします。',
+      musicPlayNow: '今すぐ再生',
+      musicSearchPlaceholder: '曲、アーティスト、アルバムを検索...', musicSearchResults: '検索結果',
+      musicCatAll: 'すべて', musicCatElectronic: 'エレクトロニック', musicCatRock: 'ロック', musicCatPop: 'ポップ',
+      musicCatJazz: 'ジャズ', musicCatClassical: 'クラシック', musicCatAmbient: 'アンビエント',
+      musicHotRecomTitle: '人気', musicHotRecomSub: '今週最も人気のインディーズ音楽', musicHotChartSub: 'インディーズ音楽の総合ランキング',
+      musicRecentTitle: '最近再生', musicRecentSub: '先ほど聴いた曲', musicRecentSubAll: '最近 200 曲の再生履歴',
+      musicLikedTitle: 'いいねした音楽', musicLikedSub: 'お気に入り登録したすべての曲', musicViewAll: 'すべて見る',
+      musicLyrics: '歌詞', musicLyricsEmpty: '曲を再生すると歌詞を表示します',
+      musicModeTitle: 'ループモード', musicPrevTitle: '前へ', musicPlayPauseTitle: '再生/一時停止', musicNextTitle: '次へ', musicLikeTitle: 'お気に入り'
     },
     ko: {
       genderMale: '남성', genderFemale: '여성', genderSecret: '비공개', genderLabel: '성별',
@@ -1303,7 +1375,21 @@
       engineLoadFailed: '테스트 엔진을 불러오지 못했습니다. 페이지를 새로고침해 주세요.',
       feedbackNameRequired: '이름을 입력하세요', feedbackEmailRequired: '이메일을 입력하세요', feedbackEmailInvalid: '이메일 형식이 올바르지 않습니다', feedbackContentRequired: '피드백 내용을 입력하세요', feedbackSubmitFailed: '제출 실패',
       feedbackSubject: 'APEXON 피드백', feedbackNameLabel: '이름：', feedbackEmailLabel: '이메일：', feedbackBodyLabel: '피드백 내용：', feedbackOpeningClient: '이메일 클라이언트를 여는 중…',
-      aimOverlayStart: '클릭하여 시작'
+      aimOverlayStart: '클릭하여 시작',
+      // 음악 페이지
+      musicDiscover: '발견', musicDailyRecom: '오늘의 추천', musicHotRecom: '인기', musicSearch: '음악 검색',
+      musicMyMusic: '내 음악', musicLiked: '좋아요', musicRecent: '최근 재생',
+      musicHeroDaily: '데일리 픽', musicHeroTitle: '저작권 없는 인디 음악 발견',
+      musicHeroDesc: 'APEXON Music은 전 세계 인디 아티스트들의 Creative Commons 라이선스 작품을 모았습니다. 모든 트랙을 무료로 온라인에서 들을 수 있으며 저작권 걱정이 필요 없습니다. 스마트 검색으로 원하는 노래를 빠르게 찾고, 일렉트로닉, 록, 팝, 재즈, 클래식, 앰비언트 등 카테고리 태그로 새로운 음악을 탐색하세요. 마음에 드는 곡은 원클릭으로 "좋아요"에 저장하고 "최근 재생"에서 언제든 다시 들을 수 있습니다. 플레이어에는 하단 고정 컨트롤 바가 있으며 탐색, 볼륨 조절, 목록 반복, 한 곡 반복, 셔플 등 세 가지 재생 모드를 지원합니다. 능력 테스트 후 휴식할 때든, 일이나 공부에 리듬이 필요할 때든 APEXON Music은 부드럽고 몰입감 있는 고품질 음악 경험을 선사합니다.',
+      musicPlayNow: '지금 재생',
+      musicSearchPlaceholder: '노래, 아티스트, 앨범 검색...', musicSearchResults: '검색 결과',
+      musicCatAll: '전체', musicCatElectronic: '일렉트로닉', musicCatRock: '록', musicCatPop: '팝',
+      musicCatJazz: '재즈', musicCatClassical: '클래식', musicCatAmbient: '앰비언트',
+      musicHotRecomTitle: '인기', musicHotRecomSub: '이번 주 가장 인기 있는 인디 음악', musicHotChartSub: '전체 인디 음악 인기 차트',
+      musicRecentTitle: '최근 재생', musicRecentSub: '방금 들었던 음악', musicRecentSubAll: '최근 200곡 재생 기록',
+      musicLikedTitle: '좋아하는 음악', musicLikedSub: '저장한 모든 노래', musicViewAll: '모두 보기',
+      musicLyrics: '가사', musicLyricsEmpty: '노래를 재생하면 가사가 표시됩니다',
+      musicModeTitle: '반복 모드', musicPrevTitle: '이전 곡', musicPlayPauseTitle: '재생/일시정지', musicNextTitle: '다음 곡', musicLikeTitle: '좋아요'
     },
     fr: {
       genderMale: 'Homme', genderFemale: 'Femme', genderSecret: 'Secret', genderLabel: 'Genre',
@@ -1347,7 +1433,21 @@
       engineLoadFailed: 'Échec du chargement du moteur de test. Veuillez rafraîchir la page.',
       feedbackNameRequired: 'Veuillez saisir votre nom', feedbackEmailRequired: 'Veuillez saisir votre email', feedbackEmailInvalid: 'Format d\'email invalide', feedbackContentRequired: 'Veuillez saisir votre feedback', feedbackSubmitFailed: 'Échec de l\'envoi',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nom : ', feedbackEmailLabel: 'Email : ', feedbackBodyLabel: 'Feedback :', feedbackOpeningClient: 'Ouverture du client de messagerie…',
-      aimOverlayStart: 'Cliquer pour commencer'
+      aimOverlayStart: 'Cliquer pour commencer',
+      // Page musique
+      musicDiscover: 'Découvrir', musicDailyRecom: 'Recommandations du jour', musicHotRecom: 'Tendances', musicSearch: 'Rechercher de la musique',
+      musicMyMusic: 'Ma musique', musicLiked: 'J\'aime', musicRecent: 'Lecture récente',
+      musicHeroDaily: 'Sélection du jour', musicHeroTitle: 'Découvrez la musique indépendante libre de droits',
+      musicHeroDesc: 'L\'APEXON Music rassemble des œuvres sous licence Creative Commons d\'artistes indépendants du monde entier. Tous les morceaux sont gratuits à écouter en ligne, sans souci de droits. Utilisez la recherche intelligente pour trouver rapidement la chanson qui vous convient, ou explorez de nouvelles musiques via des étiquettes de catégorie comme Électronique, Rock, Pop, Jazz, Classique et Ambient. Aimez une œuvre et enregistrez-la en un clic dans « J\'aime », puis retrouvez vos mélodies à tout moment dans « Lecture récente ». Le lecteur dispose d\'une barre de contrôle fixe en bas avec recherche, réglage du volume et trois modes de lecture : boucle de liste, boucle unique et lecture aléatoire. Que vous vous détendiez après un test d\'aptitude ou cherchiez un rythme d\'accompagnement pour travailler ou étudier, l\'APEXON Music offre une expérience audio fluide, immersive et de haute qualité.',
+      musicPlayNow: 'Écouter maintenant',
+      musicSearchPlaceholder: 'Rechercher chansons, artistes, albums...', musicSearchResults: 'Résultats de recherche',
+      musicCatAll: 'Tout', musicCatElectronic: 'Électronique', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classique', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Tendances', musicHotRecomSub: 'Meilleure musique indépendante cette semaine', musicHotChartSub: 'Classement de la musique indépendante',
+      musicRecentTitle: 'Lecture récente', musicRecentSub: 'La musique que vous venez d\'écouter', musicRecentSubAll: '200 dernières écoutes',
+      musicLikedTitle: 'Musique aimée', musicLikedSub: 'Toutes les chansons que vous avez enregistrées', musicViewAll: 'Tout voir',
+      musicLyrics: 'Paroles', musicLyricsEmpty: 'Écoutez un morceau pour voir les paroles',
+      musicModeTitle: 'Mode de boucle', musicPrevTitle: 'Précédent', musicPlayPauseTitle: 'Lecture/Pause', musicNextTitle: 'Suivant', musicLikeTitle: 'Aimer'
     },
     de: {
       genderMale: 'Männlich', genderFemale: 'Weiblich', genderSecret: 'Geheim', genderLabel: 'Geschlecht',
@@ -1391,7 +1491,21 @@
       engineLoadFailed: 'Test-Engine konnte nicht geladen werden. Bitte aktualisieren Sie die Seite.',
       feedbackNameRequired: 'Bitte Namen eingeben', feedbackEmailRequired: 'Bitte E-Mail eingeben', feedbackEmailInvalid: 'Ungültiges E-Mail-Format', feedbackContentRequired: 'Bitte Feedback eingeben', feedbackSubmitFailed: 'Senden fehlgeschlagen',
       feedbackSubject: 'APEXON Feedback', feedbackNameLabel: 'Name: ', feedbackEmailLabel: 'E-Mail: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'E-Mail-Client wird geöffnet…',
-      aimOverlayStart: 'Klicken zum Starten'
+      aimOverlayStart: 'Klicken zum Starten',
+      // Musikseite
+      musicDiscover: 'Entdecken', musicDailyRecom: 'Heutige Empfehlungen', musicHotRecom: 'Trends', musicSearch: 'Musik suchen',
+      musicMyMusic: 'Meine Musik', musicLiked: 'Gefällt mir', musicRecent: 'Zuletzt gehört',
+      musicHeroDaily: 'Tägliche Auswahl', musicHeroTitle: 'Lizenzfreie Independent-Musik entdecken',
+      musicHeroDesc: 'APEXON Music bündelt Creative-Commons-lizenzierte Werke unabhängiger Künstler aus aller Welt. Alle Titel sind kostenlos online hörbar, ganz ohne Urheberrechtsbedenken. Mit der smarten Suche findest du schnell den passenden Song oder erkundest über Kategorien wie Electronic, Rock, Pop, Jazz, Klassik und Ambient neue Musik. Gefällt dir ein Werk, speicherst du es mit einem Klick unter „Gefällt mir“, jederzeit wiederzufinden unter „Zuletzt gehört“. Der Player bietet eine fixierte Steuerleiste mit Scrubben, Lautstärke und drei Wiedergabemodi: Listen-Wiederholung, Einzeltitel-Wiederholung und Zufallswiedergabe. Ob zur Entspannung nach einem Test oder als Rhythmusbegleitung bei Arbeit und Studium – APEXON Music liefert ein flüssiges, immersives und hochwertiges Klangerlebnis.',
+      musicPlayNow: 'Jetzt abspielen',
+      musicSearchPlaceholder: 'Songs, Künstler, Alben suchen...', musicSearchResults: 'Suchergebnisse',
+      musicCatAll: 'Alle', musicCatElectronic: 'Electronic', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Klassik', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Trends', musicHotRecomSub: 'Beliebteste Independent-Musik dieser Woche', musicHotChartSub: 'Independent-Musik-Bestenliste',
+      musicRecentTitle: 'Zuletzt gehört', musicRecentSub: 'Musik, die du gerade gehört hast', musicRecentSubAll: 'Letzte 200 Wiedergaben',
+      musicLikedTitle: 'Gefällt mir Musik', musicLikedSub: 'Alle gespeicherten Songs', musicViewAll: 'Alle ansehen',
+      musicLyrics: 'Liedtext', musicLyricsEmpty: 'Spiele einen Song, um die Liedtexte zu sehen',
+      musicModeTitle: 'Wiederholungsmodus', musicPrevTitle: 'Vorheriger', musicPlayPauseTitle: 'Abspielen/Pause', musicNextTitle: 'Nächster', musicLikeTitle: 'Gefällt mir'
     },
     es: {
       genderMale: 'Hombre', genderFemale: 'Mujer', genderSecret: 'Secreto', genderLabel: 'Género',
@@ -1435,7 +1549,21 @@
       engineLoadFailed: 'No se pudo cargar el motor de pruebas. Por favor, actualiza la página.',
       feedbackNameRequired: 'Introduce tu nombre', feedbackEmailRequired: 'Introduce tu email', feedbackEmailInvalid: 'Formato de email inválido', feedbackContentRequired: 'Introduce tu feedback', feedbackSubmitFailed: 'Envío fallido',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nombre: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Abriendo cliente de correo…',
-      aimOverlayStart: 'Clic para empezar'
+      aimOverlayStart: 'Clic para empezar',
+      // Página de música
+      musicDiscover: 'Descubrir', musicDailyRecom: 'Recomendaciones de hoy', musicHotRecom: 'Tendencias', musicSearch: 'Buscar música',
+      musicMyMusic: 'Mi música', musicLiked: 'Me gusta', musicRecent: 'Reproducidos recientemente',
+      musicHeroDaily: 'Selección diaria', musicHeroTitle: 'Descubre música independiente sin derechos de autor',
+      musicHeroDesc: 'APEXON Music reúne obras con licencia Creative Commons de artistas independientes de todo el mundo. Todos los temas se pueden escuchar gratis en línea, sin preocupaciones de derechos de autor. Usa la búsqueda inteligente para encontrar rápido la canción que quieres, o explora nueva música con etiquetas de categoría como Electrónica, Rock, Pop, Jazz, Clásica y Ambiental. Ama una obra y guárdala en «Me gusta» con un clic, para recuperar sus melodías en «Reproducidos recientemente» cuando quieras. El reproductor incluye una barra de control fija en la parte inferior con avance, ajuste de volumen y tres modos de reproducción: bucle de lista, bucle único y aleatorio. Ya sea para relajarte tras una prueba o buscar un ritmo para trabajar o estudiar, APEXON Music ofrece una experiencia de audio fluida, inmersiva y de alta calidad.',
+      musicPlayNow: 'Reproducir ahora',
+      musicSearchPlaceholder: 'Buscar canciones, artistas, álbumes...', musicSearchResults: 'Resultados de búsqueda',
+      musicCatAll: 'Todos', musicCatElectronic: 'Electrónica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Clásica', musicCatAmbient: 'Ambiental',
+      musicHotRecomTitle: 'Tendencias', musicHotRecomSub: 'Música independiente más popular esta semana', musicHotChartSub: 'Ranking de música independiente',
+      musicRecentTitle: 'Reproducidos recientemente', musicRecentSub: 'La música que acabas de escuchar', musicRecentSubAll: 'Últimas 200 reproducciones',
+      musicLikedTitle: 'Música que me gusta', musicLikedSub: 'Todas las canciones que has guardado', musicViewAll: 'Ver todo',
+      musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduce una canción para ver la letra',
+      musicModeTitle: 'Modo de bucle', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproducir/Pausar', musicNextTitle: 'Siguiente', musicLikeTitle: 'Me gusta'
     },
     ru: {
       genderMale: 'Мужской', genderFemale: 'Женский', genderSecret: 'Секрет', genderLabel: 'Пол',
@@ -1479,7 +1607,21 @@
       engineLoadFailed: 'Не удалось загрузить тестовый движок. Пожалуйста, обновите страницу.',
       feedbackNameRequired: 'Введите имя', feedbackEmailRequired: 'Введите email', feedbackEmailInvalid: 'Неверный формат email', feedbackContentRequired: 'Введите содержание отзыва', feedbackSubmitFailed: 'Ошибка отправки',
       feedbackSubject: 'Обратная связь APEXON', feedbackNameLabel: 'Имя: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Сообщение:', feedbackOpeningClient: 'Открывается почтовый клиент…',
-      aimOverlayStart: 'Нажмите для старта'
+      aimOverlayStart: 'Нажмите для старта',
+      // Музыкальная страница
+      musicDiscover: 'Обзор', musicDailyRecom: 'Рекомендации дня', musicHotRecom: 'Популярное', musicSearch: 'Поиск музыки',
+      musicMyMusic: 'Моя музыка', musicLiked: 'Нравится', musicRecent: 'Недавнее',
+      musicHeroDaily: 'Ежедневная подборка', musicHeroTitle: 'Открывайте свободную от авторских прав инди-музыку',
+      musicHeroDesc: 'APEXON Music объединяет произведения инди-артистов со всего мира под лицензией Creative Commons. Все треки можно бесплатно слушать онлайн без опасений по поводу авторских прав. С помощью умного поиска вы быстро найдете нужную песню или откроете новую музыку по категориям: электронная, рок, поп, джаз, классика, эмбиент и другим. Понравившееся произведение сохраняйте в избранное «Нравится» одним кликом и в любое время возвращайтесь к мелодиям в разделе «Недавнее». Плеер оснащен закрепленной панелью управления с перемоткой, регулировкой громкости и тремя режимами воспроизведения: по списку, повтором трека и случайным. Будь то отдых после теста или поиск ритма для работы и учебы, APEXON Music дарит плавное, захватывающее и качественное музыкальное впечатление.',
+      musicPlayNow: 'Слушать сейчас',
+      musicSearchPlaceholder: 'Искать песни, исполнителей, альбомы...', musicSearchResults: 'Результаты поиска',
+      musicCatAll: 'Все', musicCatElectronic: 'Электронная', musicCatRock: 'Рок', musicCatPop: 'Поп',
+      musicCatJazz: 'Джаз', musicCatClassical: 'Классика', musicCatAmbient: 'Эмбиент',
+      musicHotRecomTitle: 'Популярное', musicHotRecomSub: 'Самая популярная инди-музыка на этой неделе', musicHotChartSub: 'Рейтинг инди-музыки',
+      musicRecentTitle: 'Недавнее', musicRecentSub: 'Музыка, которую вы только что слушали', musicRecentSubAll: 'Последние 200 треков',
+      musicLikedTitle: 'Понравившаяся музыка', musicLikedSub: 'Все сохраненные песни', musicViewAll: 'Смотреть все',
+      musicLyrics: 'Текст песни', musicLyricsEmpty: 'Воспроизведите песню, чтобы увидеть текст',
+      musicModeTitle: 'Режим повтора', musicPrevTitle: 'Предыдущий', musicPlayPauseTitle: 'Играть/Пауза', musicNextTitle: 'Следующий', musicLikeTitle: 'Нравится'
     },
     pt: {
       genderMale: 'Masculino', genderFemale: 'Feminino', genderSecret: 'Secreto', genderLabel: 'Gênero',
@@ -1523,7 +1665,21 @@
       engineLoadFailed: 'Falha ao carregar o motor de teste. Por favor, atualize a página.',
       feedbackNameRequired: 'Digite seu nome', feedbackEmailRequired: 'Digite seu email', feedbackEmailInvalid: 'Email inválido', feedbackContentRequired: 'Digite seu feedback', feedbackSubmitFailed: 'Falha ao enviar',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nome: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Abrindo cliente de email…',
-      aimOverlayStart: 'Clique para começar'
+      aimOverlayStart: 'Clique para começar',
+      // Página de música
+      musicDiscover: 'Descobrir', musicDailyRecom: 'Recomendações do dia', musicHotRecom: 'Tendências', musicSearch: 'Buscar música',
+      musicMyMusic: 'Minha música', musicLiked: 'Curtidas', musicRecent: 'Reproduzidas recentemente',
+      musicHeroDaily: 'Seleção diária', musicHeroTitle: 'Descubra música independente livre de direitos',
+      musicHeroDesc: 'O APEXON Music reúne obras licenciadas sob Creative Commons de artistas independentes do mundo todo. Todas as faixas podem ser ouvidas gratuitamente online, sem preocupação com direitos autorais. Use a busca inteligente para encontrar rapidamente a música que deseja ou explore novos sons por categorias como Eletrônica, Rock, Pop, Jazz, Clássica e Ambiental. Curta uma obra e salve-a em «Curtidas» com um clique, retomando a melodia em «Reproduzidas recentemente» quando quiser. O player tem uma barra de controle fixa na parte inferior com avanço, ajuste de volume e três modos de reprodução: repetir lista, repetir faixa e aleatório. Seja para relaxar após um teste ou buscar um ritmo de companhia no trabalho e nos estudos, o APEXON Music oferece uma experiência de áudio fluida, imersiva e de alta qualidade.',
+      musicPlayNow: 'Reproduzir agora',
+      musicSearchPlaceholder: 'Buscar músicas, artistas, álbuns...', musicSearchResults: 'Resultados da busca',
+      musicCatAll: 'Tudo', musicCatElectronic: 'Eletrônica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Clássica', musicCatAmbient: 'Ambiental',
+      musicHotRecomTitle: 'Tendências', musicHotRecomSub: 'Música independente mais popular da semana', musicHotChartSub: 'Ranking de música independente',
+      musicRecentTitle: 'Reproduzidas recentemente', musicRecentSub: 'A música que você acabou de ouvir', musicRecentSubAll: 'Últimas 200 reproduções',
+      musicLikedTitle: 'Música curtida', musicLikedSub: 'Todas as músicas que você salvou', musicViewAll: 'Ver tudo',
+      musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduza uma música para ver a letra',
+      musicModeTitle: 'Modo de repetição', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproduzir/Pausar', musicNextTitle: 'Próxima', musicLikeTitle: 'Curtir'
     },
     it: {
       genderMale: 'Uomo', genderFemale: 'Donna', genderSecret: 'Segreto', genderLabel: 'Genere',
@@ -1567,7 +1723,21 @@
       engineLoadFailed: 'Impossibile caricare il motore di test. Aggiorna la pagina.',
       feedbackNameRequired: 'Inserisci il nome', feedbackEmailRequired: 'Inserisci l\'email', feedbackEmailInvalid: 'Email non valida', feedbackContentRequired: 'Inserisci il feedback', feedbackSubmitFailed: 'Invio fallito',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nome: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Apertura client email…',
-      aimOverlayStart: 'Clicca per iniziare'
+      aimOverlayStart: 'Clicca per iniziare',
+      // Pagina musicale
+      musicDiscover: 'Esplora', musicDailyRecom: 'Consigli di oggi', musicHotRecom: 'Tendenze', musicSearch: 'Cerca musica',
+      musicMyMusic: 'La mia musica', musicLiked: 'Mi piace', musicRecent: 'Ascoltati di recente',
+      musicHeroDaily: 'Selezione quotidiana', musicHeroTitle: 'Scopri musica indipendente libera da diritti',
+      musicHeroDesc: 'Lo APEXON Music riunisce opere con licenza Creative Commons di artisti indipendenti di tutto il mondo. Tutti i brani sono ascoltabili gratuitamente online, senza alcuna preoccupazione di copyright. Con la ricerca intelligente trovi rapidamente il brano che cerchi o esplori nuova musica con etichette di categoria come Elettronica, Rock, Pop, Jazz, Classica e Ambientale. Apprezza un\'opera e salvala in «Mi piace» con un clic, per ritrovare le melodie in «Ascoltati di recente» in qualsiasi momento. Il player dispone di una barra di controllo fissa in basso con trascinamento, regolazione del volume e tre modalità di riproduzione: ripetizione lista, ripetizione singola e casuale. Che tu voglia rilassarti dopo un test o cercare un ritmo per lavoro e studio, lo APEXON Music offre un\'esperienza audio fluida, immersiva e di alta qualità.',
+      musicPlayNow: 'Riproduci ora',
+      musicSearchPlaceholder: 'Cerca canzoni, artisti, album...', musicSearchResults: 'Risultati della ricerca',
+      musicCatAll: 'Tutti', musicCatElectronic: 'Elettronica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classica', musicCatAmbient: 'Ambientale',
+      musicHotRecomTitle: 'Tendenze', musicHotRecomSub: 'La musica indipendente più popolare della settimana', musicHotChartSub: 'Classifica della musica indipendente',
+      musicRecentTitle: 'Ascoltati di recente', musicRecentSub: 'La musica che hai appena ascoltato', musicRecentSubAll: 'Ultime 200 riproduzioni',
+      musicLikedTitle: 'Musica che mi piace', musicLikedSub: 'Tutte le canzoni salvate', musicViewAll: 'Vedi tutto',
+      musicLyrics: 'Testo', musicLyricsEmpty: 'Riproduci un brano per vedere il testo',
+      musicModeTitle: 'Modalità di ripetizione', musicPrevTitle: 'Precedente', musicPlayPauseTitle: 'Riproduci/Pausa', musicNextTitle: 'Successivo', musicLikeTitle: 'Mi piace'
     }
   };
 

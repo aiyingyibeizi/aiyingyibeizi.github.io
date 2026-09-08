@@ -609,12 +609,26 @@
       const res = await WorkerAPI.request(`/api/scores?leaderboard=1&test_type=${encodeURIComponent(testType)}&limit=${limit}`, 'GET');
       if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
       const rows = res.data.data;
-      return rows.map(r => ({
-        user_id: r.user_id,
-        username: r.username,
-        score_value: r.score_value,
-        created_at: r.created_at
-      }));
+
+      // P2-14: 清理排行榜中的测试账号数据（testuser/stress/perf/e2e/diag 等压测占位账号）
+      // 并按键去重，避免同一账号重复占位。测试账号由服务器压测注入，正式环境不应展示给用户。
+      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder)[_\-\w]*$|realtest/i;
+      const seen = new Set();
+      const list = [];
+      for (const r of rows) {
+        const name = (r.username || '').trim();
+        if (!name || TEST_ACCOUNT_RE.test(name)) continue;
+        const uid = r.user_id;
+        if (!uid || seen.has(uid)) continue; // 去重：保留服务器返回次序中靠前（更优）的一条
+        seen.add(uid);
+        list.push({
+          user_id: uid,
+          username: name,
+          score_value: r.score_value,
+          created_at: r.created_at
+        });
+      }
+      return list;
     },
 
     async getHistoryByUserAndType(userId, type, limit = 20) {
@@ -1292,6 +1306,7 @@
         { key: 'total_tests', el: this.els.totalTests }
       ];
       let changed = false;
+      const firstLoad = !this._loaded;
       for (const item of map) {
         const el = item.el;
         if (!el) continue;
@@ -1301,8 +1316,13 @@
           el.textContent = newVal;
           changed = true;
           if (newVal > oldVal) this._animate(el);
+        } else if (firstLoad && el.textContent === '–') {
+          // 首次加载成功后，即使数值为 0 也替换掉占位符，避免误以为数据被清空
+          el.textContent = newVal;
+          changed = true;
         }
       }
+      this._loaded = true;
       this.prev = next;
       return changed;
     },
@@ -1632,6 +1652,14 @@
         e.stopPropagation();
         const isHidden = palettePanel.hasAttribute('hidden');
         if (isHidden) {
+          // 互斥：打开主题配色面板时关闭语言选择器与动态背景面板
+          const langList = document.querySelector('.apexon-lang-selector__dropdown');
+          if (langList) langList.classList.remove('is-open');
+          document.querySelectorAll('.apex-style-panel.is-open').forEach(p => p.classList.remove('is-open'));
+          const ud = document.getElementById('apexUserDropdown');
+          if (ud) ud.classList.remove('show');
+          const hd = document.getElementById('headerDropdown');
+          if (hd) hd.classList.remove('open');
           palettePanel.removeAttribute('hidden');
           this._refreshPaletteActive();
         } else {
@@ -1860,7 +1888,19 @@
 
         toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          const willOpenPanel = !panel.classList.contains('is-open');
           panel.classList.toggle('is-open');
+          if (willOpenPanel) {
+            // 互斥：打开动态背景面板时关闭语言选择器与主题配色面板
+            const langList = document.querySelector('.apexon-lang-selector__dropdown');
+            if (langList) langList.classList.remove('is-open');
+            const palettePanel = document.querySelector('.apex-palette-panel');
+            if (palettePanel) palettePanel.setAttribute('hidden', '');
+            const ud = document.getElementById('apexUserDropdown');
+            if (ud) ud.classList.remove('show');
+            const hd = document.getElementById('headerDropdown');
+            if (hd) hd.classList.remove('open');
+          }
           this._refreshStyleActive();
         });
 
@@ -2131,6 +2171,55 @@
         document.body.insertBefore(footer, lastScript);
       } else {
         document.body.appendChild(footer);
+      }
+    },
+
+    // 页面回到顶部控件（长页面滚动时显示，点击平滑回顶）
+    injectBackToTop() {
+      if (document.querySelector('.apex-backtotop')) return;
+      const btn = document.createElement('button');
+      btn.className = 'apex-backtotop';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Back to top');
+      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+      document.body.appendChild(btn);
+      const onScroll = () => {
+        const show = (window.scrollY || document.documentElement.scrollTop) > 400;
+        btn.classList.toggle('is-visible', show);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    },
+
+    // P2-18: 测试页“再来一次 / 分享成绩”在完成任一测试前禁用，避免点了没反应
+    controlResultButtons() {
+      const sel = 'button[data-i18n="shareScore"], button[data-i18n="testAgain"], button[data-i18n="retest"]';
+      const btns = Array.from(document.querySelectorAll(sel));
+      if (!btns.length) return;
+      const disable = () => btns.forEach(b => b.setAttribute('disabled', 'disabled'));
+      const enable = () => btns.forEach(b => b.removeAttribute('disabled'));
+      // 页面加载前无成绩时先禁用；若已有（如返回上一结果状态）则直接可用
+      if (window.lastScore == null) {
+        disable();
+      } else {
+        enable();
+        return;
+      }
+      if (!this._resultBtnBound) {
+        this._resultBtnBound = true;
+        // 首次成绩保存成功后统一启用（saveScore 成功时会派发 apexon:scoreSaved）
+        document.addEventListener('apexon:scoreSaved', enable, { once: false });
+        // 兜底：某些页面直接赋值 window.lastScore 而未走 saveScore
+        const interval = setInterval(() => {
+          if (window.lastScore != null) {
+            enable();
+            clearInterval(interval);
+          }
+        }, 800);
+        window.addEventListener('pagehide', () => clearInterval(interval));
       }
     },
 
@@ -2898,6 +2987,17 @@
       const canvas = typeof config.selector === 'string' ? document.getElementById(config.selector) : config.selector;
       if (!canvas) return;
 
+      // 自适应性能档位：尊重系统“减弱动态效果”，并在低端设备上自动降低画质以保住帧率
+      const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const lowEnd = (navigator.hardwareConcurrency || 8) <= 4;
+      const quality = preferReduced
+        ? { dpr: 1, particleScale: 0, cloudScale: 0, lineScale: 0, noise: false, static: true }
+        : lowEnd
+          ? { dpr: 1.25, particleScale: 0.6, cloudScale: 0.5, lineScale: 0.5, noise: false, static: false }
+          : { dpr: Math.min(window.devicePixelRatio || 1, 2), particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false };
+      // 减弱动态效果时强制静态背景（用户可随时在设置中手动开启），可访问性与续航兼顾
+      if (preferReduced) ParticleSystem.settings.animated = false;
+
       const ctx = canvas.getContext('2d');
       const offscreen = document.createElement('canvas');
       const offCtx = offscreen.getContext('2d');
@@ -2953,7 +3053,7 @@
       };
 
       const resize = () => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = quality.dpr;
         const cw = window.innerWidth;
         const ch = window.innerHeight;
         w = canvas.width = cw * dpr;
@@ -2972,7 +3072,7 @@
         const isMobile = window.innerWidth < 768;
         const area = window.innerWidth * window.innerHeight;
         const density = isMobile ? 26000 : 16000;
-        const count = Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount);
+        const count = Math.round(Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount) * quality.particleScale);
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = config.speed * (Math.random() * 0.9 + 0.5);
@@ -2997,7 +3097,7 @@
       const createClouds = () => {
         clouds = [];
         const isMobile = window.innerWidth < 768;
-        const count = isMobile ? 3 : config.cloudCount;
+        const count = Math.round((isMobile ? 3 : config.cloudCount) * quality.cloudScale);
         for (let i = 0; i < count; i++) {
           const ww = window.innerWidth;
           const wh = window.innerHeight;
@@ -3018,7 +3118,7 @@
       const createNeonLines = () => {
         neonLines = [];
         const isMobile = window.innerWidth < 768;
-        const count = isMobile ? 1 : config.scanlineCount;
+        const count = Math.round((isMobile ? 1 : config.scanlineCount) * quality.lineScale);
         for (let i = 0; i < count; i++) {
           neonLines.push({
             x: Math.random() * window.innerWidth,
@@ -3661,7 +3761,7 @@
 
         // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
         if (ParticleSystem.settings.animated) {
-          drawNoiseBackground();
+          if (quality.noise) drawNoiseBackground();
           drawClouds();
           drawNeonLines();
         }
@@ -3669,6 +3769,8 @@
         drawParticles();
         drawBursts();
         drawStars();
+        // 减弱动态效果/静态模式下仅渲染一帧，避免空转占用 CPU
+        if (quality.static) return;
         frameId = requestAnimationFrame(draw);
       };
 
@@ -4272,6 +4374,10 @@
     UI.bindGlobalEscape();
     // 注入页脚
     UI.injectFooter();
+    // 注入页面回到顶部控件
+    UI.injectBackToTop();
+    // P2-18：测试页成绩按钮受控（未完成测试前禁用）
+    UI.controlResultButtons();
     // 微交互：为关键按钮自动绑定涟漪效果
     UI.bindGlobalRipple();
     document.addEventListener('apexon:langchange', () => {

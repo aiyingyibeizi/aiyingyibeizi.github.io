@@ -497,7 +497,13 @@ app.get('/api/scores', async (c) => {
       bestRows = bestRows.slice(0, lbLimit);
     }
 
-    const body = { data: bestRows.map(flattenScore) };
+    // P2-14: 过滤压测注入的测试账号（testuser/stress/perf/e2e/diag 等），正式环境不展示给用户
+    // 用户名需从 payload 解析，故先 flatten 再过滤。
+    const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder)[_\-\w]*$|realtest/i;
+    const body = { data: bestRows.map(flattenScore).filter((s) => {
+      const name = (s.username || '').trim();
+      return name && !TEST_ACCOUNT_RE.test(name);
+    }) };
     try {
       await redis.set(lbCacheKey, body, { ex: 30 });
     } catch (err) {
