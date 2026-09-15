@@ -27,6 +27,7 @@
 
   /* 背景与表面：深邃靛黑 */
   --apex-bg: #05070d;
+  --apex-bg-gradient: linear-gradient(135deg, #070a16 0%, #0a0f22 45%, #170d2c 100%);
   --apex-bg-elevated: #0a0e18;
   --apex-surface: rgba(10, 14, 28, 0.72);
   --apex-surface-elevated: rgba(14, 20, 38, 0.84);
@@ -133,6 +134,7 @@
   --apex-info: #8b7efc;
 
   --apex-bg: #05070d;
+  --apex-bg-gradient: linear-gradient(135deg, #070a16 0%, #0a0f22 45%, #170d2c 100%);
   --apex-bg-elevated: #0a0e18;
   --apex-surface: rgba(10, 14, 28, 0.72);
   --apex-surface-elevated: rgba(14, 20, 38, 0.84);

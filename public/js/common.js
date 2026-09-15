@@ -116,16 +116,10 @@
   // 注：Supabase 相关密钥不再暴露于前端，全部通过 Cloudflare Worker 代理访问。
   const SUPABASE_URL = '';
   const SUPABASE_ANON_KEY = '';
-  // 关键修复：优先使用相对路径 /，避免硬编码 api.apexon.qzz.io 导致跨域、证书、DNS 任何一个出问题就全挂
-  // —— 这是"全部项目录入成绩都报错/网络错误"的最大嫌疑点。
-  // 仅在 file:// 本地打开或明显是其他域名时才回退到完整 URL。
-  const _isLocalFile = typeof location !== 'undefined' && location.protocol === 'file:';
-  const WORKER_API_URL = (function () {
-    if (_isLocalFile) return 'https://api.apexon.qzz.io';
-    // 只要不是走本地文件协议，都走同源 /api，由 /_worker 或反向代理到 Cloudflare Worker
-    // 这样既无 CORS，又能复用 HTTP/2/TCP 连接，延迟比跨域低一个数量级
-    return '';
-  })();
+  // API 始终指向 Cloudflare Worker 域名（前端托管在 GitHub Pages / 其它静态站，
+  // 同源 /api 无法路由到 Worker，会导致全部接口 404/405、错误率飙升）。
+  // Worker 端已开启 CORS（任意来源），跨域调用不受限。
+  const WORKER_API_URL = 'https://api.apexon.qzz.io';
 
   // ===== Cloudflare Worker API 帮助对象 =====
   const WorkerAPI = {
@@ -450,6 +444,66 @@
   };
   APEXON.LocalStats = LocalStats;
 
+  // ===== 全局骨架屏 / 加载状态组件 =====
+  // 用法：APEXON.Loading.block(containerEl, 'row'|'card'|'line', count)
+  //       APEXON.Loading.clear(containerEl)
+  //       const hide = APEXON.Loading.overlay('正在加载…'); hide();
+  const Loading = {
+    bar(w, extra) {
+      return '<div class="skeleton-bar" style="width:' + w + ';' + (extra || '') + '"></div>';
+    },
+    // 排行榜行骨架
+    blockRow(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="leaderboard-row skeleton-row">' + this.bar('28px') + '<div class="skeleton-circle"></div>' + this.bar('90px') + this.bar('50px', 'margin-left:auto') + '</div>';
+      }
+      return h;
+    },
+    // 卡片网格骨架
+    blockCard(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="personal-card skeleton-card"><div class="skeleton-bar" style="width:60%;height:14px"></div><div class="skeleton-bar" style="width:40%;height:28px;margin-top:12px"></div><div class="skeleton-bar" style="width:50%;height:12px;margin-top:8px"></div></div>';
+      }
+      return h;
+    },
+    // 图文行 / 段落骨架
+    blockLine(n) {
+      const cnt = Math.max(1, n || 3);
+      let h = '';
+      for (let i = 0; i < cnt; i++) {
+        h += '<div class="apex-skeleton">' + this.bar('100%', 'height:14px') + this.bar('92%', 'height:14px;margin-top:8px') + this.bar('64%', 'height:14px;margin-top:8px') + '</div>';
+      }
+      return h;
+    },
+    // 用骨架填充一个容器
+    block(container, type, count) {
+      if (!container) return;
+      const builder = type === 'card' ? 'blockCard' : type === 'line' ? 'blockLine' : 'blockRow';
+      container.innerHTML = this[builder](count);
+    },
+    // 移除骨架占位（置空，通常由调用方随后渲染真实内容）
+    clear(container) {
+      if (container) container.innerHTML = '';
+    },
+    // 全屏加载遮罩（返回关闭函数）；重复调用会复用同一个遮罩避免堆叠
+    overlay(text) {
+      let el = document.getElementById('apexon-loading-overlay');
+      if (el) return function () { if (el && el.parentNode) el.remove(); };
+      el = document.createElement('div');
+      el.id = 'apexon-loading-overlay';
+      el.className = 'apexon-loading-overlay';
+      el.innerHTML = '<div class="apexon-loading-overlay__spinner"></div>' + (text ? '<div class="apexon-loading-overlay__text"></div>' : '');
+      if (text) el.querySelector('.apexon-loading-overlay__text').textContent = text;
+      document.body.appendChild(el);
+      return function () { if (el && el.parentNode) el.remove(); };
+    }
+  };
+  APEXON.Loading = Loading;
+
   // ===== 1. Supabase 数据库 =====
   const DB = {
     async request(table, method, body, query, extraHeaders) {
@@ -615,12 +669,37 @@
       const res = await WorkerAPI.request(`/api/scores?leaderboard=1&test_type=${encodeURIComponent(testType)}&limit=${limit}`, 'GET');
       if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
       const rows = res.data.data;
-      return rows.map(r => ({
-        user_id: r.user_id,
-        username: r.username,
-        score_value: r.score_value,
-        created_at: r.created_at
-      }));
+
+      // P2-14: 清理排行榜中的测试账号数据（testuser/stress/perf/e2e/diag 等压测占位账号）
+      // 并按键去重，避免同一账号重复占位。测试账号由服务器压测注入，正式环境不应展示给用户。
+      // 额外识别常见垃圾/水军名（纯数字、占位占位、重复字符、乱码）与异常分数（NaN/Infinity）。
+      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder|guest|anonymous|systest|automation)[_\-\w]*$|realtest/i;
+      const GARBAGE_NAME_RE = /^(x{3,}|z{3,}|q{3,}|ad{2,}|tt{2,}|去{3,}|测试|垃圾|灌水)/i;
+      const PURE_DIGITS_RE = /^\d+$/;
+      const seen = new Set();
+      const list = [];
+      for (const r of rows) {
+        const name = (r.username || '').trim();
+        if (!name || TEST_ACCOUNT_RE.test(name)) continue;
+        if (GARBAGE_NAME_RE.test(name)) continue;
+        if (PURE_DIGITS_RE.test(name) && name.length >= 6) continue; // 纯数字长名多为占位
+        const rawScore = Number(r.score_value);
+        if (!Number.isFinite(rawScore)) continue;
+        const uid = r.user_id;
+        if (!uid || seen.has(uid)) continue; // 去重：保留服务器返回次序中靠前（更优）的一条
+        seen.add(uid);
+        list.push({
+          user_id: uid,
+          username: name,
+          score_value: r.score_value,
+          created_at: r.created_at
+        });
+      }
+      // 数据诊断：供页内"排行榜数据"面板展示清洗前后数量，便于排查脏数据与"数据丢失"
+      if (window.APEXON && APEXON.__setLbDiag) {
+        APEXON.__setLbDiag({ testType, total: rows.length, kept: list.length, dropped: rows.length - list.length });
+      }
+      return list;
     },
 
     async getHistoryByUserAndType(userId, type, limit = 20) {
@@ -678,14 +757,15 @@
       }
       console.log('[addComment] result:', res && res.data);
       if (!res || !res.ok) {
+        // 原始后端错误只写控制台便于排查，不再直接弹给用户（避免出现一长串英文数据库报错）。
+        // 提示语统一用本地化文案；同时此方法不再自行弹 toast，由调用方（postComment）统一弹一次，避免双击弹两个失败提示。
+        const rawErr = (res && res.data && res.data.error) || null;
+        if (rawErr) console.error('[addComment] backend error:', res && res.status, rawErr);
         const hint = (res && res.status === 401)
           ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
           : (res && res.status && res.status >= 500)
             ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
-            : (res && res.data && res.data.error)
-              ? res.data.error
-              : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
-        APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(hint, 2800, 'error');
+            : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
         return { success: false, error: hint };
       }
       WorkerAPI.invalidate('GET:/api/comments?');
@@ -1297,6 +1377,7 @@
         { key: 'total_tests', el: this.els.totalTests }
       ];
       let changed = false;
+      const firstLoad = !this._loaded;
       for (const item of map) {
         const el = item.el;
         if (!el) continue;
@@ -1306,8 +1387,13 @@
           el.textContent = newVal;
           changed = true;
           if (newVal > oldVal) this._animate(el);
+        } else if (firstLoad && el.textContent === '–') {
+          // 首次加载成功后，即使数值为 0 也替换掉占位符，避免误以为数据被清空
+          el.textContent = newVal;
+          changed = true;
         }
       }
+      this._loaded = true;
       this.prev = next;
       return changed;
     },
@@ -1637,6 +1723,14 @@
         e.stopPropagation();
         const isHidden = palettePanel.hasAttribute('hidden');
         if (isHidden) {
+          // 互斥：打开主题配色面板时关闭语言选择器与动态背景面板
+          const langList = document.querySelector('.apexon-lang-selector__dropdown');
+          if (langList) langList.classList.remove('is-open');
+          document.querySelectorAll('.apex-style-panel.is-open').forEach(p => p.classList.remove('is-open'));
+          const ud = document.getElementById('apexUserDropdown');
+          if (ud) ud.classList.remove('show');
+          const hd = document.getElementById('headerDropdown');
+          if (hd) hd.classList.remove('open');
           palettePanel.removeAttribute('hidden');
           this._refreshPaletteActive();
         } else {
@@ -1678,20 +1772,22 @@
     },
 
     initStylePicker() {
+      // 背景统一为「黑白两套」（全局 data-bw 深色黑/明亮白开关），
+      // 原先的 13 个彩色照片主题全部注释掉，保留默认背景。
       const styles = [
-        { id: 'scifi', name: '科幻深空', icon: '🚀' },
-        { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
-        { id: 'forest', name: '翡翠森林', icon: '🌲' },
-        { id: 'starry', name: '璀璨星空', icon: '✨' },
-        { id: 'anime', name: '梦幻二次元', icon: '🌸' },
-        { id: 'minimal', name: '极简纯白', icon: '⬜' },
-        { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
-        { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
-        { id: 'aurora', name: '极光之夜', icon: '🌌' },
-        { id: 'sunset', name: '日落暖霞', icon: '🌅' },
-        { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
-        { id: 'neon', name: '霓虹都市', icon: '🌃' },
-        { id: 'healing', name: '治愈猫派', icon: '🐱' }
+        // { id: 'scifi', name: '科幻深空', icon: '🚀' },
+        // { id: 'cyberpunk', name: '赛博朋克', icon: '🌆' },
+        // { id: 'forest', name: '翡翠森林', icon: '🌲' },
+        // { id: 'starry', name: '璀璨星空', icon: '✨' },
+        // { id: 'anime', name: '梦幻二次元', icon: '🌸' },
+        // { id: 'minimal', name: '极简纯白', icon: '⬜' },
+        // { id: 'ocean', name: '深海幽蓝', icon: '🌊' },
+        // { id: 'desert', name: '暖金沙漠', icon: '🏜️' },
+        // { id: 'aurora', name: '极光之夜', icon: '🌌' },
+        // { id: 'sunset', name: '日落暖霞', icon: '🌅' },
+        // { id: 'sakura', name: '樱花烂漫', icon: '🌸' },
+        // { id: 'neon', name: '霓虹都市', icon: '🌃' },
+        // { id: 'healing', name: '治愈猫派', icon: '🐱' }
       ];
 
       const applyStyle = (styleId) => {
@@ -1729,33 +1825,36 @@
         const panel = document.createElement('div');
         panel.className = 'apex-style-panel';
 
-        const title = document.createElement('div');
-        title.className = 'apex-style-panel__title';
-        title.textContent = '选择主题风格';
+        // 无主题可选时（黑白两套由全局 data-bw 开关控制）隐藏风格选择区，只保留粒子背景设置
+        if (styles.length) {
+          const title = document.createElement('div');
+          title.className = 'apex-style-panel__title';
+          title.textContent = '选择主题风格';
 
-        const grid = document.createElement('div');
-        grid.className = 'apex-style-grid';
+          const grid = document.createElement('div');
+          grid.className = 'apex-style-grid';
 
-        styles.forEach((style) => {
-          const item = document.createElement('div');
-          item.className = 'apex-style-item';
-          item.dataset.style = style.id;
-          item.title = style.name;
+          styles.forEach((style) => {
+            const item = document.createElement('div');
+            item.className = 'apex-style-item';
+            item.dataset.style = style.id;
+            item.title = style.name;
 
-          const preview = document.createElement('div');
-          preview.className = 'apex-style-item__preview';
+            const preview = document.createElement('div');
+            preview.className = 'apex-style-item__preview';
 
-          const name = document.createElement('span');
-          name.className = 'apex-style-item__name';
-          name.textContent = style.name;
+            const name = document.createElement('span');
+            name.className = 'apex-style-item__name';
+            name.textContent = style.name;
 
-          item.appendChild(preview);
-          item.appendChild(name);
-          grid.appendChild(item);
-        });
+            item.appendChild(preview);
+            item.appendChild(name);
+            grid.appendChild(item);
+          });
 
-        panel.appendChild(title);
-        panel.appendChild(grid);
+          panel.appendChild(title);
+          panel.appendChild(grid);
+        }
 
         // 动态背景设置区域
         const bgSection = document.createElement('div');
@@ -1860,7 +1959,19 @@
 
         toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          const willOpenPanel = !panel.classList.contains('is-open');
           panel.classList.toggle('is-open');
+          if (willOpenPanel) {
+            // 互斥：打开动态背景面板时关闭语言选择器与主题配色面板
+            const langList = document.querySelector('.apexon-lang-selector__dropdown');
+            if (langList) langList.classList.remove('is-open');
+            const palettePanel = document.querySelector('.apex-palette-panel');
+            if (palettePanel) palettePanel.setAttribute('hidden', '');
+            const ud = document.getElementById('apexUserDropdown');
+            if (ud) ud.classList.remove('show');
+            const hd = document.getElementById('headerDropdown');
+            if (hd) hd.classList.remove('open');
+          }
           this._refreshStyleActive();
         });
 
@@ -2131,6 +2242,55 @@
         document.body.insertBefore(footer, lastScript);
       } else {
         document.body.appendChild(footer);
+      }
+    },
+
+    // 页面回到顶部控件（长页面滚动时显示，点击平滑回顶）
+    injectBackToTop() {
+      if (document.querySelector('.apex-backtotop')) return;
+      const btn = document.createElement('button');
+      btn.className = 'apex-backtotop';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Back to top');
+      btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+      document.body.appendChild(btn);
+      const onScroll = () => {
+        const show = (window.scrollY || document.documentElement.scrollTop) > 400;
+        btn.classList.toggle('is-visible', show);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    },
+
+    // P2-18: 测试页“再来一次 / 分享成绩”在完成任一测试前禁用，避免点了没反应
+    controlResultButtons() {
+      const sel = 'button[data-i18n="shareScore"], button[data-i18n="testAgain"], button[data-i18n="retest"]';
+      const btns = Array.from(document.querySelectorAll(sel));
+      if (!btns.length) return;
+      const disable = () => btns.forEach(b => b.setAttribute('disabled', 'disabled'));
+      const enable = () => btns.forEach(b => b.removeAttribute('disabled'));
+      // 页面加载前无成绩时先禁用；若已有（如返回上一结果状态）则直接可用
+      if (window.lastScore == null) {
+        disable();
+      } else {
+        enable();
+        return;
+      }
+      if (!this._resultBtnBound) {
+        this._resultBtnBound = true;
+        // 首次成绩保存成功后统一启用（saveScore 成功时会派发 apexon:scoreSaved）
+        document.addEventListener('apexon:scoreSaved', enable, { once: false });
+        // 兜底：某些页面直接赋值 window.lastScore 而未走 saveScore
+        const interval = setInterval(() => {
+          if (window.lastScore != null) {
+            enable();
+            clearInterval(interval);
+          }
+        }, 800);
+        window.addEventListener('pagehide', () => clearInterval(interval));
       }
     },
 
@@ -2898,6 +3058,17 @@
       const canvas = typeof config.selector === 'string' ? document.getElementById(config.selector) : config.selector;
       if (!canvas) return;
 
+      // 自适应性能档位：尊重系统“减弱动态效果”，并在低端设备上自动降低画质以保住帧率
+      const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const lowEnd = (navigator.hardwareConcurrency || 8) <= 4;
+      const quality = preferReduced
+        ? { dpr: 1, particleScale: 0, cloudScale: 0, lineScale: 0, noise: false, static: true }
+        : lowEnd
+          ? { dpr: 1.25, particleScale: 0.6, cloudScale: 0.5, lineScale: 0.5, noise: false, static: false }
+          : { dpr: Math.min(window.devicePixelRatio || 1, 2), particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false };
+      // 减弱动态效果时强制静态背景（用户可随时在设置中手动开启），可访问性与续航兼顾
+      if (preferReduced) ParticleSystem.settings.animated = false;
+
       const ctx = canvas.getContext('2d');
       const offscreen = document.createElement('canvas');
       const offCtx = offscreen.getContext('2d');
@@ -2953,7 +3124,7 @@
       };
 
       const resize = () => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const dpr = quality.dpr;
         const cw = window.innerWidth;
         const ch = window.innerHeight;
         w = canvas.width = cw * dpr;
@@ -2972,7 +3143,7 @@
         const isMobile = window.innerWidth < 768;
         const area = window.innerWidth * window.innerHeight;
         const density = isMobile ? 26000 : 16000;
-        const count = Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount);
+        const count = Math.round(Math.min(Math.floor(area / density), isMobile ? config.mobileCount : config.baseCount) * quality.particleScale);
         for (let i = 0; i < count; i++) {
           const angle = Math.random() * Math.PI * 2;
           const speed = config.speed * (Math.random() * 0.9 + 0.5);
@@ -2997,7 +3168,7 @@
       const createClouds = () => {
         clouds = [];
         const isMobile = window.innerWidth < 768;
-        const count = isMobile ? 3 : config.cloudCount;
+        const count = Math.round((isMobile ? 3 : config.cloudCount) * quality.cloudScale);
         for (let i = 0; i < count; i++) {
           const ww = window.innerWidth;
           const wh = window.innerHeight;
@@ -3018,7 +3189,7 @@
       const createNeonLines = () => {
         neonLines = [];
         const isMobile = window.innerWidth < 768;
-        const count = isMobile ? 1 : config.scanlineCount;
+        const count = Math.round((isMobile ? 1 : config.scanlineCount) * quality.lineScale);
         for (let i = 0; i < count; i++) {
           neonLines.push({
             x: Math.random() * window.innerWidth,
@@ -3661,7 +3832,7 @@
 
         // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
         if (ParticleSystem.settings.animated) {
-          drawNoiseBackground();
+          if (quality.noise) drawNoiseBackground();
           drawClouds();
           drawNeonLines();
         }
@@ -3669,6 +3840,8 @@
         drawParticles();
         drawBursts();
         drawStars();
+        // 减弱动态效果/静态模式下仅渲染一帧，避免空转占用 CPU
+        if (quality.static) return;
         frameId = requestAnimationFrame(draw);
       };
 
@@ -3931,7 +4104,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'type', { avg: avgTime, accuracy: avgAcc, wpm: avgWpm, cpm: avgCpm });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -4088,7 +4261,7 @@
           }
 
           const saved = await DB.saveScore(APEXON.Auth.getUserId(), APEXON.Auth.getUser(), 'reaction', { avg: avg.toFixed(2), times: timeList, fouls: foulCount, leaderboard_eligible: foulCount < 3 });
-          if (!saved) UI.toast(window.APEXON && APEXON.i18n ? APEXON.i18n.t('saveScoreFailed') : '数据保存失败，请重试');
+          // 失败提示已在 saveScore 内部统一弹出（含更准确的 401/5xx 文案），此处不再重复弹，避免"两个保存失败"
 
           AudioManager.playSuccess();
           Utils.vibrate(30);
@@ -4272,6 +4445,10 @@
     UI.bindGlobalEscape();
     // 注入页脚
     UI.injectFooter();
+    // 注入页面回到顶部控件
+    UI.injectBackToTop();
+    // P2-18：测试页成绩按钮受控（未完成测试前禁用）
+    UI.controlResultButtons();
     // 微交互：为关键按钮自动绑定涟漪效果
     UI.bindGlobalRipple();
     document.addEventListener('apexon:langchange', () => {

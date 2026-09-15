@@ -20,7 +20,7 @@
     <title data-i18n="siteTitle">APEXON — 全能能力测试</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=20">
+    <link rel="stylesheet" href="styles/main.css?v=22">
 <!-- Clarity tracking code for https://apexon.qzz.io -->
 <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -100,15 +100,16 @@
             <div class="hero-title-main" data-i18n="heroTitle">APEXON</div>
             <div class="hero-tagline" data-i18n="heroTagline">科学化在线认知能力评估平台 · 精准测量反应、记忆、专注与手眼协调 · 与全球玩家一起挑战人类极限</div>
             <div class="hero-stats-bar">
-                <div class="hero-stat-chip"><strong id="statOnline">0</strong> <span data-i18n="statOnline">在线人数</span></div>
-                <div class="hero-stat-chip"><strong id="statTotalUsers">0</strong> <span data-i18n="statTotalUsers">总玩家数量</span></div>
-                <div class="hero-stat-chip"><strong id="statTotalTests">0</strong> <span data-i18n="statTotalTests">总测试数</span></div>
+                <div class="hero-stat-chip"><strong id="statOnline">–</strong> <span data-i18n="statOnline">在线人数</span></div>
+                <div class="hero-stat-chip"><strong id="statTotalUsers">–</strong> <span data-i18n="statTotalUsers">总玩家数量</span></div>
+                <div class="hero-stat-chip"><strong id="statTotalTests">–</strong> <span data-i18n="statTotalTests">总测试数</span></div>
             </div>
         </div>
 
-        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
-            <input name="q" data-i18n-placeholder="searchPlaceholder" placeholder="输入关键词，搜索全世界" required>
+        <form class="search-box" id="siteSearchForm" role="search" onsubmit="event.preventDefault(); var q=document.getElementById('siteSearchInput').value.trim(); if(q) location.href='search.html?q='+encodeURIComponent(q);">
+            <input id="siteSearchInput" name="q" data-i18n-placeholder="searchPlaceholder" placeholder="搜索测试、页面与音乐" required autocomplete="off">
             <button type="submit" data-i18n="searchButton">搜索</button>
+            <div class="search-suggest-panel" id="siteSearchPanel" aria-live="polite"></div>
         </form>
 
         <div class="cards-grid">
@@ -176,6 +177,7 @@
 
         <div class="leaderboard" id="leaderboard">
             <div class="leaderboard-title" data-i18n="leaderboardTitle">🏆 排行榜</div>
+            <div class="leaderboard-diag" id="lbDiag" style="display:none"></div>
             <div class="leaderboard-tabs">
                 <button class="leaderboard-tab active" onclick="showLb('reaction')" data-i18n="lbReaction">反应</button>
                 <button class="leaderboard-tab" onclick="showLb('type')" data-i18n="lbType">打字</button>
@@ -231,15 +233,24 @@
 
     </div>
 
-    <script src="js/i18n.js?v=13"></script>
-    <script src="js/common.js?v=31"></script>
+    <script src="js/i18n.js?v=14"></script>
+    <script src="js/common.js?v=35"></script>
     <script src="js/achievements.js?v=2"></script>
+    <script src="js/search.js?v=1"></script>
     <script>
     (async function() {
         const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb){ return fb; };
 
         // ===== 粒子背景 =====
         APEXON.Particles.init();
+
+        // ===== 站内搜索：即时建议 =====
+        if (window.APEXON && APEXON.Search) {
+            APEXON.Search.attachLive(
+                document.getElementById('siteSearchInput'),
+                document.getElementById('siteSearchPanel')
+            );
+        }
 
         // ===== 渲染成就墙 =====
         if (window.APEXON && APEXON.Achievements) {
@@ -301,12 +312,27 @@
                 APEXON.DB.getLeaderboard(type, 100).catch(() => {});
             }, { passive: true });
         });
+        // 数据诊断：记录最近一次排行榜清洗前后的数量（用于向用户证明"水军/占位数据"已被清除，而非数据丢失）
+        let lbDiag = null;
+        window.APEXON = window.APEXON || {};
+        APEXON.__setLbDiag = function (d) { lbDiag = d; const s = document.getElementById('lbDiag'); if (s) { renderLbDiag(); } };
+        function renderLbDiag() {
+            const s = document.getElementById('lbDiag');
+            if (!s) return;
+            if (!lbDiag || (lbDiag.dropped <= 0 && lbDiag.kept === 0)) { s.style.display = 'none'; return; }
+            s.style.display = '';
+            const tpl = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('lbDiagClean', '已过滤 {n} 条占位/测试数据（保留 {m} 条）') : '已过滤 {n} 条占位/测试数据（保留 {m} 条）');
+            s.innerHTML = '🛡 ' + tpl.replace('{n}', lbDiag.dropped).replace('{m}', lbDiag.kept);
+        }
         async function loadLeaderboard(type) {
             const esc = APEXON.Security.escapeHtml;
             const lbEl = document.getElementById('lbContent');
+            const diagEl = document.getElementById('lbDiag');
+            if (diagEl) diagEl.style.display = 'none';
             // 骨架屏：立即展示占位，避免空白闪烁
             if (lbEl) lbEl.innerHTML = Array.from({length: 6}, () => '<div class="leaderboard-row skeleton-row"><div class="skeleton-bar" style="width:28px"></div><div class="skeleton-circle"></div><div class="skeleton-bar" style="width:90px"></div><div class="skeleton-bar" style="width:50px;margin-left:auto"></div></div>').join('');
             const entries = await APEXON.DB.getLeaderboard(type, 100);
+            renderLbDiag();
             if (!entries.length) {
                 document.getElementById('lbContent').innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">🏆</div><div class="apex-empty-state__title">' + t('lbEmptyTitle', '暂无榜单数据') + '</div><div class="apex-empty-state__desc">' + t('lbEmptyFirst', '还没有人上榜，快来成为第一个！') + '</div></div>';
                 return;

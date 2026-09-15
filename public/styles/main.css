@@ -26,6 +26,7 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   color-scheme: light dark;
+  background-color: var(--apex-bg);
   transition: filter 400ms ease;
 }
 
@@ -33,14 +34,8 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background:
-    var(--style-bg-gradient,
-      radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.04) 0%, transparent 30%),
-      radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 35%),
-      radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%)),
-    var(--apex-bg);
-  background-attachment: fixed;
-  transition: background 500ms ease, background-color 500ms ease, color 300ms ease;
+  background-color: var(--apex-bg);
+  transition: background-color 500ms ease, color 300ms ease;
   color: var(--apex-text);
   line-height: var(--line-height);
   min-height: 100vh;
@@ -69,8 +64,7 @@ textarea *,
 html[data-bw="true"] body,
 html[data-theme="light"] body,
 body.theme-light {
-  background: var(--apex-bg) !important;
-  background-attachment: scroll !important;
+  background-color: var(--apex-bg);
 }
 
 /* 移动端背景统一使用 scroll，避免 fixed 附件导致重绘异常 */
@@ -525,7 +519,7 @@ body.loaded .apexon-page {
 .apexon-header-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 18px);
   left: 0;
   width: 220px;
   flex-direction: column;
@@ -543,9 +537,9 @@ body.loaded .apexon-page {
   gap: 2px;
   overflow: hidden;
   transform-origin: top left;
-  transform: translateY(-6px) scale(0.98);
+  transform: translateY(-8px) scale(0.97);
   opacity: 0;
-  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 260ms ease, transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .apexon-header-dropdown.open {
@@ -944,7 +938,7 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   }
 
   .apexon-header-dropdown {
-    top: calc(100% + 0.5rem);
+    top: calc(100% + 1.1rem);
     left: 0;
     right: auto;
     width: min(15rem, calc(100vw - var(--container-padding) * 2));
@@ -1059,10 +1053,10 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   background: linear-gradient(135deg, #05070d 0%, #0a0e1c 50%, #110a22 100%);
   opacity: 0;
   pointer-events: none;
-  transform: scale(1.04);
+  transform: scale(1.05);
   transition:
-    opacity 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    transform 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity 460ms cubic-bezier(0.65, 0, 0.35, 1),
+    transform 520ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 html[data-bw="true"] .apex-page-transition,
@@ -1079,21 +1073,15 @@ body.theme-light .apex-page-transition {
 
 .apex-page-transition.exit {
   opacity: 0;
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 body {
   opacity: 0;
-  background: linear-gradient(135deg, #05070d 0%, #0a0e1c 50%, #110a22 100%);
+  background-color: var(--apex-bg);
   transition:
-    opacity 320ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    background 400ms ease;
-}
-
-html[data-bw="true"] body,
-html[data-theme="light"] body,
-body.theme-light {
-  background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 50%, #f5f9ff 100%);
+    opacity 620ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    background-color 500ms ease;
 }
 
 body.loaded {
@@ -1796,6 +1784,149 @@ html[data-bw="true"] .hero-stat-chip {
 
 .search-box button:active {
   transform: translateY(0);
+}
+
+/* ============================================================================
+   Section: In-Site Search（站内搜索：即时建议下拉 + 结果页）
+   ============================================================================ */
+.search-box {
+  position: relative;
+}
+.search-suggest-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--apex-surface-elevated);
+  border: 1px solid var(--apex-border-strong);
+  border-radius: var(--apex-radius);
+  box-shadow: var(--apex-shadow-lg);
+  padding: 8px;
+  display: none;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+.search-suggest-panel.show {
+  display: block;
+  animation: searchFadeIn 160ms ease;
+}
+@keyframes searchFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.search-suggest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--apex-radius-sm);
+  color: var(--apex-text);
+  font-size: 0.9rem;
+  transition: background-color var(--apex-transition-fast);
+}
+.search-suggest:hover {
+  background: var(--apex-surface-hover);
+}
+.search-suggest__icon {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+.search-suggest__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-suggest--more {
+  margin-top: 4px;
+  border-top: 1px solid var(--apex-border-subtle);
+  padding-top: 9px;
+  color: var(--apex-primary-light);
+  font-weight: 600;
+}
+
+.search-results-wrap {
+  min-height: 40vh;
+}
+.search-results__meta {
+  color: var(--apex-text-secondary);
+  font-size: 0.9rem;
+  margin: 18px 0;
+}
+.search-group {
+  margin-bottom: 26px;
+}
+.search-group__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--apex-text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border-radius: var(--apex-radius);
+  background: var(--apex-surface);
+  border: 1px solid var(--apex-border-subtle);
+  transition: transform var(--apex-transition-fast), border-color var(--apex-transition-fast), background-color var(--apex-transition-fast);
+}
+.search-result:hover {
+  transform: translateY(-1px);
+  border-color: var(--apex-border-strong);
+  background: var(--apex-surface-elevated);
+}
+.search-result__icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--apex-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: var(--apex-surface-hover);
+}
+.search-result__body {
+  flex: 1;
+  min-width: 0;
+}
+.search-result__title {
+  color: var(--apex-text);
+  font-weight: 600;
+  font-size: 0.98rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-result__desc {
+  color: var(--apex-text-secondary);
+  font-size: 0.82rem;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-result__arrow {
+  flex: 0 0 auto;
+  color: var(--apex-text-tertiary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 767px) {
+  .search-result {
+    padding: 12px 14px;
+  }
+  .search-result__icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
 }
 
 /* ============================================================================
@@ -3125,6 +3256,42 @@ html[data-theme="light"] .apex-card--game:hover {
   gap: 8px;
 }
 
+/* 全屏加载遮罩 */
+.apexon-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: color-mix(in srgb, var(--apex-bg) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: apex-overlay-fade 180ms ease;
+}
+.apexon-loading-overlay__spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--apex-border);
+  border-top-color: var(--apex-accent, #a5a2fd);
+  border-right-color: var(--apex-accent, #a5a2fd);
+  border-radius: 50%;
+  animation: apex-overlay-spin 0.8s linear infinite;
+}
+.apexon-loading-overlay__text {
+  color: var(--apex-text-secondary);
+  font-size: 0.9rem;
+}
+@keyframes apex-overlay-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes apex-overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .leaderboard-row {
   display: flex;
   align-items: center;
@@ -3228,6 +3395,17 @@ html[data-theme="light"] .apex-card--game:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.leaderboard-diag {
+  font-size: 0.75rem;
+  color: var(--apex-text-tertiary, rgba(255,255,255,0.5));
+  background: var(--apex-surface, rgba(255,255,255,0.04));
+  border: 1px dashed var(--apex-border, rgba(255,255,255,0.1));
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: -10px 0 14px;
+  line-height: 1.5;
 }
 
 .forum-input-wrap {
@@ -4470,7 +4648,17 @@ canvas#testBox,
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  background-image: var(--apex-bg-gradient, none);
+  background-size: cover;
+  background-position: center;
   transition: opacity 500ms ease;
+}
+
+/* 亮色主题：背景渐变跟随主题切换，全程可见、不断层 */
+html[data-bw="true"] #particles,
+html[data-theme="light"] #particles,
+body.theme-light #particles {
+  background-image: linear-gradient(135deg, #edf1ff 0%, #eae6f9 48%, #f4f6ff 100%);
 }
 
 /* ============================================================================
@@ -6741,20 +6929,29 @@ html[data-bw="true"] .game-canvas {
   top: calc(100% + 0.4rem);
   left: 0;
   right: auto;
-  min-width: 8rem;
-  display: none;
+  min-width: 9.5rem;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.35rem;
-  background: var(--apex-surface);
-  border: 1px solid var(--apex-border);
-  border-radius: 0.7rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  gap: 0.2rem;
+  padding: 0.4rem;
+  background: var(--apex-surface-elevated, var(--apex-surface));
+  border: 1px solid var(--apex-border-strong, var(--apex-border));
+  border-radius: 0.85rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.18);
   z-index: 1000;
+  opacity: 0;
+  transform-origin: top center;
+  transform: translateY(-8px) scale(0.96);
+  pointer-events: none;
+  display: flex;
+  transition:
+    opacity 260ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .apexon-lang-selector__dropdown.is-open {
-  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .apexon-lang-selector__item {
@@ -6794,6 +6991,22 @@ html[data-bw="true"] .game-canvas {
   }
   .apexon-lang-selector__arrow {
     display: none;
+  }
+  /* 移动端语言下拉改为右对齐，避免被右侧视口截断；弹出动画更细腻 */
+  .apexon-lang-selector__dropdown {
+    left: auto;
+    right: 0;
+    min-width: 9rem;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+    transform-origin: top right;
+    transition:
+      opacity 240ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .apexon-lang-selector__dropdown.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -7361,10 +7574,10 @@ html[data-bw="true"] .game-canvas {
 
 /* 页面主内容淡入 */
 .apex-page-enter {
-  animation: apex-page-fade-in 360ms ease-out;
+  animation: apex-page-fade-in 560ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes apex-page-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -7631,8 +7844,12 @@ body {
 }
 
 /* ============================================================
-   修复3：治愈派(healing) = 写实小猫 AI 图背景
+   黑白两套方案：以下彩色照片主题全部注释停用
+   背景统一由全局 data-bw「深色黑 / 明亮白」开关控制
+   停用：healing / anime / aurora / cyberpunk（原规则保留以便恢复）
    ============================================================ */
+/*
+-- 治愈派 healing（已停用） --
 html[data-style="healing"] {
   --apex-bg: #FFF8F0;
   --apex-surface: rgba(255,248,240,0.92);
@@ -7666,9 +7883,7 @@ html[data-style="healing"] body::after {
   pointer-events: none;
 }
 
-/* ============================================================
-   修复4：二次元风格(anime) = 美少女 AI 插画背景
-   ============================================================ */
+-- 二次元 anime（已停用） --
 html[data-style="anime"] {
   --apex-bg: #FDF4FF;
   --apex-surface: rgba(253,244,255,0.90);
@@ -7703,9 +7918,7 @@ html[data-style="anime"] body::after {
   pointer-events: none;
 }
 
-/* ============================================================
-   修复5：极光之夜(aurora) + 赛博朋克(cyberpunk) 升级
-   ============================================================ */
+-- 极光之夜 aurora（已停用） --
 html[data-style="aurora"] {
   --apex-bg: #0A0E1A;
   --apex-surface: rgba(15,23,42,0.88);
@@ -7748,6 +7961,7 @@ html[data-style="aurora"] .apex-primary-text {
   text-shadow: 0 0 12px rgba(34,211,238,0.45), 0 0 24px rgba(167,139,250,0.25);
 }
 
+-- 赛博朋克 cyberpunk（已停用） --
 html[data-style="cyberpunk"] {
   --apex-bg: #070012;
   --apex-surface: rgba(12,0,30,0.90);
@@ -7792,6 +8006,7 @@ html[data-style="cyberpunk"] .apex-primary-text {
     0 0 20px rgba(34,211,238,0.35),
     0 0 40px rgba(232,121,249,0.25);
 }
+*/
 
 /* ============================================================
    修复7：手机端布局最简化
@@ -8345,5 +8560,196 @@ body {
     transform: translateY(1px) scale(0.985);
     transition: transform 90ms ease-out;
   }
+}
+
+/* ============================================================================
+   Mobile QA 修复（追加在末尾以覆盖旧规则，避免改动既有媒体查询）
+   ============================================================================ */
+
+/* 手机端：头部强制不回被内容撑宽，pill 导航与 Music 按钮收进汉堡下拉，防止横向溢出/裁切 */
+@media (max-width: 767px) {
+  .apexon-header {
+    width: 100% !important;
+    max-width: 100dvw !important;
+    min-width: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  .apexon-header__inner {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .apexon-header-center .apexon-header-nav,
+  .apexon-header-center .apex-music-btn {
+    display: none !important;
+  }
+
+  .header-actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .header-actions button {
+    min-width: 34px;
+    min-height: 34px;
+  }
+}
+
+/* 手机端：功能卡片、我的成绩从固定双列改为自适应列数（窄屏自动单列，避免文字换行拥挤） */
+@media (max-width: 767px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)) !important;
+    gap: 12px;
+  }
+
+  .personal-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)) !important;
+    gap: 10px;
+  }
+}
+
+/* 手机端：弹窗/面板不超出视口，避免控件被裁切 */
+@media (max-width: 767px) {
+  [class*="modal"]:not([class*="__grid"]),
+  .auth-overlay > *,
+  .profile-overlay > * {
+    max-width: calc(100vw - 28px) !important;
+  }
+}
+
+/* ============================================================================
+   P0-5 性能：移动端/低端设备降低 backdrop-filter 模糊开销
+   （模糊是造成滚动卡顿与交互迟滞的主要 GPU 负担，减轻半径以保住帧率）
+   ============================================================================ */
+@media (max-width: 767px) {
+  .apexon-header,
+  .item-card,
+  .apex-card--game,
+  .profile-overlay,
+  .login-overlay,
+  .theme-pill,
+  [class*="dropdown"],
+  [class*="modal"],
+  .auth-overlay,
+  .profile-overlay {
+    -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
+    backdrop-filter: blur(8px) saturate(130%) !important;
+  }
+}
+
+/* 全端：优先用 transform/opacity 组合做按钮与面板反馈，避免触发昂贵的重新布局，
+   让点击与弹窗开关更跟手 */
+@media (prefers-reduced-motion: no-preference) {
+  .apexon-header {
+    transform: translateZ(0);
+    will-change: backdrop-filter;
+  }
+}
+
+/* ============================================================================
+   P1-11 移动端：去掉系统原生 tap 高亮矩形与长按文本选区，保持品牌圆角视觉
+   ============================================================================ */
+html,
+body,
+a,
+button,
+input,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none;
+}
+button,
+a,
+.item-card,
+[class*="btn"],
+[class*="tab"],
+[class*="card"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* 保留可访问性焦点轮廓，但用柔和的自定义样式取代突兀的系统高亮 */
+:where(button, a, [role="button"]):focus-visible {
+  outline: 2px solid var(--apex-accent, #8b7efc);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ============================================================================
+   P2-13 回到顶部控件
+   ============================================================================ */
+.apex-backtotop {
+  position: fixed;
+  right: 22px;
+  bottom: 26px;
+  z-index: 1200;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 45%, #60A5FA 100%);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  opacity: 0;
+  transform: translateY(14px) scale(0.9);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.apex-backtotop.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.apex-backtotop:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 9px 24px rgba(124, 58, 237, 0.45);
+}
+.apex-backtotop:active {
+  transform: translateY(0) scale(0.96);
+}
+@media (max-width: 767px) {
+  .apex-backtotop {
+    right: 14px;
+    bottom: 18px;
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* ============================================================================
+   P2-12 浅色主题对比度提升
+   （加深三级文本与卡片描述色，轻微加深卡片底色，改善强光下的可读性）
+   ============================================================================ */
+html[data-theme="light"],
+html[data-bw="true"][data-theme] {
+  --apex-text-secondary: #4a46a0;
+  --apex-text-tertiary: #5f5aa8;
+  --game-card-title: #2a2760;
+  --game-card-desc: #514d9e;
+  --game-card-border: rgba(90, 76, 180, 0.24);
+  --game-card-bg: linear-gradient(135deg, #e3f4ff 0%, #f0e3ff 100%);
+}
+
+/* ============================================================================
+   P2-18 测试结果按钮受控（未完成测试前禁用，给出清晰的不可用反馈）
+   ============================================================================ */
+.btn[disabled],
+.btn-group .btn[disabled],
+button[data-i18n="shareScore"][disabled],
+button[data-i18n="testAgain"][disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+  pointer-events: none;
+  box-shadow: none;
+  transform: none !important;
 }
 
