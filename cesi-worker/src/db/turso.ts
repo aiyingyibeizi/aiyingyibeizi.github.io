@@ -47,12 +47,23 @@ export async function tursoMigrate(client: Client): Promise<void> {
       updated_at TEXT
     )
   `);
+
+  // Create indexes for common query patterns (Bug4: SQL performance)
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_created ON mixed_data(type, created_at DESC)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_user ON mixed_data(type, user_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_user_id ON mixed_data(user_id)`);
+  // 账号按用户名（subtype）精确查询 / 排行榜按 (subtype, score) 聚合的高频查询路径
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_subtype ON mixed_data(type, subtype)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_subtype_score ON mixed_data(type, subtype, score_value)`);
 }
 
 export async function tursoInsert(client: Client, data: MixedData): Promise<void> {
   await client.execute({
+    // ON CONFLICT DO NOTHING：后台补写副本遇到同 id 已存在（如上次超时但实际写入成功）时幂等跳过，
+    // 不再报错导致副本静默丢失
     sql: `INSERT INTO mixed_data (id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO NOTHING`,
     args: [
       data.id,
       data.user_id,
@@ -95,9 +106,18 @@ export async function tursoSelectByType(
     conditions.push('user_id = ?');
     args.push(options.userId);
   }
+  if (options.userIds && options.userIds.length) {
+    // 批量按用户查询（如 profiles?user_ids=a,b,c）：一次 IN 查询替代"读最新1000条再内存过滤"
+    conditions.push(`user_id IN (${options.userIds.map(() => '?').join(', ')})`);
+    args.push(...options.userIds);
+  }
   if (options.subtype) {
     conditions.push('subtype = ?');
     args.push(options.subtype);
+  }
+  if (options.orderByScore) {
+    // 按分数排序时排除 NULL 行：SQLite 中 NULL 在 ASC 排最前，会占掉 LIMIT 名额把真实成绩挤掉
+    conditions.push('score_value IS NOT NULL');
   }
 
   const orderBy =
@@ -107,7 +127,8 @@ export async function tursoSelectByType(
       ? 'score_value DESC, created_at DESC'
       : 'created_at DESC';
 
-  const limit = Math.min(Math.max(options.limit ?? 100, 1), 1000);
+  const rawLimit = Number(options.limit);
+  const safeLimit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 100;
 
   const result = await client.execute({
     sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
@@ -115,9 +136,63 @@ export async function tursoSelectByType(
           WHERE ${conditions.join(' AND ')}
           ORDER BY ${orderBy}
           LIMIT ?`,
-    args: [...args, limit],
+    args: [...args, safeLimit],
   });
   return result.rows as unknown as MixedData[];
+}
+
+/**
+ * 数据库端排行榜聚合：每个用户只取最佳成绩后再排序。
+ * 修复"先取全局 top-1000 再按用户去重"的缺陷——单个用户刷分可占满全部名额，把其他用户挤出榜单。
+ * 同时在 SQL 层过滤 leaderboardEligible=false 的记录（reaction 3+ 犯规不参与排名）。
+ */
+export async function tursoSelectLeaderboard(
+  client: Client,
+  subtype: string,
+  order: 'asc' | 'desc',
+  limit: number
+): Promise<MixedData[]> {
+  const dir = order === 'asc' ? 'ASC' : 'DESC';
+  const rawLimit = Number(limit);
+  const safeLimit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 100;
+
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM (
+            SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at,
+                   ROW_NUMBER() OVER (
+                     PARTITION BY user_id
+                     ORDER BY score_value ${dir}, created_at DESC
+                   ) AS rn
+            FROM mixed_data
+            WHERE type = 'score' AND subtype = ? AND score_value IS NOT NULL
+              AND CASE
+                    WHEN json_valid(payload) = 1
+                      THEN COALESCE(json_extract(payload, '$.leaderboardEligible'), 1) != 0
+                    ELSE 1
+                  END
+          )
+          WHERE rn = 1
+          ORDER BY score_value ${dir}, created_at DESC
+          LIMIT ?`,
+    args: [subtype, safeLimit],
+  });
+  return result.rows as unknown as MixedData[];
+}
+
+/**
+ * 删除某类型中早于指定时间的记录（用于 online 心跳等易膨胀数据的清理）。
+ */
+export async function tursoDeleteOldByType(
+  client: Client,
+  type: string,
+  beforeIso: string
+): Promise<number> {
+  const result = await client.execute({
+    sql: `DELETE FROM mixed_data WHERE type = ? AND created_at < ?`,
+    args: [type, beforeIso],
+  });
+  return Number((result as unknown as { rowsAffected?: number }).rowsAffected) || 0;
 }
 
 export async function tursoSelectById(client: Client, id: string): Promise<MixedData | undefined> {
@@ -167,6 +242,7 @@ export async function tursoUpdateMetaUsedBytes(
           VALUES (?, ?, ?, datetime('now'))
           ON CONFLICT(db_name) DO UPDATE SET
             used_bytes = excluded.used_bytes,
+            max_bytes = excluded.max_bytes,
             updated_at = excluded.updated_at`,
     args: [dbName, usedBytes, maxBytes],
   });

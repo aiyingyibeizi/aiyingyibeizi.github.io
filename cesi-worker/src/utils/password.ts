@@ -53,6 +53,16 @@ function randomSalt(): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(32));
 }
 
+/** 恒定时间字符串比较（缓解时序侧信道，比 === 更安全） */
+function timingSafeEqual(a: string, b: string): boolean {
+  const maxLen = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < maxLen; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomSalt();
   const derived = await deriveKey(password, salt);
@@ -64,7 +74,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 
   // 旧版明文兼容：若存储的不是 pbkdf2 格式，按明文比较。
   if (!storedHash.startsWith('pbkdf2:')) {
-    return storedHash === password;
+    return timingSafeEqual(storedHash, password);
   }
 
   const parts = storedHash.split(':');
@@ -74,10 +84,11 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const salt = hexToBytes(parts[3]);
   const hash = parts[4];
 
-  if (!iterations || !salt.length || !hash) return false;
+  // 迭代次数加上限防御：损坏数据写入超大迭代次数会导致 CPU 挂死
+  if (!iterations || iterations < 1 || iterations > 10_000_000 || !salt.length || !hash) return false;
 
   const keyMaterial = await deriveKey(password, salt);
-  return bytesToHex(keyMaterial) === hash;
+  return timingSafeEqual(bytesToHex(keyMaterial), hash);
 }
 
 export function isLegacyPassword(storedHash: string): boolean {
