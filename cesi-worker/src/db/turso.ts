@@ -55,6 +55,8 @@ export async function tursoMigrate(client: Client): Promise<void> {
   // 账号按用户名（subtype）精确查询 / 排行榜按 (subtype, score) 聚合的高频查询路径
   await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_subtype ON mixed_data(type, subtype)`);
   await client.execute(`CREATE INDEX IF NOT EXISTS idx_mixed_type_subtype_score ON mixed_data(type, subtype, score_value)`);
+  // 账号按 payload 中的用户名/会话令牌精确查询（修复注册/登录/认证回退路径的 1000 条硬限制）
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_account_session_token ON mixed_data(type, json_extract(payload, '$.session_token')) WHERE type = 'account'`);
 }
 
 export async function tursoInsert(client: Client, data: MixedData): Promise<void> {
@@ -206,10 +208,51 @@ export async function tursoSelectById(client: Client, id: string): Promise<Mixed
   return (result.rows[0] as unknown as MixedData) ?? undefined;
 }
 
+/**
+ * 按用户名精确查找账号。
+ * 修复：此前注册/登录/认证回退路径读前 1000 条账号再内存匹配，账号超过 1000 后老用户无法登录或注册重复。
+ */
+export async function tursoSelectAccountByUsername(client: Client, username: string): Promise<MixedData | undefined> {
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM mixed_data
+          WHERE type = 'account' AND json_extract(payload, '$.username') = ?
+          LIMIT 1`,
+    args: [username],
+  });
+  return (result.rows[0] as unknown as MixedData) ?? undefined;
+}
+
+/**
+ * 按会话令牌精确查找账号。
+ * 修复：认证回退路径此前读前 1000 条账号再内存匹配，账号超过 1000 后老用户的自定义 token 无法命中缓存/Supabase 时会被拒绝。
+ */
+export async function tursoSelectAccountBySessionToken(client: Client, token: string): Promise<MixedData | undefined> {
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM mixed_data
+          WHERE type = 'account' AND json_extract(payload, '$.session_token') = ?
+          LIMIT 1`,
+    args: [token],
+  });
+  return (result.rows[0] as unknown as MixedData) ?? undefined;
+}
+
 export async function tursoDeleteById(client: Client, id: string): Promise<void> {
   await client.execute({
     sql: `DELETE FROM mixed_data WHERE id = ?`,
     args: [id],
+  });
+}
+
+/**
+ * 原地更新账号 payload，用于登录时重哈希密码/刷新会话令牌。
+ * 避免 insert+delete 在用户名唯一索引下产生冲突。
+ */
+export async function tursoUpdateAccountPayload(client: Client, id: string, payload: string, updatedAt: string): Promise<void> {
+  await client.execute({
+    sql: `UPDATE mixed_data SET payload = ?, updated_at = ? WHERE id = ?`,
+    args: [payload, updatedAt, id],
   });
 }
 

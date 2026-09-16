@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { Redis } from '@upstash/redis/cloudflare';
 import { createRedis } from './db/redis';
-import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectLeaderboard, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
+import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectLeaderboard, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes, tursoSelectAccountByUsername, tursoSelectAccountBySessionToken, tursoUpdateAccountPayload } from './db/turso';
 // 已切换为仅使用 3 个 Turso 数据库（同厂商，延迟更低），Neon 和 Supabase 暂时注释掉
 // import { createClient } from '@supabase/supabase-js';
 // import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
@@ -90,6 +90,9 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexonClient, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexonClient, 'APEXON'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexonClient, 'APEXON', 450 * 1024 * 1024, used),
+    selectAccountByUsername: (username) => tursoSelectAccountByUsername(tursoApexonClient, username),
+    selectAccountBySessionToken: (token) => tursoSelectAccountBySessionToken(tursoApexonClient, token),
+    updateAccountPayload: (id, payload, updatedAt) => tursoUpdateAccountPayload(tursoApexonClient, id, payload, updatedAt),
   };
 
   const tursoApexon1: DbConfig = {
@@ -105,6 +108,9 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon1Client, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon1Client, 'APEXON_1'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon1Client, 'APEXON_1', 450 * 1024 * 1024, used),
+    selectAccountByUsername: (username) => tursoSelectAccountByUsername(tursoApexon1Client, username),
+    selectAccountBySessionToken: (token) => tursoSelectAccountBySessionToken(tursoApexon1Client, token),
+    updateAccountPayload: (id, payload, updatedAt) => tursoUpdateAccountPayload(tursoApexon1Client, id, payload, updatedAt),
   };
 
   const tursoApexon2: DbConfig = {
@@ -120,6 +126,9 @@ async function buildShardService(env: Env): Promise<ShardService> {
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon2Client, subtype, order, limit),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon2Client, 'APEXON_2'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon2Client, 'APEXON_2', 450 * 1024 * 1024, used),
+    selectAccountByUsername: (username) => tursoSelectAccountByUsername(tursoApexon2Client, username),
+    selectAccountBySessionToken: (token) => tursoSelectAccountBySessionToken(tursoApexon2Client, token),
+    updateAccountPayload: (id, payload, updatedAt) => tursoUpdateAccountPayload(tursoApexon2Client, id, payload, updatedAt),
   };
 
   // 已切换为仅使用 3 个 Turso 数据库，Neon 和 Supabase 配置注释掉
@@ -229,16 +238,9 @@ app.post('/api/auth/register', async (c) => {
   }
 
   const shard = await buildShardService(c.env);
-  // Targeted query: only load accounts and check username match
-  const existing = await shard.readByType('account', { limit: 1000 });
-  const duplicate = existing.find((r) => {
-    try {
-      return JSON.parse(r.payload).username === username;
-    } catch {
-      return false;
-    }
-  });
-  if (duplicate) {
+  // 精确按用户名查询，避免账号超过 1000 后无法识别重复或老用户无法登录
+  const existing = await shard.selectAccountByUsername(username);
+  if (existing) {
     return c.json({ error: 'Username already exists' }, 409);
   }
 
@@ -286,16 +288,8 @@ app.post('/api/auth/login', async (c) => {
   if (!ipOk || !userOk) return c.json({ error: 'Too many attempts, please try again later' }, 429);
 
   const shard = await buildShardService(c.env);
-  // Targeted query: only load accounts and find matching username
-  const accounts = await shard.readByType('account', { limit: 1000 });
-  const account = accounts.find((r) => {
-    try {
-      const p = JSON.parse(r.payload);
-      return p.username === username;
-    } catch {
-      return false;
-    }
-  });
+  // 精确按用户名查询，避免账号超过 1000 后老用户无法登录
+  const account = await shard.selectAccountByUsername(username);
 
   if (!account) return c.json({ error: 'Invalid username or password' }, 401);
 
@@ -317,23 +311,11 @@ app.post('/api/auth/login', async (c) => {
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
 
-  // Atomic-ish: write new record first, then delete old one.
-  // If write succeeds but delete fails, we have a duplicate (harmless).
-  // If delete succeeds but write fails, the old record is gone (mitigated by writing first).
-  const writeResult = await shard.write({
-    id: uuid(),
-    user_id: account.user_id,
-    type: 'account',
-    subtype: null,
-    score_value: null,
-    payload: JSON.stringify(payload),
-    file_url: null,
-    created_at: account.created_at,
-    updated_at: new Date().toISOString(),
-  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
-
-  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
-  await shard.deleteById(account.id);
+  // 原地更新账号 payload，保持 id/created_at 不变。
+  // 此前 insert+delete 会在删除前产生重复记录，且与后续可能加上的用户名唯一索引冲突。
+  const updatedAt = new Date().toISOString();
+  const updateResult = await shard.updateAccountPayload(account.id, JSON.stringify(payload), updatedAt);
+  if (!updateResult.ok) return c.json({ error: updateResult.error }, 503);
 
   // 登录成功后写入 Redis 会话缓存
   await cacheSession(getRedis(c.env), sessionToken, account.user_id, expiresAt);

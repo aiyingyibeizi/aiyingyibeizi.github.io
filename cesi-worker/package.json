@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260801.1",
     "@types/pg": "^8.11.6",
+    "tsx": "^4.19.0",
     "typescript": "^5.5.4",
     "wrangler": "^4.118.0"
   }

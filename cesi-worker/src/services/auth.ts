@@ -69,29 +69,23 @@ export function createAuthMiddleware(
     // 4. Fall back to custom session token stored in mixed_data (type='account').
     try {
       const shard = await buildShardService(c.env);
-      // limit 提升到 1000（此前 300：账号超过 300 后老用户的 token 校验会直接失败）
-      const accounts = await shard.readByType('account', { limit: 1000 });
-      const account = accounts.find((row) => {
-        try {
-          const payload = JSON.parse(row.payload);
-          const expiresAt = payload.session_expires_at ? new Date(payload.session_expires_at).getTime() : 0;
-          return payload.session_token === token && expiresAt > Date.now();
-        } catch {
-          return false;
-        }
-      });
+      // 精确按会话令牌查询，避免账号超过 1000 后老用户的 token 校验直接失败
+      const account = await shard.selectAccountBySessionToken(token);
 
       if (account) {
-        c.set('userId', account.user_id);
-        // 回填 Redis 缓存，后续请求不再扫库
-        try {
-          const payload = JSON.parse(account.payload);
-          await cacheSession(getRedis(c.env), token, account.user_id, payload.session_expires_at);
-        } catch {
-          /* 缓存回填失败不影响本次认证 */
+        const payload = JSON.parse(account.payload);
+        const expiresAt = payload.session_expires_at ? new Date(payload.session_expires_at).getTime() : 0;
+        if (payload.session_token === token && expiresAt > Date.now()) {
+          c.set('userId', account.user_id);
+          // 回填 Redis 缓存，后续请求不再扫库
+          try {
+            await cacheSession(getRedis(c.env), token, account.user_id, payload.session_expires_at);
+          } catch {
+            /* 缓存回填失败不影响本次认证 */
+          }
+          await next();
+          return;
         }
-        await next();
-        return;
       }
     } catch (err) {
       console.error('Custom token verification error:', err);

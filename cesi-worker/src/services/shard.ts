@@ -182,6 +182,73 @@ export class ShardService {
   }
 
   /**
+   * 按用户名精确查找账号。优先返回第一个成功命中的 DB 结果，
+   * 避免注册/登录时拉取全部账号再内存过滤。
+   */
+  async selectAccountByUsername(username: string): Promise<MixedData | undefined> {
+    const queries = this.dbs.map(async (db) => {
+      if (!db.selectAccountByUsername) return undefined;
+      try {
+        return await withTimeout(db.selectAccountByUsername(username), DB_TIMEOUT_MS, `selectAccountByUsername(${db.name})`);
+      } catch (err) {
+        console.error(`selectAccountByUsername failed for ${db.name}`, err);
+        return undefined;
+      }
+    });
+    const results = await Promise.allSettled(queries);
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) return r.value;
+    }
+    return undefined;
+  }
+
+  /**
+   * 按会话令牌精确查找账号。认证回退路径使用，
+   * 避免账号超过 1000 后老用户的自定义 token 被拒绝。
+   */
+  async selectAccountBySessionToken(token: string): Promise<MixedData | undefined> {
+    const queries = this.dbs.map(async (db) => {
+      if (!db.selectAccountBySessionToken) return undefined;
+      try {
+        return await withTimeout(db.selectAccountBySessionToken(token), DB_TIMEOUT_MS, `selectAccountBySessionToken(${db.name})`);
+      } catch (err) {
+        console.error(`selectAccountBySessionToken failed for ${db.name}`, err);
+        return undefined;
+      }
+    });
+    const results = await Promise.allSettled(queries);
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) return r.value;
+    }
+    return undefined;
+  }
+
+  /**
+   * 原地更新账号 payload。登录重哈希/刷新令牌时使用，
+   * 避免 insert+delete 破坏用户名唯一索引。
+   */
+  async updateAccountPayload(id: string, payload: string, updatedAt: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    const errors: string[] = [];
+    let updatedCount = 0;
+    for (const db of this.dbs) {
+      if (!db.updateAccountPayload) {
+        errors.push(`${db.name}: not supported`);
+        continue;
+      }
+      try {
+        await withTimeout(db.updateAccountPayload(id, payload, updatedAt), DB_TIMEOUT_MS, `updateAccountPayload(${db.name})`);
+        updatedCount += 1;
+      } catch (err) {
+        errors.push(`${db.name}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    if (updatedCount === 0) {
+      return { ok: false, error: `All databases failed: ${errors.join('; ')}` };
+    }
+    return { ok: true };
+  }
+
+  /**
    * 数据库端排行榜聚合（每用户最佳成绩）。任一 DB 支持即启用；
    * 返回 null 表示所有 DB 都不支持，调用方回退到 readByType 旧路径。
    */
