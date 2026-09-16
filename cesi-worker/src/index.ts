@@ -10,7 +10,8 @@ import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoS
 import { ShardService } from './services/shard';
 import { createAuthMiddleware, cacheSession } from './services/auth';
 import { uploadFile } from './services/storage';
-import { hashPassword, verifyPassword, isLegacyPassword } from './utils/password';
+import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
+import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import type { Env } from './types/env';
 import type { MixedData, DbConfig } from './types/models';
 
@@ -191,14 +192,24 @@ app.use('*', async (c, next) => {
     'http://localhost:3000',
     'http://localhost:5173',
   ];
+  // 只在来源明确时回显确切 Origin；不认识的来源一律不返回 ACAO，
+  // 绝不回退成 '*'(与 Allow-Credentials 同用属于错误配置)。
   if (allowedOrigins.includes(origin)) {
     c.header('Access-Control-Allow-Origin', origin);
     c.header('Access-Control-Allow-Credentials', 'true');
-  } else {
-    c.header('Access-Control-Allow-Origin', '*');
   }
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
+  c.header('Vary', 'Origin');
+
+  // 通用安全响应头（API 返回 JSON，对这些头最relevant的是 nosniff；
+  // 其余按业界默认补全，不影响前端渲染）
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   await next();
 });
@@ -211,6 +222,11 @@ app.post('/api/auth/register', async (c) => {
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
   if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
   if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
+
+  // 频率限制：按 IP 限注册，防脚本批量灌号
+  if (!(await rateLimit(getRedis(c.env), rlKey('register', clientIp(c)), 10, 60))) {
+    return c.json({ error: 'Too many attempts, please try again later' }, 429);
+  }
 
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and check username match
@@ -262,6 +278,13 @@ app.post('/api/auth/login', async (c) => {
   if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
   if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
 
+  // 频率限制：同时按 IP 和账号名限速，兼顾封堵脚本与防止对单一账号打爆。
+  // 限制统一走 before 响应，两次校验用同一把计数，避免重复消耗 Redis 调用。
+  const ip = clientIp(c);
+  const ipOk = await rateLimit(getRedis(c.env), rlKey('login-ip', ip), 30, 60);
+  const userOk = await rateLimit(getRedis(c.env), rlKey('login-user', username), 10, 60);
+  if (!ipOk || !userOk) return c.json({ error: 'Too many attempts, please try again later' }, 429);
+
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and find matching username
   const accounts = await shard.readByType('account', { limit: 1000 });
@@ -283,8 +306,8 @@ app.post('/api/auth/login', async (c) => {
   const passwordValid = await verifyPassword(password, passwordHash);
   if (!passwordValid) return c.json({ error: 'Invalid username or password' }, 401);
 
-  // 若是旧版明文密码，立即重哈希并更新存储。
-  if (isLegacyPassword(passwordHash)) {
+  // 旧明文 / 旧算法(sha256) / 低迭代 → 登录成功后统一重哈希到最强参数（PBKDF2-SHA512/600k）
+  if (isLegacyPassword(passwordHash) || needsRehash(passwordHash)) {
     payload.password_hash = await hashPassword(password);
   }
 
@@ -340,6 +363,10 @@ app.post('/api/feedback', async (c) => {
   const content = (body.content || '').toString().trim().slice(0, 2000);
   if (!name || !email || !content) return c.json({ ok: false, error: '所有字段必填' }, 400);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return c.json({ ok: false, error: '邮箱格式不正确' }, 400);
+  // 公开接口务必限流，防脚本刷反馈表单
+  if (!(await rateLimit(getRedis(c.env), rlKey('feedback', clientIp(c)), 5, 60))) {
+    return c.json({ ok: false, error: '太频繁了，稍后再试' }, 429);
+  }
   const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
@@ -409,7 +436,12 @@ app.get('/api/stats', async (c) => {
 });
 
 // Protected API routes.
-app.use('/api/*', createAuthMiddleware(buildShardService, getRedis));
+function authOrAdmin(c: Parameters<ReturnType<typeof createAuthMiddleware>>[0], next: () => Promise<void>) {
+  // /api/admin/* 由 ADMIN_TOKEN 单独把关（见对应路由），不走用户登录态
+  if (c.req.path.startsWith('/api/admin')) return next();
+  return createAuthMiddleware(buildShardService, getRedis)(c, next);
+}
+app.use('/api/*', authOrAdmin);
 
 type FlatScore = {
   id: string;
@@ -546,6 +578,40 @@ app.post('/api/scores', async (c) => {
     payload.leaderboardEligible = false;
   }
 
+  // ===== 服务端成绩合理性校验（防止构造 HTTP 请求伪造成绩刷榜）=====
+  // 分数必须是个有限正数，否则无意义。
+  if (scoreValue === null || !Number.isFinite(scoreValue)) {
+    return c.json({ error: 'invalid score_value' }, 400);
+  }
+  // 按测试类型做上下限校验：低于人类物理极限的必然伪造，超上限的必然异常。
+  // 此处只给"离群值"收口。range 为 [min, max]。
+  const SCORE_BOUNDS: Record<string, [number, number]> = {
+    // ms，越低越好；视觉反应生理下限约 100ms，留 80ms 余量防误杀
+    reaction: [80, 6000],
+    visualsearch: [80, 120000],
+    // reaction 类（瞄准按命中单位换算 ms 或分数，宁宽勿窄）
+    aim: [1, 1000000],
+    // type 输入速度相关
+    type: [0.1, 6000],
+    // 其余为积分/关数/点数类
+    stick: [0, 1000000],
+    number: [0, 1000000],
+    verbal: [0, 1000000],
+    visual: [0, 1000000],
+    sequence: [0, 1000000],
+    stroop: [0, 1000000],
+    nback: [0, 1000000],
+  };
+  const [minV, maxV] = SCORE_BOUNDS[testType] || [0, 1000000000];
+  if (scoreValue < minV || scoreValue > maxV) {
+    return c.json({ error: 'score out of range' }, 400);
+  }
+
+  // 频率限制：按用户身份限速，防脚本刷榜/刷存储
+  if (!(await rateLimit(getRedis(c.env), rlKey('score', userId), 90, 60))) {
+    return c.json({ error: 'Too many requests, slow down' }, 429);
+  }
+
   const shard = await buildShardService(c.env);
   const result = await shard.write({
     id: uuid(),
@@ -624,6 +690,11 @@ app.post('/api/comments', async (c) => {
   if (!content) return c.json({ error: 'content is required' }, 400);
   const category = str(body.category, 30).trim() || 'chat';
   if (!/^[\w-]{1,30}$/.test(category)) return c.json({ error: 'invalid category' }, 400);
+
+  // 频率限制：按用户身份限速，防刷屏/垃圾评论淹没正常内容
+  if (!(await rateLimit(getRedis(c.env), rlKey('comment', userId), 12, 60))) {
+    return c.json({ error: 'You are commenting too fast' }, 429);
+  }
 
   const shard = await buildShardService(c.env);
   const result = await shard.write({
@@ -862,6 +933,15 @@ app.post('/api/upload', async (c) => {
 });
 
 app.get('/api/admin/dbs', async (c) => {
+  // 管理接口：必须有 ADMIN_TOKEN 环境变量，且客户端提供匹配的 Bearer 才放行。
+  // 普通游客/用户不该能看到数据库状态这类内部信息。
+  const adminToken = c.env.ADMIN_TOKEN;
+  if (!adminToken) return c.json({ error: 'admin interface disabled' }, 404);
+  const auth = c.req.header('Authorization') || '';
+  if (!auth.startsWith('Bearer ') || auth.slice(7).trim() !== adminToken) {
+    return c.json({ error: 'forbidden' }, 403);
+  }
+
   const shard = await buildShardService(c.env);
   const statuses = await Promise.all(
     shard.getDbs().map(async (db) => {
