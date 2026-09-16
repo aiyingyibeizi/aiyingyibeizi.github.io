@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="APEXON Music - 免费在线音乐播放器，发现无版权独立音乐，支持搜索、收藏、最近播放。">
     <meta name="keywords" content="音乐播放器,无版权音乐,在线听歌,Jamendo,APEXON Music">
     <meta name="author" content="APEXON">
@@ -16,8 +16,8 @@
     <meta name="twitter:description" content="发现无版权独立音乐，支持搜索、收藏、最近播放。">
     <title>APEXON Music - 在线音乐播放器</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="stylesheet" href="styles/variables.css?v=8">
-    <link rel="stylesheet" href="styles/main.css?v=22">
+    <link rel="stylesheet" href="styles/variables.css?v=9">
+    <link rel="stylesheet" href="styles/main.css?v=23">
     <style>
         :root {
             --music-sidebar-width: 240px;
@@ -897,7 +897,7 @@
         .music-lyrics-panel {
             position: fixed;
             right: 0;
-            top: var(--header-height);
+            top: calc(var(--header-height) + var(--safe-top));
             bottom: var(--music-player-height);
             width: 380px;
             max-width: 90vw;
@@ -1814,12 +1814,12 @@
             }
 
             .music-app {
-                padding-top: calc(var(--header-height) + 8px);
+                padding-top: calc(var(--header-height) + var(--safe-top) + 8px);
                 padding-bottom: var(--music-player-height);
             }
 
             .music-sidebar {
-                top: var(--header-height);
+                top: calc(var(--header-height) + var(--safe-top));
                 bottom: var(--music-player-height);
                 width: min(260px, 80vw);
                 transform: translateX(-100%);
@@ -2068,7 +2068,7 @@
             .music-lyrics-panel {
                 width: 100vw;
                 max-width: 100vw;
-                top: var(--header-height);
+                top: calc(var(--header-height) + var(--safe-top));
                 bottom: var(--music-player-height);
             }
         }

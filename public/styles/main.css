@@ -209,7 +209,7 @@ body.loaded .apexon-page {
   width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: calc(var(--header-height) + 20px) var(--container-padding) 40px;
+  padding: calc(var(--header-height) + var(--safe-top) + 20px) var(--container-padding) 40px;
 }
 
 .legal-content {
@@ -347,7 +347,8 @@ body.loaded .apexon-page {
   top: 0;
   left: 0;
   right: 0;
-  height: var(--header-height);
+  height: calc(var(--header-height) + var(--safe-top));
+  padding-top: var(--safe-top);
   z-index: 1000;
   background: rgba(5, 7, 13, 0.72);
   backdrop-filter: blur(16px) saturate(160%);
@@ -358,7 +359,7 @@ body.loaded .apexon-page {
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
-  padding: 0;
+  padding: var(--safe-top) 0 0;
 }
 
 .apexon-header__inner {
@@ -4878,7 +4879,7 @@ html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
 @media (max-width: 767px) {
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 12px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 12px);
     padding-bottom: 24px;
   }
 
@@ -6192,7 +6193,7 @@ html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
 @media (min-width: 1024px) {
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 28px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 28px);
   }
 
   .hero-apexon {
@@ -6207,7 +6208,7 @@ html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
 @media (min-width: 1440px) {
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 36px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 36px);
   }
 
   /* 菜单栏必须顶满屏幕宽度，LOGO 贴左、右侧贴右 */
@@ -6219,14 +6220,14 @@ html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
 @media (min-width: 1920px) {
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 44px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 44px);
   }
 }
 
 @media (min-width: 2560px) {
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 52px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 52px);
   }
 }
 
@@ -6240,7 +6241,7 @@ html, body, .item-card, .apexon-header, .modal-content, .btn-primary {
 
   .apex-container,
   .container {
-    padding-top: calc(var(--header-height) + 60px);
+    padding-top: calc(var(--header-height) + var(--safe-top) + 60px);
   }
 }
 

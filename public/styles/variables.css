@@ -68,6 +68,7 @@
 
   /* 布局 */
   --header-height: 72px;
+  --safe-top: env(safe-area-inset-top, 0px);
   --container-max: 720px;
   --container-padding: 16px;
   --grid-columns: 1;
