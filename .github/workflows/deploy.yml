@@ -33,4 +33,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./public
           cname: 'apexon.qzz.io'
-          # token: uses the default GITHUB_TOKEN provided to Actions
+          token: ${{ secrets.GITHUB_TOKEN }}
