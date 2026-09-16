@@ -20,13 +20,15 @@ function sanitizeFileName(name: string): string {
   return cleaned || 'file';
 }
 
-export async function uploadFile(env: Env, userId: string, file: File): Promise<string> {
+export async function uploadFile(env: Env, userId: string, file: File, detectedType: string): Promise<string> {
   const supabase = getClient(env);
   const safeUserId = userId.replace(/[^\w.-]/g, '_');
   const path = `${safeUserId}/${Date.now()}-${sanitizeFileName(file.name)}`;
 
+  // contentType 使用服务端魔数嗅探出的类型，绝不信任客户端声明的 file.type，
+  // 避免上传 HTML/SVG 等可执行内容并在 CDN 上以危险 MIME 类型被渲染执行
   const { data, error } = await supabase.storage.from(BUCKET_NAME).upload(path, file, {
-    contentType: file.type || 'application/octet-stream',
+    contentType: detectedType,
     upsert: false,
   });
 

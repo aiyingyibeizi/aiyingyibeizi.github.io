@@ -626,7 +626,8 @@ app.post('/api/scores', async (c) => {
       accuracy: num(body.accuracy),
       wpm: num(body.wpm),
       cpm: num(body.cpm),
-      ...payload,
+      // 只保留显式声明的上榜标记，不透传客户端任意键（防批量赋值/字段注入）
+      leaderboard_eligible: payload.leaderboardEligible === false ? false : true,
     }),
     file_url: null,
     created_at: new Date().toISOString(),
@@ -905,8 +906,23 @@ app.post('/api/users', async (c) => {
   return c.json({ ok: true, db: result.db });
 });
 
+/** 图片魔数嗅探：只允许真正的图片，防止客户端伪造 contentType 上传 HTML/SVG 等可执行内容 */
+function sniffImageType(bytes: Uint8Array): string | null {
+  const has = (off: number, arr: number[]) => arr.every((b, i) => bytes[off + i] === b);
+  if (has(0, [0x89, 0x50, 0x4e, 0x47])) return 'image/png';
+  if (has(0, [0xff, 0xd8, 0xff])) return 'image/jpeg';
+  if (has(0, [0x47, 0x49, 0x46, 0x38])) return 'image/gif';
+  // RIFF....WEBP
+  if (has(0, [0x52, 0x49, 0x46, 0x46]) && has(8, [0x57, 0x45, 0x42, 0x50])) return 'image/webp';
+  return null;
+}
+
 app.post('/api/upload', async (c) => {
   const userId = c.get('userId');
+  // 限流：防脚本批量灌存储
+  if (!(await rateLimit(getRedis(c.env), rlKey('upload', userId), 10, 60))) {
+    return c.json({ error: 'Too many uploads, slow down' }, 429);
+  }
   const formData = await c.req.formData();
   const file = formData.get('file');
   if (!file || typeof file === 'string') return c.json({ error: 'No file uploaded' }, 400);
@@ -914,7 +930,19 @@ app.post('/api/upload', async (c) => {
   const size = (file as File).size || 0;
   if (!size || size > 5 * 1024 * 1024) return c.json({ error: 'File too large (max 5MB)' }, 413);
 
-  const fileUrl = await uploadFile(c.env, userId, file);
+  // 只允许图片扩展名，且魔数与声明类型一致，杜绝伪装成图片上传的脚本/HTML 执行载体
+  const buf = new Uint8Array(await (file as File).arrayBuffer());
+  const sniffed = sniffImageType(buf);
+  if (!sniffed) {
+    return c.json({ error: 'Only image uploads are allowed (png/jpeg/gif/webp)' }, 400);
+  }
+  const declared = (file as File).type || '';
+  const allowedImageTypes = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+  if (!allowedImageTypes.has(declared) || declared !== sniffed) {
+    return c.json({ error: 'File type or content does not match an allowed image' }, 400);
+  }
+
+  const fileUrl = await uploadFile(c.env, userId, file, sniffed);
 
   const shard = await buildShardService(c.env);
   await shard.write({
