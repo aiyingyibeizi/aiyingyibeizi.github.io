@@ -448,23 +448,27 @@ function renderOverview(){
     }
     html += '</div>';
     html += '<div class="section-title">最近未解决告警</div>';
-    renderAlertMini(html, el);
     el.innerHTML = html;
+    renderAlertMini(el);
     renderSnapshots();
   }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
 }
-function renderAlertMini(prefix, el){
+function renderAlertMini(el){
+  if (!el) return;
+  el.insertAdjacentHTML('beforeend', '<div id="miniAlertList"><p class="muted">加载中…</p></div>');
+  var box = document.getElementById('miniAlertList');
+  if (!box) return;
   api('/alerts?status=open&limit=5').then(function(d){
     var rows = d.data || [];
-    if (!rows.length) { el.innerHTML = prefix + '<div class="empty">暂无待处理告警 🎉</div>'; return; }
-    var h = prefix + '<div class="table-wrap"><table><tr><th>等级</th><th>类型</th><th>消息</th><th>来源</th><th>时间</th></tr>';
+    if (!rows.length) { box.innerHTML = '<div class="empty">暂无待处理告警 🎉</div>'; return; }
+    var h = '<div class="table-wrap"><table><tr><th>等级</th><th>类型</th><th>消息</th><th>来源</th><th>时间</th></tr>';
     for (var i=0;i<rows.length;i++){
       var r = rows[i];
       h += '<tr><td>' + badge(r.severity) + '</td><td class="mono">' + esc(r.kind) + '</td><td>' + esc(trunc(r.message,60)) + '</td><td class="mono">' + esc(r.source_ip || r.target || '-') + '</td><td>' + fmtDate(r.created_at) + '</td></tr>';
     }
     h += '</table></div>';
-    el.innerHTML = h;
-  }).catch(function(){ el.innerHTML = prefix + '<div class="empty">暂无待处理告警</div>'; });
+    box.innerHTML = h;
+  }).catch(function(){ box.innerHTML = '<div class="empty">暂无待处理告警</div>'; });
 }
 function fmtBytes(b){
   b = Number(b) || 0;

@@ -880,7 +880,8 @@ app.get('/api/scores', async (c) => {
       const eligibleRows = rows.filter((r) => {
         try {
           const payload = JSON.parse(r.payload);
-          return payload.leaderboardEligible !== false;
+          // 同时识别 snake_case（写入规范）与历史上可能存在的 camelCase 两种标记
+          return payload.leaderboard_eligible !== false && payload.leaderboardEligible !== false;
         } catch {
           return true;
         }
@@ -1434,7 +1435,8 @@ app.post('/api/profiles/username', async (c) => {
 app.post('/api/online_users', async (c) => {
   try {
     const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
-    const userId = str(body.user_id || c.get('userId'), 64).trim();
+    // 优先取鉴权后的真实身份，避免客户端伪造 user_id 灌水在线数
+    const userId = str(c.get('userId') || body.user_id, 64).trim();
     if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
     const lastSeen = str(body.last_seen, 40) || new Date().toISOString();
     const shard = await buildShardService(c.env);
@@ -1465,7 +1467,8 @@ app.post('/api/online_users', async (c) => {
 // users 表 upsert（syncUser：首次登录/注册时写基础资料）
 app.post('/api/users', async (c) => {
   const body = await c.req.json<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>();
-  const userId = str(body.user_id || c.get('userId'), 64).trim();
+  // 优先取鉴权后的真实身份，避免客户端伪造 user_id 为任意用户建行
+  const userId = str(c.get('userId') || body.user_id, 64).trim();
   if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
   const shard = await buildShardService(c.env);
   const existing = await shard.readByUserAndType(userId, 'user', 1);

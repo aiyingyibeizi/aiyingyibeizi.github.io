@@ -168,7 +168,7 @@ export async function tursoSelectLeaderboard(
             WHERE type = 'score' AND subtype = ? AND score_value IS NOT NULL
               AND CASE
                     WHEN json_valid(payload) = 1
-                      THEN COALESCE(json_extract(payload, '$.leaderboardEligible'), 1) != 0
+                      THEN COALESCE(json_extract(payload, '$.leaderboard_eligible'), json_extract(payload, '$.leaderboardEligible'), 1) != 0
                     ELSE 1
                   END
           )
