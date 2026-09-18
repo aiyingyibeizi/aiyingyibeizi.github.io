@@ -1012,8 +1012,17 @@ app.post('/api/upload', async (c) => {
 
 // ===== 管理后台 =====
 // UI 页面（GET /admin），内联返回、无需静态资源；未配置 ADMIN_TOKEN 时仍能打开但登录会失败
-app.get('/admin', (c) => c.html(renderAdminUI()));
-app.get('/admin/*', (c) => c.html(renderAdminUI()));
+// 加入严格 CSP：禁止外联脚本/图片/字体与站点外请求，即使被 XSS 注入也无法外带数据。
+const ADMIN_CSP =
+  "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+  "img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; " +
+  "form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests";
+function serveAdmin(c: any) {
+  c.header('Content-Security-Policy', ADMIN_CSP);
+  return c.html(renderAdminUI());
+}
+app.get('/admin', serveAdmin);
+app.get('/admin/*', serveAdmin);
 
 function flattenContent(r: MixedData) {
   const p: any = safeJsonParse(r.payload) || {};
@@ -1054,8 +1063,10 @@ function flattenAudit(r: MixedData) {
 
 /** 管理接口统一入口：校验会话令牌（短期、带 TTL），通过后经 c.set 注入管理员标识供审计复用 */
 async function adminGw(c: any, next: any): Promise<Response | void> {
-  // 登录与注销端点不走会话校验（它们自己处理口令 + 动态码）
-  if (c.req.method === 'POST' && (c.req.path === '/api/admin/login' || c.req.path === '/api/admin/logout')) {
+  // 登录/注销/2FA 首次绑定端点不走会话校验（它们各自处理鉴权：登录与绑定需持口令，注销只消会话）
+  const p = c.req.path;
+  if ((c.req.method === 'POST' && (p === '/api/admin/login' || p === '/api/admin/logout')) ||
+      (c.req.method === 'GET' && p === '/api/admin/2fa/setup')) {
     return next();
   }
   if (!c.env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
@@ -1157,6 +1168,20 @@ app.get('/api/admin/2fa', async (c) => {
   const uri = adminOtpauthUri(env);
   if (!uri) return c.json({ enabled: false, message: 'TOTP 未启用（未配置 ADMIN_TOTP_SECRET）' });
   return c.json({ enabled: true, otpauth: uri, secret: env.ADMIN_TOTP_SECRET, issuer: 'APEXON Admin' });
+});
+
+// 2FA 首次绑定端点：无需会话令牌，但必须持有管理员口令（常数时间比较），
+// 解决「先绑定验证器才能登录，但没登录就看不到密钥」的死锁。
+app.get('/api/admin/2fa/setup', async (c) => {
+  const env = c.env as Env;
+  if (!env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
+  const authHeader = c.req.header('Authorization');
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  // 必须正确持有 ADMIN_TOKEN 才允许取回 2FA 绑定信息
+  if (!verifyAdminPassword(env, token)) return c.json({ error: 'forbidden' }, 403 as any);
+  const uri = adminOtpauthUri(env);
+  if (!uri) return c.json({ enabled: false, message: '尚未配置 ADMIN_TOTP_SECRET' });
+  return c.json({ enabled: true, secret: env.ADMIN_TOTP_SECRET, otpauth: uri });
 });
 
 app.get('/api/admin/overview', async (c) => {
