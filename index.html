@@ -375,7 +375,7 @@
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
                 const val = e.score_value || 0;
                 const profile = profileMap.get(e.user_id);
-                const avatar = '<div class="leaderboard-avatar" onclick="viewProfile(\'' + esc(e.user_id) + '\')">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
+                const avatar = '<div class="leaderboard-avatar" data-uid="' + esc(e.user_id) + '" onclick="viewProfile(this.dataset.uid)">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
                 return '<div class="leaderboard-row"><div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div>' + avatar + '<div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
             }).join('');
         }
@@ -595,7 +595,7 @@
                 const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : null;
                 return '<div class="forum-item">' +
                     '<div class="forum-item-header">' +
-                        '<div class="forum-item-user" onclick="window.showForumProfile && window.showForumProfile(' + esc(JSON.stringify(c.user_id || '')) + ')">' +
+                        '<div class="forum-item-user" data-uid="' + esc(c.user_id || '') + '" onclick="window.showForumProfile && window.showForumProfile(this.dataset.uid)">' +
                             renderForumAvatar(avatarUrl) +
                             '<span>' + esc(c.username) + '</span>' +
                         '</div>' +
