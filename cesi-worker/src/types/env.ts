@@ -22,4 +22,8 @@ export interface Env {
 
   // 管理接口（/api/admin/*）的访问令牌；未配置时管理接口直接禁用
   ADMIN_TOKEN?: string;
+
+  // 安全告警外发通知的 webhook 地址（可选）。配置后，暴破/异常告警会 POST 到该地址，
+  // 可用于接机器人通知（如飞书/企业微信/钉钉/自建服务）。留空则仅面板内留痕、不外发。
+  ADMIN_ALERT_WEBHOOK?: string;
 }

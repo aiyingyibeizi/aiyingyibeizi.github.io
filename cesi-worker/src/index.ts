@@ -12,6 +12,9 @@ import { createAuthMiddleware, cacheSession } from './services/auth';
 import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
+import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts } from './services/security';
+import { authorizeAdmin, writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { renderAdminUI } from './services/admin-ui';
 import type { Env } from './types/env';
 import type { MixedData, DbConfig } from './types/models';
 
@@ -180,7 +183,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
   return cachedShardService;
 }
 
-type Variables = { userId: string };
+type Variables = { userId: string; adminToken?: string };
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 app.use('*', async (c, next) => {
@@ -273,6 +276,16 @@ app.post('/api/auth/register', async (c) => {
   // 登录/注册成功后立即写入 Redis 会话缓存，后续请求不再扫库
   await cacheSession(getRedis(c.env), sessionToken, userId, expiresAt);
 
+  // 注册异常检测：单 IP 短时大量注册触发告警（fire-and-forget）
+  try {
+    const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+    const spike = recordRegisterSpike(getRedis(c.env), await buildShardService(c.env), waitUntil, c.env, clientIp(c));
+    spike.catch((err) => console.error('recordRegisterSpike error:', err));
+    try { waitUntil(spike); } catch { /* ignore */ }
+  } catch (err) {
+    console.error('register spike hook error:', err);
+  }
+
   return c.json({ user_id: userId, username, token: sessionToken, expires_at: expiresAt });
 });
 
@@ -289,6 +302,12 @@ app.post('/api/auth/login', async (c) => {
   const userOk = await rateLimit(getRedis(c.env), rlKey('login-user', username), 10, 60);
   if (!ipOk || !userOk) return c.json({ error: 'Too many attempts, please try again later' }, 429);
 
+  // 暴破封锁：登录前先查是否因失败次数过多被临时冻结（成功则正常放行，不影响既有流程）
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  if (await isBlocked(getRedis(c.env), 'ip', ip) || await isBlocked(getRedis(c.env), 'user', username)) {
+    return c.json({ error: 'Too many attempts, account temporarily locked' }, 429);
+  }
+
   const shard = await buildShardService(c.env);
   // Targeted query: only load accounts and find matching username
   const accounts = await shard.readByType('account', { limit: 1000 });
@@ -301,14 +320,27 @@ app.post('/api/auth/login', async (c) => {
     }
   });
 
-  if (!account) return c.json({ error: 'Invalid username or password' }, 401);
+  // 账号不存在：记入暴破失败计数（fire-and-forget，不拖慢登录响应）
+  if (!account) {
+    logLoginFailure(c, username, false);
+    return c.json({ error: 'Invalid username or password' }, 401);
+  }
 
   const payload = JSON.parse(account.payload);
+
+  // 封禁账号拒绝登录（管理后台设置；不影响已有解锁逻辑）
+  if (payload.banned === true) {
+    return c.json({ error: 'Account suspended' }, 403);
+  }
+
   const passwordHash = payload.password_hash;
 
   // 后端验证密码：旧版明文密码登录成功后自动迁移为新哈希格式。
   const passwordValid = await verifyPassword(password, passwordHash);
-  if (!passwordValid) return c.json({ error: 'Invalid username or password' }, 401);
+  if (!passwordValid) {
+    logLoginFailure(c, username, true);
+    return c.json({ error: 'Invalid username or password' }, 401);
+  }
 
   // 旧明文 / 旧算法(sha256) / 低迭代 → 登录成功后统一重哈希到最强参数（PBKDF2-SHA512/600k）
   if (isLegacyPassword(passwordHash) || needsRehash(passwordHash)) {
@@ -444,6 +476,19 @@ function authOrAdmin(c: Parameters<ReturnType<typeof createAuthMiddleware>>[0], 
   // /api/admin/* 由 ADMIN_TOKEN 单独把关（见对应路由），不走用户登录态
   if (c.req.path.startsWith('/api/admin')) return next();
   return createAuthMiddleware(buildShardService, getRedis)(c, next);
+}
+
+/** 记录一次登录失败并依据阈值触发暴破封锁/告警（fire-and-forget，不拖慢登录响应） */
+async function logLoginFailure(c: { env: Env; executionCtx: any; req: { header: (n: string) => string | undefined } }, username: string, matchedUser: boolean) {
+  try {
+    const shard = await buildShardService(c.env);
+    const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+    const task = recordLoginFailure(getRedis(c.env), shard, waitUntil, c.env, clientIp(c), username, matchedUser);
+    task.catch((err) => console.error('recordLoginFailure error:', err));
+    try { waitUntil(task); } catch { /* ignore */ }
+  } catch (err) {
+    console.error('logLoginFailure error:', err);
+  }
 }
 app.use('/api/*', authOrAdmin);
 
@@ -964,18 +1009,81 @@ app.post('/api/upload', async (c) => {
   return c.json({ ok: true, url: fileUrl });
 });
 
-app.get('/api/admin/dbs', async (c) => {
-  // 管理接口：必须有 ADMIN_TOKEN 环境变量，且客户端提供匹配的 Bearer 才放行。
-  // 普通游客/用户不该能看到数据库状态这类内部信息。
-  const adminToken = c.env.ADMIN_TOKEN;
-  if (!adminToken) return c.json({ error: 'admin interface disabled' }, 404);
-  const auth = c.req.header('Authorization') || '';
-  if (!auth.startsWith('Bearer ') || auth.slice(7).trim() !== adminToken) {
-    return c.json({ error: 'forbidden' }, 403);
-  }
+// ===== 管理后台 =====
+// UI 页面（GET /admin），内联返回、无需静态资源；未配置 ADMIN_TOKEN 时仍能打开但登录会失败
+app.get('/admin', (c) => c.html(renderAdminUI()));
+app.get('/admin/*', (c) => c.html(renderAdminUI()));
 
+function flattenContent(r: MixedData) {
+  const p: any = safeJsonParse(r.payload) || {};
+  return {
+    id: r.id,
+    type: r.type,
+    subtype: r.subtype,
+    user_id: r.user_id,
+    username: p.username || p.name || r.user_id,
+    content: p.content || p.message || '',
+    payload: p,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  };
+}
+
+function flattenAlert(r: MixedData) {
+  const p: any = safeJsonParse(r.payload) || {};
+  return {
+    id: r.id,
+    user_id: r.user_id,
+    kind: p.kind || r.subtype,
+    severity: p.severity || 'info',
+    source_ip: p.source_ip || null,
+    target: p.target || null,
+    message: p.message || '',
+    count: p.count != null ? Number(p.count) : (r.score_value != null ? Number(r.score_value) : null),
+    detail: p.detail || null,
+    resolved: Boolean(p.resolved),
+    created_at: r.created_at,
+  };
+}
+
+function flattenAudit(r: MixedData) {
+  const p: any = safeJsonParse(r.payload) || {};
+  return { id: r.id, admin: p.admin, action: p.action, target: p.target, detail: p.detail, created_at: r.created_at };
+}
+
+/** 管理接口统一入口：校验 ADMIN_TOKEN 并通过 c.set 注入标识，供后续处理器复用 */
+async function adminGw(c: any, next: any): Promise<Response | void> {
+  const auth = authorizeAdmin(c);
+  if (!auth.ok) return c.json({ error: auth.error }, auth.status as any);
+  c.set('adminToken', auth.token);
+  return next();
+}
+app.use('/api/admin/*', adminGw);
+
+app.get('/api/admin/ping', async (c) => c.json({ ok: true }));
+
+app.get('/api/admin/overview', async (c) => {
   const shard = await buildShardService(c.env);
-  const statuses = await Promise.all(
+  const FIVE_MIN_MS = 5 * 60 * 1000;
+  const now = Date.now();
+  const [totalTests, totalComments, feedbackCount, onlineRecords, totalUsers, openAl] = await Promise.all([
+    shard.countByType('score'),
+    shard.countByType('comment'),
+    shard.countByType('feedback'),
+    shard.readByType('online', { limit: 1000 }),
+    shard.countByType('account'),
+    countOpenAlerts(shard),
+  ]);
+  let online = 0;
+  for (const r of onlineRecords) {
+    const payload: any = safeJsonParse(r.payload);
+    const lastSeen = (payload && payload.last_seen) || r.updated_at || r.created_at;
+    if (lastSeen) {
+      const ts = new Date(String(lastSeen)).getTime();
+      if (!isNaN(ts) && now - ts <= FIVE_MIN_MS) online += 1;
+    }
+  }
+  const dbs = await Promise.all(
     shard.getDbs().map(async (db) => {
       try {
         const used = await shard.getUsedBytes(db.name);
@@ -985,7 +1093,155 @@ app.get('/api/admin/dbs', async (c) => {
       }
     })
   );
-  return c.json({ data: statuses });
+  return c.json({ success: true, data: { online, total_users: totalUsers, total_tests: totalTests, total_comments: totalComments, feedback: feedbackCount, open_alerts: openAl, dbs } });
+});
+
+app.get('/api/admin/users', async (c) => {
+  const q = str(c.req.query('q'), 100);
+  const limit = Number(c.req.query('limit') || 300);
+  const shard = await buildShardService(c.env);
+  const rows = await searchAccounts(shard, q, limit);
+  return c.json({ data: rows.map(flattenAccount) });
+});
+
+app.get('/api/admin/users/:userId', async (c) => {
+  const shard = await buildShardService(c.env);
+  const detail = await getUserDetail(shard, c.req.param('userId'));
+  return c.json({ data: detail });
+});
+
+app.delete('/api/admin/users/:userId', async (c) => {
+  const shard = await buildShardService(c.env);
+  const userId = c.req.param('userId');
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const types = ['account', 'profile', 'score', 'comment', 'feedback', 'online', 'user', 'file'];
+  for (const t of types) {
+    const rows = await shard.readByUserAndType(userId, t, 1000);
+    for (const row of rows) {
+      await shard.deleteById(row.id);
+    }
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.delete', userId);
+  return c.json({ success: true });
+});
+
+async function setBan(c: any, banned: boolean) {
+  const shard = await buildShardService(c.env);
+  const userId = c.req.param('userId');
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const account = (await shard.readByUserAndType(userId, 'account', 10))[0];
+  if (!account) return c.json({ success: false, error: '账号不存在' }, 404) as any;
+
+  const payload: any = safeJsonParse(account.payload) || {};
+  payload.banned = banned;
+  if (banned) {
+    const body = await c.req.json().catch(() => ({}) as Record<string, unknown>);
+    const reason = str((body as { reason?: unknown }).reason, 300).trim();
+    payload.banned_reason = reason || '管理员封禁';
+  } else {
+    delete payload.banned_reason;
+  }
+
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: account.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil });
+  if (!writeResult.ok) return c.json({ success: false, error: writeResult.error }, 503) as any;
+  await shard.deleteById(account.id);
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', banned ? 'user.ban' : 'user.unban', userId, payload.banned_reason || null);
+  return c.json({ success: true, banned });
+}
+
+app.post('/api/admin/users/:userId/ban', async (c) => setBan(c, true));
+app.post('/api/admin/users/:userId/unban', async (c) => setBan(c, false));
+
+app.get('/api/admin/content', async (c) => {
+  const type = str(c.req.query('type'), 40).trim() || 'comment';
+  const allowed = new Set(['comment', 'feedback', 'score', 'profile']);
+  if (!allowed.has(type)) return c.json({ error: 'invalid type' }, 400);
+  const q = str(c.req.query('q'), 200);
+  const limit = Number(c.req.query('limit') || 200);
+  const shard = await buildShardService(c.env);
+  const rows = await listContent(shard, type, q, limit);
+  return c.json({ data: rows.map(flattenContent) });
+});
+
+app.get('/api/admin/content/:id', async (c) => {
+  const shard = await buildShardService(c.env);
+  const row = await shard.readById(c.req.param('id'));
+  if (!row) return c.json({ success: false, error: 'Not found' }, 404);
+  return c.json({ data: flattenContent(row) });
+});
+
+app.delete('/api/admin/content/:id', async (c) => {
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const row = await shard.readById(c.req.param('id'));
+  await shard.deleteById(c.req.param('id'));
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'content.delete', c.req.param('id'), row ? row.type : undefined);
+  return c.json({ success: true });
+});
+
+app.get('/api/admin/alerts', async (c) => {
+  const status = str(c.req.query('status'), 20).trim() || 'open';
+  const q = str(c.req.query('q'), 200);
+  const limit = Number(c.req.query('limit') || 300);
+  const shard = await buildShardService(c.env);
+  const rows = await shard.readByType('alert', { limit: 1000 });
+  const needle = q.trim().toLowerCase();
+  const filtered = rows
+    .map(flattenAlert)
+    .filter((a) => {
+      if (status === 'open' && a.resolved) return false;
+      if (status === 'resolved' && !a.resolved) return false;
+      if (needle) {
+        const hay = `${a.message} ${a.kind} ${a.source_ip || ''} ${a.target || ''}`.toLowerCase();
+        return hay.includes(needle);
+      }
+      return true;
+    });
+  return c.json({ data: filtered.slice(0, Math.min(Math.max(Number.isFinite(limit) ? limit : 300, 1), 1000)) });
+});
+
+app.patch('/api/admin/alerts/:id', async (c) => {
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const id = c.req.param('id');
+  const row = await shard.readById(id);
+  if (!row) return c.json({ success: false, error: 'Not found' }, 404);
+  const body = (await c.req.json().catch(() => ({}))) as { resolved?: boolean };
+  const payload: any = safeJsonParse(row.payload) || {};
+  payload.resolved = body.resolved !== false;
+  payload.resolved_at = new Date().toISOString();
+  const writeResult = await shard.write({ ...row, id: uuid(), payload: JSON.stringify(payload), updated_at: new Date().toISOString() }, { waitUntil });
+  if (!writeResult.ok) return c.json({ success: false, error: writeResult.error }, 503);
+  await shard.deleteById(id);
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'alert.resolve', id);
+  return c.json({ success: true });
+});
+
+app.delete('/api/admin/alerts/:id', async (c) => {
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const id = c.req.param('id');
+  await shard.deleteById(id);
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'alert.delete', id);
+  return c.json({ success: true });
+});
+
+app.get('/api/admin/audit', async (c) => {
+  const limit = Number(c.req.query('limit') || 200);
+  const shard = await buildShardService(c.env);
+  const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? limit : 200, 1), 1000);
+  const rows = await shard.readByType('audit', { limit: safeLimit });
+  return c.json({ data: rows.map(flattenAudit) });
 });
 
 // ===== 全局 404 与内部错误兜底（修复 4xx/5xx 大量堆积）=====
