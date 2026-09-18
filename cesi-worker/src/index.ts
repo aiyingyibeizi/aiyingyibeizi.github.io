@@ -209,6 +209,10 @@ app.use('*', async (c, next) => {
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
   c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  // API 返回动态/鉴权数据，禁止任何缓存，防止浏览器或中间代理把含会话钥匙的响应落盘
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  c.header('Pragma', 'no-cache');
+  c.header('Expires', '0');
 
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   await next();
