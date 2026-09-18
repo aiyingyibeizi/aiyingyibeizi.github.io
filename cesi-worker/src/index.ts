@@ -12,10 +12,20 @@ import { createAuthMiddleware, cacheSession } from './services/auth';
 import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
-import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts } from './services/security';
+import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
 import { writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
 import { verifyAdminPassword, verifyAdminTotp, adminOtpauthUri, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
+import { sendNotify } from './services/notify';
+import { toCsv, csvDownload, csvFilename } from './services/export';
+import { emailConfig, sendMail } from './services/email';
 import { renderAdminUI } from './services/admin-ui';
+import { parseCsv } from './services/csv';
+import { issueCaptcha, verifyCaptcha, countIpFailure, isIpBlacklisted, blacklistIp, ipBlacklistCount, clearIpBlacklist } from './services/captcha';
+import { checkScoreAnomaly } from './services/anomaly';
+import { analyzeContent } from './services/spam';
+import { createSnapshot, listSnapshots, getSnapshot } from './services/snapshot';
+import { sampleRequest, reportError } from './services/observability';
+import { setSubscription, readMySubscription, subscribersForType, sendPublishNotification, flattenSubscription } from './services/subscribe';
 import type { Env } from './types/env';
 import type { MixedData, DbConfig } from './types/models';
 
@@ -30,6 +40,72 @@ function str(v: unknown, maxLen: number): string {
 function num(v: unknown): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+// 成绩合理性上下限（按测试类型收口离群值，min/max）
+const SCORE_BOUNDS: Record<string, [number, number]> = {
+  reaction: [80, 6000],
+  visualsearch: [80, 120000],
+  aim: [1, 1000000],
+  type: [0.1, 6000],
+  stick: [0, 1000000],
+  number: [0, 1000000],
+  verbal: [0, 1000000],
+  visual: [0, 1000000],
+  sequence: [0, 1000000],
+  stroop: [0, 1000000],
+  nback: [0, 1000000],
+};
+function scoreInBounds(testType: string, v: number): boolean {
+  const [minV, maxV] = SCORE_BOUNDS[testType] || [0, 1000000000];
+  return v >= minV && v <= maxV;
+}
+function scoreLowerIsBetter(testType: string): boolean {
+  return LOWER_IS_BETTER.has(testType);
+}
+
+// ---------------------------------------------------------------------------
+// 邮箱验证码辅助（Redis 存储，短期 TTL；全部 fail-open）
+// ---------------------------------------------------------------------------
+const MAIL_CODE_PREFIX = 'mailver:code:';
+const MAIL_CODE_TTL_SEC = 10 * 60;
+
+function mailKey(email: string): string {
+  return MAIL_CODE_PREFIX + email.replace(/[^a-z0-9@._+-]/gi, '_').slice(0, 120);
+}
+
+/** 生成 6 位数字验证码并写入 Redis（带 TTL）；Redis 异常返回 null（调用方视为生成失败） */
+async function issueMailCode(redis: Redis, email: string): Promise<string | null> {
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  try {
+    await redis.set(mailKey(email), code, { ex: MAIL_CODE_TTL_SEC });
+    return code;
+  } catch (err) {
+    console.error('issueMailCode failed:', err);
+    return null;
+  }
+}
+
+/** 校验验证码：命中则删除（一次性），防止同一验证码被反复使用 */
+async function verifyMailCode(redis: Redis, email: string, code: string): Promise<boolean> {
+  if (!/^\d{6}$/.test(code)) return false;
+  try {
+    const expect = await redis.get<string>(mailKey(email));
+    if (!expect) return false;
+    if (expect !== code) return false;
+    await redis.del(mailKey(email));
+    return true;
+  } catch (err) {
+    console.error('verifyMailCode failed:', err);
+    return false;
+  }
+}
+
+/** 校验邮箱格式（宽松：local@domain.tld） */
+function isValidEmail(v: unknown): boolean {
+  if (typeof v !== 'string') return false;
+  const e = v.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) && e.length <= 120;
 }
 
 let migrated = false;
@@ -184,7 +260,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
   return cachedShardService;
 }
 
-type Variables = { userId: string; adminToken?: string };
+type Variables = { userId: string; adminToken?: string; adminSessionIp?: string };
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 app.use('*', async (c, next) => {
@@ -219,7 +295,21 @@ app.use('*', async (c, next) => {
   c.header('Expires', '0');
 
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
+  const __start = Date.now();
   await next();
+  // 采样访问日志（需 OBSERVABILITY_SAMPLE > 0，默认关闭）
+  const envSample = (c.env as Env).OBSERVABILITY_SAMPLE;
+  if (Number(envSample) > 0) {
+    sampleRequest({
+      method: c.req.method,
+      path: c.req.path,
+      status: c.res ? c.res.status : 0,
+      durationMs: Date.now() - __start,
+      sample: Number(envSample),
+      ip: clientIp(c),
+      ua: c.req.header('User-Agent'),
+    });
+  }
 });
 
 app.get('/', (c) => c.text('APEXON Worker is running'));
@@ -291,22 +381,49 @@ app.post('/api/auth/register', async (c) => {
 });
 
 app.post('/api/auth/login', async (c) => {
-  const { username, password } = await c.req.json<{ username?: string; password?: string }>();
+  const env = c.env as Env;
+  const body = await c.req.json<{ username?: string; password?: string; captcha_id?: string; captcha_answer?: string }>().catch((): { username?: string; password?: string; captcha_id?: string; captcha_answer?: string } => ({}));
+  const username = str(body.username, 30);
+  const password = str(body.password, 512);
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
   if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
   if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
 
+  const ip = clientIp(c);
+  const redis = getRedis(env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+
+  // 累积式 IP 黑名单：命中直接拒绝登录（正常用户不误伤，触及该名单的基本可判定为脚本）
+  if (await isIpBlacklisted(redis, ip)) {
+    return c.json({ error: 'Too many attempts, IP temporarily blocked', locked: true }, 429);
+  }
+
   // 频率限制：同时按 IP 和账号名限速，兼顾封堵脚本与防止对单一账号打爆。
   // 限制统一走 before 响应，两次校验用同一把计数，避免重复消耗 Redis 调用。
-  const ip = clientIp(c);
-  const ipOk = await rateLimit(getRedis(c.env), rlKey('login-ip', ip), 30, 60);
-  const userOk = await rateLimit(getRedis(c.env), rlKey('login-user', username), 10, 60);
+  const ipOk = await rateLimit(redis, rlKey('login-ip', ip), 30, 60);
+  const userOk = await rateLimit(redis, rlKey('login-user', username), 10, 60);
   if (!ipOk || !userOk) return c.json({ error: 'Too many attempts, please try again later' }, 429);
 
   // 暴破封锁：登录前先查是否因失败次数过多被临时冻结（成功则正常放行，不影响既有流程）
-  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
-  if (await isBlocked(getRedis(c.env), 'ip', ip) || await isBlocked(getRedis(c.env), 'user', username)) {
+  if (await isBlocked(redis, 'ip', ip) || await isBlocked(redis, 'user', username)) {
     return c.json({ error: 'Too many attempts, account temporarily locked' }, 429);
+  }
+
+  // 算数验证码：平时无感（不要求），可疑来源（累计失败 >= 阈值）或强制开启时要求。
+  const requireCaptcha = env.CAPTCHA_ALWAYS === 'on' ||
+    (await ipBlacklistCount(redis, ip)) >= (Number(env.CAPTCHA_REQUIRE_AFTER_FAIL) || 3);
+  if (requireCaptcha) {
+    const capOk = await verifyCaptcha(redis, str(body.captcha_id, 64), str(body.captcha_answer, 16));
+    if (!capOk) {
+      // 未通过：即使答案是空的也返回统一校验失败，避免这边枚举「是否首次尝试」的差异。
+      const fresh = await issueCaptcha(redis);
+      return c.json({
+        error: 'Invalid CAPTCHA, please retry',
+        captcha_required: true,
+        captcha_question: fresh ? fresh.question : undefined,
+        captcha_id: fresh ? fresh.id : undefined,
+      }, 400);
+    }
   }
 
   const shard = await buildShardService(c.env);
@@ -324,14 +441,15 @@ app.post('/api/auth/login', async (c) => {
   // 账号不存在：记入暴破失败计数（fire-and-forget，不拖慢登录响应）
   if (!account) {
     logLoginFailure(c, username, false);
+    recordCumulativeIpFailure(c);
     return c.json({ error: 'Invalid username or password' }, 401);
   }
 
   const payload = JSON.parse(account.payload);
 
-  // 封禁账号拒绝登录（管理后台设置；不影响已有解锁逻辑）
+  // 封禁账号拒绝登录；错误文案与"密码错误"保持一致，避免暴露账号是否存在/是否被封
   if (payload.banned === true) {
-    return c.json({ error: 'Account suspended' }, 403);
+    return c.json({ error: 'Invalid username or password' }, 401);
   }
 
   const passwordHash = payload.password_hash;
@@ -340,6 +458,7 @@ app.post('/api/auth/login', async (c) => {
   const passwordValid = await verifyPassword(password, passwordHash);
   if (!passwordValid) {
     logLoginFailure(c, username, true);
+    recordCumulativeIpFailure(c);
     return c.json({ error: 'Invalid username or password' }, 401);
   }
 
@@ -350,9 +469,12 @@ app.post('/api/auth/login', async (c) => {
 
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const loginIp = clientIp(c);
+  const prevLoginIp = typeof payload.last_login_ip === 'string' ? payload.last_login_ip : '';
 
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
+  payload.last_login_ip = loginIp;
 
   // Atomic-ish: write new record first, then delete old one.
   // If write succeeds but delete fails, we have a duplicate (harmless).
@@ -375,7 +497,177 @@ app.post('/api/auth/login', async (c) => {
   // 登录成功后写入 Redis 会话缓存
   await cacheSession(getRedis(c.env), sessionToken, account.user_id, expiresAt);
 
+  // 异地登录提醒：来源 IP 变化且配置了通知渠道时推送（可选开关 GEO_DIFF_LOGIN_NOTIFY='off' 关闭）
+  const env2 = c.env as Env;
+  if (prevLoginIp && prevLoginIp !== loginIp && env2.ADMIN_ALERT_WEBHOOK && env2.GEO_DIFF_LOGIN_NOTIFY !== 'off') {
+    sendNotify(env2.ADMIN_ALERT_WEBHOOK, {
+      title: 'APEXON · 异地登录提醒',
+      theme: 'orange',
+      lines: [
+        { label: '账号', value: account.user_id },
+        { label: '新 IP', value: loginIp },
+        { label: '此前 IP', value: prevLoginIp },
+      ],
+    }, c.executionCtx.waitUntil.bind(c.executionCtx));
+  }
+
   return c.json({ user_id: account.user_id, username, token: sessionToken, expires_at: expiresAt });
+});
+
+// ---------------------------------------------------------------------------
+// 邮箱验证码登录/注册（供应商无关，见 services/email.ts）。未配置 MAIL_API_KEY 时禁用。
+// 注意：这些路由必须在 app.use('/api/*') 的鉴权中间件之前注册，保持公开。
+// ---------------------------------------------------------------------------
+
+// ① 发送验证码到邮箱
+app.post('/api/auth/send-code', async (c) => {
+  const env = c.env as Env;
+  const cfg = emailConfig(env);
+  if (!cfg) return c.json({ error: 'email not configured' }, 503);
+
+  const body = await c.req.json<{ email?: unknown }>().catch((): { email?: unknown } => ({}));
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+
+  // 频率限制：按邮箱与 IP 双重限速（60 秒内限 2 次发码）
+  const redis = getRedis(env);
+  const ip = clientIp(c);
+  const okMail = await rateLimit(redis, rlKey('mailcode-mail', email), 2, 60);
+  const okIp = await rateLimit(redis, rlKey('mailcode-ip', ip), 10, 60);
+  if (!okMail || !okIp) return c.json({ error: 'Too many attempts, please try again later' }, 429);
+
+  const code = await issueMailCode(redis, email);
+  if (!code) return c.json({ error: 'Internal error (code issue)' }, 500);
+
+  const text = `【APEXON】您的验证码是 ${code}，10 分钟内有效。若非本人操作请忽略。`;
+  const html = `<div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e3e8f0;border-radius:12px;padding:24px"><h2 style="margin:0 0 8px">APEXON 验证码</h2><p style="color:#555">请输入下方验证码完成登录/注册：</p><div style="font-size:26px;letter-spacing:6px;font-weight:700;color:#4f6bff;padding:12px 0">${code}</div><p style="color:#888;font-size:12px">验证码 10 分钟内有效，请勿泄露给他人。</p></div>`;
+
+  const sent = await sendMail(cfg, email, 'APEXON 验证码', html, text);
+  if (!sent) {
+    // 发送失败：清除刚生成的验证码，避免残留误用
+    await redis.del(mailKey(email)).catch(() => {});
+    return c.json({ error: 'email send failed, please retry' }, 502);
+  }
+  return c.json({ ok: true, expires_in: MAIL_CODE_TTL_SEC });
+});
+
+// ② 邮箱注册：username + email + 验证码
+app.post('/api/auth/email-register', async (c) => {
+  const env = c.env as Env;
+  const cfg = emailConfig(env);
+  if (!cfg) return c.json({ error: 'email not configured' }, 503);
+
+  const body = await c.req.json<{ username?: unknown; email?: unknown; code?: unknown }>().catch((): { username?: unknown; email?: unknown; code?: unknown } => ({}));
+  const username = str(body.username, 30).trim();
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const code = str(body.code, 6).trim();
+
+  if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
+  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+
+  const redis = getRedis(env);
+  const shard = await buildShardService(env);
+
+  // 限速（含验证码校验前的防刷）
+  if (!(await rateLimit(redis, rlKey('emailreg', clientIp(c)), 5, 60))) {
+    return c.json({ error: 'Too many attempts, please try again later' }, 429);
+  }
+  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
+
+  // 唯一性校验：用户名与邮箱都不可重复
+  const existing = await shard.readByType('account', { limit: 1000 });
+  for (const r of existing) {
+    let p: any;
+    try { p = JSON.parse(r.payload); } catch { continue; }
+    if (p.username === username) return c.json({ error: 'Username already exists' }, 409);
+    if (String(p.email || '').toLowerCase() === email) return c.json({ error: 'Email already registered, please login' }, 409);
+  }
+
+  const userId = uuid();
+  const sessionToken = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const createdAt = new Date().toISOString();
+
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify({ username, email, email_verified: true, session_token: sessionToken, session_expires_at: expiresAt, last_login_ip: clientIp(c) }),
+    file_url: null,
+    created_at: createdAt,
+    updated_at: createdAt,
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
+
+  await cacheSession(redis, sessionToken, userId, expiresAt);
+  return c.json({ user_id: userId, username, token: sessionToken, expires_at: expiresAt });
+});
+
+// ③ 邮箱登录：email + 验证码（无需密码）
+app.post('/api/auth/email-login', async (c) => {
+  const env = c.env as Env;
+  const cfg = emailConfig(env);
+  if (!cfg) return c.json({ error: 'email not configured' }, 503);
+
+  const body = await c.req.json<{ email?: unknown; code?: unknown }>().catch((): { email?: unknown; code?: unknown } => ({}));
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const code = str(body.code, 6).trim();
+  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+
+  const redis = getRedis(env);
+  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
+
+  const shard = await buildShardService(env);
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  const account = accounts.find((r) => {
+    try { return String(JSON.parse(r.payload).email || '').toLowerCase() === email; } catch { return false; }
+  });
+  if (!account) return c.json({ error: 'No account with this email' }, 404);
+  const payload: any = JSON.parse(account.payload);
+  if (payload.banned === true) return c.json({ error: 'No account with this email' }, 404);
+
+  const ip = clientIp(c);
+  const prevIp = typeof payload.last_login_ip === 'string' ? payload.last_login_ip : '';
+  const sessionToken = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  payload.session_token = sessionToken;
+  payload.session_expires_at = expiresAt;
+  payload.last_login_ip = ip;
+
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: account.user_id,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: account.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
+  await shard.deleteById(account.id);
+
+  await cacheSession(redis, sessionToken, account.user_id, expiresAt);
+
+  // 异地登录提醒：IP 变化且有通知渠道时推送
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  if (prevIp && prevIp !== ip && env.ADMIN_ALERT_WEBHOOK && env.GEO_DIFF_LOGIN_NOTIFY !== 'off') {
+    sendNotify(env.ADMIN_ALERT_WEBHOOK, {
+      title: 'APEXON · 异地登录提醒',
+      theme: 'orange',
+      lines: [
+        { label: '账号', value: account.user_id },
+        { label: '新 IP', value: ip },
+        { label: '此前 IP', value: prevIp },
+      ],
+    }, waitUntil);
+  }
+
+  return c.json({ user_id: account.user_id, username: payload.username || account.user_id, token: sessionToken, expires_at: expiresAt });
 });
 
 app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedis), async (c) => {
@@ -386,7 +678,9 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedi
   const shard = await buildShardService(c.env);
   const anonScores = await shard.readByUserAndType(anon_id, 'score', 1000);
   for (const row of anonScores) {
-    await shard.write({ ...row, id: uuid(), user_id: userId, updated_at: new Date().toISOString() }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+    // 保留原始 score 的 id：重复合并同一匿名账号时，tursoInsert 的 ON CONFLICT(id) DO NOTHING
+    // 会幂等跳过，避免重复叠加同一成绩（此前每次都新生成 uuid 导致重复合并会翻倍）。
+    await shard.write({ ...row, user_id: userId, updated_at: new Date().toISOString() }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
   }
 
   return c.json({ merged: anonScores.length });
@@ -491,7 +785,38 @@ async function logLoginFailure(c: { env: Env; executionCtx: any; req: { header: 
     console.error('logLoginFailure error:', err);
   }
 }
+// 下发一道算数验证码挑战（公开）。供登录前需要验证码时调用；能力缺失时返回 disabled。
+// 注意：必须在 app.use('/api/*', authOrAdmin) 之前注册，保持公开。
+app.get('/api/auth/captcha', async (c) => {
+  const challenge = await issueCaptcha(getRedis(c.env));
+  if (!challenge) return c.json({ enabled: false });
+  return c.json({ enabled: true, ...challenge });
+});
+
 app.use('/api/*', authOrAdmin);
+
+/** 登录失败时同步累计 IP 失败次数；达到阈值则拉黑该 IP（fire-and-forget，不拖慢响应） */
+function recordCumulativeIpFailure(c: { env: Env; executionCtx: any; req: { header: (n: string) => string | undefined } }): void {
+  try {
+    const env = c.env as Env;
+    const threshold = Number(env.IP_BLACKLIST_THRESHOLD) || 20;
+    const windowSec = Number(env.IP_BLACKLIST_WINDOW_SEC) || 3600;
+    const durationSec = Number(env.IP_BLACKLIST_DURATION_SEC) || 86400;
+    const ip = clientIp(c);
+    const task = (async () => {
+      const redis = getRedis(env);
+      const n = await countIpFailure(redis, ip, windowSec);
+      if (n >= threshold) {
+        await blacklistIp(redis, ip, durationSec);
+        console.warn(`IP blacklisted (${n} failures): ${ip}`);
+      }
+    })();
+    task.catch((err) => console.error('recordCumulativeIpFailure error:', err));
+    try { c.executionCtx.waitUntil(task); } catch { /* ignore */ }
+  } catch (err) {
+    console.error('recordCumulativeIpFailure outer error:', err);
+  }
+}
 
 type FlatScore = {
   id: string;
@@ -633,27 +958,8 @@ app.post('/api/scores', async (c) => {
   if (scoreValue === null || !Number.isFinite(scoreValue)) {
     return c.json({ error: 'invalid score_value' }, 400);
   }
-  // 按测试类型做上下限校验：低于人类物理极限的必然伪造，超上限的必然异常。
-  // 此处只给"离群值"收口。range 为 [min, max]。
-  const SCORE_BOUNDS: Record<string, [number, number]> = {
-    // ms，越低越好；视觉反应生理下限约 100ms，留 80ms 余量防误杀
-    reaction: [80, 6000],
-    visualsearch: [80, 120000],
-    // reaction 类（瞄准按命中单位换算 ms 或分数，宁宽勿窄）
-    aim: [1, 1000000],
-    // type 输入速度相关
-    type: [0.1, 6000],
-    // 其余为积分/关数/点数类
-    stick: [0, 1000000],
-    number: [0, 1000000],
-    verbal: [0, 1000000],
-    visual: [0, 1000000],
-    sequence: [0, 1000000],
-    stroop: [0, 1000000],
-    nback: [0, 1000000],
-  };
-  const [minV, maxV] = SCORE_BOUNDS[testType] || [0, 1000000000];
-  if (scoreValue < minV || scoreValue > maxV) {
+  // 按测试类型做上下限校验：低于人类物理极限的必然伪造，超上限的必然异常（复用模块级收口）。
+  if (scoreValue < 0 || !scoreInBounds(testType, scoreValue)) {
     return c.json({ error: 'score out of range' }, 400);
   }
 
@@ -663,6 +969,11 @@ app.post('/api/scores', async (c) => {
   }
 
   const shard = await buildShardService(c.env);
+
+  // 防刷分：运行异常检测（高频连发 / 相对历史最佳异常提升）。命中 → 标记 suspicious 且默认不上榜，
+  // 管理员可在"异常成绩"面板复核，用户也可对标记成绩发起申诉。
+  const anomaly = await checkScoreAnomaly(getRedis(c.env), shard, userId, testType, scoreValue, scoreLowerIsBetter(testType));
+
   const result = await shard.write({
     id: uuid(),
     user_id: userId,
@@ -677,7 +988,11 @@ app.post('/api/scores', async (c) => {
       wpm: num(body.wpm),
       cpm: num(body.cpm),
       // 只保留显式声明的上榜标记，不透传客户端任意键（防批量赋值/字段注入）
-      leaderboard_eligible: payload.leaderboardEligible === false ? false : true,
+      leaderboard_eligible: payload.leaderboardEligible === false ? false : !anomaly.flagged,
+      // 异常检测结果
+      validity: anomaly.flagged ? 'suspicious' : 'valid',
+      flag_reason: anomaly.flagged ? anomaly.flagReason || null : null,
+      flagged: anomaly.flagged,
     }),
     file_url: null,
     created_at: new Date().toISOString(),
@@ -692,7 +1007,8 @@ app.post('/api/scores', async (c) => {
   } catch (err) {
     console.warn('scores cache invalidate failed:', err);
   }
-  return c.json({ success: true });
+  // 若命中可疑：给用户一个温和提示（不做硬性拒绝，避免误杀真实成绩）。
+  return c.json({ success: true, flagged: anomaly.flagged });
 });
 
 app.delete('/api/scores', async (c) => {
@@ -708,6 +1024,180 @@ app.delete('/api/scores', async (c) => {
 
   await shard.deleteById(id);
   return c.json({ success: true });
+});
+
+// 个人成绩趋势（C1）：当前登录用户自己的成绩按时间升序序列，供前端画趋势图
+app.get('/api/scores/trend', async (c) => {
+  const userId = c.get('userId');
+  const testType = str(c.req.query('test_type'), 40).trim();
+  const limit = Number(c.req.query('limit') || 100);
+  const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? limit : 100, 1), 500);
+  const shard = await buildShardService(c.env);
+  const options: { userId: string; subtype?: string; limit: number } = { userId, limit: 1000 };
+  if (testType) options.subtype = testType;
+  const rows = await shard.readByType('score', options);
+  // 按创建时间升序（时间轴从左到右）
+  rows.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const series = rows.slice(-safeLimit).map((r) => {
+    const p: any = safeJsonParse(r.payload) || {};
+    return {
+      id: r.id,
+      subtype: r.subtype || p.test_type || '',
+      score_value: r.score_value,
+      accuracy: p.accuracy != null ? Number(p.accuracy) : null,
+      wpm: p.wpm != null ? Number(p.wpm) : null,
+      cpm: p.cpm != null ? Number(p.cpm) : null,
+      created_at: r.created_at,
+    };
+  });
+  return c.json({ data: { test_type: testType || null, limit: safeLimit, series } });
+});
+
+// 用户导出自已成绩（C2）：当前登录用户，按 test_type 可选，返回 CSV 下载
+app.get('/api/export/my-scores', async (c) => {
+  const userId = c.get('userId');
+  const testType = str(c.req.query('test_type'), 40).trim();
+  const shard = await buildShardService(c.env);
+  const options: { userId: string; subtype?: string; limit: number } = { userId, limit: 1000 };
+  if (testType) options.subtype = testType;
+  const rows = await shard.readByType('score', options);
+  rows.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  const headers = ['test_type', 'score_value', 'accuracy', 'wpm', 'cpm', 'created_at'];
+  const body = rows.map((r) => {
+    const p: any = safeJsonParse(r.payload) || {};
+    return [
+      r.subtype || p.test_type || '',
+      r.score_value ?? '',
+      p.accuracy != null ? Number(p.accuracy) : '',
+      p.wpm != null ? Number(p.wpm) : '',
+      p.cpm != null ? Number(p.cpm) : '',
+      r.created_at,
+    ];
+  });
+  const filename = csvFilename(testType ? `scores-${testType}` : 'my-scores');
+  return csvDownload(toCsv(headers, body), filename);
+});
+
+// ===== 成绩发布订阅（C 端）=====
+// 订阅「某类测试 / 全部」的成绩发布邮箱提醒。email 未传时回退账号绑定的邮箱。
+app.post('/api/subscriptions', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{ email?: unknown; test_type?: unknown; enabled?: unknown }>().catch((): { email?: unknown; test_type?: unknown; enabled?: unknown } => ({}));
+  const testType = str(body.test_type, 40).trim();
+  const enabled = body.enabled !== false;
+  const rl = await rateLimit(getRedis(c.env), rlKey('sub', userId), 10, 60);
+  if (!rl) return c.json({ error: 'Too many requests, slow down' }, 429);
+
+  const shard = await buildShardService(c.env);
+  // 邮箱：优先用请求里带的；否则回退账号绑定的邮箱。
+  let email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  if (email && !isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+  if (!email) {
+    const acc = (await shard.readByUserAndType(userId, 'account', 10))[0];
+    if (acc) {
+      const p: any = safeJsonParse(acc.payload) || {};
+      if (typeof p.email === 'string') email = p.email;
+    }
+  }
+  if (!email) return c.json({ error: '需要有效的收件邮箱' }, 400);
+
+  const r = await setSubscription(shard, userId, email, testType, enabled);
+  if (!r.ok) return c.json({ error: r.error }, 503);
+  return c.json({ success: true });
+});
+
+// 查看自己的订阅设置
+app.get('/api/me/subscriptions', async (c) => {
+  const shard = await buildShardService(c.env);
+  const sub = await readMySubscription(shard, c.get('userId'));
+  return c.json({ data: sub });
+});
+
+// ===== 成绩申诉（C 端）=====
+// 用户对自己被标记的成绩发起申诉；管理员在后台复核。
+app.post('/api/scores/:id/appeal', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const body = await c.req.json<{ reason?: unknown }>().catch((): { reason?: unknown } => ({}));
+  const reason = str(body.reason, 500).trim();
+  if (reason.length < 5) return c.json({ error: '申诉理由至少 5 个字' }, 400);
+  if (!(await rateLimit(getRedis(c.env), rlKey('appeal', userId), 5, 60))) {
+    return c.json({ error: 'Too many requests, slow down' }, 429);
+  }
+
+  const shard = await buildShardService(c.env);
+  const score = await shard.readById(id);
+  if (!score || score.type !== 'score') return c.json({ error: '记录不存在' }, 404);
+  if (score.user_id !== userId) return c.json({ error: 'Forbidden' }, 403);
+  const p: any = safeJsonParse(score.payload) || {};
+
+  // 只允许对"被判可疑/无效"的成绩申诉
+  if (p.validity === 'valid') return c.json({ error: '该成绩状态正常，无需申诉' }, 409);
+  // 已存在的未处理申诉 → 拒绝重复提交
+  const existingAppeals = await shard.readByUserAndType(userId, 'appeal', 50);
+  const open = existingAppeals.find((a) => {
+    const ap: any = safeJsonParse(a.payload) || {};
+    return ap.score_id === id && ap.status === 'open';
+  });
+  if (open) return c.json({ error: '已有处理中的申诉' }, 409);
+
+  const now = new Date().toISOString();
+  const w = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'appeal',
+    subtype: score.subtype,
+    score_value: score.score_value,
+    payload: JSON.stringify({
+      score_id: id,
+      test_type: score.subtype || p.test_type || '',
+      score_value: score.score_value,
+      reason,
+      status: 'open',
+      created_at: now,
+      updated_at: now,
+      resolved_by: null,
+      admin_note: null,
+    }),
+    file_url: null,
+    created_at: now,
+    updated_at: now,
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!w.ok) return c.json({ error: w.error }, 503);
+  // 提醒管理员
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 成绩申诉',
+    theme: 'blue',
+    lines: [
+      { label: '用户', value: userId },
+      { label: '题目', value: score.subtype || p.test_type || '-' },
+      { label: '分数', value: score.score_value != null ? String(score.score_value) : '-' },
+      { label: '理由', value: reason },
+    ],
+  }, c.executionCtx.waitUntil.bind(c.executionCtx));
+  return c.json({ success: true });
+});
+
+// 查看自己的申诉记录
+app.get('/api/my-appeals', async (c) => {
+  const userId = c.get('userId');
+  const shard = await buildShardService(c.env);
+  const rows = await shard.readByUserAndType(userId, 'appeal', 50);
+  const data = rows.map((r) => {
+    const p: any = safeJsonParse(r.payload) || {};
+    return {
+      id: r.id,
+      score_id: p.score_id,
+      test_type: r.subtype || p.test_type || '',
+      score_value: r.score_value,
+      reason: p.reason || '',
+      status: p.status || 'open',
+      admin_note: p.admin_note || null,
+      created_at: r.created_at,
+    };
+  });
+  return c.json({ data });
 });
 
 app.get('/api/comments', async (c) => {
@@ -728,6 +1218,7 @@ app.get('/api/comments', async (c) => {
         content: payload.content || '',
         created_at: r.created_at,
         updated_at: r.updated_at,
+        spam: payload.spam_filtered === true,
         payload,
       };
     }),
@@ -745,6 +1236,47 @@ app.post('/api/comments', async (c) => {
   // 频率限制：按用户身份限速，防刷屏/垃圾评论淹没正常内容
   if (!(await rateLimit(getRedis(c.env), rlKey('comment', userId), 12, 60))) {
     return c.json({ error: 'You are commenting too fast' }, 429);
+  }
+
+  // 内容反垃圾：硬命中（广告/外链/危险内容）拦截并落告警；软命中（无意义刷屏）打标记由客户端过滤。
+  const env = c.env as Env;
+  if (env.CONTENT_FILTER !== 'off') {
+    const verdict = analyzeContent(content);
+    if (verdict.action === 'block') {
+      const redis = getRedis(env);
+      await recordAlert(
+        redis,
+        await (async () => buildShardService(env))(),
+        c.executionCtx.waitUntil.bind(c.executionCtx),
+        env,
+        { kind: 'comment', severity: 'warning', source_ip: clientIp(c), target: userId, message: '评论命中反垃圾规则', count: 1, detail: verdict.reason }
+      );
+      return c.json({ error: '该内容包含不允许的词语或链接' }, 400);
+    }
+    if (verdict.action === 'flag') {
+      const flagged = { spam_filtered: true, spam_reason: verdict.reason };
+      const shard = await buildShardService(env);
+      const result = await shard.write({
+        id: uuid(),
+        user_id: userId,
+        type: 'comment',
+        subtype: category,
+        score_value: null,
+        payload: JSON.stringify({
+          username: str(body.username, 60) || userId,
+          content,
+          category,
+          spam_filtered: true,
+          spam_reason: verdict.reason,
+        }),
+        file_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+      if (!result.ok) return c.json({ error: result.error }, 503);
+      try { await getRedis(env).del('cache:stats'); } catch (err) { console.warn('comments cache invalidate failed:', err); }
+      return c.json({ success: true, filtered: flagged });
+    }
   }
 
   const shard = await buildShardService(c.env);
@@ -1061,10 +1593,63 @@ function flattenAudit(r: MixedData) {
   return { id: r.id, admin: p.admin, action: p.action, target: p.target, detail: p.detail, created_at: r.created_at };
 }
 
+/** 删除指定用户全部类型的数据（与单删接口保持一致的分片删除策略） */
+async function deleteUserAllData(shard: ShardService, userId: string): Promise<void> {
+  const types = ['account', 'profile', 'score', 'comment', 'feedback', 'online', 'user', 'file'];
+  for (const t of types) {
+    const rows = await shard.readByUserAndType(userId, t, 1000);
+    for (const row of rows) {
+      await shard.deleteById(row.id);
+    }
+  }
+}
+
+/** 封禁/解封单个账号（写新行 + 删旧行，保留 created_at）。返回 { ok } 或 { ok:false, error } */
+async function applyUserBan(
+  shard: ShardService,
+  userId: string,
+  banned: boolean,
+  reason: string,
+  waitUntil: ((p: Promise<unknown>) => void) | undefined
+): Promise<{ ok: boolean; error?: string }> {
+  const account = (await shard.readByUserAndType(userId, 'account', 10))[0];
+  if (!account) return { ok: false, error: '账号不存在' };
+
+  const payload: any = safeJsonParse(account.payload) || {};
+  payload.banned = banned;
+  if (banned) {
+    payload.banned_reason = reason.trim() || '管理员封禁';
+  } else {
+    delete payload.banned_reason;
+  }
+
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: account.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil });
+  if (!writeResult.ok) return { ok: false, error: writeResult.error };
+  await shard.deleteById(account.id);
+  return { ok: true };
+}
+
+/** 高危操作二次校验（2FA）：已启用 TOTP 时，要求请求体中的动态码有效；未启用则放行 */
+async function requireHighRiskTotp(c: any, body: { code?: unknown }): Promise<boolean> {
+  const env = c.env as Env;
+  const t = await verifyAdminTotp(env, String(body?.code || '').trim());
+  return t.requiresTotp ? t.ok : true;
+}
+
 /** 管理接口统一入口：校验会话令牌（短期、带 TTL），通过后经 c.set 注入管理员标识供审计复用 */
 async function adminGw(c: any, next: any): Promise<Response | void> {
-  // 登录/注销/2FA 首次绑定端点不走会话校验（它们各自处理鉴权：登录与绑定需持口令，注销只消会话）
   const p = c.req.path;
+  // 登录/注销/2FA 首次绑定端点不走会话校验（它们各自处理鉴权：登录与绑定需持口令，注销只消会话）
   if ((c.req.method === 'POST' && (p === '/api/admin/login' || p === '/api/admin/logout')) ||
       (c.req.method === 'GET' && p === '/api/admin/2fa/setup')) {
     return next();
@@ -1146,10 +1731,26 @@ app.post('/api/admin/login', async (c) => {
   // 4) 成功：清失败计数、发放短期会话令牌
   await clearAdminFailures(redis, ip);
   const ttlSec = adminSessionTtl(env);
-  const session = await createAdminSession(redis, `admin#${String(env.ADMIN_TOKEN).slice(-6)}`, ip, ttlSec);
-  writeAudit(shard, waitUntil, `admin#${String(env.ADMIN_TOKEN).slice(-6)}`, 'admin.login.success', ip, `session_ttl=${ttlSec}s`);
+  const adminLabel = `admin#${String(env.ADMIN_TOKEN).slice(-6)}`;
+  const created = await createAdminSession(redis, adminLabel, ip, ttlSec);
+  if (!created.ok) {
+    // 会话令牌写入失败：发不可用的令牌毫无意义，视为登录失败（fail-closed，宁可 503 也不发死令牌）
+    console.error('admin session create failed at ip', ip);
+    return c.json({ error: 'session create failed, please retry' }, 503 as any);
+  }
+  writeAudit(shard, waitUntil, adminLabel, 'admin.login.success', ip, `session_ttl=${ttlSec}s`);
+  // 高危事件实时推送：后台登录成功也第一时间通知管理员（可配飞书/Lark webhook）
+  sendNotify(env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 后台登录成功',
+    theme: 'green',
+    lines: [
+      { label: '时间', value: new Date().toLocaleString('zh-CN') },
+      { label: '来源 IP', value: ip },
+      { label: '会话有效', value: Math.round(ttlSec / 60) + ' 分钟' },
+    ],
+  }, waitUntil);
 
-  return c.json({ ok: true, session, expires_in: ttlSec, totp_enabled: totp.requiresTotp });
+  return c.json({ ok: true, session: created.token, expires_in: ttlSec, totp_enabled: totp.requiresTotp });
 });
 
 // 注销：删除会话令牌
@@ -1233,51 +1834,43 @@ app.get('/api/admin/users/:userId', async (c) => {
 });
 
 app.delete('/api/admin/users/:userId', async (c) => {
+  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const userId = c.req.param('userId');
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
-  const types = ['account', 'profile', 'score', 'comment', 'feedback', 'online', 'user', 'file'];
-  for (const t of types) {
-    const rows = await shard.readByUserAndType(userId, t, 1000);
-    for (const row of rows) {
-      await shard.deleteById(row.id);
-    }
-  }
+  await deleteUserAllData(shard, userId);
   await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.delete', userId);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 高危操作：删除用户',
+    theme: 'red',
+    lines: [
+      { label: '用户', value: userId },
+      { label: '来源 IP', value: c.get('adminSessionIp') || '' },
+      { label: '范围', value: '账号及全部成绩/评论/资料/反馈' },
+    ],
+  }, waitUntil);
   return c.json({ success: true });
 });
 
 async function setBan(c: any, banned: boolean) {
+  const body = await c.req.json().catch(() => ({} as { code?: unknown; reason?: unknown }));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403) as any;
   const shard = await buildShardService(c.env);
   const userId = c.req.param('userId');
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
-  const account = (await shard.readByUserAndType(userId, 'account', 10))[0];
-  if (!account) return c.json({ success: false, error: '账号不存在' }, 404) as any;
-
-  const payload: any = safeJsonParse(account.payload) || {};
-  payload.banned = banned;
-  if (banned) {
-    const body = await c.req.json().catch(() => ({}) as Record<string, unknown>);
-    const reason = str((body as { reason?: unknown }).reason, 300).trim();
-    payload.banned_reason = reason || '管理员封禁';
-  } else {
-    delete payload.banned_reason;
-  }
-
-  const writeResult = await shard.write({
-    id: uuid(),
-    user_id: userId,
-    type: 'account',
-    subtype: null,
-    score_value: null,
-    payload: JSON.stringify(payload),
-    file_url: null,
-    created_at: account.created_at,
-    updated_at: new Date().toISOString(),
-  }, { waitUntil });
-  if (!writeResult.ok) return c.json({ success: false, error: writeResult.error }, 503) as any;
-  await shard.deleteById(account.id);
-  await writeAudit(shard, waitUntil, c.get('adminToken') || '', banned ? 'user.ban' : 'user.unban', userId, payload.banned_reason || null);
+  const reason = banned ? str((body as { reason?: unknown }).reason, 300).trim() : '';
+  const res = await applyUserBan(shard, userId, banned, reason, waitUntil);
+  if (!res.ok) return c.json({ success: false, error: res.error }, res.error && res.error.includes('不存在') ? 404 : 503) as any;
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', banned ? 'user.ban' : 'user.unban', userId, reason || undefined);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: banned ? 'APEXON · 高危操作：封禁用户' : 'APEXON · 后台操作：解除封禁',
+    theme: banned ? 'orange' : 'blue',
+    lines: [
+      { label: '用户', value: userId },
+      { label: (banned ? '原因' : '来源 IP' ), value: banned ? reason : (c.get('adminSessionIp') || '') },
+    ],
+  }, waitUntil);
   return c.json({ success: true, banned });
 }
 
@@ -1303,11 +1896,22 @@ app.get('/api/admin/content/:id', async (c) => {
 });
 
 app.delete('/api/admin/content/:id', async (c) => {
+  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
   const row = await shard.readById(c.req.param('id'));
   await shard.deleteById(c.req.param('id'));
   await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'content.delete', c.req.param('id'), row ? row.type : undefined);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 高危操作：删除内容',
+    theme: 'orange',
+    lines: [
+      { label: '记录', value: c.req.param('id') },
+      { label: '类型', value: (row && row.type) || '' },
+      { label: '来源 IP', value: c.get('adminSessionIp') || '' },
+    ],
+  }, waitUntil);
   return c.json({ success: true });
 });
 
@@ -1350,30 +1954,756 @@ app.patch('/api/admin/alerts/:id', async (c) => {
 });
 
 app.delete('/api/admin/alerts/:id', async (c) => {
+  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
   const id = c.req.param('id');
   await shard.deleteById(id);
   await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'alert.delete', id);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 高危操作：删除告警',
+    theme: 'orange',
+    lines: [
+      { label: '告警', value: id },
+      { label: '来源 IP', value: c.get('adminSessionIp') || '' },
+    ],
+  }, waitUntil);
   return c.json({ success: true });
 });
 
 app.get('/api/admin/audit', async (c) => {
+  // D2 增强：按管理员 / 操作类型 / 关键词筛选
+  const admin = str(c.req.query('admin'), 60).trim();
+  const action = str(c.req.query('action'), 60).trim();
+  const q = str(c.req.query('q'), 200).trim();
   const limit = Number(c.req.query('limit') || 200);
   const shard = await buildShardService(c.env);
   const safeLimit = Math.min(Math.max(Number.isFinite(limit) ? limit : 200, 1), 1000);
-  const rows = await shard.readByType('audit', { limit: safeLimit });
-  return c.json({ data: rows.map(flattenAudit) });
+  const needle = q.toLowerCase();
+  const rows = await shard.readByType('audit', { limit: 1000 });
+  const filtered = rows
+    .map(flattenAudit)
+    .filter((a) => {
+      if (admin && a.admin !== admin) return false;
+      if (action && a.action !== action) return false;
+      if (needle && !`${a.target || ''} ${a.detail || ''}`.toLowerCase().includes(needle)) return false;
+      return true;
+    });
+  return c.json({ data: filtered.slice(0, safeLimit) });
 });
 
-// ===== 全局 404 与内部错误兜底（修复 4xx/5xx 大量堆积）=====
-// - 不存在的路由统一返回结构化 JSON 404，避免无效路径进数据库/耗 CPU
-// - 未捕获的接口异常统一记录日志并返回 500，杜绝 Worker 静默崩溃
+// ---- 数据看板（A1）：注册趋势 / 活跃趋势 / 成绩类型分布（JS 聚合，无线程/外部图库依赖）----
+app.get('/api/admin/stats/trends', async (c) => {
+  const days = Number(c.req.query('days') || 14);
+  const daysClamped = Math.min(Math.max(Number.isFinite(days) ? Math.trunc(days) : 14, 1), 90);
+  const shard = await buildShardService(c.env);
+  const [accounts, scores] = await Promise.all([
+    shard.readByType('account', { limit: 1000 }),
+    shard.readByType('score', { limit: 1000 }),
+  ]);
+
+  // 本地时区的"日"分桶键（YYYY-MM-DD）
+  const dayKey = (iso: string) => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  // 生成日期轴（含今天之前 daysClamped-1 天）
+  const keys: string[] = [];
+  const start = new Date();
+  start.setDate(start.getDate() - (daysClamped - 1));
+  for (let i = 0; i < daysClamped; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    keys.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+  }
+
+  const regMap = new Map<string, number>();
+  const actMap = new Map<string, number>();
+  for (const a of accounts) { const k = dayKey(a.created_at); if (k && keys.includes(k)) regMap.set(k, (regMap.get(k) || 0) + 1); }
+  for (const s of scores) { const k = dayKey(s.created_at); if (k && keys.includes(k)) actMap.set(k, (actMap.get(k) || 0) + 1); }
+
+  const registrations = keys.map((k) => ({ date: k, count: regMap.get(k) || 0 }));
+  const activity = keys.map((k) => ({ date: k, count: actMap.get(k) || 0 }));
+
+  // 成绩类型分布（不限定窗口，展示全量结构）
+  const distMap = new Map<string, number>();
+  for (const s of scores) {
+    const t = s.subtype || ((safeJsonParse(s.payload) as any)?.test_type) || 'other';
+    distMap.set(t, (distMap.get(t) || 0) + 1);
+  }
+  const distribution = Array.from(distMap.entries())
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+  const distinctUsers = new Set(scores.map((s) => s.user_id)).size;
+
+  return c.json({ success: true, data: { days: daysClamped, registrations, activity, distribution, active_users: distinctUsers } });
+});
+
+// ---- 导出 CSV（A2）----
+app.get('/api/admin/export/users', async (c) => {
+  const q = str(c.req.query('q'), 100);
+  const shard = await buildShardService(c.env);
+  const rows = await searchAccounts(shard, q, 1000);
+  const headers = ['user_id', 'username', 'email', 'banned', 'banned_reason', 'created_at', 'updated_at'];
+  const body = rows.map(flattenAccount).map((u) => [
+    u.user_id, u.username, u.email || '', u.banned ? '1' : '0', u.banned_reason || '', u.created_at, u.updated_at,
+  ]);
+  return csvDownload(toCsv(headers, body), csvFilename('users'));
+});
+
+app.get('/api/admin/export/audit', async (c) => {
+  const admin = str(c.req.query('admin'), 60).trim();
+  const action = str(c.req.query('action'), 60).trim();
+  const q = str(c.req.query('q'), 200).trim();
+  const shard = await buildShardService(c.env);
+  const needle = q.toLowerCase();
+  const rows = await shard.readByType('audit', { limit: 1000 });
+  const filtered = rows.map(flattenAudit).filter((a) => {
+    if (admin && a.admin !== admin) return false;
+    if (action && a.action !== action) return false;
+    if (needle && !`${a.target || ''} ${a.detail || ''}`.toLowerCase().includes(needle)) return false;
+    return true;
+  });
+  const headers = ['id', 'admin', 'action', 'target', 'detail', 'created_at'];
+  const body = filtered.map((a) => [a.id, a.admin || '', a.action || '', a.target || '', a.detail || '', a.created_at]);
+  return csvDownload(toCsv(headers, body), csvFilename('audit'));
+});
+
+// ---- 批量操作（D1）：批量删除 / 封禁 / 解封（均需 2FA 动态码）----
+function adminUserIdList(body: any): string[] {
+  if (!Array.isArray(body?.userIds)) return [];
+  return body.userIds.filter((x: unknown) => typeof x === 'string' && x.trim()).map((x: string) => String(x).trim().slice(0, 128)).slice(0, 500);
+}
+
+app.post('/api/admin/users/batch/delete', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const userIds = adminUserIdList(body);
+  if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  let deleted = 0;
+  for (const id of userIds) {
+    try { await deleteUserAllData(shard, id); deleted += 1; }
+    catch (err) { console.error(`batch delete user ${id} failed:`, err); }
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.batch_delete', `${userIds.length}`, `deleted=${deleted}`);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 高危操作：批量删除用户',
+    theme: 'red',
+    lines: [
+      { label: '数量', value: `${deleted}/${userIds.length}` },
+      { label: '来源 IP', value: c.get('adminSessionIp') || '' },
+    ],
+  }, waitUntil);
+  return c.json({ success: true, deleted, requested: userIds.length });
+});
+
+app.post('/api/admin/users/batch/ban', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const userIds = adminUserIdList(body);
+  if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
+  const reason = str((body as { reason?: unknown }).reason, 300).trim() || '批量封禁';
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  let done = 0, failed = 0;
+  for (const id of userIds) {
+    const r = await applyUserBan(shard, id, true, reason, waitUntil);
+    r.ok ? (done += 1) : (failed += 1);
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.batch_ban', `${userIds.length}`, `done=${done} failed=${failed} reason=${reason}`);
+  sendNotify(c.env.ADMIN_ALERT_WEBHOOK, {
+    title: 'APEXON · 高危操作：批量封禁用户',
+    theme: 'orange',
+    lines: [
+      { label: '数量', value: `${done}/${userIds.length}（失败 ${failed}）` },
+      { label: '原因', value: reason },
+      { label: '来源 IP', value: c.get('adminSessionIp') || '' },
+    ],
+  }, waitUntil);
+  return c.json({ success: true, done, failed });
+});
+
+app.post('/api/admin/users/batch/unban', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const userIds = adminUserIdList(body);
+  if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  let done = 0;
+  for (const id of userIds) { const r = await applyUserBan(shard, id, false, '', waitUntil); if (r.ok) done += 1; }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.batch_unban', `${userIds.length}`, `done=${done}`);
+  return c.json({ success: true, done });
+});
+
+// ===========================================================================
+// 新增：登录加固 / 防刷分 / 成绩申诉 / 教师端班级 / 成绩发布订阅（管理端）
+// ===========================================================================
+
+/** 校类名：仅允许 1-40 位的中英文、数字、横杠、下划线 */
+function normClass(v: unknown): string {
+  const s = str(v, 40).trim();
+  return /^[\w\u4e00-\u9fa5-]{1,40}$/.test(s) ? s : '';
+}
+
+/** 更新账号所属班级（写新行 + 删除旧行，保留 created_at） */
+async function setUserClass(
+  shard: ShardService,
+  userId: string,
+  cls: string,
+  waitUntil: ((p: Promise<unknown>) => void) | undefined
+): Promise<{ ok: boolean; error?: string }> {
+  const account = (await shard.readByUserAndType(userId, 'account', 10))[0];
+  if (!account) return { ok: false, error: '账号不存在' };
+  const payload: any = safeJsonParse(account.payload) || {};
+  if (cls) payload.class = cls;
+  else delete payload.class;
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: account.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil });
+  if (!writeResult.ok) return { ok: false, error: writeResult.error };
+  await shard.deleteById(account.id);
+  return { ok: true };
+}
+
+/** 覆写一条成绩的 validity（写新行 + 删除旧行，保持同一 id，幂等） */
+async function setScoreValidity(
+  shard: ShardService,
+  scoreId: string,
+  validity: 'valid' | 'invalid',
+  note: string,
+  waitUntil: ((p: Promise<unknown>) => void) | undefined
+): Promise<{ ok: boolean; error?: string; test_type?: string }> {
+  const score = await shard.readById(scoreId);
+  if (!score || score.type !== 'score') return { ok: false, error: '成绩不存在' };
+  const payload: any = safeJsonParse(score.payload) || {};
+  payload.validity = validity;
+  payload.flag_reason = validity === 'invalid' ? (note || payload.flag_reason || '管理员标记') : null;
+  payload.flagged = validity === 'invalid';
+  payload.leaderboard_eligible = validity === 'valid';
+  const writeResult = await shard.write({
+    id: scoreId,
+    user_id: score.user_id,
+    type: 'score',
+    subtype: score.subtype,
+    score_value: score.score_value,
+    payload: JSON.stringify(payload),
+    file_url: score.file_url,
+    created_at: score.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil });
+  if (!writeResult.ok) return { ok: false, error: writeResult.error };
+  await shard.deleteById(scoreId);
+  return { ok: true, test_type: score.subtype || payload.test_type || '' };
+}
+
+// ---- 登录加固：验证码状态 + 累积式 IP 黑名单管理 ----
+app.get('/api/admin/security', async (c) => {
+  const env = c.env as Env;
+  return c.json({
+    data: {
+      captcha_always: env.CAPTCHA_ALWAYS === 'on',
+      captcha_require_after_fail: Number(env.CAPTCHA_REQUIRE_AFTER_FAIL) || 3,
+      ip_blacklist_threshold: Number(env.IP_BLACKLIST_THRESHOLD) || 20,
+      ip_blacklist_window_sec: Number(env.IP_BLACKLIST_WINDOW_SEC) || 3600,
+      ip_blacklist_duration_sec: Number(env.IP_BLACKLIST_DURATION_SEC) || 86400,
+      admin_alert_webhook: Boolean(env.ADMIN_ALERT_WEBHOOK),
+    },
+  });
+});
+
+app.get('/api/admin/security/ipbans', async (c) => {
+  const redis = getRedis(c.env);
+  let keys: string[] = [];
+  try {
+    keys = await redis.keys('ipblack:*');
+  } catch (err) {
+    console.error('ipbans keys scan failed:', err);
+    return c.json({ data: [] });
+  }
+  const list: Array<{ ip: string; failures: number; ttl: number }> = [];
+  for (const k of keys.slice(0, 200)) {
+    const ip = k.replace(/^ipblack:/, '');
+    let failures = 0, ttl = 0;
+    try { failures = (await redis.get<number>(k)) || 0; } catch { /* */ }
+    try { ttl = await redis.ttl(k); } catch { /* */ }
+    list.push({ ip, failures, ttl });
+  }
+  list.sort((a, b) => a.ip.localeCompare(b.ip));
+  return c.json({ data: list });
+});
+
+app.post('/api/admin/security/ipbans/add', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const ip = str((body as { ip?: unknown }).ip, 64).trim();
+  if (!/^[\w.:\-\[\]]+$/.test(ip) || !ip) return c.json({ error: '无效的 IP' }, 400);
+  const hours = Number((body as { hours?: unknown }).hours);
+  const durationSec = Number.isFinite(hours) && hours > 0 ? Math.min(Math.trunc(hours * 3600), 30 * 86400) : (Number((c.env as Env).IP_BLACKLIST_DURATION_SEC) || 86400);
+  await blacklistIp(getRedis(c.env), ip, durationSec);
+  const shard = await buildShardService(c.env);
+  await writeAudit(shard, c.executionCtx.waitUntil.bind(c.executionCtx), c.get('adminToken') || '', 'security.ipban.add', ip, `duration=${durationSec}s`);
+  return c.json({ success: true, ip, duration_sec: durationSec });
+});
+
+app.post('/api/admin/security/ipbans/remove', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const ip = str((body as { ip?: unknown }).ip, 64).trim();
+  if (!ip) return c.json({ error: '无效的 IP' }, 400);
+  await clearIpBlacklist(getRedis(c.env), ip);
+  const shard = await buildShardService(c.env);
+  await writeAudit(shard, c.executionCtx.waitUntil.bind(c.executionCtx), c.get('adminToken') || '', 'security.ipban.remove', ip);
+  return c.json({ success: true });
+});
+
+// ---- 防刷分：异常成绩审核 ----
+app.get('/api/admin/scores/flagged', async (c) => {
+  const status = str(c.req.query('status'), 20).trim(); // all | suspicious | invalid
+  const shard = await buildShardService(c.env);
+  const rows = await shard.readByType('score', { limit: 1000 });
+  const data = rows
+    .map((r) => {
+      const p: any = safeJsonParse(r.payload) || {};
+      const v = p.validity === 'invalid' ? 'invalid' : (p.flagged || p.validity === 'suspicious' ? 'suspicious' : 'valid');
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        username: p.username || r.user_id,
+        test_type: r.subtype || p.test_type || '',
+        score_value: r.score_value,
+        validity: v,
+        flag_reason: p.flag_reason || null,
+        leaderboard_eligible: p.leaderboard_eligible !== false,
+        created_at: r.created_at,
+      };
+    })
+    .filter((s) => status === 'all' || s.validity === status || (status === '' && s.validity !== 'valid'))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return c.json({ data: data.slice(0, 500) });
+});
+
+app.patch('/api/admin/scores/:id/validity', async (c) => {
+  const env = c.env as Env;
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const validity = str((body as { validity?: unknown }).validity, 16).trim();
+  if (validity !== 'valid' && validity !== 'invalid') return c.json({ error: 'validity 只能为 valid 或 invalid' }, 400);
+  const id = c.req.param('id');
+  const note = str((body as { reason?: unknown }).reason, 300).trim();
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const r = await setScoreValidity(shard, id, validity, note, waitUntil);
+  if (!r.ok) return c.json({ error: r.error }, r.error && r.error.includes('不存在') ? 404 : 503);
+  // 失效/恢复上榜会改变榜单聚合结果，需清缓存
+  if (r.test_type) {
+    try { await getRedis(env).del(`cache:lb:${r.test_type}`); } catch { /* ignore */ }
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', validity === 'invalid' ? 'score.invalidate' : 'score.restore', id, note || undefined);
+  return c.json({ success: true, validity });
+});
+
+// ---- 成绩申诉审核 ----
+function flattenAppeal(r: MixedData) {
+  const p: any = safeJsonParse(r.payload) || {};
+  return {
+    id: r.id,
+    user_id: r.user_id,
+    score_id: p.score_id || '',
+    test_type: r.subtype || p.test_type || '',
+    score_value: r.score_value,
+    reason: p.reason || '',
+    status: p.status || 'open',
+    admin_note: p.admin_note || null,
+    created_at: r.created_at,
+  };
+}
+
+app.get('/api/admin/appeals', async (c) => {
+  const status = str(c.req.query('status'), 20).trim(); // open | all
+  const shard = await buildShardService(c.env);
+  const rows = await shard.readByType('appeal', { limit: 1000 });
+  let data = rows.map(flattenAppeal);
+  if (status === 'open') data = data.filter((a) => a.status === 'open');
+  data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return c.json({ data: data.slice(0, 500) });
+});
+
+app.patch('/api/admin/appeals/:id', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const id = c.req.param('id');
+  const status = str((body as { status?: unknown }).status, 16).trim();
+  const note = str((body as { note?: unknown }).note, 300).trim();
+  if (status !== 'approved' && status !== 'rejected') return c.json({ error: 'status 只能为 approved 或 rejected' }, 400);
+
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const appeal = await shard.readById(id);
+  if (!appeal || appeal.type !== 'appeal') return c.json({ error: '申诉不存在' }, 404);
+  const ap: any = safeJsonParse(appeal.payload) || {};
+  if (ap.status !== 'open') return c.json({ error: '该申诉已处理' }, 409);
+
+  // 更新申诉状态（写新行 + 删旧行，保持同一 id）
+  const now = new Date().toISOString();
+  ap.status = status;
+  ap.updated_at = now;
+  ap.resolved_by = c.get('adminToken') || 'admin';
+  ap.admin_note = note || null;
+  const w1 = await shard.write({
+    id,
+    user_id: appeal.user_id,
+    type: 'appeal',
+    subtype: appeal.subtype,
+    score_value: appeal.score_value,
+    payload: JSON.stringify(ap),
+    file_url: appeal.file_url,
+    created_at: appeal.created_at,
+    updated_at: now,
+  }, { waitUntil });
+  if (!w1.ok) return c.json({ error: w1.error }, 503);
+  await shard.deleteById(id);
+
+  // 申诉通过 → 恢复对应成绩为有效并上榜
+  const scoreId = ap.score_id;
+  if (status === 'approved' && scoreId) {
+    const sc = await setScoreValidity(shard, scoreId, 'valid', '', waitUntil);
+    if (sc.ok && sc.test_type) {
+      try { await getRedis(c.env).del(`cache:lb:${sc.test_type}`); } catch { /* ignore */ }
+    }
+  }
+
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', `appeal.${status}`, id, `score=${scoreId || '-'} note=${note || '-'}`);
+  return c.json({ success: true, status });
+});
+
+// ---- 教师端：班级管理 + 成绩 CSV 导入 + 发布订阅 ----
+app.post('/api/admin/users/:userId/class', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const cls = normClass((body as { class?: unknown }).class);
+  const userId = c.req.param('userId');
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const r = await setUserClass(shard, userId, cls, waitUntil);
+  if (!r.ok) return c.json({ error: r.error }, r.error && r.error.includes('不存在') ? 404 : 503);
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', cls ? 'user.setclass' : 'user.clearclass', userId, cls || '(清空)');
+  return c.json({ success: true, class: cls });
+});
+
+app.post('/api/admin/users/batch/class', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const cls = normClass((body as { class?: unknown }).class);
+  if (!cls) return c.json({ error: 'class 不能为空' }, 400);
+  const userIds = adminUserIdList(body);
+  if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  let done = 0, failed = 0;
+  for (const id of userIds) {
+    const r = await setUserClass(shard, id, cls, waitUntil);
+    r.ok ? (done += 1) : (failed += 1);
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'user.batch_class', `${userIds.length}`, `class=${cls} done=${done} failed=${failed}`);
+  return c.json({ success: true, done, failed });
+});
+
+/** 汇总班级：依据 account 上的 class 字段聚合（排除压测账号与未设班级） */
+app.get('/api/admin/classes', async (c) => {
+  const shard = await buildShardService(c.env);
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  const byClass = new Map<string, number>();
+  for (const row of accounts) {
+    const p: any = safeJsonParse(row.payload) || {};
+    const name = typeof p.class === 'string' ? p.class.trim() : '';
+    if (!name || !normClass(name)) continue;
+    byClass.set(name, (byClass.get(name) || 0) + 1);
+  }
+  const data = Array.from(byClass.entries())
+    .map(([name, member_count]) => ({ name, member_count }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+  return c.json({ data });
+});
+
+/** 班级名册：返回该班级的所有账号 */
+app.get('/api/admin/classes/:name/members', async (c) => {
+  const name = normClass(c.req.param('name'));
+  if (!name) return c.json({ error: '无效的班级名' }, 400);
+  const shard = await buildShardService(c.env);
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  const members = accounts
+    .filter((row) => {
+      const p: any = safeJsonParse(row.payload) || {};
+      return typeof p.class === 'string' && p.class.trim() === name;
+    })
+    .map(flattenAccount);
+  return c.json({ data: members });
+});
+
+/** 班级榜单导出：每个成员在各类测试上的最佳成绩（CSV，每行=成员×类型） */
+app.get('/api/admin/classes/:name/export', async (c) => {
+  const name = normClass(c.req.param('name'));
+  if (!name) return c.json({ error: '无效的班级名' }, 400);
+  const shard = await buildShardService(c.env);
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  const userSet = new Set<string>();
+  const userName = new Map<string, string>();
+  for (const row of accounts) {
+    const p: any = safeJsonParse(row.payload) || {};
+    if (typeof p.class === 'string' && p.class.trim() === name) {
+      userSet.add(row.user_id);
+      userName.set(row.user_id, typeof p.username === 'string' ? p.username : row.user_id);
+    }
+  }
+  const scores = await shard.readByType('score', { limit: 1000 });
+  const bestByKey = new Map<string, MixedData>();
+  for (const s of scores) {
+    if (!userSet.has(s.user_id)) continue;
+    const sub = s.subtype || '';
+    if (!sub) continue;
+    const p: any = safeJsonParse(s.payload) || {};
+    if (p.leaderboard_eligible === false || p.validity === 'invalid') continue;
+    if (p.flagged || p.validity === 'suspicious') continue;
+    const key = `${s.user_id}\u0001${sub}`;
+    const cur = bestByKey.get(key);
+    const better = !cur
+      || (scoreLowerIsBetter(sub)
+        ? (s.score_value ?? Infinity) < (cur.score_value ?? Infinity)
+        : (s.score_value ?? -Infinity) > (cur.score_value ?? -Infinity));
+    if (better) bestByKey.set(key, s);
+  }
+  const headers = ['class', 'username', 'user_id', 'test_type', 'best_score', 'created_at'];
+  const body = Array.from(bestByKey.entries()).map(([key, s]) => {
+    const [userId] = key.split('\u0001');
+    return [name, userName.get(userId) || userId, userId, s.subtype || '', s.score_value ?? '', s.created_at];
+  });
+  body.sort((a, b) => String(a[3]).localeCompare(String(b[3])) || (Number(b[4]) || 0) - (Number(a[4]) || 0));
+  return csvDownload(toCsv(headers, body), csvFilename(`class-${name}`));
+});
+
+/** 成绩批量导入（教师 CSV）：支持 preview(预览, dry_run) 与 commit(提交)。表头：username,test_type,score_value[,accuracy,wpm,cpm] */
+app.post('/api/admin/scores/import', async (c) => {
+  const env = c.env as Env;
+  const body = await c.req.json().catch(() => ({}));
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  const csv = str((body as { csv?: unknown }).csv, 2_000_000);
+  const dryRun = (body as { dry_run?: unknown }).dry_run !== false;
+  const rows = parseCsv(csv);
+  if (!rows) return c.json({ error: '文件不是合法的 CSV（引号未闭合）' }, 400);
+  if (rows.length < 2) return c.json({ error: '没有可导入的数据行' }, 400);
+
+  const maxRows = Math.min(Math.max(Number(env.IMPORT_MAX_ROWS) || 1000, 1), 5000);
+  // 表头映射（大小写不敏感、容错空格，支持常见中文别名）
+  const head = rows[0].map((h) => h.trim().toLowerCase().replace(/ +/g, '_'));
+  const idx = (names: string[]) => {
+    const hit = names.find((n) => head.indexOf(n) !== -1);
+    return hit ? head.indexOf(hit) : -1;
+  };
+  const iUser = idx(['username', 'user_id', 'user', '用户名', '账号']);
+  const iType = idx(['test_type', 'testtype', 'type', '题目', '测试类型']);
+  const iScore = idx(['score_value', 'score', 'value', '分数', '成绩']);
+  const iAcc = idx(['accuracy', '正确率']);
+  const iWpm = idx(['wpm']);
+  const iCpm = idx(['cpm']);
+  if (iUser < 0 || iType < 0 || iScore < 0) {
+    return c.json({ error: '表头缺失：需要包含 username / test_type / score_value 列' }, 400);
+  }
+
+  const shard = await buildShardService(c.env);
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  const byUser = new Map<string, { user_id: string; username: string }>();
+  for (const a of accounts) {
+    const p: any = safeJsonParse(a.payload) || {};
+    const uname = typeof p.username === 'string' ? p.username : a.user_id;
+    byUser.set(uname.toLowerCase(), { user_id: a.user_id, username: uname });
+    byUser.set(a.user_id.toLowerCase(), { user_id: a.user_id, username: uname });
+  }
+
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const redis = getRedis(env);
+  const errors: Array<{ row: number; message: string }> = [];
+  const toWrite: Array<{ user_id: string; test_type: string; score_value: number; accuracy: number | null; wpm: number | null; cpm: number | null; created_at: string; flagged: boolean; flag_reason: string | null }> = [];
+  const involvedTypes = new Set<string>();
+
+  for (let r = 1; r < rows.length && r - 1 < maxRows; r++) {
+    const line = rows[r];
+    const get = (col: number) => (col >= 0 && col < line.length ? line[col].trim() : '');
+    const unameRaw = get(iUser);
+    const typeRaw = get(iType);
+    const scoreRaw = get(iScore);
+    if (!unameRaw && !typeRaw && !scoreRaw) continue; // 空行跳过
+
+    // 跳过表头行（与首行完全相同的行）
+    if (JSON.stringify(line) === JSON.stringify(rows[0])) continue;
+
+    const user = byUser.get(unameRaw.toLowerCase());
+    if (!user) { errors.push({ row: r + 1, message: `未找到用户「${unameRaw}」` }); continue; }
+    const testType = typeRaw;
+    if (!testType || !/^[\w-]{1,40}$/.test(testType)) { errors.push({ row: r + 1, message: `无效的 test_type「${typeRaw}」` }); continue; }
+    const sv = Number(scoreRaw);
+    if (!Number.isFinite(sv) || sv < 0 || !scoreInBounds(testType, sv)) { errors.push({ row: r + 1, message: `分数越界「${scoreRaw}」` }); continue; }
+
+    // 复用异常检测
+    let flagged = false, flagReason: string | null = null;
+    try {
+      const an = await checkScoreAnomaly(redis, shard, user.user_id, testType, sv, scoreLowerIsBetter(testType));
+      flagged = an.flagged;
+      flagReason = an.flagReason || null;
+    } catch (err) {
+      console.error('import anomaly check failed:', err);
+    }
+    const acc = iAcc >= 0 ? num(get(iAcc)) : null;
+    const wpm = iWpm >= 0 ? num(get(iWpm)) : null;
+    const cpm = iCpm >= 0 ? num(get(iCpm)) : null;
+    toWrite.push({
+      user_id: user.user_id,
+      test_type: testType,
+      score_value: sv,
+      accuracy: acc,
+      wpm,
+      cpm,
+      created_at: new Date().toISOString(),
+      flagged,
+      flag_reason: flagReason,
+    });
+    involvedTypes.add(testType);
+  }
+
+  if (dryRun || !toWrite.length) {
+    return c.json({
+      dry_run: true,
+      preview: true,
+      total_rows: rows.length - 1,
+      would_add: toWrite.length,
+      error_count: errors.length,
+      errors: errors.slice(0, 200),
+      involved_types: Array.from(involvedTypes),
+    });
+  }
+
+  // commit：落库
+  let added = 0;
+  for (const item of toWrite) {
+    const now = new Date().toISOString();
+    const r = await shard.write({
+      id: uuid(),
+      user_id: item.user_id,
+      type: 'score',
+      subtype: item.test_type,
+      score_value: item.score_value,
+      payload: JSON.stringify({
+        username: userNameOf(shard, item.user_id, accounts) as any,
+        test_type: item.test_type,
+        score_value: item.score_value,
+        accuracy: item.accuracy,
+        wpm: item.wpm,
+        cpm: item.cpm,
+        leaderboard_eligible: !item.flagged,
+        validity: item.flagged ? 'suspicious' : 'valid',
+        flag_reason: item.flag_reason,
+        flagged: item.flagged,
+        source: 'admin-import',
+      }),
+      file_url: null,
+      created_at: item.created_at,
+      updated_at: now,
+    }, { waitUntil });
+    if (r.ok) added += 1;
+  }
+  // 清相关排行榜缓存
+  for (const t of involvedTypes) {
+    try { await redis.del(`cache:lb:${t}`); } catch { /* ignore */ }
+  }
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'score.import', `${added}`, `types=${Array.from(involvedTypes).join(',')}`);
+
+  // 发布：给订阅了相关题型的用户发邮件提醒（fire-and-forget，不阻塞导入响应）
+  if (involvedTypes.size > 0) {
+    const task = (async () => {
+      for (const t of involvedTypes) {
+        const subs = await subscribersForType(shard, t, 1000);
+        if (subs.length) await sendPublishNotification(env, subs, t, `新成绩已发布«${t}»`);
+      }
+    })();
+    task.catch((err) => console.error('notify subscribers after import failed:', err));
+    try { waitUntil(task); } catch { /* ignore */ }
+  }
+
+  return c.json({ dry_run: false, committed: true, added, error_count: errors.length, errors: errors.slice(0, 200) });
+});
+
+// 导入时解析用户名的小工具：避免重复扫库
+function userNameOf(shard: ShardService, userId: string, cache: MixedData[]): string {
+  const row = cache.find((a) => a.user_id === userId);
+  if (row) {
+    const p: any = safeJsonParse(row.payload) || {};
+    return typeof p.username === 'string' ? p.username : userId;
+  }
+  return userId;
+}
+
+/** 手动发布成绩通知：向订阅了某 type（或全部）的用户发邮件。test_type 可空=全部 */
+app.post('/api/admin/notify/publish', async (c) => {
+  const env = c.env as Env;
+  const body = await c.req.json().catch(() => ({}));
+  const testType = str((body as { test_type?: unknown }).test_type, 40).trim();
+  const subject = str((body as { subject?: unknown }).subject, 120);
+  const message = str((body as { message?: unknown }).message, 2000);
+  const shard = await buildShardService(c.env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+
+  const subs = await subscribersForType(shard, testType, 1000);
+  const result = await sendPublishNotification(env, subs, testType, subject, message);
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', 'notify.publish', testType || '(all)', `recipients=${subs.length} sent=${result.sent} configured=${result.configured}`);
+  return c.json({ success: true, type: testType || '(all)', recipients: subs.length, sent: result.sent, configured: result.configured });
+});
+// ===== 榜单快照与回放（admin）=====
+// 固化某个时刻的排行榜，供事后回放与追溯，化解排名争议。
+app.get('/api/admin/snapshots', async (c) => {
+  const shard = await buildShardService(c.env);
+  const list = await listSnapshots(shard, getRedis(c.env));
+  return c.json({ data: list });
+});
+
+app.post('/api/admin/snapshots', async (c) => {
+  const shard = await buildShardService(c.env);
+  const meta = await createSnapshot(shard, getRedis(c.env), c.env as Env);
+  if (!meta) return c.json({ error: '快照生成失败' }, 503);
+  await writeAudit(shard, c.executionCtx.waitUntil.bind(c.executionCtx), c.get('adminToken') || '', 'lb.snapshot', meta.id, `types=${meta.type_count} entries=${meta.entry_count}`);
+  return c.json({ success: true, snapshot: meta });
+});
+
+app.get('/api/admin/snapshots/:id', async (c) => {
+  const shard = await buildShardService(c.env);
+  const snap = await getSnapshot(shard, c.req.param('id'));
+  if (!snap) return c.json({ error: '快照不存在' }, 404);
+  return c.json({ data: snap });
+});
+
 app.notFound((c) => {
   return c.json({ success: false, error: 'Not found', path: c.req.path }, 404);
 });
 app.onError((err, c) => {
   console.error(`[onError] ${c.req.method} ${c.req.path}`, err instanceof Error ? err.message : String(err));
+  reportError(
+    (c.env as Env).OBSERVABILITY_WEBHOOK,
+    { method: c.req.method, path: c.req.path, message: err instanceof Error ? err.message : String(err) },
+    c.executionCtx.waitUntil.bind(c.executionCtx)
+  );
   return c.json({ success: false, error: 'Internal server error' }, 500);
 });
 

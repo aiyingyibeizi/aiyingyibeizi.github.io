@@ -247,6 +247,11 @@
                 <button class="forum-filter-btn" data-cat="score" onclick="setCommentFilter('score')" data-i18n="forumScore">分数讨论</button>
                 <button class="forum-filter-btn" data-cat="bug" onclick="setCommentFilter('bug')" data-i18n="forumBug">Bug 反馈</button>
                 <button class="forum-filter-btn" data-cat="suggestion" onclick="setCommentFilter('suggestion')" data-i18n="forumSuggestion">网站建议</button>
+                <label class="apex-check forum-spam-toggle" title="开启后自动隐藏被判定为无意义或危险的内容">
+                    <input type="checkbox" id="forumSpamFilter" checked onchange="setSpamFilter(this.checked)">
+                    <span class="apex-check__box"></span>
+                    <span class="apex-check__label" data-i18n="forumSpamFilter">过滤无意义或危险内容</span>
+                </label>
             </div>
             <div class="forum-list" id="forumList"><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:60%"></div><div class="apex-skeleton apex-skeleton-line" style="width:80%"></div><div class="apex-skeleton apex-skeleton-line" style="width:40%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:55%"></div><div class="apex-skeleton apex-skeleton-line" style="width:75%"></div><div class="apex-skeleton apex-skeleton-line" style="width:35%"></div></div><div class="apex-skeleton-row"><div class="apex-skeleton apex-skeleton-line" style="width:65%"></div><div class="apex-skeleton apex-skeleton-line" style="width:85%"></div><div class="apex-skeleton apex-skeleton-line" style="width:45%"></div></div></div>
             <div class="forum-pagination" id="forumPagination"></div>
@@ -443,6 +448,21 @@
         let allComments = [];
         let commentProfiles = {};
         let currentCommentPage = 1;
+        // 内容反垃圾过滤开关（默认开启，隐藏被后端标记为无意义/危险的评论）
+        let commentSpamFilter = true;
+        try { if (localStorage.getItem('apexon_forum_spam_filter') === '0') commentSpamFilter = false; } catch (e) { /* ignore */ }
+
+        window.setSpamFilter = function(on) {
+            commentSpamFilter = !!on;
+            try { localStorage.setItem('apexon_forum_spam_filter', commentSpamFilter ? '1' : '0'); } catch (e) { /* ignore */ }
+            currentCommentPage = 1;
+            renderComments();
+        };
+        // 过滤后的可见评论（关闭过滤时原样返回）
+        function visibleComments() {
+            if (!commentSpamFilter) return allComments;
+            return allComments.filter(function(c) { return !c.spam; });
+        }
 
         window.setPostCategory = function(cat) {
             document.getElementById('forumCategory').value = cat;
@@ -461,7 +481,8 @@
         }, 300);
 
         window.goCommentPage = function(page) {
-            if (page < 1 || page > Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES)) return;
+            const total = Math.min(Math.ceil(visibleComments().length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES);
+            if (page < 1 || page > total) return;
             currentCommentPage = page;
             renderComments();
         };
@@ -555,14 +576,20 @@
             const esc = APEXON.Security.escapeHtml;
             const listEl = document.getElementById('forumList');
             const pageEl = document.getElementById('forumPagination');
-            if (!allComments.length) {
-                listEl.innerHTML = '<div class="apex-empty-state"><div class="apex-empty-state__icon">💬</div><div class="apex-empty-state__title">' + t('forumEmptyTitle', '暂无讨论') + '</div><div class="apex-empty-state__desc">' + t('noDiscussionInCategory', '该分类下还没有讨论') + '</div></div>';
+            const sfEl = document.getElementById('forumSpamFilter');
+            if (sfEl) sfEl.checked = commentSpamFilter;
+            const visible = visibleComments();
+            if (!visible.length) {
+                const hiddenSpam = commentSpamFilter && allComments.length > 0;
+                listEl.innerHTML = hiddenSpam
+                    ? '<div class="apex-empty-state"><div class="apex-empty-state__icon">🛡️</div><div class="apex-empty-state__title">' + t('spamFilteredAll', '内容已过滤') + '</div><div class="apex-empty-state__desc">' + t('spamFilteredAllDesc', '取消勾选「过滤无意义或危险内容」即可查看被过滤的内容。') + '</div></div>'
+                    : '<div class="apex-empty-state"><div class="apex-empty-state__icon">💬</div><div class="apex-empty-state__title">' + t('forumEmptyTitle', '暂无讨论') + '</div><div class="apex-empty-state__desc">' + t('noDiscussionInCategory', '该分类下还没有讨论') + '</div></div>';
                 pageEl.innerHTML = '';
                 return;
             }
-            const totalPages = Math.min(Math.ceil(allComments.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES);
+            const totalPages = Math.min(Math.ceil(visible.length / COMMENTS_PER_PAGE), MAX_COMMENT_PAGES);
             const start = (currentCommentPage - 1) * COMMENTS_PER_PAGE;
-            const pageItems = allComments.slice(start, start + COMMENTS_PER_PAGE);
+            const pageItems = visible.slice(start, start + COMMENTS_PER_PAGE);
             listEl.innerHTML = pageItems.map(c => {
                 const profile = c.user_id ? commentProfiles[c.user_id] : null;
                 const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : null;

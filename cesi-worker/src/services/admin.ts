@@ -3,6 +3,7 @@ import type { Env } from '../types/env';
 import type { MixedData } from '../types/models';
 import type { ShardService } from './shard';
 import { verifyTotp, buildOtpauthUri } from './totp';
+import { accountRisk } from './security';
 
 /**
  * 管理后台辅助：鉴权 + 审计 + 数据聚合
@@ -100,6 +101,7 @@ export function flattenAccount(row: MixedData): {
   id: string;
   user_id: string;
   username: string;
+  email: string | null;
   banned: boolean;
   banned_reason: string | null;
   created_at: string;
@@ -110,6 +112,7 @@ export function flattenAccount(row: MixedData): {
     id: row.id,
     user_id: row.user_id,
     username: typeof p.username === 'string' ? p.username : row.user_id,
+    email: typeof p.email === 'string' ? p.email : null,
     banned: Boolean(p.banned),
     banned_reason: typeof p.banned_reason === 'string' ? p.banned_reason : null,
     created_at: row.created_at,
@@ -147,6 +150,7 @@ export async function getUserDetail(
 ): Promise<{
   user_id: string;
   username: string;
+  email: string | null;
   banned: boolean;
   banned_reason: string | null;
   account_created_at: string | null;
@@ -156,6 +160,8 @@ export async function getUserDetail(
   feedback_count: number;
   online_last_seen: string | null;
   recent_scores: MixedData[];
+  last_login_ip: string | null;
+  risk: { score: number; level: 'low' | 'medium' | 'high' | 'critical'; flags: string[] };
 }> {
   const account = (await shard.readByUserAndType(userId, 'account', 10))[0];
   const profiles = await shard.readByUserAndType(userId, 'profile', 1);
@@ -166,10 +172,12 @@ export async function getUserDetail(
 
   const accountInfo = account ? flattenAccount(account) : null;
   const onlineLast = online ? safeJsonParse(online.payload).last_seen || online.updated_at : null;
+  const accountPayload: any = account ? safeJsonParse(account.payload) : null;
 
   return {
     user_id: userId,
     username: accountInfo?.username || (profiles[0] ? safeJsonParse(profiles[0].payload).username : userId),
+    email: accountInfo?.email ?? null,
     banned: accountInfo?.banned ?? false,
     banned_reason: accountInfo?.banned_reason ?? null,
     account_created_at: account ? account.created_at : null,
@@ -179,6 +187,8 @@ export async function getUserDetail(
     feedback_count: feedback.length,
     online_last_seen: onlineLast || null,
     recent_scores: scores.slice(0, 20),
+    last_login_ip: typeof accountPayload?.last_login_ip === 'string' ? accountPayload.last_login_ip : null,
+    risk: accountRisk(accountPayload || {}, 0),
   };
 }
 
@@ -295,13 +305,13 @@ export async function clearAdminFailures(redis: Redis, ip: string): Promise<void
   }
 }
 
-/** 发放短期会话令牌（登录成功调用） */
+/** 发放短期会话令牌（登录成功调用）。返回 { ok, token }；Redis 写入失败时 ok=false，调用方应视为登录失败（503），避免发一个不可用的死令牌 */
 export async function createAdminSession(
   redis: Redis,
   adminLabel: string,
   ip: string,
   ttlSec: number
-): Promise<string> {
+): Promise<{ ok: boolean; token: string }> {
   const token = crypto.randomUUID();
   try {
     await redis.set(
@@ -311,8 +321,9 @@ export async function createAdminSession(
     );
   } catch (err) {
     console.error('createAdminSession set failed:', err);
+    return { ok: false, token };
   }
-  return token;
+  return { ok: true, token };
 }
 
 /** 校验会话令牌；有效返回 { ok:true, admin, ip }，否则 { ok:false } */

@@ -42,6 +42,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -3608,6 +3609,70 @@ html[data-bw="true"] .forum-category-select option {
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
 }
 
+/* ===== 统一样式复选框（apex-check）===== */
+.apex-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.apex-check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+.apex-check__box {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 1.5px solid var(--apex-border);
+  background: var(--apex-bg);
+  position: relative;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  flex: none;
+  font-size: 0;
+}
+.apex-check__label {
+  font-size: 0.8125rem;
+  color: var(--apex-text-secondary);
+  line-height: 1.4;
+}
+.apex-check:hover .apex-check__box {
+  border-color: var(--apex-primary);
+}
+.apex-check input:checked + .apex-check__box {
+  background: linear-gradient(135deg, #6d5dfc 0%, #8b5cf6 100%);
+  border-color: transparent;
+}
+.apex-check input:checked + .apex-check__box::after {
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.apex-check input:focus-visible + .apex-check__box {
+  box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.25);
+}
+html[data-theme="light"] .apex-check__box {
+  background: #fff;
+}
+.forum-spam-toggle {
+  margin-left: auto;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
 html[data-theme="light"] .forum-filter-btn[data-cat="chat"],
 html[data-bw="true"] .forum-filter-btn[data-cat="chat"],
 html[data-theme="light"] .forum-category-tab[data-cat="chat"],
@@ -7068,6 +7133,11 @@ html[data-bw="true"] .game-canvas {
   .forum-category-tab {
     padding: 0.4rem 0.3rem;
     font-size: 0.75rem;
+  }
+  .forum-spam-toggle {
+    margin-left: 0;
+    white-space: normal;
+    flex-basis: 100%;
   }
 }
 

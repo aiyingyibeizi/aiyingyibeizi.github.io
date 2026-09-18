@@ -21,6 +21,9 @@ const ICON_PATHS: Record<string, string> = {
   list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
   logout: '<path d="M9 4h8v16H9M4 12h11M12 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  cap: '<path d="M12 4l10 4-10 4L2 8l10-4zM5.5 11.2V15c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-3.8M15 3.5v2.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  flag: '<path d="M6 21V4M6 5c3-1.6 6 1.4 9 0v9c-3 1.4-6-1.6-9 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  key: '<path d="M14 10a6 6 0 11-9.5-4.8A6 6 0 0114 10h6v3h-3v3M9 8h.01" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 function iconSvg(id: string): string {
   return '<svg width="18" height="18" viewBox="0 0 24 24">' + (ICON_PATHS[id] || ICON_PATHS.grid) + '</svg>';
@@ -148,6 +151,10 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 .muted{color:var(--muted)}
 .mt{margin-top:14px}
+.content textarea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;outline:none;resize:vertical}
+.content textarea:focus{border-color:var(--accent)}
+.content input{border:1px solid var(--line);background:var(--bg2);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;outline:none}
+.content code{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-size:12px}
 @media(max-width:760px){.sidebar{width:64px;flex-basis:64px}.side-brand h2,.nav-item span,.side-foot .who{display:none}.nav-item{justify-content:center}.field-row{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -183,7 +190,10 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
       <button class="nav-item active" data-nav="overview" onclick="show('overview')">${iconSvg('grid')}<span>仪表盘</span></button>
       <button class="nav-item" data-nav="users" onclick="show('users')">${iconSvg('users')}<span>用户管理</span></button>
       <button class="nav-item" data-nav="content" onclick="show('content')">${iconSvg('doc')}<span>内容审核</span></button>
+      <button class="nav-item" data-nav="teaching" onclick="show('teaching')">${iconSvg('cap')}<span>教学管理</span></button>
+      <button class="nav-item" data-nav="antichat" onclick="show('antichat')">${iconSvg('flag')}<span>防刷分</span></button>
       <button class="nav-item" data-nav="alerts" onclick="show('alerts')">${iconSvg('bell')}<span>安全告警</span></button>
+      <button class="nav-item" data-nav="security" onclick="show('security')">${iconSvg('key')}<span>登录加固</span></button>
       <button class="nav-item" data-nav="audit" onclick="show('audit')">${iconSvg('list')}<span>审计日志</span></button>
     </nav>
     <div class="side-foot">
@@ -201,7 +211,10 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
       <div id="view-overview"></div>
       <div id="view-users" style="display:none"></div>
       <div id="view-content" style="display:none"></div>
+      <div id="view-teaching" style="display:none"></div>
+      <div id="view-antichat" style="display:none"></div>
       <div id="view-alerts" style="display:none"></div>
+      <div id="view-security" style="display:none"></div>
       <div id="view-audit" style="display:none"></div>
     </div>
   </div>
@@ -223,7 +236,7 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 var API_PREFIX = '${API_PREFIX}';
 var TOKEN_KEY = 'apexon_admin_token';
 var state = { user: null, totpEnabled: true };
-var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', alerts:'安全告警', audit:'审计日志' };
+var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
 
 function $(id){ return document.getElementById(id); }
 function api(path, opts){
@@ -326,13 +339,16 @@ function show(view){
   for (var i=0;i<items.length;i++){
     items[i].classList.toggle('active', items[i].getAttribute('data-nav') === view);
   }
-  var views = ['overview','users','content','alerts','audit'];
+  var views = ['overview','users','content','teaching','antichat','alerts','security','audit'];
   for (var j=0;j<views.length;j++){ $('view-' + views[j]).style.display = views[j] === view ? 'block' : 'none'; }
   $('pageTitle').textContent = TITLES[view] || view;
   if (view === 'overview') renderOverview();
   if (view === 'users') renderUsers();
   if (view === 'content') renderContent();
+  if (view === 'teaching') renderTeaching();
+  if (view === 'antichat') renderAntichat();
   if (view === 'alerts') renderAlerts();
+  if (view === 'security') renderSecurity();
   if (view === 'audit') renderAudit();
 }
 function openSetup2FA(){
@@ -418,6 +434,7 @@ function renderOverview(){
     html += '<div class="section-title">最近未解决告警</div>';
     renderAlertMini(html, el);
     el.innerHTML = html;
+    renderSnapshots();
   }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
 }
 function renderAlertMini(prefix, el){
@@ -439,6 +456,60 @@ function fmtBytes(b){
   if (b >= 1048576) return (b/1048576).toFixed(2) + ' MB';
   if (b >= 1024) return (b/1024).toFixed(1) + ' KB';
   return b + ' B';
+}
+
+/* ---------- 榜单快照 ---------- */
+function renderSnapshots(){
+  var el = $('view-overview');
+  el.insertAdjacentHTML('beforeend', '<div class="section-title">榜单快照 · 历史排名</div><div class="toolbar"><button class="btn" onclick="createSnapshot()">立即生成快照</button><button class="btn ghost" onclick="loadSnapshots()">刷新</button></div><div id="snapList"><p class="muted">加载中…</p></div>');
+  loadSnapshots();
+}
+function loadSnapshots(){
+  var el = document.getElementById('snapList');
+  if (!el) return;
+  api('/snapshots').then(function(d){
+    var rows = d.data || [];
+    if (!rows.length){ el.innerHTML = '<div class="empty">暂无快照，点击「立即生成」固化当前排行榜（供事后回放）。</div>'; return; }
+    var h = '<div class="table-wrap"><table><tr><th>快照</th><th>题型数</th><th>上榜数</th><th>时间</th><th>操作</th></tr>';
+    for (var i=0;i<rows.length;i++){
+      var r = rows[i];
+      h += '<tr><td class="mono">' + esc(trunc(r.id,12)) + '</td><td>' + esc(r.type_count) + '</td><td>' + esc(r.entry_count) + '</td><td>' + fmtDate(r.created_at) + '</td>';
+      h += '<td class="actions"><button class="btn" onclick="openSnapshot(\\'' + esc(r.id) + '\\')">查看</button></td></tr>';
+    }
+    h += '</table></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function createSnapshot(){
+  api('/snapshots', { method:'POST' }).then(function(){
+    toast('快照已生成');
+    loadSnapshots();
+  }).catch(function(e){ toast('生成失败：' + e.message, true); });
+}
+function openSnapshot(id){
+  var body = $('userModalBody');
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  $('userModal').classList.add('show');
+  api('/snapshots/' + encodeURIComponent(id)).then(function(d){
+    var s = d.data || {};
+    var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>榜单快照（' + fmtDate(s.created_at) + '）</h3><p class="muted">' + esc(s.summary) + '</p>';
+    var types = Object.keys(s.per_type || {});
+    if (!types.length){ h += '<div class="empty">快照无数据</div>'; }
+    else {
+      for (var j=0;j<types.length;j++){
+        var t = types[j];
+        var arr = s.per_type[t] || [];
+        h += '<div class="section-title">' + esc(t) + '</div>';
+        if (!arr.length){ h += '<div class="empty">无数据</div>'; continue; }
+        h += '<div class="table-wrap"><table><tr><th>名次</th><th>用户名</th><th>user_id</th><th>分数</th></tr>';
+        for (var k=0;k<arr.length;k++){ var e = arr[k]; h += '<tr><td>' + e.rank + '</td><td>' + esc(e.username) + '</td><td class="mono">' + esc(trunc(e.user_id,20)) + '</td><td>' + esc(e.score_value) + '</td></tr>'; }
+        h += '</table></div>';
+      }
+    }
+    h += '<div class="actions mt"><button class="btn ghost" onclick="closeModal()">关闭</button></div>';
+    body.innerHTML = h;
+    $('userModal').classList.add('show');
+  }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
 }
 
 /* ---------- Users ---------- */
@@ -591,6 +662,252 @@ function resolveAlert(id){
 function delAlert(id){
   if (!confirm('确定删除该告警？')) return;
   api('/alerts/' + encodeURIComponent(id), { method:'DELETE' }).then(function(){ toast('已删除'); renderAlerts(); }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+
+/* ---------- 高危二次验证 ---------- */
+function askTotp(){
+  var c = prompt('高危操作需二次验证：请输入验证器 6 位动态码', '');
+  if (c === null) return null;
+  c = String(c).trim();
+  if (!/^\d{6}$/.test(c)) { toast('请输入 6 位数字动态码', true); return null; }
+  return c;
+}
+
+/* ---------- 教学管理 ---------- */
+function renderTeaching(){
+  var el = $('view-teaching');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api('/classes').then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">班级列表</div>';
+    h += '<div class="toolbar"><button class="btn ghost" onclick="renderTeaching()">刷新</button><span class="muted">' + rows.length + ' 个班级</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无班级（在「用户管理」给账号设置班级后出现）</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>班级</th><th>人数</th><th>操作</th></tr>';
+      for (var i=0;i<rows.length;i++){
+        var c = rows[i];
+        h += '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.member_count) + '</td>';
+        h += '<td class="actions"><button class="btn" onclick="openClass(\\'' + esc(c.name).replace(/\\\\/g,'\\\\\\\\') + '\\')">成员</button>';
+        h += '<a class="btn" href="' + API_PREFIX + '/classes/' + encodeURIComponent(c.name) + '/export">导出榜单</a></td></tr>';
+      }
+      h += '</table></div>';
+    }
+    h += '<div class="section-title">批量设置班级</div>';
+    h += '<div class="card"><div class="row"><b>给用户批量分配班级</b></div><p class="muted">在下方文本域每行填一个 user_id，配合一个班级名一次性批量设置。</p>';
+    h += '<textarea id="classIds" rows="3" placeholder="每行一个 user_id"></textarea>';
+    h += '<div class="row" style="margin-top:8px"><input id="className" placeholder="班级名，例如：高三(1)班" style="flex:1"><button class="btn primary" onclick="batchSetClass()">批量设置</button></div></div>';
+
+    h += '<div class="section-title">成绩批量导入</div>';
+    h += '<div class="card"><div class="row"><b>CSV 导入（教师端）</b></div>';
+    h += '<p class="muted">表头：<code>username,test_type,score_value[,accuracy,wpm,cpm]</code>。先「预览校验」，无误后再「确认导入」（已接入异常检测，可疑成绩自动标记）。</p>';
+    h += '<textarea id="importCsv" rows="8" placeholder="username,test_type,score_value&#10;小测A,typing,380&#10;小测A,math,92"></textarea>';
+    h += '<div class="actions"><button class="btn" onclick="previewImport()">预览校验</button><button class="btn primary" onclick="commitImport()">确认导入</button></div>';
+    h += '<div id="importResult"></div></div>';
+
+    h += '<div class="section-title">发布成绩通知</div>';
+    h += '<div class="card"><div class="row"><b>邮件通知订阅用户</b></div>';
+    h += '<div class="row" style="margin-top:8px"><input id="pubType" placeholder="test_type（留空 = 全部订阅者）" style="flex:1"></div>';
+    h += '<div class="row" style="margin-top:8px"><input id="pubSubject" placeholder="邮件标题（留空用默认）" style="flex:1"></div>';
+    h += '<div class="row" style="margin-top:8px"><textarea id="pubMsg" rows="3" placeholder="邮件正文（留空用默认）"></textarea></div>';
+    h += '<div class="actions"><button class="btn primary" onclick="publishNotify()">发送通知</button></div>';
+    h += '<div id="pubResult"></div></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function openClass(name){
+  var body = $('userModalBody');
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  $('userModal').classList.add('show');
+  api('/classes/' + encodeURIComponent(name) + '/members').then(function(d){
+    var rows = d.data || [];
+    var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>班级 ' + esc(name) + ' 成员</h3>';
+    h += '<p class="muted">' + rows.length + ' 人</p>';
+    if (!rows.length){ h += '<div class="empty">暂无成员</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>注册时间</th></tr>';
+      for (var i=0;i<rows.length;i++){ var m = rows[i]; h += '<tr><td>' + esc(m.username) + '</td><td class="mono">' + esc(m.user_id) + '</td><td>' + fmtDate(m.created_at) + '</td></tr>'; }
+      h += '</table></div>';
+    }
+    h += '<div class="actions mt"><a class="btn primary" href="' + API_PREFIX + '/classes/' + encodeURIComponent(name) + '/export">导出班级榜单 CSV</a><button class="btn ghost" onclick="closeModal()">关闭</button></div>';
+    body.innerHTML = h;
+    $('userModal').classList.add('show');
+  }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
+}
+function batchSetClass(){
+  var ids = $('classIds').value.split(/[\r\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+  var cls = $('className').value.trim();
+  if (!ids.length) { toast('请先填写 user_id 列表', true); return; }
+  if (!cls) { toast('请填写班级名', true); return; }
+  var code = askTotp(); if (code === null) return;
+  api('/users/batch/class', { method:'POST', body:{ userIds: ids, class: cls, code: code } }).then(function(r){
+    toast('完成：设置 ' + r.done + '，失败 ' + r.failed);
+    renderTeaching();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+function previewImport(){
+  var csv = $('importCsv').value;
+  if (!csv.trim()) { toast('请先填写 CSV', true); return; }
+  $('importResult').innerHTML = '<p class="muted">校验中…</p>';
+  api('/scores/import', { method:'POST', body:{ csv: csv, dry_run: true } }).then(function(d){
+    var h = '<div class="card mt"><b>预览结果</b><div class="dbinfo"><span>共 ' + d.total_rows + ' 行，将导入 ' + d.would_add + '，错误 ' + d.error_count + '</span></div>';
+    if (d.involved_types && d.involved_types.length) h += '<p class="muted">涉及题型：' + esc(d.involved_types.join(', ')) + '</p>';
+    if (d.errors && d.errors.length){ h += '<div class="table-wrap"><table><tr><th>行</th><th>原因</th></tr>'; for (var i=0;i<d.errors.length;i++){ h += '<tr><td>' + d.errors[i].row + '</td><td>' + esc(d.errors[i].message) + '</td></tr>'; } h += '</table></div>'; }
+    else h += '<p style="color:var(--ok)">无错误，可直接确认导入。</p>';
+    h += '</div>';
+    $('importResult').innerHTML = h;
+  }).catch(function(e){ $('importResult').innerHTML = '<div class="empty">校验失败：' + esc(e.message) + '</div>'; });
+}
+function commitImport(){
+  var code = askTotp(); if (code === null) return;
+  $('importResult').innerHTML = '<p class="muted">导入中…</p>';
+  api('/scores/import', { method:'POST', body:{ csv: $('importCsv').value, dry_run: false, code: code } }).then(function(d){
+    toast('已导入 ' + d.added + ' 条，错误 ' + d.error_count);
+    var hh = '<div class="card mt"><b>导入结果</b><div class="dbinfo"><span>成功 ' + d.added + '，失败 ' + d.error_count + '</span></div>';
+    if (d.errors && d.errors.length){ hh += '<div class="table-wrap"><table><tr><th>行</th><th>原因</th></tr>'; for (var i=0;i<d.errors.length;i++){ hh += '<tr><td>' + d.errors[i].row + '</td><td>' + esc(d.errors[i].message) + '</td></tr>'; } hh += '</table></div>'; }
+    hh += '</div>';
+    $('importResult').innerHTML = hh;
+  }).catch(function(e){ $('importResult').innerHTML = '<div class="empty">导入失败：' + esc(e.message) + '</div>'; });
+}
+function publishNotify(){
+  $('pubResult').innerHTML = '<p class="muted">发送中…</p>';
+  api('/notify/publish', { method:'POST', body:{ test_type: $('pubType').value.trim(), subject: $('pubSubject').value.trim(), message: $('pubMsg').value.trim() } }).then(function(d){
+    toast('通知已发送：' + d.recipients + ' 个订阅者');
+    $('pubResult').innerHTML = '<div class="card mt"><b>发送结果</b><div class="dbinfo"><span>收件人 ' + d.recipients + '，成功 ' + d.sent + (d.configured ? '' : '（邮件服务未配置，未实际发出）') + '</span></div></div>';
+  }).catch(function(e){ $('pubResult').innerHTML = '<div class="empty">发送失败：' + esc(e.message) + '</div>'; });
+}
+
+/* ---------- 防刷分 ---------- */
+var cheatTab = 'all';
+function renderAntichat(){
+  var el = $('view-antichat');
+  var url = '/scores/flagged?status=' + encodeURIComponent(cheatTab) + '&limit=500';
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">异常成绩审核</div>';
+    h += '<div class="toolbar"><select onchange="cheatTab=this.value;renderAntichat()">';
+    var ss = [['all','可疑/无效'],['suspicious','仅可疑'],['invalid','仅无效'],['valid','有效']];
+    for (var i=0;i<ss.length;i++){ h += '<option value="' + ss[i][0] + '"' + (cheatTab===ss[i][0]?' selected':'') + '>' + ss[i][1] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderAntichat()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无该状态的成绩</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>状态</th><th>用户</th><th>题型</th><th>分数</th><th>标记原因</th><th>时间</th><th>操作</th></tr>';
+      for (var j=0;j<rows.length;j++){
+        var r = rows[j];
+        var st = r.validity === 'invalid' ? '<span class="badge danger">无效</span>' : (r.validity === 'suspicious' ? '<span class="badge warn">可疑</span>' : '<span class="badge ok">有效</span>');
+        h += '<tr><td>' + st + '</td><td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
+        h += '<td class="mono">' + esc(r.test_type) + '</td><td>' + esc(r.score_value) + '</td>';
+        h += '<td>' + esc(trunc(r.flag_reason || '-',46)) + '</td><td>' + fmtDate(r.created_at) + '</td>';
+        h += '<td class="actions">' + (r.validity === 'invalid' ? '<button class="btn primary" onclick="setValidity(\\'' + esc(r.id) + '\\',\'valid\')">恢复</button>' : '<button class="btn danger" onclick="setValidity(\\'' + esc(r.id) + '\\',\'invalid\')">判无效</button>') + '</td></tr>';
+      }
+      h += '</table></div>';
+    }
+    el.innerHTML = h;
+    renderAppeals();
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function setValidity(id, v){
+  var reason = prompt(v === 'invalid' ? '判定无效原因（可选）' : '恢复原因（可选）') || '';
+  var code = askTotp(); if (code === null) return;
+  api('/scores/' + encodeURIComponent(id) + '/validity', { method:'PATCH', body:{ validity: v, reason: reason, code: code } }).then(function(){
+    toast(v === 'invalid' ? '已判无效' : '已恢复，可重新上榜');
+    renderAntichat();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+var appealTab = 'open';
+function renderAppeals(){
+  var el = $('view-antichat');
+  var url = '/appeals?status=' + encodeURIComponent(appealTab);
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">成绩申诉审核</div>';
+    h += '<div class="toolbar"><select onchange="appealTab=this.value;renderAppeals()">';
+    var ss = [['open','待处理'],['all','全部']];
+    for (var i=0;i<ss.length;i++){ h += '<option value="' + ss[i][0] + '"' + (appealTab===ss[i][0]?' selected':'') + '>' + ss[i][1] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderAppeals()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无申诉</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>用户</th><th>题型</th><th>分数</th><th>理由</th><th>状态</th><th>时间</th><th>操作</th></tr>';
+      for (var j=0;j<rows.length;j++){
+        var a = rows[j];
+        var st = a.status === 'open' ? '<span class="badge warn">待处理</span>' : (a.status === 'approved' ? '<span class="badge ok">已通过</span>' : '<span class="badge danger">已驳回</span>');
+        h += '<tr><td class="mono">' + esc(trunc(a.user_id,20)) + '</td><td class="mono">' + esc(a.test_type) + '</td><td>' + esc(a.score_value) + '</td>';
+        h += '<td>' + esc(trunc(a.reason || '-',40)) + '</td><td>' + st + '</td><td>' + fmtDate(a.created_at) + '</td>';
+        h += '<td class="actions">' + (a.status === 'open' ? '<button class="btn primary" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\'approved\')">通过</button><button class="btn danger" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\'rejected\')">驳回</button>' : '<span class="muted">' + esc(a.admin_note || '') + '</span>') + '</td></tr>';
+      }
+      h += '</table></div>';
+    }
+    el.insertAdjacentHTML('beforeend', h);
+  }).catch(function(){});
+}
+function reviewAppeal(id, status){
+  var note = prompt((status === 'approved' ? '通过' : '驳回') + '备注（可选）') || '';
+  var code = askTotp(); if (code === null) return;
+  api('/appeals/' + encodeURIComponent(id), { method:'PATCH', body:{ status: status, note: note, code: code } }).then(function(){
+    toast(status === 'approved' ? '已通过，成绩已恢复上榜' : '已驳回');
+    renderAntichat();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+
+/* ---------- 登录加固 ---------- */
+function renderSecurity(){
+  var el = $('view-security');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api('/security').then(function(s){
+    var cfg = s.data || {};
+    var h = '<div class="section-title">安全策略配置</div><div class="grid">';
+    h += '<div class="card"><div class="num">' + (cfg.captcha_always ? '开' : '关') + '</div><div class="label">强制算数验证码</div></div>';
+    h += '<div class="card"><div class="num">' + esc(cfg.captcha_require_after_fail) + '</div><div class="label">失败次数触发验证码</div></div>';
+    h += '<div class="card"><div class="num">' + esc(cfg.ip_blacklist_threshold) + '</div><div class="label">IP 拉黑阈值</div></div>';
+    h += '<div class="card"><div class="num">' + esc(Math.round((cfg.ip_blacklist_duration_sec||0)/3600)) + 'h</div><div class="label">拉黑时长</div></div>';
+    h += '<div class="card"><div class="num">' + (cfg.admin_alert_webhook ? '已配' : '未配') + '</div><div class="label">安全告警 Webhook</div></div>';
+    h += '</div>';
+    h += '<p class="muted">说明：来源 IP 在窗口内登录失败累计达到阈值会被自动拉黑；可疑来源登录被要求先过算式验证码。以上参数由环境变量在部署时配置。</p>';
+    h += '<div class="section-title">IP 黑名单</div>';
+    h += '<div class="toolbar"><button class="btn ghost" onclick="renderSecurity()">刷新</button><button class="btn danger" onclick="addIpBan()">手动拉黑 IP</button></div>';
+    h += '<div id="ipbanList"><p class="muted">加载中…</p></div>';
+    el.innerHTML = h;
+    api('/security/ipbans').then(function(d){
+      var rows = d.data || [];
+      var hh = '';
+      if (!rows.length){ hh = '<div class="empty">暂无拉黑记录</div>'; }
+      else {
+        hh += '<div class="table-wrap"><table><tr><th>IP</th><th>累计失败</th><th>剩余时间</th><th>操作</th></tr>';
+        for (var i=0;i<rows.length;i++){
+          var b = rows[i];
+          hh += '<tr><td class="mono">' + esc(b.ip) + '</td><td>' + esc(b.failures) + '</td><td>' + fmtDur(b.ttl) + '</td>';
+          hh += '<td class="actions"><button class="btn danger" onclick="removeIpBan(\\'' + esc(b.ip) + '\\')">解除</button></td></tr>';
+        }
+        hh += '</table></div>';
+      }
+      $('ipbanList').innerHTML = hh;
+    }).catch(function(e){ $('ipbanList').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function fmtDur(sec){
+  sec = Number(sec) || 0;
+  if (sec > 0) return (sec >= 86400 ? Math.round(sec/86400) + ' 天' : (sec >= 3600 ? Math.round(sec/3600) + ' 小时' : Math.round(sec/60) + ' 分钟'));
+  return '已过期';
+}
+function addIpBan(){
+  var ip = prompt('要拉黑的 IP：');
+  if (ip === null || !ip.trim()) return;
+  var hours = prompt('拉黑时长（小时，留空用默认）：', '24');
+  var dur = hours === null ? '' : hours.trim();
+  var bodyB = { ip: ip.trim(), code: askTotp() };
+  if (!bodyB.code) return;
+  if (dur) bodyB.hours = Number(dur);
+  api('/security/ipbans/add', { method:'POST', body: bodyB }).then(function(){
+    toast('已拉黑 ' + ip.trim());
+    renderSecurity();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+function removeIpBan(ip){
+  if (!confirm('确定解除 ' + ip + ' 的拉黑？')) return;
+  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip } }).then(function(){
+    toast('已解除');
+    renderSecurity();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
 }
 
 /* ---------- Audit ---------- */

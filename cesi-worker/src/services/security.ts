@@ -1,6 +1,7 @@
 import type { Redis } from '@upstash/redis/cloudflare';
 import type { ShardService } from './shard';
 import type { Env } from '../types/env';
+import { sendNotify } from './notify';
 
 /**
  * 安全检测与告警（暴破 / 异常行为）
@@ -184,12 +185,21 @@ export async function recordAlert(
   // 可选外发通知：仅未禁用时发送（fire-and-forget，经 waitUntil 确保在 Worker 生命周期内送达，不阻塞接口）
   const webhook = env.ADMIN_ALERT_WEBHOOK;
   if (webhook) {
-    sendWebhook(webhook, {
-      ...alert,
-      alert_id: crypto.randomUUID(),
-      created_at: createdAt,
-      _title: 'APEXON 安全告警',
-    }, waitUntil);
+    sendNotify(
+      webhook,
+      {
+        title: 'APEXON · 安全告警',
+        theme: alert.severity === 'critical' ? 'red' : alert.severity === 'warning' ? 'orange' : 'blue',
+        text: alert.message,
+        lines: [
+          { label: '类型', value: alert.kind },
+          { label: '等级', value: alert.severity },
+          { label: '来源', value: alert.source_ip || alert.target || 'system' },
+          { label: '次数', value: String(alert.count) },
+        ],
+      },
+      waitUntil
+    );
   }
   return true;
 }
@@ -273,4 +283,55 @@ export async function countOpenAlerts(shard: ShardService): Promise<number> {
 /** 判断告警记录是否已解决 */
 export function isAlertResolved(payload: any): boolean {
   return Boolean(payload && payload[RESOLVED_FLAG] === true);
+}
+
+/**
+ * 读取某用户在统计窗口内的登录失败次数（供风险评分/后台展示），异常返回 0。
+ */
+export async function userFailCount(redis: Redis, username: string): Promise<number> {
+  try {
+    return (await redis.get<number>(`rl:${FAIL_PREFIX}user:${safeKeyPart(username)}`)) || 0;
+  } catch (err) {
+    console.error('security userFailCount failed:', err);
+    return 0;
+  }
+}
+
+export interface RiskSummary {
+  score: number;             // 0-100
+  level: 'low' | 'medium' | 'high' | 'critical';
+  flags: string[];
+}
+
+/**
+ * 综合账号风险评分：用于后台展示与"高风险自动限流"决策。
+ * 规则（可组合）：
+ *  - 被封禁 → 满分 100
+ *  - 账号窗口内登录失败 >= 8（e.g. 暴破命中）→ 高风险
+ *  - 失败 3-7 次 → 中风险
+ *  - 出现过撞库告警（matched user 密码错误）→ 记 flag
+ *  - 其余为低风险
+ */
+export function accountRisk(accountPayload: any, failCount: number): RiskSummary {
+  const flags: string[] = [];
+  if (accountPayload && accountPayload.banned === true) {
+    flags.push('banned');
+    return { score: 100, level: 'critical', flags };
+  }
+  if (accountPayload && accountPayload.last_login_ip) flags.push('has_login_history');
+
+  const fc = failCount || 0;
+  if (fc >= SECURITY_FAIL_THRESHOLD) {
+    flags.push(`login_fail_${fc}`);
+    return { score: 90, level: 'high', flags };
+  }
+  if (fc >= 3) {
+    flags.push(`login_fail_${fc}`);
+    return { score: 55, level: 'medium', flags };
+  }
+  if (fc >= 1) {
+    flags.push(`login_fail_${fc}`);
+    return { score: 30, level: 'low', flags };
+  }
+  return { score: 0, level: 'low', flags };
 }
