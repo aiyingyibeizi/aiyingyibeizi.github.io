@@ -13,7 +13,8 @@ import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts } from './services/security';
-import { authorizeAdmin, writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { verifyAdminPassword, verifyAdminTotp, adminOtpauthUri, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import { renderAdminUI } from './services/admin-ui';
 import type { Env } from './types/env';
 import type { MixedData, DbConfig } from './types/models';
@@ -1051,16 +1052,112 @@ function flattenAudit(r: MixedData) {
   return { id: r.id, admin: p.admin, action: p.action, target: p.target, detail: p.detail, created_at: r.created_at };
 }
 
-/** 管理接口统一入口：校验 ADMIN_TOKEN 并通过 c.set 注入标识，供后续处理器复用 */
+/** 管理接口统一入口：校验会话令牌（短期、带 TTL），通过后经 c.set 注入管理员标识供审计复用 */
 async function adminGw(c: any, next: any): Promise<Response | void> {
-  const auth = authorizeAdmin(c);
-  if (!auth.ok) return c.json({ error: auth.error }, auth.status as any);
-  c.set('adminToken', auth.token);
+  // 登录与注销端点不走会话校验（它们自己处理口令 + 动态码）
+  if (c.req.method === 'POST' && (c.req.path === '/api/admin/login' || c.req.path === '/api/admin/logout')) {
+    return next();
+  }
+  if (!c.env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
+
+  // 从 Authorization: Bearer <session> 取会话令牌
+  const authHeader = c.req.header('Authorization');
+  const token = authHeader && authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : '';
+  if (!token) return c.json({ error: 'missing bearer token' }, 401 as any);
+
+  const sess = await resolveAdminSession(getRedis(c.env), token);
+  if (!sess.ok) return c.json({ error: 'forbidden' }, 403 as any);
+
+  c.set('adminToken', sess.admin);
+  c.set('adminSessionIp', sess.ip);
   return next();
 }
 app.use('/api/admin/*', adminGw);
 
 app.get('/api/admin/ping', async (c) => c.json({ ok: true }));
+
+// ---- 双重验证（2FA）登录：口令 + TOTP 动态码都正确才发放会话令牌 ----
+app.post('/api/admin/login', async (c) => {
+  const env = c.env as Env;
+  if (!env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
+
+  const ip = clientIp(c);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const shard = await buildShardService(env);
+  const redis = getRedis(env);
+
+  // 1) 该来源已冻结？直接拒绝
+  if (await isAdminLocked(redis, ip)) {
+    return c.json({ error: 'Too many failed login attempts, temporarily locked', locked: true }, 429 as any);
+  }
+
+  const body = await c.req.json().catch(() => ({} as any));
+  const password = str(body?.password, 512);
+  const code = str(body?.code, 16);
+
+  // 2) 校验口令（第一因素）
+  const passOk = verifyAdminPassword(env, password);
+
+  // 3) 校验动态码（第二因素；未配置 TOTP 时自动放行，提示 requiresTotp=false）
+  const totp = await verifyAdminTotp(env, code);
+  const success = passOk && totp.ok;
+
+  if (!success) {
+    // 登录失败：计数 + 审计 + （达到阈值时）冻结 + 告警
+    const failCount = await recordAdminLoginFailure(redis, ip);
+    writeAudit(shard, waitUntil, passOk ? 'admin#TOTPFAIL' : 'admin#NOPASS', 'admin.login.failed', passOk ? 'totp-mismatch' : 'bad-password', `ip=${ip} retries=${failCount}`);
+    if (passOk && !totp.ok) {
+      console.warn('admin totp mismatch at ip', ip);
+    }
+    if (failCount >= ADMIN_FAIL_LOCK_THRESHOLD) {
+      await lockAdminSource(redis, ip);
+      // 触发安全告警（可选 webhook 外发）
+      try {
+        const { recordAlert } = await import('./services/security');
+        await recordAlert(redis, shard, waitUntil, env, {
+          kind: 'admin',
+          severity: 'critical',
+          source_ip: ip,
+          target: 'admin',
+          message: `后台登录失败 ${failCount} 次，已临时冻结来源 15 分钟`,
+          count: failCount,
+          detail: `admin login brute force from ${ip}`,
+        });
+      } catch (err) {
+        console.error('admin lock alert failed:', err);
+      }
+    }
+    return c.json({ error: passOk ? 'Invalid verification code' : 'Invalid password', locked: failCount >= ADMIN_FAIL_LOCK_THRESHOLD }, 401 as any);
+  }
+
+  // 4) 成功：清失败计数、发放短期会话令牌
+  await clearAdminFailures(redis, ip);
+  const ttlSec = adminSessionTtl(env);
+  const session = await createAdminSession(redis, `admin#${String(env.ADMIN_TOKEN).slice(-6)}`, ip, ttlSec);
+  writeAudit(shard, waitUntil, `admin#${String(env.ADMIN_TOKEN).slice(-6)}`, 'admin.login.success', ip, `session_ttl=${ttlSec}s`);
+
+  return c.json({ ok: true, session, expires_in: ttlSec, totp_enabled: totp.requiresTotp });
+});
+
+// 注销：删除会话令牌
+app.post('/api/admin/logout', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  const token = authHeader && authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : '';
+  if (token) await revokeAdminSession(getRedis(c.env), token);
+  return c.json({ ok: true });
+});
+
+// TOTP 绑定信息（供首次配置验证器使用）：需先用口令换到的会话令牌访问
+app.get('/api/admin/2fa', async (c) => {
+  const env = c.env as Env;
+  const uri = adminOtpauthUri(env);
+  if (!uri) return c.json({ enabled: false, message: 'TOTP 未启用（未配置 ADMIN_TOTP_SECRET）' });
+  return c.json({ enabled: true, otpauth: uri, secret: env.ADMIN_TOTP_SECRET, issuer: 'APEXON Admin' });
+});
 
 app.get('/api/admin/overview', async (c) => {
   const shard = await buildShardService(c.env);

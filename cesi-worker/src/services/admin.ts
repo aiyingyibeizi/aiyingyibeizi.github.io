@@ -1,6 +1,8 @@
+import type { Redis } from '@upstash/redis/cloudflare';
 import type { Env } from '../types/env';
 import type { MixedData } from '../types/models';
 import type { ShardService } from './shard';
+import { verifyTotp, buildOtpauthUri } from './totp';
 
 /**
  * 管理后台辅助：鉴权 + 审计 + 数据聚合
@@ -205,4 +207,152 @@ export async function listContent(
       .toLowerCase();
     return text.includes(needle);
   });
+}
+
+// ---------------------------------------------------------------------------
+// 双重验证（2FA）登录与会话
+//
+// 关键安全设计：
+//   1) 登录端点 `POST /api/admin/login` 校验「口令 + TOTP 动态码」，两者都正确
+//      才发放一段短期**会话令牌**（Redis 存 key，带 TTL）。
+//   2) 之后所有 /api/admin/* 接口一律只认该会话令牌，**不再直接校验 ADMIN_TOKEN**。
+//      因此即使攻击者偷到 ADMIN_TOKEN（口令），缺动态码也无法绕过双重验证直连接口。
+//   3) 连续登录失败按来源 IP 计数，超过阈值临时冻结，并写审计 + 触发告警。
+// ---------------------------------------------------------------------------
+
+// 会话存储前缀（Redis）
+const ADMIN_SESSION_PREFIX = 'admin:sess:';
+// 登录失败计数 / 冻结前缀
+const ADMIN_FAIL_PREFIX = 'admin:loginfail:';
+const ADMIN_LOCK_PREFIX = 'admin:lock:';
+
+/** 会话有效期：默认 2 小时，可通过 env.ADMIN_SESSION_TTL_SEC 覆盖 */
+export function adminSessionTtl(env: Env): number {
+  const v = Number(env.ADMIN_SESSION_TTL_SEC);
+  const safe = Number.isFinite(v) && v > 0 ? Math.min(Math.trunc(v), 24 * 3600) : 2 * 3600;
+  return Math.max(300, safe);
+}
+
+/** 登录失败阈值与冻结窗口：5 分钟内 5 次失败 → 冻结 15 分钟 */
+export const ADMIN_FAIL_WINDOW_SEC = 300;
+export const ADMIN_FAIL_LOCK_THRESHOLD = 5;
+export const ADMIN_LOCK_WINDOW_SEC = 15 * 60;
+
+/** 校验后台口令（常数时间比较）。env 未配置口令时不返回 ok。 */
+export function verifyAdminPassword(env: Env, password: string): boolean {
+  return !!(env.ADMIN_TOKEN && safeEqual(password, env.ADMIN_TOKEN));
+}
+
+function adminFailKey(ip: string): string {
+  return `${ADMIN_FAIL_PREFIX}${ip.replace(/[^\w.\-:@]+/g, '_').slice(0, 64) || 'anon'}`;
+}
+function adminLockKey(ip: string): string {
+  return `${ADMIN_LOCK_PREFIX}${ip.replace(/[^\w.\-:@]+/g, '_').slice(0, 64) || 'anon'}`;
+}
+export function adminSessionKey(token: string): string {
+  return `${ADMIN_SESSION_PREFIX}${token}`;
+}
+
+/** 记录一次后台登录失败；返回自窗口内累计失败次数。Redis 异常时返回 0（不阻断流程） */
+export async function recordAdminLoginFailure(redis: Redis, ip: string): Promise<number> {
+  try {
+    const key = adminFailKey(ip);
+    const n = await redis.incr(key);
+    if (n === 1) await redis.expire(key, ADMIN_FAIL_WINDOW_SEC);
+    return n;
+  } catch (err) {
+    console.error('recordAdminLoginFailure failed:', err);
+    return 0;
+  }
+}
+
+/** 来源 IP 是否已被冻结 */
+export async function isAdminLocked(redis: Redis, ip: string): Promise<boolean> {
+  try {
+    return !!(await redis.get(adminLockKey(ip)));
+  } catch (err) {
+    console.error('isAdminLocked failed:', err);
+    return false;
+  }
+}
+
+/** 超过阈值则临时冻结该来源 IP（仅当失败次数达到阈值后调用） */
+export async function lockAdminSource(redis: Redis, ip: string): Promise<void> {
+  try {
+    await redis.set(adminLockKey(ip), '1', { ex: ADMIN_LOCK_WINDOW_SEC });
+  } catch (err) {
+    console.error('lockAdminSource failed:', err);
+  }
+}
+
+/** 登录成功：清空失败计数与冻结标记 */
+export async function clearAdminFailures(redis: Redis, ip: string): Promise<void> {
+  try {
+    await redis.del(adminFailKey(ip));
+    await redis.del(adminLockKey(ip));
+  } catch (err) {
+    console.error('clearAdminFailures failed:', err);
+  }
+}
+
+/** 发放短期会话令牌（登录成功调用） */
+export async function createAdminSession(
+  redis: Redis,
+  adminLabel: string,
+  ip: string,
+  ttlSec: number
+): Promise<string> {
+  const token = crypto.randomUUID();
+  try {
+    await redis.set(
+      adminSessionKey(token),
+      JSON.stringify({ admin: adminLabel, ip, created_at: new Date().toISOString() }),
+      { ex: ttlSec }
+    );
+  } catch (err) {
+    console.error('createAdminSession set failed:', err);
+  }
+  return token;
+}
+
+/** 校验会话令牌；有效返回 { ok:true, admin, ip }，否则 { ok:false } */
+export async function resolveAdminSession(
+  redis: Redis,
+  token: string
+): Promise<{ ok: true; admin: string; ip: string } | { ok: false }> {
+  if (!token) return { ok: false };
+  try {
+    const raw = await redis.get<string>(adminSessionKey(token));
+    if (!raw) return { ok: false };
+    const parsed = JSON.parse(raw);
+    return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || '') };
+  } catch (err) {
+    console.error('resolveAdminSession failed:', err);
+    return { ok: false };
+  }
+}
+
+/** 注销会话（退出登录） */
+export async function revokeAdminSession(redis: Redis, token: string): Promise<void> {
+  try {
+    await redis.del(adminSessionKey(token));
+  } catch (err) {
+    console.error('revokeAdminSession failed:', err);
+  }
+}
+
+/** 生成 otpauth URI（供验证器绑定展示）。secret 为 Base32。 */
+export function adminOtpauthUri(env: Env): string | null {
+  if (!env.ADMIN_TOTP_SECRET) return null;
+  return buildOtpauthUri(env.ADMIN_TOTP_SECRET, 'APEXON Admin', 'admin@apexon.qzz.io');
+}
+
+/** 校验用户输入的 6 位 TOTP 动态码（带 ±1 时间窗容错）。返回 { ok, requiresTotp } */
+export async function verifyAdminTotp(env: Env, code: string): Promise<{ ok: boolean; requiresTotp: boolean }> {
+  if (!env.ADMIN_TOTP_SECRET) {
+    // 未配置二次验证密钥：退化为"无需动态码"
+    return { ok: true, requiresTotp: false };
+  }
+  const valid = await verifyTotp(env.ADMIN_TOTP_SECRET, code);
+  return { ok: valid, requiresTotp: true };
 }

@@ -94,6 +94,9 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:8px;pa
     <p>安全：口令仅保存在当前会话，关闭页面即失效。使用 HTTPS 访问。</p>
     <label>管理员口令（ADMIN_TOKEN）</label>
     <input type="password" id="tokenInput" autocomplete="off" placeholder="请输入管理员口令">
+    <label>动态验证码（6 位，验证器 App 生成）</label>
+    <input type="text" id="totpInput" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="000000">
+    <p class="muted" style="margin:0 0 12px">双重验证：口令 + 动态码都正确才会登录，接口只认短期会话令牌。</p>
     <div class="row mt">
       <button class="primary" onclick="doLogin()">登录</button>
       <span class="muted" id="loginHint"></span>
@@ -132,7 +135,7 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:8px;pa
 
 <script>
 var TOKEN_KEY = 'apexon_admin_token';
-var state = { user: null };
+var state = { user: null, totpEnabled: false };
 
 function $(id){ return document.getElementById(id); }
 function api(path, opts){
@@ -176,28 +179,52 @@ function badge(sev){
 
 function doLogin(){
   var t = $('tokenInput').value.trim();
+  var code = $('totpInput').value.trim();
   var hint = $('loginHint');
   if (!t) { hint.textContent = '口令不能为空'; return; }
+  if (!code) { hint.textContent = '请输入 6 位动态验证码'; return; }
   hint.textContent = '校验中…';
-  api('/ping').then(function(){
-    sessionStorage.setItem(TOKEN_KEY, t);
+  fetch(API_PREFIX + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: t, code: code })
+  }).then(function(res){
+    return res.json().catch(function(){ return {}; }).then(function(data){
+      if (res.status >= 400) {
+        if (data && data.locked) {
+          hint.textContent = '失败次数过多，来源已临时冻结（15 分钟）';
+        } else {
+          hint.textContent = (data && data.error) || ('登录失败（HTTP ' + res.status + '）');
+        }
+        var e = new Error(hint.textContent);
+        e.status = res.status;
+        throw e;
+      }
+      return data;
+    });
+  }).then(function(data){
+    sessionStorage.setItem(TOKEN_KEY, data.session);
+    state.totpEnabled = data.totp_enabled;
     boot();
-  }).catch(function(e){
-    hint.textContent = '口令错误或管理接口未启用';
-  });
+  }).catch(function(){ /* hint already set */ });
 }
 function logout(){
+  var s = sessionStorage.getItem(TOKEN_KEY);
+  if (s) {
+    fetch(API_PREFIX + '/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + s } }).catch(function(){});
+  }
   sessionStorage.removeItem(TOKEN_KEY);
   $('appView').style.display = 'none';
   $('loginView').style.display = 'flex';
   $('tokenInput').value = '';
+  $('totpInput').value = '';
 }
 function boot(){
   $('loginView').style.display = 'none';
   $('appView').style.display = 'block';
   var who = sessionStorage.getItem(TOKEN_KEY);
   state.tokenTip = who;
-  $('whoami').textContent = '会话已登录';
+  $('whoami').textContent = '会话已登录' + (state.totpEnabled ? '（双重验证）' : '');
   show('overview');
 }
 function show(view){
@@ -443,6 +470,7 @@ function renderAudit(){
 
 /* init */
 $('tokenInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
+$('totpInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
 (function init(){
   if (sessionStorage.getItem(TOKEN_KEY)){ boot(); } else { $('loginView').style.display = 'flex'; }
 })();
