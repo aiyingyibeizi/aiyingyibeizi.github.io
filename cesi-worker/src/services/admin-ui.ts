@@ -66,6 +66,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'He
 .hint{min-height:18px;font-size:12px;margin:10px 0 2px}
 .hint.err{color:var(--danger)}
 .hint.ok{color:var(--ok)}
+.hint.warn{color:var(--warn)}
 .btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .btn:hover{background:var(--line)}
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#0b0f1a;font-weight:700}
@@ -239,6 +240,16 @@ var state = { user: null, totpEnabled: true };
 var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
 
 function $(id){ return document.getElementById(id); }
+// 会话失效（令牌缺失/过期/被拒绝）时回到登录页，避免后台卡在“全加载失败（forbidden）”
+function sessionExpired(){
+  sessionStorage.removeItem(TOKEN_KEY);
+  var app = $('appView'), log = $('loginView'), hint = $('loginHint');
+  if (app) app.style.display = 'none';
+  if (log) log.style.display = 'flex';
+  if (hint){ hint.className = 'hint warn'; hint.textContent = '登录已过期或验证未通过，请重新登录'; }
+  var tq = $('tokenInput'), cq = $('totpInput');
+  if (tq) tq.value = ''; if (cq) cq.value = '';
+}
 function api(path, opts){
   opts = opts || {};
   var headers = opts.headers || {};
@@ -251,6 +262,11 @@ function api(path, opts){
       if (res.status >= 400) {
         var e = new Error((data && data.error) || ('HTTP ' + res.status));
         e.status = res.status;
+        // 401（无/无效令牌）或 403-forbidden（会话校验不过）＝会话已失效 → 自动回登录页。
+        // 注意：后台高危操作的“需要有效的动态验证码”也是 403，但其 error 文本不同，不会误触发。
+        if (res.status === 401 || (res.status === 403 && data && data.error === 'forbidden')) {
+          sessionExpired();
+        }
         throw e;
       }
       return data;
