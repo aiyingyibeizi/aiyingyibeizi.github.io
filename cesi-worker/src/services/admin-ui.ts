@@ -134,6 +134,7 @@ pre{background:var(--panel2);border:1px solid var(--border);border-radius:8px;pa
 <div class="toast" id="toast"></div>
 
 <script>
+var API_PREFIX = '${API_PREFIX}';
 var TOKEN_KEY = 'apexon_admin_token';
 var state = { user: null, totpEnabled: false };
 
@@ -317,8 +318,8 @@ function renderUsers(){
       h += '<tr><td>' + esc(u.username) + '</td><td class="mono">' + esc(trunc(u.user_id,28)) + '</td>';
       h += '<td>' + (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>') + '</td>';
       h += '<td>' + fmtDate(u.created_at) + '</td>';
-      h += '<td class="row"><button onclick="openUser(\'' + esc(u.user_id) + '\')">详情</button>';
-      h += '<button class="danger" onclick="delUser(\'' + esc(u.user_id) + '\',\'' + esc(u.username) + '\')">删除</button></td></tr>';
+      h += '<td class="row"><button onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
+      h += '<button class="danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></td></tr>';
     }
     h += '</table></div>';
     el.innerHTML = h;
@@ -345,8 +346,8 @@ function openUser(userId){
     else { h += '<div class="table-wrap"><table><tr><th>类型</th><th>分数</th><th>时间</th></tr>'; for (var i=0;i<sc.length;i++){ h += '<tr><td class="mono">' + esc(sc[i].subtype) + '</td><td>' + esc(sc[i].score_value) + '</td><td>' + fmtDate(sc[i].created_at) + '</td></tr>'; } h += '</table></div>'; }
     h += '</div>';
     h += '<div class="row mt">';
-    h += (u.banned ? '<button class="primary" onclick="setBan(\'' + esc(u.user_id) + '\',false)">解除封禁</button>' : '<button class="warnbtn" onclick="setBan(\'' + esc(u.user_id) + '\',true)">封禁</button>');
-    h += '<button class="danger" onclick="delUser(\'' + esc(u.user_id) + '\',\'' + esc(u.username) + '\')">删除账号及全部数据</button>';
+    h += (u.banned ? '<button class="primary" onclick="setBan(\\'' + esc(u.user_id) + '\\',false)">解除封禁</button>' : '<button class="warnbtn" onclick="setBan(\\'' + esc(u.user_id) + '\\',true)">封禁</button>');
+    h += '<button class="danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除账号及全部数据</button>';
     h += '<button onclick="closeModal()">关闭</button>';
     h += '</div>';
     body.innerHTML = h;
@@ -398,7 +399,7 @@ function renderContent(){
       h += '<td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
       h += '<td>' + esc(trunc(bodyText,80)) + '</td>';
       h += '<td>' + fmtDate(r.created_at) + '</td>';
-      h += '<td><button onclick="viewContent(\'' + esc(r.id) + '\')">查看</button><button class="danger" onclick="delContent(\'' + esc(r.id) + '\')">删除</button></td></tr>';
+      h += '<td><button onclick="viewContent(\\'' + esc(r.id) + '\\')">查看</button><button class="danger" onclick="delContent(\\'' + esc(r.id) + '\\')">删除</button></td></tr>';
     }
     h += '</table></div>';
     el.innerHTML = h;
@@ -437,7 +438,7 @@ function renderAlerts(){
       h += '<tr><td>' + badge(r.severity) + '</td><td class="mono">' + esc(r.kind) + '</td>';
       h += '<td>' + esc(trunc(r.message,70)) + '</td><td class="mono">' + esc(r.source_ip || r.target || '-') + '</td>';
       h += '<td>' + fmtDate(r.created_at) + '</td>';
-      h += '<td class="row">' + (r.resolved ? '' : '<button class="primary" onclick="resolveAlert(\'' + esc(r.id) + '\')">标记解决</button>') + '<button class="danger" onclick="delAlert(\'' + esc(r.id) + '\')">删除</button></td></tr>';
+      h += '<td class="row">' + (r.resolved ? '' : '<button class="primary" onclick="resolveAlert(\\'' + esc(r.id) + '\\')">标记解决</button>') + '<button class="danger" onclick="delAlert(\\'' + esc(r.id) + '\\')">删除</button></td></tr>';
     }
     h += '</table></div>';
     el.innerHTML = h;
