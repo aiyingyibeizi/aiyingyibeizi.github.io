@@ -42,6 +42,10 @@ export interface Env {
   MAIL_PROVIDER?: string;
   MAIL_API_KEY?: string;
   MAIL_FROM?: string;
+  // 邮件额度防刷防火墙（天级）：单邮箱每日最多发码数（默认 5）、单 IP 每日最多发码数（默认 30）。
+  // 超过即拒绝当日再次请求，防止单一来源把厂商免费额度打穿。
+  MAIL_DAILY_PER_EMAIL?: number;
+  MAIL_DAILY_PER_IP?: number;
 
   // 异地登录提醒开关：登录来源 IP 与上次不同时，推送通知到 ADMIN_ALERT_WEBHOOK（可选，默认开启）。
   GEO_DIFF_LOGIN_NOTIFY?: string;

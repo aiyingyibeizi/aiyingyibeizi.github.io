@@ -93,11 +93,14 @@ export async function recordLoginFailure(
   matchedUser: boolean // 该用户存在且被成功查找到（撞库信号）
 ): Promise<{ locked: boolean; alertWritten: boolean }> {
   const ipCount = await countAndExpire(redis, FAIL_PREFIX + 'ip:' + safeKeyPart(ip), SECURITY_ALERT_WINDOW_SEC);
-  const userCount = await countAndExpire(redis, FAIL_PREFIX + 'user:' + safeKeyPart(username), SECURITY_ALERT_WINDOW_SEC);
+  // 同源(IP+账号)组合计数：只有来自同一来源的连续失败才累积，
+  // 避免未认证攻击者对任意账号远程触发用户级封锁(DoS)。
+  const src = ip + ':' + username;
+  const srcCount = await countAndExpire(redis, FAIL_PREFIX + 'src:' + safeKeyPart(src), SECURITY_ALERT_WINDOW_SEC);
 
-  // 命中阈值才触发封锁 + 告警（8 次）。撞库命中的有效用户名提前到 3 次即告警但不封锁。
-  const userBreach = matchedUser && userCount >= 3 && userCount < SECURITY_FAIL_THRESHOLD;
-  const brute = ipCount >= SECURITY_FAIL_THRESHOLD || userCount >= SECURITY_FAIL_THRESHOLD;
+  // 命中阈值才触发封锁 + 告警（8 次）。同源撞库命中的有效用户名提前到 3 次即告警但不封锁。
+  const userBreach = matchedUser && srcCount >= 3 && srcCount < SECURITY_FAIL_THRESHOLD;
+  const brute = ipCount >= SECURITY_FAIL_THRESHOLD || srcCount >= SECURITY_FAIL_THRESHOLD;
 
   let locked = false;
   let alertWritten = false;
@@ -105,7 +108,8 @@ export async function recordLoginFailure(
   if (brute) {
     try {
       await redis.set(`${LOCK_PREFIX}ip:${safeKeyPart(ip)}`, '1', { ex: SECURITY_LOCK_WINDOW_SEC });
-      await redis.set(`${LOCK_PREFIX}user:${safeKeyPart(username)}`, '1', { ex: SECURITY_LOCK_WINDOW_SEC });
+      // 仅封锁同源组合(IP+账号)，不封锁裸用户名，防止远程封杀受害者账号。
+      await redis.set(`${LOCK_PREFIX}user:${safeKeyPart(src)}`, '1', { ex: SECURITY_LOCK_WINDOW_SEC });
       locked = true;
     } catch (err) {
       console.error('security lock set failed:', err);
@@ -115,9 +119,9 @@ export async function recordLoginFailure(
       severity: 'critical',
       source_ip: ip,
       target: username,
-      message: `暴力破解：IP 在 ${SECURITY_ALERT_WINDOW_SEC / 60} 分钟内累计失败 ${Math.max(ipCount, userCount)} 次，已临时封锁 15 分钟`,
-      count: Math.max(ipCount, userCount),
-      detail: `matchedUser=${matchedUser} ipFail=${ipCount} userFail=${userCount}`,
+      message: `暴力破解：IP 在 ${SECURITY_ALERT_WINDOW_SEC / 60} 分钟内累计失败 ${Math.max(ipCount, srcCount)} 次，已临时封锁 15 分钟`,
+      count: Math.max(ipCount, srcCount),
+      detail: `matchedUser=${matchedUser} ipFail=${ipCount} srcFail=${srcCount}`,
     });
   } else if (userBreach) {
     alertWritten = await recordAlert(redis, shard, waitUntil, env, {
@@ -125,8 +129,8 @@ export async function recordLoginFailure(
       severity: 'warning',
       source_ip: ip,
       target: username,
-      message: `疑似撞库：有效账号"${username}"连续 ${userCount} 次密码错误`,
-      count: userCount,
+      message: `疑似撞库：有效账号"${username}"连续 ${srcCount} 次密码错误`,
+      count: srcCount,
     });
   }
 

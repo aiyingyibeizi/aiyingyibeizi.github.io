@@ -74,6 +74,19 @@ function mailKey(email: string): string {
   return MAIL_CODE_PREFIX + email.replace(/[^a-z0-9@._+-]/gi, '_').slice(0, 120);
 }
 
+/** 天级计数器（key 含日期并按 2 天 TTL 过期），返回当日最新计数值；Redis 异常返回 0（不阻断） */
+async function mailDayCount(redis: Redis, namespace: string, value: string): Promise<number> {
+  const k = `day:${namespace}:${value}:${new Date().toISOString().slice(0, 10)}`;
+  try {
+    const n = await redis.incr(k);
+    if (n === 1) await redis.expire(k, 2 * 24 * 60 * 60);
+    return n;
+  } catch (err) {
+    console.error('mailDayCount failed:', err);
+    return 0;
+  }
+}
+
 /** 生成 6 位数字验证码并写入 Redis（带 TTL）；Redis 异常返回 null（调用方视为生成失败） */
 async function issueMailCode(redis: Redis, email: string): Promise<string | null> {
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -404,8 +417,11 @@ app.post('/api/auth/login', async (c) => {
   const userOk = await rateLimit(redis, rlKey('login-user', username), 10, 60);
   if (!ipOk || !userOk) return c.json({ error: 'Too many attempts, please try again later' }, 429);
 
-  // 暴破封锁：登录前先查是否因失败次数过多被临时冻结（成功则正常放行，不影响既有流程）
-  if (await isBlocked(redis, 'ip', ip) || await isBlocked(redis, 'user', username)) {
+  // 暴破封锁：登录前先查是否因失败次数过多被临时冻结（成功则正常放行，不影响既有流程）。
+  // 只冻结「IP」与本请求所属「IP+账号」组合，绝不因匿名错误尝试冻结裸用户名，
+  // 防止未认证攻击者对任意账号远程触发封锁(DoS)。
+  const srcLock = await isBlocked(redis, 'user', ip + ':' + username);
+  if (await isBlocked(redis, 'ip', ip) || srcLock) {
     return c.json({ error: 'Too many attempts, account temporarily locked' }, 429);
   }
 
@@ -536,6 +552,16 @@ app.post('/api/auth/send-code', async (c) => {
   const okIp = await rateLimit(redis, rlKey('mailcode-ip', ip), 10, 60);
   if (!okMail || !okIp) return c.json({ error: 'Too many attempts, please try again later' }, 429);
 
+  // 邮件额度防刷防火墙（天级）：单邮箱 / 单 IP 每日发码上限，防止单点打穿厂商免费额度。
+  const capMail = Number(env.MAIL_DAILY_PER_EMAIL) || 5;
+  const capIp = Number(env.MAIL_DAILY_PER_IP) || 30;
+  if (capMail > 0 && (await mailDayCount(redis, 'mail', email)) > capMail) {
+    return c.json({ error: 'Daily verification-code limit reached for this email, please try again tomorrow' }, 429);
+  }
+  if (capIp > 0 && (await mailDayCount(redis, 'mailip', ip)) > capIp) {
+    return c.json({ error: 'Daily verification-code limit reached, please try again tomorrow' }, 429);
+  }
+
   const code = await issueMailCode(redis, email);
   if (!code) return c.json({ error: 'Internal error (code issue)' }, 500);
 
@@ -617,6 +643,13 @@ app.post('/api/auth/email-login', async (c) => {
   if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
 
   const redis = getRedis(env);
+  // email-login 此前缺失频率限制：验证码虽为一次性且 10 分钟有效，仍须按 IP 与邮箱限速，
+  // 防止脚本对同一来源狂刷校验码、或对单一邮箱持续爆破验证码。
+  const ip = clientIp(c);
+  if (!(await rateLimit(redis, rlKey('emaillogin-ip', ip), 30, 60)) ||
+      !(await rateLimit(redis, rlKey('emaillogin-mail', email), 15, 60))) {
+    return c.json({ error: 'Too many attempts, please try again later' }, 429);
+  }
   if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
 
   const shard = await buildShardService(env);
@@ -628,7 +661,6 @@ app.post('/api/auth/email-login', async (c) => {
   const payload: any = JSON.parse(account.payload);
   if (payload.banned === true) return c.json({ error: 'No account with this email' }, 404);
 
-  const ip = clientIp(c);
   const prevIp = typeof payload.last_login_ip === 'string' ? payload.last_login_ip : '';
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
