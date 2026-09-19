@@ -565,8 +565,26 @@ app.post('/api/auth/send-code', async (c) => {
   const code = await issueMailCode(redis, email);
   if (!code) return c.json({ error: 'Internal error (code issue)' }, 500);
 
-  const text = `【APEXON】您的验证码是 ${code}，10 分钟内有效。若非本人操作请忽略。`;
-  const html = `<div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e3e8f0;border-radius:12px;padding:24px"><h2 style="margin:0 0 8px">APEXON 验证码</h2><p style="color:#555">请输入下方验证码完成登录/注册：</p><div style="font-size:26px;letter-spacing:6px;font-weight:700;color:#4f6bff;padding:12px 0">${code}</div><p style="color:#888;font-size:12px">验证码 10 分钟内有效，请勿泄露给他人。</p></div>`;
+  const text = ['【APEXON】您的验证码', `验证码：${code}`, '10 分钟内有效，请勿泄露给他人。若非本人操作请忽略本邮件。'].join('\n');
+  const html = `<div style="background:#eef0fb;padding:28px 16px;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,Verdana,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e4e6f2;box-shadow:0 12px 40px rgba(76,93,255,.10);">
+    <div style="background:linear-gradient(135deg,#4f6bff 0%,#8b5cf6 100%);padding:26px 28px;">
+      <div style="font-size:15px;font-weight:700;color:#ffffff;letter-spacing:.5px;">⚡ APEXON</div>
+      <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:4px;">邮箱验证码</div>
+    </div>
+    <div style="padding:26px 28px 30px;">
+      <p style="margin:0 0 6px;font-size:15px;color:#1a2140;line-height:1.6;">你好，</p>
+      <p style="margin:0 0 18px;font-size:14px;color:#5a6286;line-height:1.7;">你正在进行登录 / 注册操作，以下是本次验证码：</p>
+      <div style="background:#f6f7ff;border:1.5px dashed #9aa7ff;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
+        <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:8px;color:#4f6bff;">${code}</div>
+      </div>
+      <p style="margin:0 0 6px;font-size:13px;color:#7a82a8;line-height:1.7;">· 验证码 <b style="color:#4f6bff">10 分钟</b> 内有效 · 一次性使用<br>· 请勿将验证码告知他人，谨防诈骗</p>
+    </div>
+    <div style="padding:16px 28px;background:#fafbff;border-top:1px solid #eef0fb;">
+      <p style="margin:0;font-size:12px;color:#a0a6c4;line-height:1.6;">如果你没有进行上述操作，可以忽略这封邮件。<br>APEXON · 免费在线认知能力测试平台</p>
+    </div>
+  </div>
+</div>`;
 
   const sent = await sendMail(cfg, email, 'APEXON 验证码', html, text);
   if (!sent) {
