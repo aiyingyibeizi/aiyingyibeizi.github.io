@@ -610,15 +610,10 @@ app.post('/api/auth/email-register', async (c) => {
   if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
 
   const redis = getRedis(env);
+
+  // 先查唯一性，再校验验证码：避免"邮箱已注册"等 409 时把一次性验证码消耗掉，
+  // 否则用户无法用同一验证码切换去登录。账号唯一性经 /register 本就可探测，无新增泄露。
   const shard = await buildShardService(env);
-
-  // 限速（含验证码校验前的防刷）
-  if (!(await rateLimit(redis, rlKey('emailreg', clientIp(c)), 5, 60))) {
-    return c.json({ error: 'Too many attempts, please try again later' }, 429);
-  }
-  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
-
-  // 唯一性校验：用户名与邮箱都不可重复
   const existing = await shard.readByType('account', { limit: 1000 });
   for (const r of existing) {
     let p: any;
@@ -626,6 +621,12 @@ app.post('/api/auth/email-register', async (c) => {
     if (p.username === username) return c.json({ error: 'Username already exists' }, 409);
     if (String(p.email || '').toLowerCase() === email) return c.json({ error: 'Email already registered, please login' }, 409);
   }
+
+  // 限速（含验证码校验前的防刷）
+  if (!(await rateLimit(redis, rlKey('emailreg', clientIp(c)), 5, 60))) {
+    return c.json({ error: 'Too many attempts, please try again later' }, 429);
+  }
+  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
 
   const userId = uuid();
   const sessionToken = crypto.randomUUID();
@@ -668,14 +669,15 @@ app.post('/api/auth/email-login', async (c) => {
       !(await rateLimit(redis, rlKey('emaillogin-mail', email), 15, 60))) {
     return c.json({ error: 'Too many attempts, please try again later' }, 429);
   }
-  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
-
+  // 先查账号，再校验验证码：避免首次登录(无账号)时把一次性验证码消耗掉，
+  // 否则前端无法用同一验证码回退去注册。存在性本身经 /email-login|/register 已可探测，无新增泄露。
   const shard = await buildShardService(env);
   const accounts = await shard.readByType('account', { limit: 1000 });
   const account = accounts.find((r) => {
     try { return String(JSON.parse(r.payload).email || '').toLowerCase() === email; } catch { return false; }
   });
   if (!account) return c.json({ error: 'No account with this email' }, 404);
+  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
   const payload: any = JSON.parse(account.payload);
   if (payload.banned === true) return c.json({ error: 'No account with this email' }, 404);
 
