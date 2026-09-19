@@ -1723,7 +1723,12 @@
     initTheme() {
       // 深色科技风 / 白色明亮主题切换（由 data-bw 与 body.theme-light 控制）
       const applyBW = (isBW) => {
+        // data-bw 与 data-theme 必须同步：css 中大量选择器依赖 html[data-theme="light"|"dark"]，
+        // 且 variables.css 用 html[data-bw="true"][data-theme] 激活亮色变量。
+        // 过去 data-theme 只靠每个 html 静态写死 "dark"，导致亮色下 data-theme 仍是 dark，
+        // 所有 html[data-theme="light"] 规则全部失效，属潜在视觉 bug。此处统一维护。
         document.documentElement.setAttribute('data-bw', String(isBW));
+        document.documentElement.setAttribute('data-theme', isBW ? 'light' : 'dark');
         if (document.body) document.body.classList.toggle('theme-light', isBW);
         document.dispatchEvent(new CustomEvent('apexon:themechange', { detail: { isLight: isBW } }));
       };
@@ -3118,6 +3123,12 @@
 
     const run = function () {
       if (el.getAttribute('data-counted') === 'true') return;
+      // 无障碍：系统开启“减弱动态效果”时直接跳到终值，不做滚动动画
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.textContent = formatVal(targetNum);
+        el.setAttribute('data-counted', 'true');
+        return;
+      }
       const start = performance.now();
       const step = function (now) {
         const p = Math.min(1, (now - start) / opts.duration);
@@ -3737,8 +3748,10 @@
           for (let b = 0; b < 4; b++) {
             const ab = alphaBuckets[b];
             if (!ab.length) continue;
-            // 用该桶内平均 alpha 绘制（量化误差 < 0.1，肉眼不可辨）
-            const avg = (ab[4] + ab[ab.length - 1]) / 2;
+            // 用该桶内所有线段的真实平均 alpha 绘制（量化误差 < 0.1，肉眼不可辨）
+            let sumA = 0, nA = 0;
+            for (let k = 4; k < ab.length; k += 5) { sumA += ab[k]; nA++; }
+            const avg = nA ? sumA / nA : 0.1;
             ctx.globalAlpha = avg;
             ctx.beginPath();
             for (let k = 0; k < ab.length; k += 5) {
