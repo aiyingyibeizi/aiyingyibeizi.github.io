@@ -2797,7 +2797,7 @@
       document.body.appendChild(modal);
 
       let a11yCleanup = null;
-      const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
+      const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); clearInterval(sendTimer); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
 
       const tabs = modal.querySelectorAll('.apex-login-tab');
       const submitBtn = modal.querySelector('#apexLoginSubmit');
