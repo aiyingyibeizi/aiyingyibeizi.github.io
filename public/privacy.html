@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta name="keywords" content="隐私政策,APEXON,数据保护">
+    <meta name="author" content="APEXON">
+    <meta property="og:title" content="隐私政策 - APEXON">
+    <meta property="og:description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/privacy.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="隐私政策 - APEXON">
+    <meta name="twitter:description" content="APEXON 隐私政策，说明我们如何收集、使用和保护你的数据。">
+    <meta name="twitter:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <title data-i18n="priv_title">隐私政策 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=9">
+    <link rel="stylesheet" href="styles/main.css?v=23">
+<!-- Clarity tracking code for https://apexon.qzz.io -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlclo5ihkp");
+</script>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="priv_1">隐私政策</h1>
+        <div class="legal-content">
+            <p data-i18n="priv_2">最后更新日期：2026 年 7 月 10 日</p>
+            <p data-i18n="priv_3">欢迎您使用 APEXON（以下简称"本站"）。本隐私政策旨在向您清晰、透明地说明我们在您使用本站服务过程中如何收集、使用、存储、共享和保护您的个人信息，以及您享有的相关权利。请您在使用本站前仔细阅读本政策。如果您对本政策有任何疑问，可以通过本政策末尾的联系方式与我们联系。</p>
+
+            <h2 data-i18n="priv_4">1. 我们收集的信息</h2>
+            <p data-i18n="priv_5">当您使用 APEXON 时，我们可能会收集以下类型的信息。我们坚持"最小必要"原则，仅收集提供服务所必需的信息：</p>
+            <ul>
+                <li data-i18n="priv_6"><strong>账号信息：</strong>当您注册或完善资料时，我们可能会收集用户名、密码哈希、性别（可选）、个人简介、头像链接等您主动填写的资料。密码将以哈希形式存储，我们不会以明文保存您的密码。</li>
+                <li data-i18n="priv_7"><strong>测试数据：</strong>您在各测试项目中的成绩、用时、正确率、等级评定以及测试时间等。这些数据用于生成您的个人历史记录、排行榜数据和能力分析。</li>
+                <li data-i18n="priv_8"><strong>互动数据：</strong>您在讨论区发表的评论、帖子分类、点赞或反馈内容。这些信息用于维持社区互动和改进用户体验。</li>
+                <li data-i18n="priv_9"><strong>技术信息：</strong>包括浏览器类型与版本、操作系统、设备类型、屏幕分辨率、访问时间、IP 地址（可能经过匿名化处理）、匿名设备标识以及页面访问路径。这些信息用于优化服务性能、排查故障、防止滥用和保障账号安全。</li>
+                <li data-i18n="priv_10"><strong>第三方统计信息：</strong>我们可能使用第三方分析工具（如 Microsoft Clarity）收集匿名化的用户行为数据，以了解页面使用情况和改进产品设计。此类数据通常以聚合和匿名的形式处理。</li>
+            </ul>
+
+            <h2 data-i18n="priv_11">2. 我们如何使用信息</h2>
+            <p data-i18n="priv_12">我们使用收集的信息为您提供安全、稳定、个性化的服务，具体用途包括但不限于：</p>
+            <ul>
+                <li data-i18n="priv_13">提供、维护、优化和改进本站各项功能与服务，包括测试引擎、排行榜、讨论区和音乐播放器等；</li>
+                <li data-i18n="priv_14">生成并展示您的个人成绩、历史记录、统计图表和全球排行榜；</li>
+                <li data-i18n="priv_15">保护账号安全，防止欺诈、作弊、自动化脚本攻击和其他滥用行为；</li>
+                <li data-i18n="priv_16">回复您的反馈、咨询和投诉，处理账号相关问题；</li>
+                <li data-i18n="priv_17">进行匿名化的数据分析，以改进测试设计、用户体验和网站性能；</li>
+                <li data-i18n="priv_18">在获得您同意或符合法律规定的情况下，向您发送服务通知或功能更新信息。</li>
+            </ul>
+
+            <h2 data-i18n="priv_19">3. 信息的存储与保护</h2>
+            <p data-i18n="priv_20">您的数据存储在第三方云服务提供商的服务器上，这些服务器可能位于您所在司法辖区以外的地区。我们会采取合理的技术和管理措施保护您的数据安全，包括但不限于密码哈希存储、会话令牌机制、传输层加密（HTTPS）以及访问控制策略。</p>
+            <p data-i18n="priv_21">我们会对员工和第三方服务提供商的数据访问权限进行严格限制，仅允许为履行职责所必需的人员访问您的个人信息。然而，互联网环境并非绝对安全，我们无法保证数据在传输或存储过程中 100% 不被非法访问、泄露、篡改或丢失。如发生安全事件，我们将按照适用法律的要求及时通知您并采取补救措施。</p>
+
+            <h2 data-i18n="priv_22">4. 信息共享</h2>
+            <p data-i18n="priv_23">我们高度重视您的隐私，不会将您的个人信息出售、出租或以其他方式非法提供给任何第三方。仅在以下情形中，我们可能会披露您的必要信息：</p>
+            <ul>
+                <li data-i18n="priv_24">依据法律法规、司法命令或行政机关的合法要求；</li>
+                <li data-i18n="priv_25">为保护本站、我们用户或公众的合法权益、财产安全或人身安全所必需；</li>
+                <li data-i18n="priv_26">在合并、收购、资产转让或类似交易中，您的信息可能作为业务资产的一部分被转移，但我们会要求接收方继续遵守不低于本政策标准的保护措施；</li>
+                <li data-i18n="priv_27">经您事先明确同意的其他情形。</li>
+            </ul>
+
+            <h2 data-i18n="priv_28">5. 您的权利</h2>
+            <p data-i18n="priv_29">根据适用法律，您对个人信息享有以下权利：</p>
+            <ul>
+                <li data-i18n="priv_30"><strong>访问权：</strong>您可以登录账号查看自己的个人资料和测试记录。</li>
+                <li data-i18n="priv_31"><strong>更正权：</strong>您可以随时修改或更新个人资料中的不准确信息。</li>
+                <li data-i18n="priv_32"><strong>删除权：</strong>您可以删除自己的部分资料或发布的内容。如需删除账号及全部关联数据，请发送邮件至 luoyangmengjin2025@163.com，我们将在核实身份后尽快处理。</li>
+                <li data-i18n="priv_33"><strong>限制处理权：</strong>在特定情况下，您有权要求我们限制对您个人信息的处理。</li>
+                <li data-i18n="priv_34"><strong>撤回同意：</strong>对于基于同意而收集的信息，您可以随时撤回同意，但撤回同意可能影响您使用部分功能。</li>
+            </ul>
+
+            <h2 data-i18n="priv_35">6. Cookie 与本地存储</h2>
+            <p data-i18n="priv_36">本站使用浏览器本地存储（localStorage）保存登录状态、匿名用户标识、语言偏好、主题偏好和音乐播放设置等信息，以便在您下次访问时提供一致的使用体验。我们还可能使用 Cookie 或类似技术来识别设备、记录会话状态和进行匿名流量分析。</p>
+            <p data-i18n="priv_37">大多数浏览器都允许您清除本地存储、禁用 Cookie 或设置提醒。但请注意，禁用这些技术可能导致部分功能无法正常使用，例如自动登录、主题记忆和播放进度保存等。</p>
+
+            <h2 data-i18n="priv_38">7. 未成年人</h2>
+            <p data-i18n="priv_39">我们建议 14 岁以下未成年人在监护人指导下使用本站。我们不会故意收集未成年人的个人信息。如果我们发现自己无意中收集了未成年人的个人信息，且未获得监护人同意，我们将尽快采取措施删除相关信息。如果家长或监护人认为未成年人向我们提供了个人信息，请通过本政策末尾的联系方式与我们联系。</p>
+
+            <h2 data-i18n="priv_40">8. 第三方链接与服务</h2>
+            <p data-i18n="priv_41">本站可能包含指向第三方网站或服务的链接（例如 Jamendo 音乐服务、社交媒体分享等）。这些第三方服务拥有独立的隐私政策，我们不对其内容或隐私实践负责。在向其提供个人信息前，建议您仔细阅读相关第三方的隐私政策。</p>
+
+            <h2 data-i18n="priv_42">9. 政策变更</h2>
+            <p data-i18n="priv_43">我们可能会不时更新本隐私政策，以适应法律法规变化、业务发展或技术进步。更新后的政策将在页面上公布，并注明最后更新日期。若更新内容涉及重大变更，我们可能会通过站内公告或其他适当方式通知您。您在政策更新后继续使用本站，视为您已阅读、理解并接受更新后的政策。</p>
+
+            <h2 data-i18n="priv_44">10. 联系我们</h2>
+            <p data-i18n="priv_45">如有任何隐私相关问题、投诉或请求，请发送邮件至 luoyangmengjin2025@163.com。我们会在收到您的请求后尽快进行评估和回复。</p>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=14"></script>
+    <script src="js/common.js?v=35"></script>
+    <script>
+    (function () {
+        APEXON.Particles.init();
+        document.body.classList.add('loaded');
+    })();
+    </script>
+
+    <script>
+    window.APEXON_PAGE_I18N = {
+        zh: {
+            "priv_title": "隐私政策 - APEXON",
+            "priv_1": "隐私政策",
+            "priv_2": "最后更新日期：2026 年 7 月 10 日",
+            "priv_3": "欢迎您使用 APEXON（以下简称\"本站\"）。本隐私政策旨在向您清晰、透明地说明我们在您使用本站服务过程中如何收集、使用、存储、共享和保护您的个人信息，以及您享有的相关权利。请您在使用本站前仔细阅读本政策。如果您对本政策有任何疑问，可以通过本政策末尾的联系方式与我们联系。",
+            "priv_4": "1. 我们收集的信息",
+            "priv_5": "当您使用 APEXON 时，我们可能会收集以下类型的信息。我们坚持\"最小必要\"原则，仅收集提供服务所必需的信息：",
+            "priv_6": "账号信息：当您注册或完善资料时，我们可能会收集用户名、密码哈希、性别（可选）、个人简介、头像链接等您主动填写的资料。密码将以哈希形式存储，我们不会以明文保存您的密码。",
+            "priv_7": "测试数据：您在各测试项目中的成绩、用时、正确率、等级评定以及测试时间等。这些数据用于生成您的个人历史记录、排行榜数据和能力分析。",
+            "priv_8": "互动数据：您在讨论区发表的评论、帖子分类、点赞或反馈内容。这些信息用于维持社区互动和改进用户体验。",
+            "priv_9": "技术信息：包括浏览器类型与版本、操作系统、设备类型、屏幕分辨率、访问时间、IP 地址（可能经过匿名化处理）、匿名设备标识以及页面访问路径。这些信息用于优化服务性能、排查故障、防止滥用和保障账号安全。",
+            "priv_10": "第三方统计信息：我们可能使用第三方分析工具（如 Microsoft Clarity）收集匿名化的用户行为数据，以了解页面使用情况和改进产品设计。此类数据通常以聚合和匿名的形式处理。",
+            "priv_11": "2. 我们如何使用信息",
+            "priv_12": "我们使用收集的信息为您提供安全、稳定、个性化的服务，具体用途包括但不限于：",
+            "priv_13": "提供、维护、优化和改进本站各项功能与服务，包括测试引擎、排行榜、讨论区和音乐播放器等；",
+            "priv_14": "生成并展示您的个人成绩、历史记录、统计图表和全球排行榜；",
+            "priv_15": "保护账号安全，防止欺诈、作弊、自动化脚本攻击和其他滥用行为；",
+            "priv_16": "回复您的反馈、咨询和投诉，处理账号相关问题；",
+            "priv_17": "进行匿名化的数据分析，以改进测试设计、用户体验和网站性能；",
+            "priv_18": "在获得您同意或符合法律规定的情况下，向您发送服务通知或功能更新信息。",
+            "priv_19": "3. 信息的存储与保护",
+            "priv_20": "您的数据存储在第三方云服务提供商的服务器上，这些服务器可能位于您所在司法辖区以外的地区。我们会采取合理的技术和管理措施保护您的数据安全，包括但不限于密码哈希存储、会话令牌机制、传输层加密（HTTPS）以及访问控制策略。",
+            "priv_21": "我们会对员工和第三方服务提供商的数据访问权限进行严格限制，仅允许为履行职责所必需的人员访问您的个人信息。然而，互联网环境并非绝对安全，我们无法保证数据在传输或存储过程中 100% 不被非法访问、泄露、篡改或丢失。如发生安全事件，我们将按照适用法律的要求及时通知您并采取补救措施。",
+            "priv_22": "4. 信息共享",
+            "priv_23": "我们高度重视您的隐私，不会将您的个人信息出售、出租或以其他方式非法提供给任何第三方。仅在以下情形中，我们可能会披露您的必要信息：",
+            "priv_24": "依据法律法规、司法命令或行政机关的合法要求；",
+            "priv_25": "为保护本站、我们用户或公众的合法权益、财产安全或人身安全所必需；",
+            "priv_26": "在合并、收购、资产转让或类似交易中，您的信息可能作为业务资产的一部分被转移，但我们会要求接收方继续遵守不低于本政策标准的保护措施；",
+            "priv_27": "经您事先明确同意的其他情形。",
+            "priv_28": "5. 您的权利",
+            "priv_29": "根据适用法律，您对个人信息享有以下权利：",
+            "priv_30": "访问权：您可以登录账号查看自己的个人资料和测试记录。",
+            "priv_31": "更正权：您可以随时修改或更新个人资料中的不准确信息。",
+            "priv_32": "删除权：您可以删除自己的部分资料或发布的内容。如需删除账号及全部关联数据，请发送邮件至 luoyangmengjin2025@163.com，我们将在核实身份后尽快处理。",
+            "priv_33": "限制处理权：在特定情况下，您有权要求我们限制对您个人信息的处理。",
+            "priv_34": "撤回同意：对于基于同意而收集的信息，您可以随时撤回同意，但撤回同意可能影响您使用部分功能。",
+            "priv_35": "6. Cookie 与本地存储",
+            "priv_36": "本站使用浏览器本地存储（localStorage）保存登录状态、匿名用户标识、语言偏好、主题偏好和音乐播放设置等信息，以便在您下次访问时提供一致的使用体验。我们还可能使用 Cookie 或类似技术来识别设备、记录会话状态和进行匿名流量分析。",
+            "priv_37": "大多数浏览器都允许您清除本地存储、禁用 Cookie 或设置提醒。但请注意，禁用这些技术可能导致部分功能无法正常使用，例如自动登录、主题记忆和播放进度保存等。",
+            "priv_38": "7. 未成年人",
+            "priv_39": "我们建议 14 岁以下未成年人在监护人指导下使用本站。我们不会故意收集未成年人的个人信息。如果我们发现自己无意中收集了未成年人的个人信息，且未获得监护人同意，我们将尽快采取措施删除相关信息。如果家长或监护人认为未成年人向我们提供了个人信息，请通过本政策末尾的联系方式与我们联系。",
+            "priv_40": "8. 第三方链接与服务",
+            "priv_41": "本站可能包含指向第三方网站或服务的链接（例如 Jamendo 音乐服务、社交媒体分享等）。这些第三方服务拥有独立的隐私政策，我们不对其内容或隐私实践负责。在向其提供个人信息前，建议您仔细阅读相关第三方的隐私政策。",
+            "priv_42": "9. 政策变更",
+            "priv_43": "我们可能会不时更新本隐私政策，以适应法律法规变化、业务发展或技术进步。更新后的政策将在页面上公布，并注明最后更新日期。若更新内容涉及重大变更，我们可能会通过站内公告或其他适当方式通知您。您在政策更新后继续使用本站，视为您已阅读、理解并接受更新后的政策。",
+            "priv_44": "10. 联系我们",
+            "priv_45": "如有任何隐私相关问题、投诉或请求，请发送邮件至 luoyangmengjin2025@163.com。我们会在收到您的请求后尽快进行评估和回复。"
+        },
+        en: {
+            "priv_title": "Privacy Policy - APEXON",
+            "priv_1": "Privacy Policy",
+            "priv_2": "Last updated: July 10, 2026",
+            "priv_3": "Welcome to APEXON (hereinafter referred to as \"this Site\"). This Privacy Policy is intended to clearly and transparently explain how we collect, use, store, share, and protect your personal information while you use this Site, as well as the rights you enjoy. Please read this Policy carefully before using this Site. If you have any questions about this Policy, you can contact us through the contact information at the end of this Policy.",
+            "priv_4": "1. Information We Collect",
+            "priv_5": "When you use APEXON, we may collect the following types of information. We adhere to the principle of \"minimum necessary\" and only collect information necessary to provide our services:",
+            "priv_6": "Account Information: When you register or complete your profile, we may collect information you voluntarily provide, such as your username, password hash, gender (optional), bio, and avatar link. Passwords are stored in hashed form; we never store your password in plain text.",
+            "priv_7": "Test Data: Your scores, time used, accuracy rates, level ratings, and test times in each testing module. These data are used to generate your personal history, leaderboard data, and ability analysis.",
+            "priv_8": "Interaction Data: Comments you post on the discussion forum, post categories, likes, or feedback content. This information is used to maintain community interaction and improve the user experience.",
+            "priv_9": "Technical Information: Including browser type and version, operating system, device type, screen resolution, access time, IP address (which may be anonymized), anonymous device identifiers, and page access paths. This information is used to optimize service performance, troubleshoot issues, prevent abuse, and secure your account.",
+            "priv_10": "Third-Party Statistics: We may use third-party analytics tools (such as Microsoft Clarity) to collect anonymized user behavior data to understand page usage and improve product design. Such data is usually processed in aggregated and anonymized form.",
+            "priv_11": "2. How We Use Information",
+            "priv_12": "We use the information we collect to provide you with safe, stable, and personalized services. Specific uses include but are not limited to:",
+            "priv_13": "Providing, maintaining, optimizing, and improving the features and services of this Site, including the testing engine, leaderboards, discussion forum, and music player;",
+            "priv_14": "Generating and displaying your personal scores, history, statistics charts, and global leaderboards;",
+            "priv_15": "Protecting account security, preventing fraud, cheating, automated script attacks, and other abusive behavior;",
+            "priv_16": "Responding to your feedback, inquiries, and complaints, and handling account-related issues;",
+            "priv_17": "Conducting anonymized data analysis to improve test design, user experience, and website performance;",
+            "priv_18": "Sending you service notifications or feature update information when you have given consent or when required by law.",
+            "priv_19": "3. Storage and Protection of Information",
+            "priv_20": "Your data is stored on servers provided by third-party cloud service providers, which may be located outside your jurisdiction. We take reasonable technical and administrative measures to protect the security of your data, including but not limited to password hashing, session token mechanisms, transport-layer encryption (HTTPS), and access control policies.",
+            "priv_21": "We strictly restrict access to data by employees and third-party service providers, allowing only personnel who need it to perform their duties to access your personal information. However, the Internet environment is not absolutely secure, and we cannot guarantee that data will never be 100% free from unauthorized access, disclosure, alteration, or loss during transmission or storage. If a security incident occurs, we will promptly notify you as required by applicable law and take remedial measures.",
+            "priv_22": "4. Information Sharing",
+            "priv_23": "We place great importance on your privacy and will not sell, rent, or otherwise illegally provide your personal information to any third party. We may only disclose your essential information in the following circumstances:",
+            "priv_24": "Pursuant to legal requirements, judicial orders, or legitimate requests from administrative authorities;",
+            "priv_25": "When necessary to protect the legitimate rights, property, safety, or personal security of this Site, our users, or the public;",
+            "priv_26": "In a merger, acquisition, asset transfer, or similar transaction, your information may be transferred as part of the business assets, but we will require the receiving party to continue to maintain protective measures no less stringent than those set out in this Policy;",
+            "priv_27": "Other circumstances for which you have given your prior explicit consent.",
+            "priv_28": "5. Your Rights",
+            "priv_29": "Under applicable law, you have the following rights regarding your personal information:",
+            "priv_30": "Right of Access: You can log in to your account to view your personal profile and test records.",
+            "priv_31": "Right to Rectification: You can modify or update inaccurate information in your profile at any time.",
+            "priv_32": "Right to Erasure: You can delete some of your profile data or published content. To delete your account and all associated data, please email luoyangmengjin2025@163.com, and we will process your request promptly after verifying your identity.",
+            "priv_33": "Right to Restriction of Processing: In specific circumstances, you have the right to request that we restrict the processing of your personal information.",
+            "priv_34": "Withdrawal of Consent: For information collected on the basis of consent, you may withdraw your consent at any time, although withdrawing consent may affect your ability to use certain features.",
+            "priv_35": "6. Cookies and Local Storage",
+            "priv_36": "This Site uses browser local storage to save information such as your login status, anonymous user identifier, language preference, theme preference, and music playback settings, so as to provide a consistent experience on your next visit. We may also use cookies or similar technologies to identify devices, record session states, and perform anonymous traffic analysis.",
+            "priv_37": "Most browsers allow you to clear local storage, disable cookies, or set warnings. Please note that disabling these technologies may prevent some features from working properly, such as automatic login, theme memory, and playback progress saving.",
+            "priv_38": "7. Minors",
+            "priv_39": "We recommend that minors under 14 years of age use this Site under the guidance of a guardian. We do not intentionally collect the personal information of minors. If we discover that we have unintentionally collected a minor's personal information without guardian consent, we will promptly take steps to delete such information. If a parent or guardian believes that a minor has provided us with personal information, please contact us through the contact information at the end of this Policy.",
+            "priv_40": "8. Third-Party Links and Services",
+            "priv_41": "This Site may contain links to third-party websites or services (such as the Jamendo music service and social media sharing). These third-party services have their own independent privacy policies, and we are not responsible for their content or privacy practices. Before providing them with personal information, we recommend that you carefully read the relevant third party's privacy policy.",
+            "priv_42": "9. Changes to This Policy",
+            "priv_43": "We may update this Privacy Policy from time to time to adapt to changes in laws and regulations, business development, or technological advances. The updated policy will be published on the page with its last-updated date. If the update involves significant changes, we may notify you via announcements on the site or other appropriate means. If you continue to use this Site after the policy update, you are deemed to have read, understood, and accepted the updated policy.",
+            "priv_44": "10. Contact Us",
+            "priv_45": "If you have any privacy-related questions, complaints, or requests, please email luoyangmengjin2025@163.com. We will evaluate and respond to your request as soon as possible."
+        },
+        ja: {
+            "priv_title": "プライバシーポリシー - APEXON",
+            "priv_1": "プライバシーポリシー",
+            "priv_2": "最終更新日：2026年7月10日",
+            "priv_3": "APEXON（以下「本サイト」といいます）をご利用いただきありがとうございます。本プライバシーポリシーは、お客様が本サイトを利用される際に、当社がお客様の個人情報をどのように収集、使用、保存、共有、保護するか、ならびにお客様が有する関連する権利について、明確かつ透明性をもって説明することを目的としています。本サイトをご利用になる前に本ポリシーをよくお読みください。本ポリシーについてご質問がある場合は、本ポリシー末尾の連絡先からお問い合わせください。",
+            "priv_4": "1. 当社が収集する情報",
+            "priv_5": "APEXON をご利用になる際、当社は以下の種類の情報を収集する場合があります。当社は「最小必要」の原則を守り、サービスの提供に必要な情報のみを収集します。",
+            "priv_6": "アカウント情報：登録時またはプロフィールの完成時に、ユーザー名、パスワードのハッシュ、性別（任意）、自己紹介、アバターURLなど、お客様が自ら入力した情報を収集する場合があります。パスワードはハッシュ形式で保存され、当社はパスワードを平文で保存することはありません。",
+            "priv_7": "テストデータ：各テストにおける成績、所要時間、正答率、レベル評価、テスト時間などです。これらのデータは、お客様の個人履歴、ランキングデータ、能力分析の生成に使用されます。",
+            "priv_8": "インタラクションデータ：掲示板に投稿したコメント、投稿カテゴリ、いいね、フィードバック内容などです。これらの情報は、コミュニティの交流を維持し、ユーザー体験を向上させるために使用されます。",
+            "priv_9": "技術情報：ブラウザの種類とバージョン、オペレーティングシステム、デバイスの種類、画面解像度、アクセス時間、IPアドレス（匿名化処理が行われる場合があります）、匿名デバイス識別子、ページのアクセス経路を含みます。これらの情報は、サービスのパフォーマンス最適化、障害の調査、不正利用の防止、アカウントの安全確保に使用されます。",
+            "priv_10": "第三者統計情報：Microsoft Clarity などの第三者分析ツールを使用して、匿名化されたユーザーの行動データを収集し、ページの利用状況を把握して製品設計を改善する場合があります。このようなデータは通常、集約・匿名化された形で処理されます。",
+            "priv_11": "2. 当社が情報をどのように使用するか",
+            "priv_12": "当社は収集した情報を、安全で安定した個別化されたサービスをお客様に提供するために使用します。具体的な用途には以下が含まれますが、これらに限定されません。",
+            "priv_13": "本サイトの各機能とサービス（テストエンジン、ランキング、掲示板、音楽プレイヤーなど）の提供、維持、最適化、改善；",
+            "priv_14": "お客様の個人成績、履歴、統計グラフ、グローバルランキングの生成と表示；",
+            "priv_15": "アカウントの安全保護、詐欺、不正行為、自動化スクリプト攻撃、その他の不正利用行為の防止；",
+            "priv_16": "お客様のフィードバック、相談、苦情への対応、およびアカウント関連の問題の処理；",
+            "priv_17": "テスト設計、ユーザー体験、ウェブサイトのパフォーマンスを改善するための匿名化されたデータ分析の実施；",
+            "priv_18": "同意を得た場合、または法律の規定に適合する場合に、サービス通知や機能更新情報をお客様に送信します。",
+            "priv_19": "3. 情報の保存と保護",
+            "priv_20": "お客様のデータは、お客様の司法管轄区域外に所在する可能性のある第三者クラウドサービスプロバイダーのサーバーに保存されます。当社は、パスワードのハッシュ保存、セッショントークン機構、トランスポート層暗号化（HTTPS）、アクセス制御ポリシーを含む（ただしこれらに限定されない）合理的な技術的・管理的措置を講じて、お客様のデータの安全性を保護します。",
+            "priv_21": "当社は、従業員および第三者サービスプロバイダーのデータアクセス権限を厳しく制限し、職務を遂行するために必要な担当者のみがお客様の個人情報にアクセスできるようにします。しかし、インターネット環境は完全に安全とは言えず、データが送信・保存中に 100% 不正アクセス、漏えい、改ざん、紛失されないことを保証できません。セキュリティインシデントが発生した場合は、適用される法律の要求に従って速やかにお客様に通知し、是正措置を講じます。",
+            "priv_22": "4. 情報の共有",
+            "priv_23": "当社はお客様のプライバシーを非常に重視しており、お客様の個人情報を第三者に販売、賃貸、またはその他の方法で不法に提供することはありません。以下の場合にのみ、お客様の必要な情報を開示する場合があります。",
+            "priv_24": "法律・法規、司法命令、または行政機関の合法的な要求による場合；",
+            "priv_25": "本サイト、当社のユーザー、公衆の正当な権益、財産の安全、または人身の安全を守るために必要な場合；",
+            "priv_26": "合併、買収、資産譲渡、または類似の取引において、お客様の情報は事業資産の一部として移転される可能性がありますが、当社は受領者が本ポリシーの基準を下回らない保護措置を継続して遵守することを要求します；",
+            "priv_27": "お客様があらかじめ明示的に同意したその他の場合。",
+            "priv_28": "5. お客様の権利",
+            "priv_29": "適用される法律に基づき、お客様は個人情報に関して以下の権利を有します。",
+            "priv_30": "アクセス権：アカウントにログインして、ご自身のプロフィールとテスト記録を閲覧できます。",
+            "priv_31": "訂正権：プロフィール内の不正確な情報をいつでも変更または更新できます。",
+            "priv_32": "削除権：プロフィールの一部や公開したコンテンツを削除できます。アカウントと関連データをすべて削除する場合は、luoyangmengjin2025@163.com までメールをお送りください。身元を確認後、すみやかに処理いたします。",
+            "priv_33": "処理制限権：特定の状況では、お客様の個人情報の処理の制限を要求する権利があります。",
+            "priv_34": "同意の撤回：同意に基づいて収集した情報については、いつでも同意を撤回できます。ただし、同意の撤回により一部の機能の利用に影響が出る場合があります。",
+            "priv_35": "6. Cookie とローカルストレージ",
+            "priv_36": "本サイトは、ブラウザのローカルストレージを使用して、ログイン状態、匿名ユーザー識別子、言語設定、テーマ設定、音楽再生設定などの情報を保存し、次回アクセス時にも一貫した利用体験を提供します。また、デバイスの識別、セッション状態の記録、匿名のトラフィック分析のために、Cookie や類似の技術を使用する場合があります。",
+            "priv_37": "ほとんどのブラウザでは、ローカルストレージのクリア、Cookie の無効化、または通知の設定が可能です。ただし、これらの技術を無効にすると、自動ログイン、テーマの記憶、再生進捗の保存など、一部の機能が正常に動作しなくなる場合があることにご注意ください。",
+            "priv_38": "7. 未成年者",
+            "priv_39": "14 歳未満の未成年者は、保護者の指導のもとで本サイトを利用することをお勧めします。当社は未成年者の個人情報を意図的に収集することはありません。未成年者の個人情報を保護者の同意なく誤って収集したことが判明した場合は、速やかに関連情報を削除する措置を講じます。保護者または後見人が、未成年者が当社に個人情報を提供したと考えられる場合は、本ポリシー末尾の連絡先からご連絡ください。",
+            "priv_40": "8. 第三者リンクとサービス",
+            "priv_41": "本サイトには、第三者のウェブサイトやサービス（Jamendo 音楽サービス、ソーシャルメディア共有など）へのリンクが含まれる場合があります。これらの第三者サービスには独自のプライバシーポリシーがあり、当社はその内容やプライバシー慣行について責任を負いません。個人情報を提供する前に、関連する第三者のプライバシーポリシーをよくお読みになることをお勧めします。",
+            "priv_42": "9. ポリシーの変更",
+            "priv_43": "当社は、法律・法規の変更、事業の発展、技術の進歩に適応するため、本プライバシーポリシーを随時更新する場合があります。更新後のポリシーはページ上で公表され、最終更新日が記載されます。更新内容に重大な変更が含まれる場合、当社はサイト内のお知らせやその他の適切な方法でお知らせする場合があります。ポリシー更新後も本サイトを継続して利用することは、更新後のポリシーを読んだ、理解した、受け入れたものとみなされます。",
+            "priv_44": "10. お問い合わせ",
+            "priv_45": "プライバシーに関するご質問、苦情、ご要望がある場合は、luoyangmengjin2025@163.com までメールをお送りください。ご要望を受け取った後、できるだけ早く評価し回答いたします。"
+        },
+        ko: {
+            "priv_title": "개인정보 보호정책 - APEXON",
+            "priv_1": "개인정보 보호정책",
+            "priv_2": "최종 업데이트일: 2026년 7월 10일",
+            "priv_3": "APEXON(이하 \"본 사이트\"라 함)을 이용해 주셔서 감사합니다. 본 개인정보 보호정책은 귀하가 본 사이트를 이용하는 과정에서 개인정보를 어떻게 수집, 사용, 저장, 공유, 보호하는지, 그리고 귀하가 누릴 수 있는 관련 권리를 명확하고 투명하게 설명하기 위한 것입니다. 본 사이트를 이용하시기 전에 본 정책을 주의 깊게 읽어 주시기 바랍니다. 본 정책에 대해 질문이 있으시면 본 정책 말미에 있는 연락처로 문의하실 수 있습니다.",
+            "priv_4": "1. 당사가 수집하는 정보",
+            "priv_5": "APEXON을 이용하실 때 당사는 다음과 같은 유형의 정보를 수집할 수 있습니다. 당사는 \"최소 필요\" 원칙을 준수하며, 서비스 제공에 필요한 정보만 수집합니다.",
+            "priv_6": "계정 정보: 회원가입 또는 프로필 작성 시 사용자 이름, 비밀번호 해시, 성별(선택), 소개, 아바타 링크 등 귀하가 직접 입력한 정보를 수집할 수 있습니다. 비밀번호는 해시 형태로 저장되며, 당사는 비밀번호를 평문으로 저장하지 않습니다.",
+            "priv_7": "테스트 데이터: 각 테스트 항목에서의 성적, 소요 시간, 정답률, 등급 평가 및 테스트 시간 등입니다. 이 데이터는 귀하의 개인 이력, 순위표 데이터 및 능력 분석을 생성하는 데 사용됩니다.",
+            "priv_8": "상호작용 데이터: 토론 게시판에 게시한 댓글, 게시글 분류, 좋아요 또는 피드백 내용입니다. 이 정보는 커뮤니티 상호작용을 유지하고 사용자 경험을 개선하는 데 사용됩니다.",
+            "priv_9": "기술 정보: 브라우저 유형 및 버전, 운영 체제, 기기 유형, 화면 해상도, 접속 시간, IP 주소(익명화 처리될 수 있음), 익명 기기 식별자 및 페이지 접근 경로를 포함합니다. 이 정보는 서비스 성능 최적화, 장애 해결, 남용 방지 및 계정 보안 보장에 사용됩니다.",
+            "priv_10": "제3자 통계 정보: Microsoft Clarity와 같은 제3자 분석 도구를 사용하여 익명화된 사용자 행동 데이터를 수집하고, 페이지 사용 현황을 파악하며 제품 설계를 개선할 수 있습니다. 이러한 데이터는 일반적으로 집계 및 익명화된 형태로 처리됩니다.",
+            "priv_11": "2. 정보의 사용 방법",
+            "priv_12": "당사는 수집한 정보를 안전하고 안정적이며 개인화된 서비스를 제공하는 데 사용합니다. 구체적인 용도는 다음과 같지만 이에 국한되지는 않습니다.",
+            "priv_13": "테스트 엔진, 순위표, 토론 게시판, 음악 플레이어 등을 포함한 본 사이트의 각 기능과 서비스의 제공, 유지, 최적화 및 개선;",
+            "priv_14": "귀하의 개인 성적, 이력, 통계 차트 및 글로벌 순위표의 생성 및 표시;",
+            "priv_15": "계정 보안 보호, 사기, 부정행위, 자동화 스크립트 공격 및 기타 남용 행위 방지;",
+            "priv_16": "귀하의 피드백, 문의 및 불만에 대한 응답 및 계정 관련 문제 처리;",
+            "priv_17": "테스트 설계, 사용자 경험 및 웹사이트 성능을 개선하기 위한 익명화된 데이터 분석 수행;",
+            "priv_18": "귀하의 동의를 얻었거나 법률 규정에 부합하는 경우 서비스 알림 또는 기능 업데이트 정보를 보냅니다.",
+            "priv_19": "3. 정보의 저장 및 보호",
+            "priv_20": "귀하의 데이터는 귀하가 속한 관할권 외부에 위치할 수 있는 제3자 클라우드 서비스 제공업체의 서버에 저장됩니다. 당사는 비밀번호 해시 저장, 세션 토큰 메커니즘, 전송 계층 암호화(HTTPS) 및 접근 제어 정책을 포함하되 이에 국한되지 않는 합리적인 기술적·관리적 조치를 통해 데이터의 안전을 보호합니다.",
+            "priv_21": "당사는 직원 및 제3자 서비스 제공업체의 데이터 접근 권한을 엄격히 제한하며, 직무 수행에 필요한 인원만 귀하의 개인정보에 접근할 수 있도록 합니다. 그러나 인터넷 환경이 절대적으로 안전하지는 않으며, 데이터가 전송 또는 저장 과정에서 100% 불법 접근, 유출, 변조 또는 분실되지 않도록 보장할 수 없습니다. 보안 사고가 발생할 경우 적용 법률의 요구에 따라 귀하에게 신속히 통지하고 구제 조치를 취합니다.",
+            "priv_22": "4. 정보 공유",
+            "priv_23": "당사는 귀하의 개인정보 보호를 매우 중요하게 여기며, 귀하의 개인정보를 제3자에게 판매, 임대하거나 기타 방식으로 불법적으로 제공하지 않습니다. 다음의 경우에만 귀하의 필수 정보를 공개할 수 있습니다.",
+            "priv_24": "법률·규정, 사법 명령 또는 행정 기관의 합법적 요구에 의한 경우;",
+            "priv_25": "본 사이트, 당사 사용자 또는 대중의 정당한 권익, 재산 안전 또는 인신 안전을 보호하기 위해 필요한 경우;",
+            "priv_26": "합병, 인수, 자산 양도 또는 유사한 거래에서 귀하의 정보는 사업 자산의 일부로 이전될 수 있지만, 당사는 수령자가 본 정책 기준 이상의 보호 조치를 계속 준수하도록 요구합니다;",
+            "priv_27": "귀하가 사전에 명시적으로 동의한 기타 경우.",
+            "priv_28": "5. 귀하의 권리",
+            "priv_29": "적용 법률에 따라 귀하는 개인정보에 대해 다음과 같은 권리를 가집니다.",
+            "priv_30": "열람권: 계정에 로그인하여 자신의 프로필과 테스트 기록을 확인할 수 있습니다.",
+            "priv_31": "정정권: 프로필의 부정확한 정보를 언제든지 수정하거나 업데이트할 수 있습니다.",
+            "priv_32": "삭제권: 프로필의 일부 데이터나 게시한 콘텐츠를 삭제할 수 있습니다. 계정 및 관련 데이터를 모두 삭제하려면 luoyangmengjin2025@163.com으로 이메일을 보내 주시기 바랍니다. 신원 확인 후 신속히 처리해 드리겠습니다.",
+            "priv_33": "처리 제한권: 특정 상황에서 귀하의 개인정보 처리 제한을 요구할 권리가 있습니다.",
+            "priv_34": "동의 철회: 동의에 기반하여 수집된 정보에 대해 언제든지 동의를 철회할 수 있으나, 동의 철회는 일부 기능 사용에 영향을 미칠 수 있습니다.",
+            "priv_35": "6. 쿠키 및 로컬 저장소",
+            "priv_36": "본 사이트는 로그인 상태, 익명 사용자 식별자, 언어 선호도, 테마 선호도, 음악 재생 설정 등의 정보를 저장하기 위해 브라우저의 로컬 저장소(localStorage)를 사용하여 다음 방문 시 일관된 사용 경험을 제공합니다. 또한 쿠키 또는 유사한 기술을 사용하여 기기를 식별하고, 세션 상태를 기록하며, 익명 트래픽 분석을 수행할 수 있습니다.",
+            "priv_37": "대부분의 브라우저는 로컬 저장소를 지우고, 쿠키를 비활성화하거나 경고를 설정하는 것을 허용합니다. 단, 이러한 기술을 비활성화하면 자동 로그인, 테마 기억, 재생 진행률 저장 등 일부 기능이 정상적으로 작동하지 않을 수 있습니다.",
+            "priv_38": "7. 미성년자",
+            "priv_39": "14세 미만의 미성년자는 보호자의 지도 아래 본 사이트를 이용하시기를 권장합니다. 당사는 미성년자의 개인정보를 의도적으로 수집하지 않습니다. 보호자의 동의 없이 미성년자의 개인정보를 우연히 수집한 사실을 발견하면 신속히 관련 정보를 삭제하는 조치를 취할 것입니다. 부모 또는 보호자가 미성년자가 당사에 개인정보를 제공했다고 생각하신다면 본 정책 말미의 연락처로 문의해 주시기 바랍니다.",
+            "priv_40": "8. 제3자 링크 및 서비스",
+            "priv_41": "본 사이트에는 제3자 웹사이트 또는 서비스(Jamendo 음악 서비스, 소셜 미디어 공유 등)로 연결되는 링크가 포함될 수 있습니다. 이러한 제3자 서비스는 독립적인 개인정보 보호정책을 보유하고 있으며, 당사는 그 콘텐츠나 개인정보 처리 관행에 대해 책임을 지지 않습니다. 개인정보를 제공하기 전에 관련 제3자의 개인정보 보호정책을 주의 깊게 읽으시기를 권장합니다.",
+            "priv_42": "9. 정책 변경",
+            "priv_43": "당사는 법률·규정의 변화, 사업 발전 또는 기술 발전에 적응하기 위해 본 개인정보 보호정책을 수시로 업데이트할 수 있습니다. 업데이트된 정책은 페이지에 게시되며 최종 업데이트 날짜가 명시됩니다. 업데이트 내용에 중대한 변경이 포함된 경우 당사는 사이트 내 공지나 기타 적절한 방법으로 알려드릴 수 있습니다. 정책 업데이트 후 본 사이트를 계속 이용하는 것은 업데이트된 정책을 읽고, 이해하고, 수락한 것으로 간주됩니다.",
+            "priv_44": "10. 문의하기",
+            "priv_45": "개인정보와 관련된 질문, 불만 또는 요청이 있으시면 luoyangmengjin2025@163.com으로 이메일을 보내 주시기 바랍니다. 요청을 받은 후 가능한 한 빨리 검토하고 답변해 드리겠습니다."
+        },
+        fr: {
+            "priv_title": "Politique de confidentialité - APEXON",
+            "priv_1": "Politique de confidentialité",
+            "priv_2": "Dernière mise à jour : le 10 juillet 2026",
+            "priv_3": "Bienvenue sur APEXON (ci-après le « Site »). La présente politique de confidentialité a pour objet de vous expliquer de manière claire et transparente comment nous collectons, utilisons, stockons, partageons et protégeons vos données personnelles lorsque vous utilisez notre Site, ainsi que les droits dont vous bénéficiez. Veuillez lire attentivement la présente politique avant d'utiliser notre Site. Si vous avez des questions concernant cette politique, vous pouvez nous contacter via les coordonnées figurant à la fin de celle-ci.",
+            "priv_4": "1. Informations que nous collectons",
+            "priv_5": "Lorsque vous utilisez APEXON, nous pouvons collecter les types d'informations suivants. Nous adhérons au principe du « strict nécessaire » et ne collectons que les informations nécessaires à la fourniture de nos services :",
+            "priv_6": "Informations de compte : lorsque vous vous inscrivez ou complétez votre profil, nous pouvons collecter des informations que vous fournissez volontairement, telles que votre nom d'utilisateur, le hachage de votre mot de passe, votre sexe (optionnel), votre biographie et le lien de votre avatar. Les mots de passe sont stockés sous forme hachée ; nous ne stockons jamais votre mot de passe en clair.",
+            "priv_7": "Données de test : vos scores, temps d'utilisation, taux de précision, évaluations de niveau et heures de test dans chaque module. Ces données servent à générer votre historique personnel, vos données de classement et votre analyse de capacités.",
+            "priv_8": "Données d'interaction : les commentaires que vous publiez sur le forum, la catégorie des publications, les mentions « j'aime » ou les retours. Ces informations servent à maintenir l'interaction communautaire et à améliorer l'expérience utilisateur.",
+            "priv_9": "Informations techniques : y compris le type et la version du navigateur, le système d'exploitation, le type d'appareil, la résolution d'écran, l'heure de consultation, l'adresse IP (qui peut être anonymisée), l'identifiant d'appareil anonyme et les chemins de consultation de pages. Ces informations servent à optimiser les performances du service, à résoudre les problèmes, à prévenir les abus et à sécuriser votre compte.",
+            "priv_10": "Statistiques de tiers : nous pouvons utiliser des outils d'analyse tiers (tels que Microsoft Clarity) pour collecter des données anonymisées sur le comportement des utilisateurs afin de comprendre l'utilisation des pages et d'améliorer la conception des produits. Ces données sont généralement traitées de manière agrégée et anonymisée.",
+            "priv_11": "2. Utilisation des informations",
+            "priv_12": "Nous utilisons les informations collectées pour vous fournir des services sûrs, stables et personnalisés. Les utilisations spécifiques comprennent, sans s'y limiter :",
+            "priv_13": "Fournir, maintenir, optimiser et améliorer les fonctionnalités et services du Site, notamment le moteur de test, les classements, le forum et le lecteur de musique ;",
+            "priv_14": "Générer et afficher vos scores personnels, votre historique, vos graphiques statistiques et les classements mondiaux ;",
+            "priv_15": "Protéger la sécurité du compte, prévenir la fraude, la triche, les attaques par scripts automatisés et autres comportements abusifs ;",
+            "priv_16": "Répondre à vos retours, demandes de renseignements et plaintes, et traiter les problèmes liés au compte ;",
+            "priv_17": "Effectuer des analyses anonymisées des données afin d'améliorer la conception des tests, l'expérience utilisateur et les performances du site ;",
+            "priv_18": "Vous envoyer des notifications de service ou des informations sur les mises à jour de fonctionnalités, avec votre consentement ou lorsque la loi l'exige.",
+            "priv_19": "3. Stockage et protection des informations",
+            "priv_20": "Vos données sont stockées sur des serveurs de fournisseurs de services cloud tiers, qui peuvent être situés en dehors de votre juridiction. Nous prenons des mesures techniques et administratives raisonnables pour protéger la sécurité de vos données, notamment le stockage par hachage des mots de passe, les mécanismes de jetons de session, le chiffrement de la couche de transport (HTTPS) et les stratégies de contrôle d'accès.",
+            "priv_21": "Nous limitons strictement les droits d'accès aux données des employés et des fournisseurs de services tiers, en autorisant uniquement les personnes nécessaires à l'exercice de leurs fonctions à accéder à vos informations personnelles. Cependant, l'environnement Internet n'est pas absolument sécurisé et nous ne pouvons garantir que les données ne seront jamais accessibles, divulguées, altérées ou perdues à 100 % pendant leur transmission ou leur stockage. En cas d'incident de sécurité, nous vous en informerons rapidement conformément aux exigences de la loi applicable et prendrons des mesures correctives.",
+            "priv_22": "4. Partage des informations",
+            "priv_23": "Nous attachons une grande importance à votre vie privée et ne vendrons, ne louerons ni ne fournirons illégalement vos informations personnelles à un tiers. Nous ne pouvons divulguer vos informations essentielles que dans les cas suivants :",
+            "priv_24": "Conformément aux exigences des lois et règlements, d'une ordonnance judiciaire ou d'une demande légitime des autorités administratives ;",
+            "priv_25": "Lorsque cela est nécessaire pour protéger les droits légitimes, la sécurité des biens ou la sécurité des personnes du Site, de nos utilisateurs ou du public ;",
+            "priv_26": "Dans le cadre d'une fusion, d'une acquisition, d'un transfert d'actifs ou d'une opération similaire, vos informations peuvent être transférées en tant que partie des actifs de l'entreprise, mais nous exigerons que le destinataire continue à respecter des mesures de protection au moins équivalentes à celles de la présente politique ;",
+            "priv_27": "Tout autre cas pour lequel vous avez donné votre consentement explicite préalable.",
+            "priv_28": "5. Vos droits",
+            "priv_29": "Conformément à la loi applicable, vous disposez des droits suivants concernant vos informations personnelles :",
+            "priv_30": "Droit d'accès : vous pouvez vous connecter à votre compte pour consulter votre profil et vos enregistrements de test.",
+            "priv_31": "Droit de rectification : vous pouvez modifier ou mettre à jour à tout moment les informations inexactes de votre profil.",
+            "priv_32": "Droit à l'effacement : vous pouvez supprimer une partie de vos données de profil ou le contenu publié. Pour supprimer votre compte et toutes les données associées, veuillez envoyer un e-mail à luoyangmengjin2025@163.com ; nous traiterons votre demande dès que possible après vérification de votre identité.",
+            "priv_33": "Droit à la limitation du traitement : dans certaines circonstances, vous avez le droit de demander que nous limitions le traitement de vos informations personnelles.",
+            "priv_34": "Retrait du consentement : pour les informations collectées sur la base du consentement, vous pouvez retirer votre consentement à tout moment, bien que le retrait puisse affecter votre capacité à utiliser certaines fonctionnalités.",
+            "priv_35": "6. Cookies et stockage local",
+            "priv_36": "Le Site utilise le stockage local du navigateur pour conserver des informations telles que votre état de connexion, votre identifiant d'utilisateur anonyme, vos préférences de langue, vos préférences de thème et vos réglages de lecture musicale, afin de vous offrir une expérience cohérente lors de votre prochaine visite. Nous pouvons également utiliser des cookies ou des technologies similaires pour identifier les appareils, enregistrer les états de session et effectuer des analyses de trafic anonymes.",
+            "priv_37": "La plupart des navigateurs vous permettent de vider le stockage local, de désactiver les cookies ou de définir des avertissements. Veuillez noter que la désactivation de ces technologies peut empêcher certaines fonctionnalités de fonctionner correctement, telles que la connexion automatique, la mémorisation du thème et l'enregistrement de la progression de lecture.",
+            "priv_38": "7. Mineurs",
+            "priv_39": "Nous recommandons aux mineurs de moins de 14 ans d'utiliser le Site sous la supervision d'un tuteur. Nous ne collectons pas intentionnellement les informations personnelles des mineurs. Si nous découvrons que nous avons collecté sans le vouloir les informations personnelles d'un mineur sans le consentement de son tuteur, nous prendrons rapidement des mesures pour supprimer ces informations. Si un parent ou un tuteur estime qu'un mineur nous a fourni des informations personnelles, veuillez nous contacter via les coordonnées figurant à la fin de la présente politique.",
+            "priv_40": "8. Liens et services de tiers",
+            "priv_41": "Le Site peut contenir des liens vers des sites web ou des services de tiers (tels que le service musical Jamendo et le partage sur les réseaux sociaux). Ces services tiers ont leurs propres politiques de confidentialité indépendantes, et nous ne sommes pas responsables de leur contenu ni de leurs pratiques en matière de confidentialité. Avant de leur fournir des informations personnelles, nous vous recommandons de lire attentivement la politique de confidentialité du tiers concerné.",
+            "priv_42": "9. Modifications de la politique",
+            "priv_43": "Nous pouvons mettre à jour la présente politique de confidentialité de temps à autre pour nous adapter aux évolutions des lois et règlements, au développement des activités ou aux progrès techniques. La politique mise à jour sera publiée sur la page avec sa date de dernière mise à jour. Si la mise à jour comporte des changements importants, nous pourrons vous en informer par le biais d'annonces sur le site ou d'autres moyens appropriés. Si vous continuez à utiliser le Site après la mise à jour de la politique, vous êtes réputé avoir lu, compris et accepté la politique mise à jour.",
+            "priv_44": "10. Nous contacter",
+            "priv_45": "Pour toute question, plainte ou demande liée à la confidentialité, veuillez envoyer un e-mail à luoyangmengjin2025@163.com. Nous évaluerons et répondrons à votre demande dès que possible."
+        },
+        de: {
+            "priv_title": "Datenschutzerklärung - APEXON",
+            "priv_1": "Datenschutzerklärung",
+            "priv_2": "Zuletzt aktualisiert: 10. Juli 2026",
+            "priv_3": "Willkommen bei APEXON (im Folgenden „die Website“ genannt). Diese Datenschutzerklärung soll Ihnen klar und transparent erläutern, wie wir beim Besuch unserer Website personenbezogene Daten erheben, verwenden, speichern, weitergeben und schützen sowie welche Rechte Ihnen zustehen. Bitte lesen Sie diese Erklärung vor der Nutzung der Website sorgfältig durch. Bei Fragen zu dieser Erklärung können Sie uns über die am Ende genannten Kontaktinformationen erreichen.",
+            "priv_4": "1. Welche Informationen wir erheben",
+            "priv_5": "Bei der Nutzung von APEXON können wir die folgenden Arten von Informationen erheben. Wir halten uns an das Prinzip des „Notwendigstens“ und erheben nur Informationen, die für die Bereitstellung unserer Dienste erforderlich sind.",
+            "priv_6": "Kontoinformationen: Wenn Sie sich registrieren oder Ihr Profil vervollständigen, können wir von Ihnen freiwillig angegebene Informationen wie Benutzernamen, Passwort-Hash, Geschlecht (optional), Biografie und Avatar-Link erheben. Passwörter werden in gehashter Form gespeichert; wir speichern Ihr Passwort niemals im Klartext.",
+            "priv_7": "Testdaten: Ihre Ergebnisse, benötigte Zeit, Genauigkeit, Levelbewertungen und Testzeiten in jedem Modul. Diese Daten werden verwendet, um Ihren persönlichen Verlauf, Ranglistendaten und Fähigkeitsanalysen zu erstellen.",
+            "priv_8": "Interaktionsdaten: Kommentare, die Sie im Diskussionsforum veröffentlichen, Beitragskategorien, Likes oder Feedback-Inhalte. Diese Informationen dienen der Aufrechterhaltung der Community-Interaktion und der Verbesserung der Benutzererfahrung.",
+            "priv_9": "Technische Informationen: einschließlich Browsertyp und -version, Betriebssystem, Gerätetyp, Bildschirmauflösung, Zugriffszeit, IP-Adresse (die anonymisiert werden kann), anonyme Gerätekennung und Seitenzugriffspfade. Diese Informationen werden verwendet, um die Leistung des Dienstes zu optimieren, Probleme zu beheben, Missbrauch zu verhindern und die Sicherheit Ihres Kontos zu gewährleisten.",
+            "priv_10": "Statistiken Dritter: Wir können Analysetools von Drittanbietern (z. B. Microsoft Clarity) verwenden, um anonymisierte Nutzerverhaltensdaten zu erheben, um die Seitennutzung zu verstehen und das Produktdesign zu verbessern. Diese Daten werden in der Regel in aggregierter und anonymisierter Form verarbeitet.",
+            "priv_11": "2. Wie wir Informationen verwenden",
+            "priv_12": "Wir verwenden die erhobenen Informationen, um Ihnen sichere, stabile und personalisierte Dienste bereitzustellen. Zu den spezifischen Verwendungen gehören unter anderem:",
+            "priv_13": "Bereitstellung, Wartung, Optimierung und Verbesserung der Funktionen und Dienste der Website, einschließlich Test-Engine, Ranglisten, Diskussionsforum und Musikplayer;",
+            "priv_14": "Erstellung und Anzeige Ihrer persönlichen Ergebnisse, Ihres Verlaufs, statistischer Diagramme und globaler Ranglisten;",
+            "priv_15": "Schutz der Kontosicherheit, Verhinderung von Betrug, Betrugsversuchen, automatisierten Skriptangriffen und anderem Missbrauch;",
+            "priv_16": "Beantwortung Ihres Feedbacks, Ihrer Anfragen und Beschwerden sowie Bearbeitung konto-bezogener Angelegenheiten;",
+            "priv_17": "Durchführung anonymisierter Datenanalysen zur Verbesserung des Testdesigns, der Benutzererfahrung und der Leistung der Website;",
+            "priv_18": "Senden von Servicemitteilungen oder Informationen über Funktionsupdates an Sie, wenn Sie zugestimmt haben oder wenn dies gesetzlich vorgeschrieben ist.",
+            "priv_19": "3. Speicherung und Schutz der Informationen",
+            "priv_20": "Ihre Daten werden auf Servern von Drittanbietern von Cloud-Diensten gespeichert, die sich außerhalb Ihres Zuständigkeitsbereichs befinden können. Wir ergreifen angemessene technische und administrative Maßnahmen zum Schutz Ihrer Daten, einschließlich unter anderem der Hashing-Speicherung von Passwörtern, von Sitzungs-Token-Mechanismen, der Transportverschlüsselung (HTTPS) und von Zugriffskontrollstrategien.",
+            "priv_21": "Wir beschränken die Zugriffsrechte auf Daten für Mitarbeiter und Dienstleister Dritter streng und erlauben nur den für die Ausübung ihrer Aufgaben erforderlichen Personen den Zugriff auf Ihre personenbezogenen Daten. Allerdings ist die Internetumgebung nicht absolut sicher, und wir können nicht garantieren, dass Daten bei der Übertragung oder Speicherung zu 100 % vor unbefugtem Zugriff, Offenlegung, Veränderung oder Verlust geschützt sind. Im Falle eines Sicherheitsvorfalls werden wir Sie gemäß den Anforderungen des anwendbaren Rechts umgehend benachrichtigen und Abhilfemaßnahmen ergreifen.",
+            "priv_22": "4. Weitergabe von Informationen",
+            "priv_23": "Wir nehmen Ihre Privatsphäre sehr ernst und werden Ihre personenbezogenen Daten nicht an Dritte verkaufen, vermieten oder anderweitig rechtswidrig weitergeben. Wir dürfen Ihre wesentlichen Informationen nur in den folgenden Fällen offenlegen:",
+            "priv_24": "Gemäß gesetzlichen Anforderungen, gerichtlichen Anordnungen oder rechtmäßigen Anfragen von Verwaltungsbehörden;",
+            "priv_25": "Wenn dies zum Schutz der berechtigten Interessen, des Eigentums oder der persönlichen Sicherheit der Website, unserer Nutzer oder der Öffentlichkeit erforderlich ist;",
+            "priv_26": "Im Rahmen einer Fusion, Übernahme, Vermögensübertragung oder ähnlichen Transaktion können Ihre Informationen als Teil des Geschäftsvermögens übertragen werden; wir werden jedoch verlangen, dass der Empfänger Schutzmaßnahmen beibehält, die nicht unter dem Standard dieser Erklärung liegen;",
+            "priv_27": "Sonstige Fälle, in denen Sie zuvor ausdrücklich zugestimmt haben.",
+            "priv_28": "5. Ihre Rechte",
+            "priv_29": "Nach geltendem Recht haben Sie in Bezug auf Ihre personenbezogenen Daten die folgenden Rechte:",
+            "priv_30": "Auskunftsrecht: Sie können sich in Ihr Konto einloggen, um Ihr Profil und Ihre Testaufzeichnungen einzusehen.",
+            "priv_31": "Berichtigungsrecht: Sie können unrichtige Informationen in Ihrem Profil jederzeit ändern oder aktualisieren.",
+            "priv_32": "Löschungsrecht: Sie können Teile Ihrer Profildaten oder veröffentlichte Inhalte löschen. Um Ihr Konto und alle zugehörigen Daten zu löschen, senden Sie bitte eine E-Mail an luoyangmengjin2025@163.com; wir werden Ihre Anfrage nach Überprüfung Ihrer Identität schnellstmöglich bearbeiten.",
+            "priv_33": "Recht auf Einschränkung der Verarbeitung: In bestimmten Fällen haben Sie das Recht zu verlangen, dass wir die Verarbeitung Ihrer personenbezogenen Daten einschränken.",
+            "priv_34": "Widerruf der Einwilligung: Für Informationen, die auf Grundlage einer Einwilligung erhoben werden, können Sie Ihre Einwilligung jederzeit widerrufen; der Widerruf kann jedoch Ihre Nutzung bestimmter Funktionen beeinträchtigen.",
+            "priv_35": "6. Cookies und lokale Speicherung",
+            "priv_36": "Die Website verwendet den lokalen Speicher des Browsers, um Informationen wie Ihren Anmeldestatus, Ihre anonyme Benutzerkennung, Spracheinstellungen, Theme-Einstellungen und Musikwiedergabeeinstellungen zu speichern, um Ihnen bei Ihrem nächsten Besuch ein konsistentes Erlebnis zu bieten. Wir können auch Cookies oder ähnliche Technologien verwenden, um Geräte zu identifizieren, Sitzungszustände zu erfassen und anonyme Verkehrsanalysen durchzuführen.",
+            "priv_37": "Die meisten Browser erlauben Ihnen, den lokalen Speicher zu leeren, Cookies zu deaktivieren oder Warnungen einzurichten. Bitte beachten Sie, dass das Deaktivieren dieser Technologien dazu führen kann, dass einige Funktionen nicht ordnungsgemäß funktionieren, wie z. B. automatische Anmeldung, Themenspeicherung und Speicherung des Wiedergabefortschritts.",
+            "priv_38": "7. Minderjährige",
+            "priv_39": "Wir empfehlen Minderjährigen unter 14 Jahren, die Website unter Aufsicht eines Erziehungsberechtigten zu nutzen. Wir erheben nicht absichtlich personenbezogene Daten von Minderjährigen. Wenn wir feststellen, dass wir versehentlich personenbezogene Daten eines Minderjährigen ohne Zustimmung des Erziehungsberechtigten erhoben haben, werden wir unverzüglich Maßnahmen ergreifen, um diese Informationen zu löschen. Wenn ein Elternteil oder Erziehungsberechtigter glaubt, dass ein Minderjähriger uns personenbezogene Daten zur Verfügung gestellt hat, kontaktieren Sie uns bitte über die am Ende dieser Erklärung genannten Kontaktinformationen.",
+            "priv_40": "8. Links und Dienste von Dritten",
+            "priv_41": "Die Website kann Links zu Websites oder Diensten Dritter enthalten (z. B. zum Musikdienst Jamendo und zum Social-Media-Sharing). Diese Dienste Dritter haben ihre eigenen unabhängigen Datenschutzerklärungen, und wir sind nicht für deren Inhalte oder Datenschutzpraktiken verantwortlich. Bevor Sie ihnen personenbezogene Daten zur Verfügung stellen, empfehlen wir Ihnen, die Datenschutzerklärung des betreffenden Dritten sorgfältig zu lesen.",
+            "priv_42": "9. Änderungen dieser Datenschutzerklärung",
+            "priv_43": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren, um Änderungen der Gesetze und Vorschriften, der Geschäftsentwicklung oder des technischen Fortschritts Rechnung zu tragen. Die aktualisierte Erklärung wird auf der Seite mit ihrem letzten Aktualisierungsdatum veröffentlicht. Wenn die Aktualisierung wesentliche Änderungen betrifft, können wir Sie über Ankündigungen auf der Website oder auf andere geeignete Weise benachrichtigen. Wenn Sie die Website nach der Aktualisierung weiter nutzen, gelten Sie als derjenige, der die aktualisierte Erklärung gelesen, verstanden und akzeptiert hat.",
+            "priv_44": "10. Kontakt",
+            "priv_45": "Bei Fragen, Beschwerden oder Anfragen in Bezug auf den Datenschutz senden Sie bitte eine E-Mail an luoyangmengjin2025@163.com. Wir werden Ihre Anfrage so bald wie möglich prüfen und beantworten."
+        },
+        es: {
+            "priv_title": "Política de privacidad - APEXON",
+            "priv_1": "Política de privacidad",
+            "priv_2": "Última actualización: 10 de julio de 2026",
+            "priv_3": "Bienvenido a APEXON (en adelante, el «Sitio»). La presente política de privacidad tiene como objetivo explicarle de forma clara y transparente cómo recopilamos, utilizamos, almacenamos, compartimos y protegemos su información personal cuando utiliza nuestro Sitio, así como los derechos que le asisten. Por favor, lea atentamente esta política antes de utilizar el Sitio. Si tiene alguna pregunta sobre esta política, puede ponerse en contacto con nosotros a través de la información de contacto que figura al final de la misma.",
+            "priv_4": "1. Información que recopilamos",
+            "priv_5": "Cuando utiliza APEXON, podemos recopilar los siguientes tipos de información. Nos adherimos al principio del «mínimo necesario» y solo recopilamos la información necesaria para prestar nuestros servicios:",
+            "priv_6": "Información de la cuenta: cuando se registra o completa su perfil, podemos recopilar información que usted facilita voluntariamente, como su nombre de usuario, hash de contraseña, sexo (opcional), biografía y enlace de avatar. Las contraseñas se almacenan en forma codificada; nunca guardamos su contraseña en texto plano.",
+            "priv_7": "Datos de pruebas: sus puntuaciones, tiempo empleado, tasas de precisión, evaluaciones de nivel y horarios de las pruebas en cada módulo. Estos datos se utilizan para generar su historial personal, los datos de clasificación y el análisis de capacidades.",
+            "priv_8": "Datos de interacción: los comentarios que publica en el foro, la categoría de las publicaciones, los «me gusta» o el contenido de los comentarios. Esta información se utiliza para mantener la interacción de la comunidad y mejorar la experiencia del usuario.",
+            "priv_9": "Información técnica: incluye el tipo y la versión del navegador, el sistema operativo, el tipo de dispositivo, la resolución de pantalla, la hora de acceso, la dirección IP (que puede estar anonimizada), el identificador anónimo del dispositivo y las rutas de acceso a las páginas. Esta información se utiliza para optimizar el rendimiento del servicio, solucionar problemas, prevenir el abuso y proteger la seguridad de su cuenta.",
+            "priv_10": "Estadísticas de terceros: podemos utilizar herramientas de análisis de terceros (como Microsoft Clarity) para recopilar datos anonimizados sobre el comportamiento de los usuarios, a fin de comprender el uso de las páginas y mejorar el diseño del producto. Estos datos suelen procesarse de forma agregada y anónima.",
+            "priv_11": "2. Cómo utilizamos la información",
+            "priv_12": "Utilizamos la información recopilada para ofrecerle servicios seguros, estables y personalizados. Los usos específicos incluyen, entre otros:",
+            "priv_13": "Proporcionar, mantener, optimizar y mejorar las funciones y servicios del Sitio, incluidos el motor de pruebas, las clasificaciones, el foro y el reproductor de música;",
+            "priv_14": "Generar y mostrar sus puntuaciones personales, su historial, sus gráficos estadísticos y las clasificaciones mundiales;",
+            "priv_15": "Proteger la seguridad de la cuenta, prevenir el fraude, las trampas, los ataques de scripts automatizados y otros comportamientos abusivos;",
+            "priv_16": "Responder a sus comentarios, consultas y reclamaciones, y gestionar los problemas relacionados con la cuenta;",
+            "priv_17": "Realizar análisis de datos anonimizados para mejorar el diseño de las pruebas, la experiencia del usuario y el rendimiento del sitio;",
+            "priv_18": "Enviarle notificaciones de servicio o información sobre actualizaciones de funciones, cuando haya dado su consentimiento o cuando lo exija la ley.",
+            "priv_19": "3. Almacenamiento y protección de la información",
+            "priv_20": "Sus datos se almacenan en servidores de proveedores de servicios en la nube de terceros, que pueden estar ubicados fuera de su jurisdicción. Tomamos medidas técnicas y administrativas razonables para proteger la seguridad de sus datos, incluidos, entre otros, el almacenamiento de contraseñas con hash, los mecanismos de tokens de sesión, el cifrado de la capa de transporte (HTTPS) y las políticas de control de acceso.",
+            "priv_21": "Restringimos estrictamente los derechos de acceso a los datos de los empleados y de los proveedores de servicios de terceros, permitiendo que solo el personal necesario para el desempeño de sus funciones acceda a su información personal. Sin embargo, el entorno de Internet no es absolutamente seguro, y no podemos garantizar que los datos nunca se vean afectados en un 100 % por accesos no autorizados, divulgación, alteración o pérdida durante su transmisión o almacenamiento. En caso de un incidente de seguridad, le notificaremos rápidamente según lo exige la legislación aplicable y tomaremos medidas correctivas.",
+            "priv_22": "4. Compartir información",
+            "priv_23": "Damos gran importancia a su privacidad y no venderemos, alquilaremos ni cederemos ilegalmente su información personal a ningún tercero. Solo podemos divulgar su información esencial en los siguientes casos:",
+            "priv_24": "De conformidad con los requisitos legales, las órdenes judiciales o las solicitudes legítimas de las autoridades administrativas;",
+            "priv_25": "Cuando sea necesario para proteger los derechos legítimos, la seguridad de los bienes o la seguridad personal del Sitio, de nuestros usuarios o del público;",
+            "priv_26": "En una fusión, adquisición, transferencia de activos o transacción similar, su información puede transferirse como parte de los activos de la empresa, pero exigiremos que el receptor mantenga medidas de protección no inferiores a las de esta política;",
+            "priv_27": "Cualquier otro caso en el que haya dado su consentimiento explícito previo.",
+            "priv_28": "5. Sus derechos",
+            "priv_29": "De conformidad con la legislación aplicable, usted tiene los siguientes derechos sobre su información personal:",
+            "priv_30": "Derecho de acceso: puede iniciar sesión en su cuenta para ver su perfil personal y sus registros de pruebas.",
+            "priv_31": "Derecho de rectificación: puede modificar o actualizar en cualquier momento la información inexacta de su perfil.",
+            "priv_32": "Derecho de supresión: puede eliminar parte de sus datos de perfil o el contenido publicado. Para eliminar su cuenta y todos los datos asociados, envíe un correo electrónico a luoyangmengjin2025@163.com; procesaremos su solicitud lo antes posible tras verificar su identidad.",
+            "priv_33": "Derecho a la limitación del tratamiento: en circunstancias específicas, tiene derecho a solicitar que limitemos el tratamiento de su información personal.",
+            "priv_34": "Retirada del consentimiento: para la información recopilada sobre la base del consentimiento, puede retirar su consentimiento en cualquier momento, aunque la retirada puede afectar a su capacidad para utilizar determinadas funciones.",
+            "priv_35": "6. Cookies y almacenamiento local",
+            "priv_36": "El Sitio utiliza el almacenamiento local del navegador para guardar información como su estado de inicio de sesión, su identificador de usuario anónimo, sus preferencias de idioma, sus preferencias de tema y sus ajustes de reproducción de música, a fin de ofrecerle una experiencia coherente en su próxima visita. También podemos utilizar cookies o tecnologías similares para identificar dispositivos, registrar estados de sesión y realizar análisis de tráfico anónimos.",
+            "priv_37": "La mayoría de los navegadores le permiten vaciar el almacenamiento local, deshabilitar las cookies o establecer avisos. Tenga en cuenta que deshabilitar estas tecnologías puede impedir que algunas funciones funcionen correctamente, como el inicio de sesión automático, la memoria de temas y el guardado del progreso de reproducción.",
+            "priv_38": "7. Menores",
+            "priv_39": "Recomendamos que los menores de 14 años utilicen el Sitio bajo la supervisión de un tutor. No recopilamos intencionadamente la información personal de menores. Si descubrimos que hemos recopilado accidentalmente la información personal de un menor sin el consentimiento de su tutor, tomaremos medidas rápidamente para eliminar dicha información. Si un padre o tutor considera que un menor nos ha facilitado información personal, póngase en contacto con nosotros a través de la información de contacto que figura al final de esta política.",
+            "priv_40": "8. Enlaces y servicios de terceros",
+            "priv_41": "El Sitio puede contener enlaces a sitios web o servicios de terceros (como el servicio de música Jamendo y el uso compartido en redes sociales). Estos servicios de terceros tienen sus propias políticas de privacidad independientes, y no somos responsables de su contenido ni de sus prácticas de privacidad. Antes de facilitarles información personal, le recomendamos que lea atentamente la política de privacidad del tercero correspondiente.",
+            "priv_42": "9. Cambios en la política",
+            "priv_43": "Podemos actualizar esta política de privacidad de vez en cuando para adaptarnos a los cambios en las leyes y regulaciones, al desarrollo del negocio o al progreso tecnológico. La política actualizada se publicará en la página con su fecha de última actualización. Si la actualización implica cambios significativos, podemos notificárselo mediante anuncios en el sitio u otros medios apropiados. Si continúa utilizando el Sitio después de la actualización de la política, se considerará que ha leído, entendido y aceptado la política actualizada.",
+            "priv_44": "10. Contáctenos",
+            "priv_45": "Si tiene preguntas, quejas o solicitudes relacionadas con la privacidad, envíe un correo electrónico a luoyangmengjin2025@163.com. Evaluaremos y responderemos a su solicitud lo antes posible."
+        },
+        ru: {
+            "priv_title": "Политика конфиденциальности - APEXON",
+            "priv_1": "Политика конфиденциальности",
+            "priv_2": "Последнее обновление: 10 июля 2026 г.",
+            "priv_3": "Добро пожаловать на APEXON (далее — «Сайт»). Настоящая политика конфиденциальности предназначена для того, чтобы ясно и прозрачно объяснить, как мы собираем, используем, храним, передаём и защищаем вашу личную информацию при использовании вами нашего Сайта, а также какие права вам предоставлены. Пожалуйста, внимательно прочитайте настоящую политику перед использованием Сайта. Если у вас возникнут вопросы по этой политике, вы можете связаться с нами через контактную информацию, указанную в конце данной политики.",
+            "priv_4": "1. Какая информация собирается",
+            "priv_5": "При использовании APEXON мы можем собирать следующие виды информации. Мы придерживаемся принципа «минимальной необходимости» и собираем только ту информацию, которая необходима для предоставления услуг:",
+            "priv_6": "Информация об аккаунте: при регистрации или заполнении профиля мы можем собирать информацию, которую вы предоставляете добровольно, такую как имя пользователя, хеш пароля, пол (по желанию), биографию и ссылку на аватар. Пароли хранятся в виде хеша; мы никогда не храним ваш пароль в открытом виде.",
+            "priv_7": "Данные тестов: ваши результаты, потраченное время, уровень точности, оценка уровня и время тестирования в каждом модуле. Эти данные используются для создания вашей личной истории, данных таблицы лидеров и анализа способностей.",
+            "priv_8": "Данные взаимодействия: комментарии, которые вы публикуете на форуме, категории сообщений, лайки или содержимое отзывов. Эта информация используется для поддержания взаимодействия в сообществе и улучшения пользовательского опыта.",
+            "priv_9": "Техническая информация: включая тип и версию браузера, операционную систему, тип устройства, разрешение экрана, время доступа, IP-адрес (который может быть анонимизирован), анонимный идентификатор устройства и пути доступа к страницам. Эта информация используется для оптимизации производительности услуг, устранения неполадок, предотвращения злоупотреблений и обеспечения безопасности аккаунта.",
+            "priv_10": "Статистика третьих сторон: мы можем использовать сторонние аналитические инструменты (например, Microsoft Clarity) для сбора анонимизированных данных о поведении пользователей, чтобы понимать использование страниц и улучшать дизайн продукта. Такие данные обычно обрабатываются в агрегированной и анонимной форме.",
+            "priv_11": "2. Как мы используем информацию",
+            "priv_12": "Мы используем собранную информацию, чтобы предоставлять вам безопасные, стабильные и персонализированные услуги. Конкретные цели включают, помимо прочего:",
+            "priv_13": "предоставление, поддержание, оптимизацию и улучшение функций и услуг Сайта, включая механизм тестирования, таблицы лидеров, форум и музыкальный плеер;",
+            "priv_14": "создание и отображение ваших личных результатов, истории, статистических графиков и глобальных таблиц лидеров;",
+            "priv_15": "защиту безопасности аккаунта, предотвращение мошенничества, обмана, атак с использованием автоматизированных скриптов и других злоупотреблений;",
+            "priv_16": "ответы на ваши отзывы, вопросы и жалобы, а также решение проблем, связанных с аккаунтом;",
+            "priv_17": "проведение анонимизированного анализа данных для улучшения дизайна тестов, пользовательского опыта и производительности сайта;",
+            "priv_18": "отправку вам уведомлений о услугах или информации об обновлениях функций при получении вашего согласия или в соответствии с требованиями закона.",
+            "priv_19": "3. Хранение и защита информации",
+            "priv_20": "Ваши данные хранятся на серверах сторонних поставщиков облачных услуг, которые могут находиться за пределами вашей юрисдикции. Мы принимаем разумные технические и административные меры для защиты безопасности ваших данных, включая, помимо прочего, хешированное хранение паролей, механизмы токенов сеанса, шифрование транспортного уровня (HTTPS) и политики контроля доступа.",
+            "priv_21": "Мы строго ограничиваем права доступа к данным сотрудников и сторонних поставщиков услуг, разрешая доступ к вашей личной информации только тем лицам, которым это необходимо для выполнения своих обязанностей. Однако интернет-среда не является абсолютно безопасной, и мы не можем гарантировать, что данные на 100 % не будут подвержены несанкционированному доступу, раскрытию, изменению или утрате при передаче или хранении. В случае инцидента безопасности мы оперативно уведомим вас в соответствии с требованиями применимого законодательства и примем корректирующие меры.",
+            "priv_22": "4. Передача информации",
+            "priv_23": "Мы уделяем большое внимание вашей конфиденциальности и не будем продавать, сдавать в аренду или иным образом незаконно передавать вашу личную информацию третьим лицам. Мы можем раскрывать вашу необходимую информацию только в следующих случаях:",
+            "priv_24": "в соответствии с требованиями законодательства, судебными постановлениями или законными запросами административных органов;",
+            "priv_25": "когда это необходимо для защиты законных прав, имущественной безопасности или личной безопасности Сайта, наших пользователей или общественности;",
+            "priv_26": "при слиянии, поглощении, передаче активов или аналогичной сделке ваша информация может быть передана как часть деловых активов, но мы потребуем, чтобы получатель продолжал соблюдать меры защиты не ниже стандартов, установленных настоящей политикой;",
+            "priv_27": "в других случаях, на которые вы дали предварительное явное согласие.",
+            "priv_28": "5. Ваши права",
+            "priv_29": "В соответствии с применимым законодательством вы имеете следующие права в отношении вашей личной информации:",
+            "priv_30": "Право доступа: вы можете войти в свой аккаунт, чтобы просмотреть свой профиль и записи о тестах.",
+            "priv_31": "Право на исправление: вы можете в любое время изменять или обновлять неточную информацию в профиле.",
+            "priv_32": "Право на удаление: вы можете удалить часть своих данных профиля или опубликованного контента. Чтобы удалить аккаунт и все связанные данные, отправьте письмо на адрес luoyangmengjin2025@163.com; мы обработаем ваш запрос как можно скорее после проверки личности.",
+            "priv_33": "Право на ограничение обработки: в определённых случаях вы имеете право потребовать ограничить обработку вашей личной информации.",
+            "priv_34": "Отзыв согласия: для информации, собранной на основе согласия, вы можете в любое время отозвать своё согласие, однако отзыв согласия может повлиять на вашу возможность использовать некоторые функции.",
+            "priv_35": "6. Файлы cookie и локальное хранилище",
+            "priv_36": "Сайт использует локальное хранилище браузера для сохранения информации, такой как статус входа, анонимный идентификатор пользователя, языковые предпочтения, предпочтения темы и настройки воспроизведения музыки, чтобы обеспечить единообразный опыт при следующем посещении. Мы также можем использовать файлы cookie или аналогичные технологии для идентификации устройств, записи состояния сеанса и проведения анонимного анализа трафика.",
+            "priv_37": "Большинство браузеров позволяют очищать локальное хранилище, отключать файлы cookie или устанавливать предупреждения. Обратите внимание, что отключение этих технологий может привести к тому, что некоторые функции перестанут работать должным образом, например автоматический вход в систему, запоминание темы и сохранение прогресса воспроизведения.",
+            "priv_38": "7. Несовершеннолетние",
+            "priv_39": "Мы рекомендуем несовершеннолетним в возрасте до 14 лет использовать Сайт под руководством опекуна. Мы не собираем намеренно личную информацию несовершеннолетних. Если мы обнаружим, что непреднамеренно собрали личную информацию несовершеннолетнего без согласия опекуна, мы незамедлительно примем меры по удалению такой информации. Если родитель или опекун считает, что несовершеннолетний предоставил нам личную информацию, пожалуйста, свяжитесь с нами через контактную информацию, указанную в конце настоящей политики.",
+            "priv_40": "8. Ссылки и услуги третьих сторон",
+            "priv_41": "Сайт может содержать ссылки на сторонние веб-сайты или услуги (например, музыкальный сервис Jamendo и обмен в социальных сетях). Эти сторонние услуги имеют собственные независимые политики конфиденциальности, и мы не несём ответственности за их содержимое или действия в области конфиденциальности. Перед предоставлением им личной информации мы рекомендуем внимательно ознакомиться с политикой конфиденциальности соответствующей третьей стороны.",
+            "priv_42": "9. Изменения политики",
+            "priv_43": "Мы можем время от времени обновлять настоящую политику конфиденциальности, чтобы учитывать изменения в законах и нормативных актах, развитие бизнеса или технический прогресс. Обновлённая политика будет опубликована на странице с указанием даты последнего обновления. Если обновление затрагивает существенные изменения, мы можем уведомить вас через объявления на сайте или другими подходящими способами. Если вы продолжите использовать Сайт после обновления политики, это считается тем, что вы прочитали, поняли и приняли обновлённую политику.",
+            "priv_44": "10. Свяжитесь с нами",
+            "priv_45": "Если у вас есть вопросы, жалобы или запросы, связанные с конфиденциальностью, отправьте письмо на адрес luoyangmengjin2025@163.com. Мы как можно скорее рассмотрим и ответим на ваш запрос."
+        },
+        pt: {
+            "priv_title": "Política de Privacidade - APEXON",
+            "priv_1": "Política de Privacidade",
+            "priv_2": "Última atualização: 10 de julho de 2026",
+            "priv_3": "Bem-vindo ao APEXON (doravante referido como o «Site»). Esta Política de Privacidade destina-se a explicar, de forma clara e transparente, como recolhemos, utilizamos, armazenamos, partilhamos e protegemos as suas informações pessoais quando utiliza o nosso Site, bem como os direitos que lhe assistem. Leia atentamente esta Política antes de utilizar o Site. Se tiver alguma dúvida sobre esta Política, pode contactar-nos através das informações de contacto no final da mesma.",
+            "priv_4": "1. Informações que recolhemos",
+            "priv_5": "Ao utilizar o APEXON, podemos recolher os seguintes tipos de informações. Cumprimos o princípio do «mínimo necessário» e só recolhemos as informações necessárias à prestação dos nossos serviços:",
+            "priv_6": "Informações da conta: quando se regista ou completa o seu perfil, podemos recolher informações que fornece voluntariamente, como nome de utilizador, hash de palavra-passe, sexo (opcional), biografia e link do avatar. As palavras-passe são armazenadas de forma codificada; nunca guardamos a sua palavra-passe em texto simples.",
+            "priv_7": "Dados de testes: as suas pontuações, tempo utilizado, taxas de precisão, avaliações de nível e horários dos testes em cada módulo. Estes dados são utilizados para gerar o seu histórico pessoal, dados de classificação e análise de capacidades.",
+            "priv_8": "Dados de interação: os comentários que publica no fórum, a categoria das publicações, os gostos ou o conteúdo dos feedbacks. Estas informações servem para manter a interação comunitária e melhorar a experiência do utilizador.",
+            "priv_9": "Informações técnicas: incluem tipo e versão do navegador, sistema operativo, tipo de dispositivo, resolução do ecrã, hora de acesso, endereço IP (que pode ser anonimizado), identificador de dispositivo anónimo e percursos de acesso às páginas. Estas informações servem para otimizar o desempenho do serviço, resolver problemas, prevenir abusos e garantir a segurança da sua conta.",
+            "priv_10": "Estatísticas de terceiros: podemos utilizar ferramentas de análise de terceiros (como a Microsoft Clarity) para recolher dados anonimizados sobre o comportamento dos utilizadores, a fim de compreender a utilização das páginas e melhorar o design dos produtos. Estes dados são geralmente tratados de forma agregada e anónima.",
+            "priv_11": "2. Como utilizamos as informações",
+            "priv_12": "Utilizamos as informações recolhidas para lhe proporcionar serviços seguros, estáveis e personalizados. As utilizações específicas incluem, entre outras:",
+            "priv_13": "Fornecer, manter, otimizar e melhorar as funcionalidades e serviços do Site, incluindo o mecanismo de testes, classificações, fórum e leitor de música;",
+            "priv_14": "Gerar e apresentar as suas pontuações pessoais, histórico, gráficos estatísticos e classificações mundiais;",
+            "priv_15": "Proteger a segurança da conta, prevenir fraudes, batotas, ataques de scripts automatizados e outros comportamentos abusivos;",
+            "priv_16": "Responder ao seu feedback, dúvidas e reclamações e tratar de problemas relacionados com a conta;",
+            "priv_17": "Realizar análises de dados anonimizadas para melhorar o design dos testes, a experiência do utilizador e o desempenho do site;",
+            "priv_18": "Enviar-lhe notificações de serviço ou informações sobre atualizações de funcionalidades, mediante o seu consentimento ou quando exigido por lei.",
+            "priv_19": "3. Armazenamento e proteção das informações",
+            "priv_20": "Os seus dados são armazenados em servidores de fornecedores de serviços em nuvem de terceiros, que podem estar localizados fora da sua jurisdição. Tomamos medidas técnicas e administrativas razoáveis para proteger a segurança dos seus dados, incluindo, entre outras, o armazenamento de palavras-passe com hash, mecanismos de tokens de sessão, encriptação da camada de transporte (HTTPS) e políticas de controlo de acesso.",
+            "priv_21": "Restringimos rigorosamente os direitos de acesso aos dados de funcionários e fornecedores de serviços de terceiros, permitindo apenas que o pessoal necessário ao desempenho das suas funções aceda às suas informações pessoais. No entanto, o ambiente da Internet não é absolutamente seguro e não podemos garantir que os dados nunca sejam 100% afetados por acesso não autorizado, divulgação, alteração ou perda durante a sua transmissão ou armazenamento. Em caso de incidente de segurança, notificá-lo-emos prontamente de acordo com os requisitos da lei aplicável e tomaremos medidas corretivas.",
+            "priv_22": "4. Partilha de informações",
+            "priv_23": "Damos grande importância à sua privacidade e não venderemos, alugaremos ou forneceremos ilegalmente as suas informações pessoais a terceiros. Só podemos divulgar as suas informações essenciais nos seguintes casos:",
+            "priv_24": "De acordo com os requisitos legais, ordens judiciais ou pedidos legítimos de autoridades administrativas;",
+            "priv_25": "Quando necessário para proteger os direitos legítimos, a segurança patrimonial ou a segurança pessoal do Site, dos nossos utilizadores ou do público;",
+            "priv_26": "Em caso de fusão, aquisição, transferência de ativos ou transação semelhante, as suas informações podem ser transferidas como parte dos ativos de negócio, mas exigiremos que o destinatário continue a cumprir medidas de proteção não inferiores às desta Política;",
+            "priv_27": "Qualquer outro caso para o qual tenha dado o seu consentimento explícito prévio.",
+            "priv_28": "5. Os seus direitos",
+            "priv_29": "De acordo com a legislação aplicável, tem os seguintes direitos relativamente às suas informações pessoais:",
+            "priv_30": "Direito de acesso: pode iniciar sessão na sua conta para ver o seu perfil e registos de testes.",
+            "priv_31": "Direito de retificação: pode modificar ou atualizar, a qualquer momento, as informações imprecisas do seu perfil.",
+            "priv_32": "Direito ao apagamento: pode eliminar parte dos seus dados de perfil ou do conteúdo publicado. Para eliminar a sua conta e todos os dados associados, envie um e-mail para luoyangmengjin2025@163.com; trataremos do seu pedido logo que possível após a verificação da sua identidade.",
+            "priv_33": "Direito à limitação do tratamento: em circunstâncias específicas, tem o direito de solicitar que limitemos o tratamento das suas informações pessoais.",
+            "priv_34": "Retirada do consentimento: para as informações recolhidas com base no consentimento, pode retirar o seu consentimento a qualquer momento, embora a retirada possa afetar a sua capacidade de utilizar determinadas funcionalidades.",
+            "priv_35": "6. Cookies e armazenamento local",
+            "priv_36": "O Site utiliza o armazenamento local do navegador para guardar informações como o seu estado de início de sessão, identificador de utilizador anónimo, preferências de idioma, preferências de tema e definições de reprodução de música, de modo a proporcionar uma experiência consistente na sua próxima visita. Também podemos utilizar cookies ou tecnologias semelhantes para identificar dispositivos, registar estados de sessão e realizar análises de tráfego anónimas.",
+            "priv_37": "A maioria dos navegadores permite-lhe limpar o armazenamento local, desativar cookies ou definir avisos. Tenha em conta que desativar estas tecnologias pode impedir que algumas funcionalidades funcionem corretamente, como o início de sessão automático, a memória de temas e a gravação do progresso de reprodução.",
+            "priv_38": "7. Menores",
+            "priv_39": "Recomendamos que os menores de 14 anos utilizem o Site sob a supervisão de um tutor. Não recolhemos intencionalmente informações pessoais de menores. Se descobrirmos que recolhemos acidentalmente informações pessoais de um menor sem o consentimento do tutor, tomaremos medidas prontamente para eliminar essas informações. Se um pai ou tutor considerar que um menor nos forneceu informações pessoais, contacte-nos através das informações de contacto no final desta Política.",
+            "priv_40": "8. Links e serviços de terceiros",
+            "priv_41": "O Site pode conter links para sites ou serviços de terceiros (como o serviço de música Jamendo e a partilha em redes sociais). Estes serviços de terceiros têm políticas de privacidade independentes e não somos responsáveis pelo seu conteúdo ou práticas de privacidade. Antes de lhes fornecer informações pessoais, recomendamos que leia atentamente a política de privacidade do terceiro em questão.",
+            "priv_42": "9. Alterações à Política",
+            "priv_43": "Podemos atualizar esta Política de Privacidade de tempos a tempos para nos adaptarmos a alterações nas leis e regulamentos, ao desenvolvimento do negócio ou ao progresso tecnológico. A política atualizada será publicada na página com a sua data de última atualização. Se a atualização envolver alterações significativas, poderemos notificá-lo através de anúncios no site ou outros meios adequados. Se continuar a utilizar o Site após a atualização da Política, considera-se que leu, compreendeu e aceitou a política atualizada.",
+            "priv_44": "10. Contacte-nos",
+            "priv_45": "Se tiver perguntas, reclamações ou pedidos relacionados com a privacidade, envie um e-mail para luoyangmengjin2025@163.com. Avaliaremos e responderemos ao seu pedido o mais rapidamente possível."
+        },
+        it: {
+            "priv_title": "Informativa sulla privacy - APEXON",
+            "priv_1": "Informativa sulla privacy",
+            "priv_2": "Ultimo aggiornamento: 10 luglio 2026",
+            "priv_3": "Benvenuto su APEXON (di seguito, il «Sito»). La presente informativa sulla privacy ha lo scopo di spiegarti in modo chiaro e trasparente come raccogliamo, utilizziamo, conserviamo, condividiamo e proteggiamo le tue informazioni personali durante l'utilizzo del nostro Sito, nonché i diritti di cui godi. Ti preghiamo di leggere attentamente l'informativa prima di utilizzare il Sito. Se hai domande in merito, puoi contattarci tramite le informazioni di contatto riportate alla fine dell'informativa.",
+            "priv_4": "1. Informazioni che raccogliamo",
+            "priv_5": "Quando utilizzi APEXON, potremmo raccogliere i seguenti tipi di informazioni. Ci atteniamo al principio del «minimo necessario» e raccogliamo solo le informazioni necessarie alla fornitura dei nostri servizi:",
+            "priv_6": "Informazioni sull'account: quando ti registri o completi il tuo profilo, potremmo raccogliere informazioni che fornisci volontariamente, come nome utente, hash della password, sesso (facoltativo), biografia e link all'avatar. Le password sono memorizzate in forma hash; non conserviamo mai la tua password in chiaro.",
+            "priv_7": "Dati dei test: i tuoi punteggi, il tempo impiegato, i tassi di precisione, le valutazioni di livello e gli orari dei test in ciascun modulo. Questi dati vengono utilizzati per generare la tua cronologia personale, i dati delle classifiche e l'analisi delle abilità.",
+            "priv_8": "Dati di interazione: i commenti che pubblichi nel forum, le categorie dei post, i like o i contenuti di feedback. Queste informazioni servono a mantenere l'interazione della comunità e a migliorare l'esperienza utente.",
+            "priv_9": "Informazioni tecniche: includono tipo e versione del browser, sistema operativo, tipo di dispositivo, risoluzione dello schermo, ora di accesso, indirizzo IP (che può essere anonimizzato), identificativo anonimo del dispositivo e percorsi di accesso alle pagine. Queste informazioni servono a ottimizzare le prestazioni del servizio, risolvere i problemi, prevenire gli abusi e garantire la sicurezza dell'account.",
+            "priv_10": "Statistiche di terze parti: possiamo utilizzare strumenti di analisi di terze parti (come Microsoft Clarity) per raccogliere dati anonimizzati sul comportamento degli utenti, al fine di comprendere l'utilizzo delle pagine e migliorare la progettazione del prodotto. Questi dati vengono generalmente trattati in forma aggregata e anonima.",
+            "priv_11": "2. Come utilizziamo le informazioni",
+            "priv_12": "Utilizziamo le informazioni raccolte per offrirti servizi sicuri, stabili e personalizzati. Gli usi specifici includono, a titolo esemplificativo ma non esaustivo:",
+            "priv_13": "fornire, mantenere, ottimizzare e migliorare le funzionalità e i servizi del Sito, inclusi il motore di test, le classifiche, il forum e il lettore musicale;",
+            "priv_14": "generare e mostrare i tuoi punteggi personali, la cronologia, i grafici statistici e le classifiche mondiali;",
+            "priv_15": "proteggere la sicurezza dell'account, prevenire frodi, imbrogli, attacchi di script automatizzati e altri comportamenti abusivi;",
+            "priv_16": "rispondere ai tuoi feedback, richieste e reclami e gestire i problemi relativi all'account;",
+            "priv_17": "effettuare analisi anonimizzate dei dati per migliorare la progettazione dei test, l'esperienza utente e le prestazioni del sito;",
+            "priv_18": "inviarti notifiche di servizio o informazioni sugli aggiornamenti delle funzionalità, previo tuo consenso o quando richiesto dalla legge.",
+            "priv_19": "3. Conservazione e protezione delle informazioni",
+            "priv_20": "I tuoi dati sono conservati su server di fornitori di servizi cloud di terze parti, che possono trovarsi al di fuori della tua giurisdizione. Adottiamo misure tecniche e amministrative ragionevoli per proteggere la sicurezza dei tuoi dati, incluse, a titolo esemplificativo, la memorizzazione hash delle password, i meccanismi di token di sessione, la crittografia del livello di trasporto (HTTPS) e le politiche di controllo degli accessi.",
+            "priv_21": "Limitiamo rigorosamente i diritti di accesso ai dati di dipendenti e fornitori di servizi di terze parti, consentendo l'accesso alle tue informazioni personali solo al personale necessario allo svolgimento delle proprie funzioni. Tuttavia, l'ambiente Internet non è assolutamente sicuro e non possiamo garantire che i dati non siano mai al 100% soggetti ad accesso non autorizzato, divulgazione, alterazione o perdita durante la trasmissione o la conservazione. In caso di incidente di sicurezza, ti informeremo tempestivamente secondo i requisiti della legge applicabile e adotteremo misure correttive.",
+            "priv_22": "4. Condivisione delle informazioni",
+            "priv_23": "Teniamo molto alla tua privacy e non venderemo, affitteremo né forniremo illegalmente le tue informazioni personali a terzi. Possiamo divulgare le tue informazioni essenziali solo nei seguenti casi:",
+            "priv_24": "in conformità ai requisiti di legge, agli ordini giudiziari o alle richieste legittime delle autorità amministrative;",
+            "priv_25": "quando necessario per proteggere i diritti legittimi, la sicurezza patrimoniale o l'incolumità personale del Sito, dei nostri utenti o del pubblico;",
+            "priv_26": "in caso di fusione, acquisizione, trasferimento di attività o operazione simile, le tue informazioni possono essere trasferite come parte delle attività aziendali, ma richiederemo al destinatario di continuare a rispettare misure di protezione non inferiori a quelle della presente informativa;",
+            "priv_27": "qualsiasi altro caso per il quale hai fornito il tuo previo consenso esplicito.",
+            "priv_28": "5. I tuoi diritti",
+            "priv_29": "Ai sensi della legge applicabile, hai i seguenti diritti in merito alle tue informazioni personali:",
+            "priv_30": "Diritto di accesso: puoi accedere al tuo account per consultare il tuo profilo personale e i tuoi registri dei test.",
+            "priv_31": "Diritto di rettifica: puoi modificare o aggiornare in qualsiasi momento le informazioni inesatte del tuo profilo.",
+            "priv_32": "Diritto alla cancellazione: puoi eliminare parte dei tuoi dati del profilo o dei contenuti pubblicati. Per eliminare il tuo account e tutti i dati associati, invia un'e-mail a luoyangmengjin2025@163.com; tratteremo la tua richiesta il prima possibile dopo la verifica della tua identità.",
+            "priv_33": "Diritto alla limitazione del trattamento: in circostanze specifiche, hai il diritto di richiedere che limitiamo il trattamento delle tue informazioni personali.",
+            "priv_34": "Revoca del consenso: per le informazioni raccolte sulla base del consenso, puoi revocare il tuo consenso in qualsiasi momento, sebbene la revoca possa influire sulla tua capacità di utilizzare determinate funzionalità.",
+            "priv_35": "6. Cookie e archiviazione locale",
+            "priv_36": "Il Sito utilizza l'archiviazione locale del browser per salvare informazioni come lo stato di accesso, l'identificativo anonimo dell'utente, le preferenze linguistiche, le preferenze del tema e le impostazioni di riproduzione musicale, al fine di offrirti un'esperienza coerente alla tua prossima visita. Possiamo anche utilizzare cookie o tecnologie simili per identificare i dispositivi, registrare gli stati di sessione ed eseguire analisi anonime del traffico.",
+            "priv_37": "La maggior parte dei browser ti consente di cancellare l'archiviazione locale, disabilitare i cookie o impostare avvisi. Tieni presente che la disabilitazione di queste tecnologie può impedire il corretto funzionamento di alcune funzionalità, come l'accesso automatico, la memorizzazione del tema e il salvataggio dei progressi di riproduzione.",
+            "priv_38": "7. Minori",
+            "priv_39": "Raccomandiamo ai minori di età inferiore a 14 anni di utilizzare il Sito sotto la supervisione di un tutore. Non raccogliamo intenzionalmente informazioni personali sui minori. Se scopriamo di aver raccolto accidentalmente informazioni personali di un minore senza il consenso del tutore, adotteremo prontamente misure per eliminare tali informazioni. Se un genitore o un tutore ritiene che un minore ci abbia fornito informazioni personali, ti preghiamo di contattarci tramite le informazioni di contatto riportate alla fine della presente informativa.",
+            "priv_40": "8. Link e servizi di terze parti",
+            "priv_41": "Il Sito può contenere link a siti web o servizi di terze parti (come il servizio musicale Jamendo e la condivisione sui social media). Questi servizi di terze parti hanno proprie informative sulla privacy indipendenti e non siamo responsabili dei loro contenuti o delle loro pratiche sulla privacy. Prima di fornire loro informazioni personali, ti consigliamo di leggere attentamente l'informativa sulla privacy della terza parte interessata.",
+            "priv_42": "9. Modifiche all'informativa",
+            "priv_43": "Potremmo aggiornare di tanto in tanto la presente informativa sulla privacy per adattarci a cambiamenti di leggi e regolamenti, allo sviluppo dell'attività o ai progressi tecnologici. L'informativa aggiornata sarà pubblicata sulla pagina con la sua data di ultimo aggiornamento. Se l'aggiornamento comporta modifiche significative, potremmo informarti tramite annunci sul sito o altri mezzi appropriati. Se continui a utilizzare il Sito dopo l'aggiornamento dell'informativa, si considera che tu abbia letto, compreso e accettato l'informativa aggiornata.",
+            "priv_44": "10. Contattaci",
+            "priv_45": "Per qualsiasi domanda, reclamo o richiesta relativa alla privacy, invia un'e-mail a luoyangmengjin2025@163.com. Valuteremo e risponderemo alla tua richiesta il prima possibile."
+        }
+    };
+    </script>
+</body>
+</html>

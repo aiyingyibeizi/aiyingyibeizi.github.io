@@ -39,22 +39,27 @@
     zh: {
       siteTitle: 'APEXON — 全能能力测试',
       navHome: '首页', navMusic: 'APEXON Music', navReaction: '反应测试', navType: '打字测试', navStick: '注意力测试',
-      navNumber: '数字记忆', navVerbal: '单词记忆', navVisual: '视觉记忆', navAim: '瞄准训练', navSequence: '序列记忆',
+      navNumber: '数字记忆', navVerbal: '单词记忆', navVisual: '视觉记忆', navAim: '瞄准训练', navSequence: '序列记忆', navStroop: 'Stroop 测试', navNback: 'N-Back 测试', navTaskswitch: '任务切换测试', navVisualsearch: '视觉搜索测试',
       menuOpen: '打开菜单', themeToggle: '切换主题', langSelector: '选择语言',
-      heroTitle: 'APEXON', heroTagline: '全能能力测试系统 · 挑战人类极限',
+      heroTitle: 'APEXON', heroTagline: '一套能在浏览器里玩起来的各种能力小测试 · 测测你的反应、记忆、专注和手眼协调',
       statOnline: '在线人数', statTotalUsers: '总玩家数量', statTotalTests: '总测试数',
       searchPlaceholder: '输入关键词，搜索全世界', searchButton: '搜索',
-      cardReactionTitle: '反应时间测试', cardReactionDesc: '测试你的神经反应速度，毫秒级精准测量',
-      cardTypeTitle: '打字训练测试', cardTypeDesc: '提升打字速度与准确度，挑战中文输入极限',
-      cardStickTitle: '持续注意力测试', cardStickDesc: '60秒专注力挑战，追踪你的注意力曲线',
-      cardNumberTitle: '数字记忆测试', cardNumberDesc: '挑战数字记忆广度，逐级突破记忆极限',
-      cardVerbalTitle: '单词记忆测试', cardVerbalDesc: '辨别新旧词汇，评估言语工作记忆能力',
-      cardVisualTitle: '视觉记忆测试', cardVisualDesc: '记住闪烁方块位置，锻炼空间视觉记忆',
-      cardAimTitle: '瞄准训练', cardAimDesc: '快速精准点击目标，提升手眼协调',
-      cardSequenceTitle: '序列记忆测试', cardSequenceDesc: '复现闪烁顺序，训练短时序列记忆',
+      cardReactionTitle: '反应时间测试', cardReactionDesc: '屏幕一变色就立刻点，测你从看到到点下去的用时，连测五轮取平均。',
+      cardTypeTitle: '打字训练测试', cardTypeDesc: '随机句子打起来，实时看速度、准确率，顺带练盲打。',
+      cardStickTitle: '持续注意力测试', cardStickDesc: '60秒，眼睛盯住那只会跑的小球别跟丢了——它会越跑越快。',
+      cardNumberTitle: '数字记忆测试', cardNumberDesc: '从3位数开始，记得住就往上升，看你能背到几位。',
+      cardVerbalTitle: '单词记忆测试', cardVerbalDesc: '一串英文单词逐个出现，最后认得出哪些是刚看过的。',
+      cardVisualTitle: '视觉记忆测试', cardVisualDesc: '看清网格里亮过的方块，按亮起顺序点一遍，等级越高格子越多。',
+      cardAimTitle: '瞄准训练', cardAimDesc: '扫射30个目标，点得越快越准分越高，练练鼠标手感。',
+      cardSequenceTitle: '序列记忆测试', cardSequenceDesc: '彩色块按顺序闪一圈，你照着再点一遍，一次比一次长。',
+      cardStroopTitle: 'Stroop 抑制控制测试', cardStroopDesc: '看到颜色字，别管它写的是啥，只认字的颜色。',
+      cardNbackTitle: 'N-Back 工作记忆测试', cardNbackDesc: '盯着出现的东西，回想 N 步前是不是同一个，往后越烧脑。',
+      visualsearchTitle: '视觉搜索测试',
+      cardVisualsearchTitle: '视觉搜索测试', cardVisualsearchDesc: '在一片干扰里快速找到目标，格子从 4×4 涨到 8×8，看你的眼神有多利。',
       leaderboardTitle: '🏆 排行榜', lbReaction: '反应', lbType: '打字', lbStick: '注意力', lbNumber: '数字',
-      lbVerbal: '单词', lbVisual: '视觉', lbAim: '瞄准', lbSequence: '序列', lbEmpty: '还没有人上榜',
+      lbVerbal: '单词', lbVisual: '视觉', lbAim: '瞄准', lbSequence: '序列', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '视觉搜索', lbEmpty: '还没有人上榜',
       discussionTitle: '💬 玩家讨论区', discussionEmpty: '还没有讨论，来做第一个发言的人吧',
+      forumPrivacyNote: '发表即代表你同意我们保存这条评论（含昵称与内容）用于展示和排序，不会挪作他用，具体见隐私政策。',
       myScoresTitle: '📊 我的成绩', myScoresEmpty: '暂无成绩，快去测试一下吧',
       loading: '加载中...', online: '在线', offline: '离线', submit: '提交', cancel: '取消', confirm: '确认', close: '关闭',
       profileTitle: '我的资料', editProfile: '编辑资料', editUsername: '修改用户名', logoutAccount: '退出账号',
@@ -65,7 +70,7 @@
       registerFailed: '注册失败，请重试', loginFailed: '登录失败，请重试',
       guestModeTip: '游客模式可正常使用全部功能，登录后可修改用户名与资料',
       confirmLogout: '确定删除本地登录状态？数据库中的成绩仍会保留。', operationFailed: '操作失败',
-      startTest: '开始测试', testAgain: '再测一次', yourResult: '你的成绩', bestRecord: '最佳纪录',
+      startTest: '开始测试', testAgain: '再测一次', shareScore: '分享成绩', yourResult: '你的成绩', bestRecord: '最佳纪录',
       footerPrivacy: '隐私政策', footerTerms: '服务条款',
       commentEmpty: '评论内容不能为空',
       commentTooLong: '评论内容超过 500 字限制',
@@ -119,8 +124,13 @@
       forumAll: '全部',
       forumPlaceholder: '分享你的测试心得...',
       forumPublish: '发布',
+      forumSpamFilter: '过滤无意义或危险内容',
+      spamFilteredAll: '内容已过滤',
+      spamFilteredAllDesc: '取消勾选「过滤无意义或危险内容」即可查看被过滤的内容。',
       guestCanComment: '游客模式可发表评论，登录后可修改用户名与资料',
       lbEmptyFirst: '还没有人上榜，快来成为第一个！',
+      lbDiagClean: '已过滤 {n} 条占位/测试数据（保留 {m} 条）',
+      lbEmptyTitle: '暂无榜单数据', personalGuestTitle: '游客模式', forumEmptyTitle: '暂无讨论', startTestCta: '开始测试',
       guestRecordTip: '登录或游客模式均可记录成绩',
       guestPrefix: '游客',
       user: '用户',
@@ -131,7 +141,7 @@
     en: {
       siteTitle: 'APEXON — Cognitive Ability Tests',
       navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reaction', navType: 'Typing', navStick: 'Attention',
-      navNumber: 'Number Memory', navVerbal: 'Verbal Memory', navVisual: 'Visual Memory', navAim: 'Aim Training', navSequence: 'Sequence Memory',
+      navNumber: 'Number Memory', navVerbal: 'Verbal Memory', navVisual: 'Visual Memory', navAim: 'Aim Training', navSequence: 'Sequence Memory', navStroop: 'Stroop Test', navNback: 'N-Back Test', navTaskswitch: 'Task Switch', navVisualsearch: 'Visual Search',
       menuOpen: 'Open menu', themeToggle: 'Toggle theme', langSelector: 'Select language',
       heroTitle: 'APEXON', heroTagline: 'All-in-One Cognitive Ability Testing System',
       statOnline: 'Online', statTotalUsers: 'Players', statTotalTests: 'Tests',
@@ -144,8 +154,12 @@
       cardVisualTitle: 'Visual Memory Test', cardVisualDesc: 'Remember flashing block positions',
       cardAimTitle: 'Aim Training', cardAimDesc: 'Click targets fast and accurately',
       cardSequenceTitle: 'Sequence Memory Test', cardSequenceDesc: 'Reproduce flashing sequences',
+      cardStroopTitle: 'Stroop Inhibition Test', cardStroopDesc: 'Judge ink color, ignore word meaning',
+      cardNbackTitle: 'N-Back Working Memory Test', cardNbackDesc: 'Match stimulus N steps back, train updating',
+      visualsearchTitle: 'Visual Search Test',
+      cardVisualsearchTitle: 'Visual Search Test', cardVisualsearchDesc: 'Find the target among distractors fast, from 4×4 to 8×8 grids, measuring visual search efficiency and attention allocation',
       leaderboardTitle: '🏆 Leaderboard', lbReaction: 'Reaction', lbType: 'Typing', lbStick: 'Attention', lbNumber: 'Number',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Aim', lbSequence: 'Sequence', lbEmpty: 'No scores yet. Be the first!',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Aim', lbSequence: 'Sequence', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Visual Search', lbEmpty: 'No scores yet. Be the first!',
       discussionTitle: '💬 Discussion', discussionEmpty: 'No comments yet. Start the conversation!',
       myScoresTitle: '📊 My Scores', myScoresEmpty: 'No scores yet. Take a test!',
       loading: 'Loading...', online: 'Online', offline: 'Offline', submit: 'Submit', cancel: 'Cancel', confirm: 'Confirm', close: 'Close',
@@ -157,7 +171,7 @@
       registerFailed: 'Registration failed, please try again', loginFailed: 'Login failed, please try again',
       guestModeTip: 'Guest mode has full access. Log in to edit username and profile.',
       confirmLogout: 'Are you sure you want to clear local login state? Your scores in the database will be retained.', operationFailed: 'Operation failed',
-      startTest: 'Start Test', testAgain: 'Try Again', yourResult: 'Your Result', bestRecord: 'Best Record',
+      startTest: 'Start Test', testAgain: 'Try Again', shareScore: 'Share Score', yourResult: 'Your Result', bestRecord: 'Best Record',
       footerPrivacy: 'Privacy Policy', footerTerms: 'Terms of Service',
       commentEmpty: 'Comment cannot be empty',
       commentTooLong: 'Comment exceeds 500 characters',
@@ -211,8 +225,13 @@
       forumAll: 'All',
       forumPlaceholder: 'Share your test experience...',
       forumPublish: 'Post',
+      forumSpamFilter: 'Filter meaningless or harmful content',
+      spamFilteredAll: 'Content filtered',
+      spamFilteredAllDesc: 'Uncheck "Filter meaningless or harmful content" to view filtered posts.',
       guestCanComment: 'Guests can comment. Log in to edit username and profile.',
       lbEmptyFirst: 'No scores yet. Be the first!',
+      lbDiagClean: 'Filtered {n} placeholder/test entries (kept {m})',
+      lbEmptyTitle: 'No leaderboard data', personalGuestTitle: 'Guest mode', forumEmptyTitle: 'No discussions', startTestCta: 'Start test',
       guestRecordTip: 'Scores are saved in guest or logged-in mode',
       guestPrefix: 'Guest',
       user: 'User',
@@ -223,7 +242,7 @@
     ja: {
       siteTitle: 'APEXON — 総合能力テスト',
       navHome: 'ホーム', navMusic: 'APEXON Music', navReaction: '反応速度', navType: 'タイピング', navStick: '注意力',
-      navNumber: '数字記憶', navVerbal: '単語記憶', navVisual: '視覚記憶', navAim: 'エイム練習', navSequence: '順序記憶',
+      navNumber: '数字記憶', navVerbal: '単語記憶', navVisual: '視覚記憶', navAim: 'エイム練習', navSequence: '順序記憶', navStroop: 'Stroop テスト', navNback: 'N-Back テスト', navTaskswitch: 'タスクスイッチテスト', navVisualsearch: '視覚探索テスト',
       menuOpen: 'メニューを開く', themeToggle: 'テーマ切替', langSelector: '言語を選択',
       heroTitle: 'APEXON', heroTagline: '総合能力テストシステム · 人間の限界に挑戦',
       statOnline: 'オンライン', statTotalUsers: 'プレイヤー数', statTotalTests: 'テスト数',
@@ -236,8 +255,12 @@
       cardVisualTitle: '視覚記憶テスト', cardVisualDesc: '光るブロックの位置を記憶',
       cardAimTitle: 'エイム練習', cardAimDesc: '素早く正確にターゲットをクリック',
       cardSequenceTitle: '順序記憶テスト', cardSequenceDesc: '光る順序を再現する',
+      cardStroopTitle: 'Stroop 抑制制御テスト', cardStroopDesc: '文字の意味を無視して色を判定',
+      cardNbackTitle: 'N-Back ワーキングメモリテスト', cardNbackDesc: 'N 歩前と同じか判定',
+      visualsearchTitle: '視覚探索テスト',
+      cardVisualsearchTitle: '視覚探索テスト', cardVisualsearchDesc: '妨害刺激の中から素早く目標を見つけ、4×4 から 8×8 のグリッドへ難易度が上昇',
       leaderboardTitle: '🏆 ランキング', lbReaction: '反応', lbType: 'タイピング', lbStick: '注意力', lbNumber: '数字',
-      lbVerbal: '単語', lbVisual: '視覚', lbAim: 'エイム', lbSequence: '順序', lbEmpty: 'まだランキングデータがありません',
+      lbVerbal: '単語', lbVisual: '視覚', lbAim: 'エイム', lbSequence: '順序', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '視覚探索', lbEmpty: 'まだランキングデータがありません',
       discussionTitle: '💬 ディスカッション', discussionEmpty: 'まだコメントがありません。最初の投稿者になりましょう！',
       myScoresTitle: '📊 マイスコア', myScoresEmpty: 'まだ記録がありません。テストを受けましょう！',
       loading: '読み込み中...', online: 'オンライン', offline: 'オフライン', submit: '送信', cancel: 'キャンセル', confirm: '確認', close: '閉じる',
@@ -249,7 +272,7 @@
       registerFailed: '登録に失敗しました', loginFailed: 'ログインに失敗しました',
       guestModeTip: 'ゲストモードでも全機能利用可能です。ログインするとユーザー名とプロフィールを編集できます。',
       confirmLogout: 'ローカルのログイン状態を削除しますか？データベースの成績は保持されます。', operationFailed: '操作に失敗しました',
-      startTest: 'テスト開始', testAgain: 'もう一度', yourResult: 'あなたの成績', bestRecord: '最高記録',
+      startTest: 'テスト開始', testAgain: 'もう一度', shareScore: 'スコアをシェア', yourResult: 'あなたの成績', bestRecord: '最高記録',
       footerPrivacy: 'プライバシーポリシー', footerTerms: '利用規約',
       commentEmpty: 'コメントを入力してください',
       commentTooLong: 'コメントは500文字以内にしてください',
@@ -302,8 +325,13 @@
       forumAll: 'すべて',
       forumPlaceholder: 'テストの感想を共有...',
       forumPublish: '投稿',
+      forumSpamFilter: '無意味または危険な内容をフィルタリング',
+      spamFilteredAll: 'コンテンツはフィルタリングされました',
+      spamFilteredAllDesc: '「無意味または危険な内容をフィルタリング」のチェックを外すと、フィルタリングされた投稿を表示できます。',
       guestCanComment: 'ゲストでもコメント可能。ログインするとユーザー名とプロフィールを編集できます。',
       lbEmptyFirst: 'まだランキングデータがありません。最初の記録を残しましょう！',
+      lbDiagClean: 'プレースホルダー・テストデータ {n} 件を除外しました（残り {m} 件）',
+      lbEmptyTitle: 'ランキングデータなし', personalGuestTitle: 'ゲストモード', forumEmptyTitle: '投稿なし', startTestCta: 'テスト開始',
       guestRecordTip: 'ゲストまたはログイン状態で記録が保存されます',
       guestPrefix: 'ゲスト',
       user: 'ユーザー',
@@ -314,7 +342,7 @@
     ko: {
       siteTitle: 'APEXON — 종합 능력 테스트',
       navHome: '홈', navMusic: 'APEXON Music', navReaction: '반응 속도', navType: '타이핑', navStick: '주의력',
-      navNumber: '숫자 기억', navVerbal: '단어 기억', navVisual: '시각 기억', navAim: '조준 연습', navSequence: '순서 기억',
+      navNumber: '숫자 기억', navVerbal: '단어 기억', navVisual: '시각 기억', navAim: '조준 연습', navSequence: '순서 기억', navStroop: 'Stroop 테스트', navNback: 'N-Back 테스트', navTaskswitch: '작업 전환 테스트', navVisualsearch: '시각 탐색 테스트',
       menuOpen: '메뉴 열기', themeToggle: '테마 전환', langSelector: '언어 선택',
       heroTitle: 'APEXON', heroTagline: '종합 능력 테스트 시스템 · 인간의 한계에 도전',
       statOnline: '온라인', statTotalUsers: '플레이어 수', statTotalTests: '테스트 수',
@@ -327,8 +355,12 @@
       cardVisualTitle: '시각 기억 테스트', cardVisualDesc: '깜박이는 블록 위치를 기억',
       cardAimTitle: '조준 연습', cardAimDesc: '빠르고 정확하게 목표 클릭',
       cardSequenceTitle: '순서 기억 테스트', cardSequenceDesc: '깜박이는 순서를 재현',
+      cardStroopTitle: 'Stroop 억제 통제 테스트', cardStroopDesc: '글자 뜻 무시하고 색 판단',
+      cardNbackTitle: 'N-Back 작업 기억 테스트', cardNbackDesc: 'N 단계 전과 같은지 판단',
+      visualsearchTitle: '시각 탐색 테스트',
+      cardVisualsearchTitle: '시각 탐색 테스트', cardVisualsearchDesc: '방해 항목 속에서 목표를 빠르게 찾아 4×4~8×8 그리드로 난이도가 상승합니다',
       leaderboardTitle: '🏆 순위표', lbReaction: '반응', lbType: '타이핑', lbStick: '주의력', lbNumber: '숫자',
-      lbVerbal: '단어', lbVisual: '시각', lbAim: '조준', lbSequence: '순서', lbEmpty: '아직 순위 데이터가 없습니다',
+      lbVerbal: '단어', lbVisual: '시각', lbAim: '조준', lbSequence: '순서', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: '시각 탐색', lbEmpty: '아직 순위 데이터가 없습니다',
       discussionTitle: '💬 토론', discussionEmpty: '아직 댓글이 없습니다. 첫 번째 작성자가 되어보세요!',
       myScoresTitle: '📊 내 점수', myScoresEmpty: '아직 기록이 없습니다. 테스트를 합시다!',
       loading: '로딩 중...', online: '온라인', offline: '오프라인', submit: '제출', cancel: '취소', confirm: '확인', close: '닫기',
@@ -340,7 +372,7 @@
       registerFailed: '가입 실패', loginFailed: '로그인 실패',
       guestModeTip: '게스트 모드에서도 모든 기능을 사용할 수 있습니다. 로그인하면 사용자명과 프로필을 수정할 수 있습니다.',
       confirmLogout: '로컬 로그인 상태를 삭제하시겠습니까? 데이터베이스의 성적은 유지됩니다.', operationFailed: '작업 실패',
-      startTest: '테스트 시작', testAgain: '다시 하기', yourResult: '당신의 점수', bestRecord: '최고 기록',
+      startTest: '테스트 시작', testAgain: '다시 하기', shareScore: '점수 공유', yourResult: '당신의 점수', bestRecord: '최고 기록',
       footerPrivacy: '개인정보 처리방침', footerTerms: '서비스 약관',
       commentEmpty: '댓글을 입력하세요',
       commentTooLong: '댓글은 500자 이내로 작성하세요',
@@ -393,8 +425,13 @@
       forumAll: '전체',
       forumPlaceholder: '테스트 소감을 공유...',
       forumPublish: '게시',
+      forumSpamFilter: '무의미하거나 유해한 콘텐츠 필터링',
+      spamFilteredAll: '콘텐츠가 필터링되었습니다',
+      spamFilteredAllDesc: '"무의미하거나 유해한 콘텐츠 필터링" 체크를 해제하면 필터링된 게시물을 볼 수 있습니다.',
       guestCanComment: '게스트도 댓글 작성 가능. 로그인하면 사용자명과 프로필 수정 가능.',
       lbEmptyFirst: '아직 순위 데이터가 없습니다. 첫 번째 기록을 남겨보세요!',
+      lbDiagClean: '플레이스홀더·테스트 데이터 {n}개를 걸러냈습니다 (남은 것 {m}개)',
+      lbEmptyTitle: '순위 데이터 없음', personalGuestTitle: '게스트 모드', forumEmptyTitle: '게시글 없음', startTestCta: '테스트 시작',
       guestRecordTip: '게스트 또는 로그인 상태에서 기록이 저장됩니다',
       guestPrefix: '게스트',
       user: '사용자',
@@ -405,7 +442,7 @@
     fr: {
       siteTitle: 'APEXON — Tests de capacités',
       navHome: 'Accueil', navMusic: 'APEXON Music', navReaction: 'Réaction', navType: 'Dactylo', navStick: 'Attention',
-      navNumber: 'Mémoire numérique', navVerbal: 'Mémoire verbale', navVisual: 'Mémoire visuelle', navAim: 'Visée', navSequence: 'Mémoire séquentielle',
+      navNumber: 'Mémoire numérique', navVerbal: 'Mémoire verbale', navVisual: 'Mémoire visuelle', navAim: 'Visée', navSequence: 'Mémoire séquentielle', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test de commutation', navVisualsearch: 'Recherche visuelle',
       menuOpen: 'Ouvrir le menu', themeToggle: 'Changer de thème', langSelector: 'Choisir la langue',
       heroTitle: 'APEXON', heroTagline: 'Système de tests complets des capacités cognitives',
       statOnline: 'En ligne', statTotalUsers: 'Joueurs', statTotalTests: 'Tests',
@@ -418,8 +455,12 @@
       cardVisualTitle: 'Test de mémoire visuelle', cardVisualDesc: 'Mémorisez les positions des blocs clignotants',
       cardAimTitle: 'Entraînement de visée', cardAimDesc: 'Cliquez vite et précisément sur les cibles',
       cardSequenceTitle: 'Test de mémoire séquentielle', cardSequenceDesc: 'Reproduisez les séquences clignotantes',
+      cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorer le sens, juger la couleur',
+      cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Comparer au stimulus N étapes avant',
+      visualsearchTitle: 'Test de recherche visuelle',
+      cardVisualsearchTitle: 'Test de recherche visuelle', cardVisualsearchDesc: 'Trouvez la cible parmi les distracteurs, du damier 4×4 au 8×8 pour mesurer l\'efficacité de la recherche visuelle',
       leaderboardTitle: '🏆 Classement', lbReaction: 'Réaction', lbType: 'Dactylo', lbStick: 'Attention', lbNumber: 'Numérique',
-      lbVerbal: 'Verbal', lbVisual: 'Visuel', lbAim: 'Visée', lbSequence: 'Séquence', lbEmpty: 'Aucun score pour le moment',
+      lbVerbal: 'Verbal', lbVisual: 'Visuel', lbAim: 'Visée', lbSequence: 'Séquence', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Recherche visuelle', lbEmpty: 'Aucun score pour le moment',
       discussionTitle: '💬 Discussions', discussionEmpty: 'Aucun commentaire. Soyez le premier !',
       myScoresTitle: '📊 Mes scores', myScoresEmpty: 'Aucun score. Faites un test !',
       loading: 'Chargement...', online: 'En ligne', offline: 'Hors ligne', submit: 'Envoyer', cancel: 'Annuler', confirm: 'Confirmer', close: 'Fermer',
@@ -431,7 +472,7 @@
       registerFailed: 'Inscription échouée', loginFailed: 'Connexion échouée',
       guestModeTip: 'Le mode invité offre un accès complet. Connectez-vous pour modifier le pseudo et le profil.',
       confirmLogout: 'Supprimer l\'état de connexion local ? Les scores en base de données seront conservés.', operationFailed: 'Échec de l\'opération',
-      startTest: 'Commencer', testAgain: 'Réessayer', yourResult: 'Votre score', bestRecord: 'Meilleur score',
+      startTest: 'Commencer', testAgain: 'Réessayer', shareScore: 'Partager le score', yourResult: 'Votre score', bestRecord: 'Meilleur score',
       footerPrivacy: 'Politique de confidentialité', footerTerms: 'Conditions d\'utilisation',
       commentEmpty: 'Le commentaire ne peut pas être vide',
       commentTooLong: 'Le commentaire dépasse 500 caractères',
@@ -484,8 +525,13 @@
       forumAll: 'Tout',
       forumPlaceholder: 'Partagez votre expérience...',
       forumPublish: 'Publier',
+      forumSpamFilter: 'Filtrer le contenu inutile ou dangereux',
+      spamFilteredAll: 'Contenu filtré',
+      spamFilteredAllDesc: 'Décochez « Filtrer le contenu inutile ou dangereux » pour afficher les messages filtrés.',
       guestCanComment: 'Les invités peuvent commenter. Connectez-vous pour modifier le pseudo et le profil.',
       lbEmptyFirst: 'Aucun score pour le moment. Soyez le premier !',
+      lbDiagClean: '{n} données de test/placeholders filtrées ({m} conservées)',
+      lbEmptyTitle: 'Aucune donnée', personalGuestTitle: 'Mode invité', forumEmptyTitle: 'Aucune discussion', startTestCta: 'Commencer le test',
       guestRecordTip: 'Les scores sont enregistrés en mode invité ou connecté',
       guestPrefix: 'Invité',
       user: 'Utilisateur',
@@ -496,7 +542,7 @@
     de: {
       siteTitle: 'APEXON — Fähigkeitstests',
       navHome: 'Startseite', navMusic: 'APEXON Music', navReaction: 'Reaktion', navType: 'Tippen', navStick: 'Aufmerksamkeit',
-      navNumber: 'Zahlengedächtnis', navVerbal: 'Wortgedächtnis', navVisual: 'Visuelles Gedächtnis', navAim: 'Zielübung', navSequence: 'Sequenzgedächtnis',
+      navNumber: 'Zahlengedächtnis', navVerbal: 'Wortgedächtnis', navVisual: 'Visuelles Gedächtnis', navAim: 'Zielübung', navSequence: 'Sequenzgedächtnis', navStroop: 'Stroop-Test', navNback: 'N-Back-Test', navTaskswitch: 'Aufgabenwechsel-Test', navVisualsearch: 'Visuelle Suche',
       menuOpen: 'Menü öffnen', themeToggle: 'Thema wechseln', langSelector: 'Sprache wählen',
       heroTitle: 'APEXON', heroTagline: 'All-in-One-System für kognitive Fähigkeitstests',
       statOnline: 'Online', statTotalUsers: 'Spieler', statTotalTests: 'Tests',
@@ -509,8 +555,12 @@
       cardVisualTitle: 'Visuelles Gedächtnistest', cardVisualDesc: 'Merken Sie sich die Positionen blinkender Blöcke',
       cardAimTitle: 'Zielübung', cardAimDesc: 'Klicken Sie schnell und präzise auf Ziele',
       cardSequenceTitle: 'Sequenzgedächtnistest', cardSequenceDesc: 'Reproduzieren Sie blinkende Sequenzen',
+      cardStroopTitle: 'Stroop-Inhibitionstest', cardStroopDesc: 'Wortbedeutung ignorieren, Farbe beurteilen',
+      cardNbackTitle: 'N-Back-Arbeitsgedächtnistest', cardNbackDesc: 'Mit Reiz vor N Schritten vergleichen',
+      visualsearchTitle: 'Test der visuellen Suche',
+      cardVisualsearchTitle: 'Test der visuellen Suche', cardVisualsearchDesc: 'Finde das Ziel unter Ablenkern, von 4×4 bis 8×8, und messe die Effizienz der visuellen Suche',
       leaderboardTitle: '🏆 Rangliste', lbReaction: 'Reaktion', lbType: 'Tippen', lbStick: 'Aufmerksamkeit', lbNumber: 'Zahlen',
-      lbVerbal: 'Wörter', lbVisual: 'Visuell', lbAim: 'Ziel', lbSequence: 'Sequenz', lbEmpty: 'Noch keine Einträge',
+      lbVerbal: 'Wörter', lbVisual: 'Visuell', lbAim: 'Ziel', lbSequence: 'Sequenz', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Visuelle Suche', lbEmpty: 'Noch keine Einträge',
       discussionTitle: '💬 Diskussion', discussionEmpty: 'Noch keine Kommentare. Seien Sie der Erste!',
       myScoresTitle: '📊 Meine Ergebnisse', myScoresEmpty: 'Noch keine Ergebnisse. Machen Sie einen Test!',
       loading: 'Laden...', online: 'Online', offline: 'Offline', submit: 'Senden', cancel: 'Abbrechen', confirm: 'Bestätigen', close: 'Schließen',
@@ -522,7 +572,7 @@
       registerFailed: 'Registrierung fehlgeschlagen', loginFailed: 'Anmeldung fehlgeschlagen',
       guestModeTip: 'Gastmodus bietet vollen Zugriff. Melden Sie sich an, um Benutzernamen und Profil zu bearbeiten.',
       confirmLogout: 'Lokalen Anmeldestatus löschen? Datenbank-Ergebnisse bleiben erhalten.', operationFailed: 'Vorgang fehlgeschlagen',
-      startTest: 'Test starten', testAgain: 'Nochmal', yourResult: 'Ihr Ergebnis', bestRecord: 'Bestwert',
+      startTest: 'Test starten', testAgain: 'Nochmal', shareScore: 'Ergebnis teilen', yourResult: 'Ihr Ergebnis', bestRecord: 'Bestwert',
       footerPrivacy: 'Datenschutz', footerTerms: 'Nutzungsbedingungen',
       commentEmpty: 'Kommentar darf nicht leer sein',
       commentTooLong: 'Kommentar überschreitet 500 Zeichen',
@@ -575,8 +625,13 @@
       forumAll: 'Alle',
       forumPlaceholder: 'Teile deine Testerfahrung...',
       forumPublish: 'Veröffentlichen',
+      forumSpamFilter: 'Bedeutungslosen oder gefährlichen Inhalt filtern',
+      spamFilteredAll: 'Inhalt gefiltert',
+      spamFilteredAllDesc: 'Deaktivieren Sie „Bedeutungslosen oder gefährlichen Inhalt filtern“, um gefilterte Beiträge anzuzeigen.',
       guestCanComment: 'Gäste können kommentieren. Melde dich an, um Benutzernamen und Profil zu bearbeiten.',
       lbEmptyFirst: 'Noch keine Einträge. Sei der Erste!',
+      lbDiagClean: '{n} Platzhalter-/Testdaten gefiltert ({m} beibehalten)',
+      lbEmptyTitle: 'Keine Daten', personalGuestTitle: 'Gastmodus', forumEmptyTitle: 'Keine Diskussionen', startTestCta: 'Test starten',
       guestRecordTip: 'Ergebnisse werden im Gast- oder Anmeldemodus gespeichert',
       guestPrefix: 'Gast',
       user: 'Benutzer',
@@ -587,7 +642,7 @@
     es: {
       siteTitle: 'APEXON — Tests de habilidades',
       navHome: 'Inicio', navMusic: 'APEXON Music', navReaction: 'Reacción', navType: 'Mecanografía', navStick: 'Atención',
-      navNumber: 'Memoria numérica', navVerbal: 'Memoria verbal', navVisual: 'Memoria visual', navAim: 'Puntería', navSequence: 'Memoria secuencial',
+      navNumber: 'Memoria numérica', navVerbal: 'Memoria verbal', navVisual: 'Memoria visual', navAim: 'Puntería', navSequence: 'Memoria secuencial', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test de cambio de tarea', navVisualsearch: 'Búsqueda visual',
       menuOpen: 'Abrir menú', themeToggle: 'Cambiar tema', langSelector: 'Seleccionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema integral de tests de habilidades cognitivas',
       statOnline: 'En línea', statTotalUsers: 'Jugadores', statTotalTests: 'Tests',
@@ -600,8 +655,12 @@
       cardVisualTitle: 'Test de memoria visual', cardVisualDesc: 'Recuerda las posiciones de los bloques brillantes',
       cardAimTitle: 'Entrenamiento de puntería', cardAimDesc: 'Haz clic rápida y precisamente en los objetivos',
       cardSequenceTitle: 'Test de memoria secuencial', cardSequenceDesc: 'Reproduce las secuencias brillantes',
+      cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorar el significado, juzgar el color',
+      cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Comparar con el estímulo de hace N pasos',
+      visualsearchTitle: 'Test de búsqueda visual',
+      cardVisualsearchTitle: 'Test de búsqueda visual', cardVisualsearchDesc: 'Encuentra el objetivo entre distractores, de 4×4 a 8×8, para medir la eficiencia de la búsqueda visual',
       leaderboardTitle: '🏆 Clasificación', lbReaction: 'Reacción', lbType: 'Mecanografía', lbStick: 'Atención', lbNumber: 'Números',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Puntería', lbSequence: 'Secuencia', lbEmpty: 'Aún no hay puntuaciones',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Puntería', lbSequence: 'Secuencia', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Búsqueda visual', lbEmpty: 'Aún no hay puntuaciones',
       discussionTitle: '💬 Discusión', discussionEmpty: 'Aún no hay comentarios. ¡Sé el primero!',
       myScoresTitle: '📊 Mis puntuaciones', myScoresEmpty: 'Aún no hay puntuaciones. ¡Haz un test!',
       loading: 'Cargando...', online: 'En línea', offline: 'Desconectado', submit: 'Enviar', cancel: 'Cancelar', confirm: 'Confirmar', close: 'Cerrar',
@@ -613,7 +672,7 @@
       registerFailed: 'Error al registrarse', loginFailed: 'Error al iniciar sesión',
       guestModeTip: 'El modo invitado tiene acceso completo. Inicia sesión para editar usuario y perfil.',
       confirmLogout: '¿Eliminar el estado de sesión local? Las puntuaciones en la base de datos se conservarán.', operationFailed: 'Operación fallida',
-      startTest: 'Iniciar test', testAgain: 'Reintentar', yourResult: 'Tu puntuación', bestRecord: 'Mejor marca',
+      startTest: 'Iniciar test', testAgain: 'Reintentar', shareScore: 'Compartir puntación', yourResult: 'Tu puntuación', bestRecord: 'Mejor marca',
       footerPrivacy: 'Política de privacidad', footerTerms: 'Términos de servicio',
       commentEmpty: 'El comentario no puede estar vacío',
       commentTooLong: 'El comentario supera los 500 caracteres',
@@ -666,8 +725,13 @@
       forumAll: 'Todo',
       forumPlaceholder: 'Comparte tu experiencia...',
       forumPublish: 'Publicar',
+      forumSpamFilter: 'Filtrar contenido inútil o peligroso',
+      spamFilteredAll: 'Contenido filtrado',
+      spamFilteredAllDesc: 'Desmarca «Filtrar contenido inútil o peligroso» para ver las publicaciones filtradas.',
       guestCanComment: 'Los invitados pueden comentar. Inicia sesión para editar usuario y perfil.',
       lbEmptyFirst: 'Aún no hay puntuaciones. ¡Sé el primero!',
+      lbDiagClean: '{n} datos de prueba/placeholder filtrados ({m} conservados)',
+      lbEmptyTitle: 'Sin datos', personalGuestTitle: 'Modo invitado', forumEmptyTitle: 'Sin discusiones', startTestCta: 'Iniciar test',
       guestRecordTip: 'Las puntuaciones se guardan en modo invitado o iniciado',
       guestPrefix: 'Invitado',
       user: 'Usuario',
@@ -678,7 +742,7 @@
     ru: {
       siteTitle: 'APEXON — Тесты способностей',
       navHome: 'Главная', navMusic: 'APEXON Music', navReaction: 'Реакция', navType: 'Печать', navStick: 'Внимание',
-      navNumber: 'Числовая память', navVerbal: 'Словесная память', navVisual: 'Зрительная память', navAim: 'Прицел', navSequence: 'Память последовательностей',
+      navNumber: 'Числовая память', navVerbal: 'Словесная память', navVisual: 'Зрительная память', navAim: 'Прицел', navSequence: 'Память последовательностей', navStroop: 'Тест Струпа', navNback: 'Тест N-Back', navTaskswitch: 'Тест переключения задач', navVisualsearch: 'Визуальный поиск',
       menuOpen: 'Открыть меню', themeToggle: 'Сменить тему', langSelector: 'Выбрать язык',
       heroTitle: 'APEXON', heroTagline: 'Система комплексного тестирования когнитивных способностей',
       statOnline: 'Онлайн', statTotalUsers: 'Игроки', statTotalTests: 'Тесты',
@@ -691,8 +755,12 @@
       cardVisualTitle: 'Тест зрительной памяти', cardVisualDesc: 'Запоминайте положение мигающих блоков',
       cardAimTitle: 'Тренировка прицела', cardAimDesc: 'Быстро и точно нажимайте на цели',
       cardSequenceTitle: 'Тест памяти последовательностей', cardSequenceDesc: 'Воспроизводите мигающие последовательности',
+      cardStroopTitle: 'Тест Струпа', cardStroopDesc: 'Игнорировать смысл, оценивать цвет',
+      cardNbackTitle: 'Тест N-Back', cardNbackDesc: 'Сравнить со стимулом N шагов назад',
+      visualsearchTitle: 'Тест визуального поиска',
+      cardVisualsearchTitle: 'Тест визуального поиска', cardVisualsearchDesc: 'Найдите цель среди отвлекающих стимулов в сетках от 4×4 до 8×8 — измерение эффективности визуального поиска',
       leaderboardTitle: '🏆 Рейтинг', lbReaction: 'Реакция', lbType: 'Печать', lbStick: 'Внимание', lbNumber: 'Числа',
-      lbVerbal: 'Слова', lbVisual: 'Зрительно', lbAim: 'Прицел', lbSequence: 'Последовательность', lbEmpty: 'Пока нет рекордов',
+      lbVerbal: 'Слова', lbVisual: 'Зрительно', lbAim: 'Прицел', lbSequence: 'Последовательность', lbStroop: 'Струп', lbNback: 'N-Back', lbVisualsearch: 'Визуальный поиск', lbEmpty: 'Пока нет рекордов',
       discussionTitle: '💬 Обсуждения', discussionEmpty: 'Пока нет комментариев. Будьте первым!',
       myScoresTitle: '📊 Мои результаты', myScoresEmpty: 'Пока нет результатов. Пройдите тест!',
       loading: 'Загрузка...', online: 'Онлайн', offline: 'Офлайн', submit: 'Отправить', cancel: 'Отмена', confirm: 'Подтвердить', close: 'Закрыть',
@@ -704,7 +772,7 @@
       registerFailed: 'Ошибка регистрации', loginFailed: 'Ошибка входа',
       guestModeTip: 'Гостевой режим даёт полный доступ. Войдите, чтобы редактировать имя и профиль.',
       confirmLogout: 'Удалить локальное состояние входа? Результаты в базе данных сохранятся.', operationFailed: 'Операция не удалась',
-      startTest: 'Начать тест', testAgain: 'Повторить', yourResult: 'Ваш результат', bestRecord: 'Лучший результат',
+      startTest: 'Начать тест', testAgain: 'Повторить', shareScore: 'Поделиться результатом', yourResult: 'Ваш результат', bestRecord: 'Лучший результат',
       footerPrivacy: 'Политика конфиденциальности', footerTerms: 'Условия использования',
       commentEmpty: 'Комментарий не может быть пустым',
       commentTooLong: 'Комментарий превышает 500 символов',
@@ -757,8 +825,13 @@
       forumAll: 'Все',
       forumPlaceholder: 'Поделитесь впечатлениями...',
       forumPublish: 'Опубликовать',
+      forumSpamFilter: 'Фильтровать бессмысленный или опасный контент',
+      spamFilteredAll: 'Контент отфильтрован',
+      spamFilteredAllDesc: 'Снимите флажок «Фильтровать бессмысленный или опасный контент», чтобы увидеть отфильтрованные записи.',
       guestCanComment: 'Гости могут комментировать. Войдите, чтобы редактировать имя и профиль.',
       lbEmptyFirst: 'Пока нет рекордов. Будьте первым!',
+      lbDiagClean: 'Отфильтровано {n} тестовых/заглушечных записей (осталось {m})',
+      lbEmptyTitle: 'Нет данных', personalGuestTitle: 'Гостевой режим', forumEmptyTitle: 'Нет обсуждений', startTestCta: 'Начать тест',
       guestRecordTip: 'Результаты сохраняются в гостевом или авторизованном режиме',
       guestPrefix: 'Гость',
       user: 'Пользователь',
@@ -769,7 +842,7 @@
     pt: {
       siteTitle: 'APEXON — Testes de habilidades',
       navHome: 'Início', navMusic: 'APEXON Music', navReaction: 'Reação', navType: 'Digitação', navStick: 'Atenção',
-      navNumber: 'Memória numérica', navVerbal: 'Memória verbal', navVisual: 'Memória visual', navAim: 'Mira', navSequence: 'Memória sequencial',
+      navNumber: 'Memória numérica', navVerbal: 'Memória verbal', navVisual: 'Memória visual', navAim: 'Mira', navSequence: 'Memória sequencial', navStroop: 'Teste Stroop', navNback: 'Teste N-Back', navTaskswitch: 'Teste de troca de tarefa', navVisualsearch: 'Busca visual',
       menuOpen: 'Abrir menu', themeToggle: 'Alternar tema', langSelector: 'Selecionar idioma',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo de testes de habilidades cognitivas',
       statOnline: 'Online', statTotalUsers: 'Jogadores', statTotalTests: 'Testes',
@@ -782,8 +855,12 @@
       cardVisualTitle: 'Teste de memória visual', cardVisualDesc: 'Lembre-se das posições dos blocos piscantes',
       cardAimTitle: 'Treino de mira', cardAimDesc: 'Clique rápida e precisamente nos alvos',
       cardSequenceTitle: 'Teste de memória sequencial', cardSequenceDesc: 'Reproduza as sequências piscantes',
+      cardStroopTitle: 'Teste Stroop', cardStroopDesc: 'Ignorar o significado, julgar a cor',
+      cardNbackTitle: 'Teste N-Back', cardNbackDesc: 'Comparar com o estímulo de N passos atrás',
+      visualsearchTitle: 'Teste de busca visual',
+      cardVisualsearchTitle: 'Teste de busca visual', cardVisualsearchDesc: 'Encontre o alvo entre distratores, de 4×4 a 8×8, para medir a eficiência da busca visual',
       leaderboardTitle: '🏆 Ranking', lbReaction: 'Reação', lbType: 'Digitação', lbStick: 'Atenção', lbNumber: 'Números',
-      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Mira', lbSequence: 'Sequência', lbEmpty: 'Ainda não há pontuações',
+      lbVerbal: 'Verbal', lbVisual: 'Visual', lbAim: 'Mira', lbSequence: 'Sequência', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Busca visual', lbEmpty: 'Ainda não há pontuações',
       discussionTitle: '💬 Discussão', discussionEmpty: 'Ainda não há comentários. Seja o primeiro!',
       myScoresTitle: '📊 Minhas pontuações', myScoresEmpty: 'Ainda não há pontuações. Faça um teste!',
       loading: 'Carregando...', online: 'Online', offline: 'Offline', submit: 'Enviar', cancel: 'Cancelar', confirm: 'Confirmar', close: 'Fechar',
@@ -795,7 +872,7 @@
       registerFailed: 'Falha no cadastro', loginFailed: 'Falha no login',
       guestModeTip: 'O modo convidado tem acesso completo. Faça login para editar usuário e perfil.',
       confirmLogout: 'Remover o estado de login local? As pontuações no banco de dados serão mantidas.', operationFailed: 'Operação falhou',
-      startTest: 'Iniciar teste', testAgain: 'Tentar novamente', yourResult: 'Sua pontuação', bestRecord: 'Melhor marca',
+      startTest: 'Iniciar teste', testAgain: 'Tentar novamente', shareScore: 'Compartilhar pontuação', yourResult: 'Sua pontuação', bestRecord: 'Melhor marca',
       footerPrivacy: 'Política de privacidade', footerTerms: 'Termos de serviço',
       commentEmpty: 'O comentário não pode estar vazio',
       commentTooLong: 'O comentário ultrapassa 500 caracteres',
@@ -848,8 +925,13 @@
       forumAll: 'Todos',
       forumPlaceholder: 'Compartilhe sua experiência...',
       forumPublish: 'Publicar',
+      forumSpamFilter: 'Filtrar conteúdo inútil ou perigoso',
+      spamFilteredAll: 'Conteúdo filtrado',
+      spamFilteredAllDesc: 'Desmarque «Filtrar conteúdo inútil ou perigoso» para ver as publicações filtradas.',
       guestCanComment: 'Convidados podem comentar. Faça login para editar usuário e perfil.',
       lbEmptyFirst: 'Ainda não há pontuações. Seja o primeiro!',
+      lbDiagClean: '{n} dados de teste/placeholder filtrados ({m} mantidos)',
+      lbEmptyTitle: 'Sem dados', personalGuestTitle: 'Modo convidado', forumEmptyTitle: 'Sem discussões', startTestCta: 'Iniciar teste',
       guestRecordTip: 'Pontuações são salvas no modo convidado ou logado',
       guestPrefix: 'Convidado',
       user: 'Usuário',
@@ -860,7 +942,7 @@
     it: {
       siteTitle: 'APEXON — Test di abilità',
       navHome: 'Home', navMusic: 'APEXON Music', navReaction: 'Reazione', navType: 'Battitura', navStick: 'Attenzione',
-      navNumber: 'Memoria numerica', navVerbal: 'Memoria verbale', navVisual: 'Memoria visiva', navAim: 'Mira', navSequence: 'Memoria sequenziale',
+      navNumber: 'Memoria numerica', navVerbal: 'Memoria verbale', navVisual: 'Memoria visiva', navAim: 'Mira', navSequence: 'Memoria sequenziale', navStroop: 'Test Stroop', navNback: 'Test N-Back', navTaskswitch: 'Test di cambio compito', navVisualsearch: 'Ricerca visiva',
       menuOpen: 'Apri menu', themeToggle: 'Cambia tema', langSelector: 'Seleziona lingua',
       heroTitle: 'APEXON', heroTagline: 'Sistema completo di test delle abilità cognitive',
       statOnline: 'Online', statTotalUsers: 'Giocatori', statTotalTests: 'Test',
@@ -873,8 +955,12 @@
       cardVisualTitle: 'Test di memoria visiva', cardVisualDesc: 'Ricorda le posizioni dei blocchi lampeggianti',
       cardAimTitle: 'Allenamento di mira', cardAimDesc: 'Clicca velocemente e con precisione sui bersagli',
       cardSequenceTitle: 'Test di memoria sequenziale', cardSequenceDesc: 'Riproduci le sequenze lampeggianti',
+      cardStroopTitle: 'Test Stroop', cardStroopDesc: 'Ignorare il significato, giudicare il colore',
+      cardNbackTitle: 'Test N-Back', cardNbackDesc: 'Confronta con lo stimolo di N passi fa',
+      visualsearchTitle: 'Test di ricerca visiva',
+      cardVisualsearchTitle: 'Test di ricerca visiva', cardVisualsearchDesc: 'Trova il bersaglio tra i distrattori, dal 4×4 all\'8×8, per misurare l\'efficienza della ricerca visiva',
       leaderboardTitle: '🏆 Classifica', lbReaction: 'Reazione', lbType: 'Battitura', lbStick: 'Attenzione', lbNumber: 'Numeri',
-      lbVerbal: 'Verbale', lbVisual: 'Visiva', lbAim: 'Mira', lbSequence: 'Sequenza', lbEmpty: 'Ancora nessun punteggio',
+      lbVerbal: 'Verbale', lbVisual: 'Visiva', lbAim: 'Mira', lbSequence: 'Sequenza', lbStroop: 'Stroop', lbNback: 'N-Back', lbVisualsearch: 'Ricerca visiva', lbEmpty: 'Ancora nessun punteggio',
       discussionTitle: '💬 Discussioni', discussionEmpty: 'Ancora nessun commento. Sii il primo!',
       myScoresTitle: '📊 I miei punteggi', myScoresEmpty: 'Ancora nessun punteggio. Fai un test!',
       loading: 'Caricamento...', online: 'Online', offline: 'Offline', submit: 'Invia', cancel: 'Annulla', confirm: 'Conferma', close: 'Chiudi',
@@ -886,7 +972,7 @@
       registerFailed: 'Registrazione fallita', loginFailed: 'Accesso fallito',
       guestModeTip: 'La modalità ospite offre accesso completo. Accedi per modificare nome utente e profilo.',
       confirmLogout: 'Eliminare lo stato di accesso locale? I punteggi nel database verranno conservati.', operationFailed: 'Operazione fallita',
-      startTest: 'Inizia test', testAgain: 'Riprova', yourResult: 'Il tuo punteggio', bestRecord: 'Miglior punteggio',
+      startTest: 'Inizia test', testAgain: 'Riprova', shareScore: 'Condividi punteggio', yourResult: 'Il tuo punteggio', bestRecord: 'Miglior punteggio',
       footerPrivacy: 'Informativa sulla privacy', footerTerms: 'Termini di servizio',
       commentEmpty: 'Il commento non può essere vuoto',
       commentTooLong: 'Il commento supera i 500 caratteri',
@@ -939,8 +1025,13 @@
       forumAll: 'Tutti',
       forumPlaceholder: 'Condividi la tua esperienza...',
       forumPublish: 'Pubblica',
+      forumSpamFilter: 'Filtra contenuti inutili o pericolosi',
+      spamFilteredAll: 'Contenuti filtrati',
+      spamFilteredAllDesc: 'Deseleziona «Filtra contenuti inutili o pericolosi» per vedere i post filtrati.',
       guestCanComment: 'Gli ospiti possono commentare. Accedi per modificare nome utente e profilo.',
       lbEmptyFirst: 'Ancora nessun punteggio. Sii il primo!',
+      lbDiagClean: 'Filtrati {n} dati di test/placeholder (conservati {m})',
+      lbEmptyTitle: 'Nessun dato', personalGuestTitle: 'Modalità ospite', forumEmptyTitle: 'Nessuna discussione', startTestCta: 'Inizia test',
       guestRecordTip: 'I punteggi vengono salvati in modalità ospite o logata',
       guestPrefix: 'Ospite',
       user: 'Utente',
@@ -954,17 +1045,75 @@
     current: DEFAULT_LANG,
 
     init() {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      // 页面级翻译注入：允许每个静态页通过 window.APEXON_PAGE_I18N 附带自己的 10 语言字典，
+      // 在 apply 之前合并进全局，使静态内容页（关于/隐私/条款/404/音乐）也能跟随当前语言切换。
+      if (global.APEXON_PAGE_I18N && typeof global.APEXON_PAGE_I18N === 'object') {
+        Object.keys(global.APEXON_PAGE_I18N).forEach((pgLang) => {
+          if (!TRANSLATIONS[pgLang]) TRANSLATIONS[pgLang] = {};
+          Object.assign(TRANSLATIONS[pgLang], global.APEXON_PAGE_I18N[pgLang]);
+        });
+      }
+      let saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) { /* 隐私模式等场景下 localStorage 不可用 */ }
       const preferred = saved || this.detectBrowserLang();
       this.setLang(preferred, false);
       this.injectSelector();
       this.apply();
+
+      // 若用户从未手动选择语言，则异步按 IP 所在国家自动推断语言；
+      // 不重复保存，避免覆盖用户的后续选择，也不阻塞首屏渲染。
+      if (!saved) {
+        this.detectByIP().then((ipLang) => {
+          if (ipLang && ipLang !== this.current && !localStorage.getItem(STORAGE_KEY)) {
+            this.setLang(ipLang, true);
+          }
+        });
+      }
     },
 
     detectBrowserLang() {
       const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      const map = { 'zh': 'zh', 'zh-cn': 'zh', 'zh-tw': 'zh', 'zh-hk': 'zh', 'en': 'en', 'en-us': 'en', 'en-gb': 'en', 'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de', 'es': 'es', 'ru': 'ru', 'pt': 'pt', 'it': 'it' };
+      const map = { 'zh': 'zh', 'zh-cn': 'zh', 'zh-tw': 'zh', 'zh-hk': 'zh', 'zh-mo': 'zh', 'zh-sg': 'zh', 'en': 'en', 'en-us': 'en', 'en-gb': 'en', 'ja': 'ja', 'ko': 'ko', 'fr': 'fr', 'de': 'de', 'es': 'es', 'ru': 'ru', 'pt': 'pt', 'it': 'it' };
       return map[lang] || DEFAULT_LANG;
+    },
+
+    // 根据用户 IP 所在国家推断可能的语言。为纯静态站，采用免鉴权的 IP 地理查询，
+    // 仅在用户此前从未手动选择语言时才启用，避免覆盖用户明确选择。
+    COUNTRY_LANG: {
+      CN: 'zh', TW: 'zh', HK: 'zh', MO: 'zh', SG: 'zh', MY: 'zh',
+      US: 'en', GB: 'en', AU: 'en', CA: 'en', IE: 'en', NZ: 'en', IN: 'en', PH: 'en', NG: 'en', ZA: 'en',
+      JP: 'ja', KR: 'ko',
+      FR: 'fr', BE: 'fr', CH: 'fr', LU: 'fr',
+      DE: 'de', AT: 'de', 'DE-CH': 'de',
+      ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es', VE: 'es', EC: 'es', GT: 'es', CU: 'es', BO: 'es', DO: 'es', HN: 'es', PY: 'es', SV: 'es', NI: 'es', CR: 'es', PA: 'es', PR: 'es', UY: 'es',
+      RU: 'ru', BY: 'ru', KZ: 'ru', UA: 'ru',
+      BR: 'pt', PT: 'pt', AO: 'pt', MZ: 'pt',
+      IT: 'it', SM: 'it', VA: 'it'
+    },
+
+    detectByIP() {
+      // 已有用户明确选择，不再用 IP 干预
+      let saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+      if (saved) return Promise.resolve(null);
+
+      const urls = [
+        'https://ipwho.is/',
+        'https://ipapi.co/json/'
+      ];
+      const tryUrl = (url) => {
+        return fetch(url, { mode: 'cors' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+      };
+      const seq = urls.reduce((p, u) => p.then(m => m || tryUrl(u)), Promise.resolve(null));
+
+      return Promise.race([
+        seq,
+        new Promise(res => setTimeout(() => res(null), 4000))
+      ]).then((data) => {
+        if (!data) return null;
+        const code = (data.country_code || data.alpha2 || data.country || '').toUpperCase();
+        return this.COUNTRY_LANG[code] || null;
+      });
     },
 
     setLang(lang, persist = true) {
@@ -972,7 +1121,7 @@
       this.current = lang;
       const htmlLang = { zh: 'zh-CN', en: 'en', ja: 'ja', ko: 'ko', fr: 'fr', de: 'de', es: 'es', ru: 'ru', pt: 'pt', it: 'it' };
       document.documentElement.lang = htmlLang[lang] || 'en';
-      if (persist) localStorage.setItem(STORAGE_KEY, lang);
+      if (persist) { try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) { /* localStorage 不可用时静默跳过 */ } }
       this.apply();
       this.updateSelector();
       const loginModal = document.getElementById('apex-login-modal');
@@ -1052,6 +1201,16 @@
         e.stopPropagation();
         const expanded = dropdown.classList.toggle('is-open');
         btn.setAttribute('aria-expanded', expanded);
+        if (expanded) {
+          // 互斥：打开语言面板时关闭其余顶栏设置面板
+          document.querySelectorAll('.apex-style-panel.is-open').forEach(p => p.classList.remove('is-open'));
+          const pp = document.querySelector('.apex-palette-panel');
+          if (pp) pp.setAttribute('hidden', '');
+          const ud = document.getElementById('apexUserDropdown');
+          if (ud) ud.classList.remove('show');
+          const hd = document.getElementById('headerDropdown');
+          if (hd) hd.classList.remove('open');
+        }
       });
 
       document.addEventListener('click', () => {
@@ -1140,7 +1299,27 @@
       engineLoadFailed: '测试引擎加载失败，请刷新页面重试。',
       feedbackNameRequired: '请填写姓名', feedbackEmailRequired: '请填写邮箱', feedbackEmailInvalid: '邮箱格式不正确', feedbackContentRequired: '请填写反馈内容', feedbackSubmitFailed: '提交失败，请重试',
       feedbackSubject: 'APEXON 反馈', feedbackNameLabel: '姓名：', feedbackEmailLabel: '邮箱：', feedbackBodyLabel: '反馈内容：', feedbackOpeningClient: '正在打开邮件客户端，请发送邮件…',
-      aimOverlayStart: '点击开始'
+      aimOverlayStart: '点击开始',
+      // 音乐页
+      musicDiscover: '发现', musicDailyRecom: '今日推荐', musicHotRecom: '热门推荐', musicSearch: '搜索音乐',
+      musicMyMusic: '我的音乐', musicLiked: '我喜欢', musicRecent: '最近播放',
+      musicHeroDaily: '每日推荐', musicHeroTitle: '发现无版权独立音乐',
+      musicHeroDesc: 'APEXON Music 汇聚来自全球独立音乐人的 Creative Commons 授权作品，所有曲目均可免费在线收听，无需担心版权风险。你可以通过智能搜索快速找到心仪歌曲，也可以按电子、摇滚、流行、爵士、古典、氛围等分类标签探索新音乐；遇到喜欢的作品，一键收藏到"我喜欢"，随时在"最近播放"中找回听过的旋律。播放器配备底部常驻控制栏，支持进度拖拽、音量调节与列表循环、单曲循环、随机播放三种模式，无论是在能力测试后放松身心，还是在工作学习时寻找节奏陪伴，APEXON Music 都能为你带来流畅、沉浸的高品质音乐体验。',
+      musicPlayNow: '立即播放',
+      musicSearchPlaceholder: '搜索歌曲、艺人、专辑...', musicSearchResults: '搜索结果',
+      musicCatAll: '全部', musicCatElectronic: '电子', musicCatRock: '摇滚', musicCatPop: '流行',
+      musicCatJazz: '爵士', musicCatClassical: '古典', musicCatAmbient: '氛围',
+      musicHotRecomTitle: '热门推荐', musicHotRecomSub: '本周最受欢迎的独立音乐', musicHotChartSub: '全网独立音乐热门榜单',
+      musicRecentTitle: '最近播放', musicRecentSub: '你刚刚听过的音乐', musicRecentSubAll: '最近 200 首播放记录',
+      musicLikedTitle: '我喜欢的音乐', musicLikedSub: '你收藏的所有歌曲', musicViewAll: '查看全部',
+      musicLyrics: '歌词', musicLyricsEmpty: '播放歌曲即可查看歌词',
+      musicModeTitle: '循环模式', musicPrevTitle: '上一首', musicPlayPauseTitle: '播放/暂停', musicNextTitle: '下一首', musicLikeTitle: '收藏',
+      musPlayFirst: '请先播放一首歌曲', musLoadFailed: '音频加载失败，请检查网络或稍后重试', musPlayMode: '播放模式：{mode}',
+      musModeLoop: '列表循环', musModeSingle: '单曲循环', musModeRandom: '随机播放', musPlayFailed: '播放失败，可能是网络或音频链接失效',
+      musUnliked: '已取消喜欢', musLikedMsg: '已添加到「我喜欢」', musLyricsSearching: '正在搜索歌词...', musLyricsNotFound: '未找到该歌曲的歌词', musLyricsNone: '暂无歌词',
+      musSearchTitle: '搜索：{q}', musSearching: '正在搜索...', musSearchEmpty: '没有找到相关歌曲', musSearchEmptyTip: '换个关键词试试，或者检查一下 Jamendo client_id 是否已配置。',
+      musRecentEmpty: '暂无最近播放', musRecentEmptyTip: '点击任意歌曲开始收听', musLikedEmpty: '暂无喜欢的歌曲', musLikedEmptyTip: '点击 ♡ 收藏喜欢的音乐',
+      musColSong: '歌曲', musColArtist: '艺人', musColDuration: '时长', musColAction: '操作', musNoDownload: '暂不提供下载', musActionNoDownload: '暂不提供下载'
     },
     en: {
       genderMale: 'Male', genderFemale: 'Female', genderSecret: 'Secret', genderLabel: 'Gender',
@@ -1184,7 +1363,27 @@
       engineLoadFailed: 'Test engine failed to load. Please refresh the page and try again.',
       feedbackNameRequired: 'Please enter your name', feedbackEmailRequired: 'Please enter your email', feedbackEmailInvalid: 'Invalid email format', feedbackContentRequired: 'Please enter your feedback', feedbackSubmitFailed: 'Submission failed, please try again',
       feedbackSubject: 'APEXON Feedback', feedbackNameLabel: 'Name: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Opening email client…',
-      aimOverlayStart: 'Click to start'
+      aimOverlayStart: 'Click to start',
+      // Music page
+      musicDiscover: 'Discover', musicDailyRecom: 'Daily Picks', musicHotRecom: 'Trending', musicSearch: 'Search Music',
+      musicMyMusic: 'My Music', musicLiked: 'Liked', musicRecent: 'Recently Played',
+      musicHeroDaily: 'Daily Picks', musicHeroTitle: 'Discover License-Free Indie Music',
+      musicHeroDesc: 'APEXON Music brings together Creative Commons licensed works from independent artists around the globe. Every track is free to stream online with no copyright worries. Use smart search to quickly find the song you want, or explore new music through genre tags such as Electronic, Rock, Pop, Jazz, Classical and Ambient. Like a track and bookmark it to "Liked" in one click, and revisit any melody in "Recently Played" anytime. The player features a docked control bar with seek, volume and three play modes: list loop, single loop and shuffle. Whether you relax after a skill test or seek a rhythm to accompany work and study, APEXON Music delivers a smooth, immersive, high-quality audio experience.',
+      musicPlayNow: 'Play Now',
+      musicSearchPlaceholder: 'Search songs, artists, albums...', musicSearchResults: 'Search Results',
+      musicCatAll: 'All', musicCatElectronic: 'Electronic', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classical', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Trending', musicHotRecomSub: 'Most Popular Indie Music This Week', musicHotChartSub: 'Top Chart of Indie Music',
+      musicRecentTitle: 'Recently Played', musicRecentSub: 'Music you just listened to', musicRecentSubAll: 'Last 200 plays',
+      musicLikedTitle: 'Liked Music', musicLikedSub: 'All your bookmarked songs', musicViewAll: 'View All',
+      musicLyrics: 'Lyrics', musicLyricsEmpty: 'Play a song to view lyrics',
+      musicModeTitle: 'Loop Mode', musicPrevTitle: 'Previous', musicPlayPauseTitle: 'Play/Pause', musicNextTitle: 'Next', musicLikeTitle: 'Like',
+      musPlayFirst: 'Please play a song first', musLoadFailed: 'Failed to load audio, please check your network or try again later', musPlayMode: 'Play mode: {mode}',
+      musModeLoop: 'List loop', musModeSingle: 'Single loop', musModeRandom: 'Shuffle', musPlayFailed: 'Playback failed, the network or audio link may be invalid',
+      musUnliked: 'Removed from favorites', musLikedMsg: 'Added to your favorites', musLyricsSearching: 'Searching lyrics...', musLyricsNotFound: 'No lyrics found for this song', musLyricsNone: 'No lyrics',
+      musSearchTitle: 'Search: {q}', musSearching: 'Searching...', musSearchEmpty: 'No matching songs found', musSearchEmptyTip: 'Try a different keyword, or check whether the Jamendo client_id is configured.',
+      musRecentEmpty: 'No recent plays', musRecentEmptyTip: 'Click any song to start listening', musLikedEmpty: 'No liked songs', musLikedEmptyTip: 'Click ♡ to favorite the music you like',
+      musColSong: 'Song', musColArtist: 'Artist', musColDuration: 'Duration', musColAction: 'Actions', musNoDownload: 'Download not available', musActionNoDownload: 'Download not available'
     },
     ja: {
       genderMale: '男性', genderFemale: '女性', genderSecret: '秘密', genderLabel: '性別',
@@ -1228,7 +1427,27 @@
       engineLoadFailed: 'テストエンジンの読み込みに失敗しました。ページを更新して再試行してください。',
       feedbackNameRequired: '名前を入力してください', feedbackEmailRequired: 'メールアドレスを入力してください', feedbackEmailInvalid: 'メールアドレスの形式が正しくありません', feedbackContentRequired: 'フィードバック内容を入力してください', feedbackSubmitFailed: '送信に失敗しました',
       feedbackSubject: 'APEXON フィードバック', feedbackNameLabel: '名前：', feedbackEmailLabel: 'メール：', feedbackBodyLabel: 'フィードバック内容：', feedbackOpeningClient: 'メールクライアントを開いています…',
-      aimOverlayStart: 'クリックして開始'
+      aimOverlayStart: 'クリックして開始',
+      // 音楽ページ
+      musicDiscover: '発見', musicDailyRecom: '今日のおすすめ', musicHotRecom: '人気', musicSearch: '音楽を検索',
+      musicMyMusic: 'マイミュージック', musicLiked: 'いいね', musicRecent: '最近再生',
+      musicHeroDaily: 'デイリーピック', musicHeroTitle: '著作権フリーのインディーズ音楽を発見',
+      musicHeroDesc: 'APEXON Music は世界中のインディーズアーティストによる Creative Commons ライセンス作品を集めています。全曲を無料でオンライン再生でき、著作権の心配は不要です。スマート検索でお気に入りの曲をすぐに見つけられ、エレクトロニック、ロック、ポップ、ジャズ、クラシック、アンビエントなどのカテゴリタグで新しい音楽を探索できます。気に入った曲はワンクリックで「いいね」に保存し、「最近再生」からいつでもメロディを再確認できます。プレイヤーには下部常駐コントロールバーがあり、シーク、音量調整、リストリピート、シングルリピート、シャッフルの3つの再生モードに対応しています。能力テスト後のリラックスにも、仕事や勉強のリズム伴奏としても、APEXON Music はなめらかで臨場感のある高品質な音楽体験をお届けします。',
+      musicPlayNow: '今すぐ再生',
+      musicSearchPlaceholder: '曲、アーティスト、アルバムを検索...', musicSearchResults: '検索結果',
+      musicCatAll: 'すべて', musicCatElectronic: 'エレクトロニック', musicCatRock: 'ロック', musicCatPop: 'ポップ',
+      musicCatJazz: 'ジャズ', musicCatClassical: 'クラシック', musicCatAmbient: 'アンビエント',
+      musicHotRecomTitle: '人気', musicHotRecomSub: '今週最も人気のインディーズ音楽', musicHotChartSub: 'インディーズ音楽の総合ランキング',
+      musicRecentTitle: '最近再生', musicRecentSub: '先ほど聴いた曲', musicRecentSubAll: '最近 200 曲の再生履歴',
+      musicLikedTitle: 'いいねした音楽', musicLikedSub: 'お気に入り登録したすべての曲', musicViewAll: 'すべて見る',
+      musicLyrics: '歌詞', musicLyricsEmpty: '曲を再生すると歌詞を表示します',
+      musicModeTitle: 'ループモード', musicPrevTitle: '前へ', musicPlayPauseTitle: '再生/一時停止', musicNextTitle: '次へ', musicLikeTitle: 'お気に入り',
+      musPlayFirst: '先に曲を再生してください', musLoadFailed: '音声の読み込みに失敗しました。ネットワークを確認するか、後でもう一度お試しください', musPlayMode: '再生モード：{mode}',
+      musModeLoop: 'リストループ', musModeSingle: '単曲リピート', musModeRandom: 'シャッフル再生', musPlayFailed: '再生に失敗しました。ネットワークまたは音声リンクが無効な可能性があります',
+      musUnliked: 'お気に入りを解除しました', musLikedMsg: '「お気に入り」に追加しました', musLyricsSearching: '歌詞を検索中...', musLyricsNotFound: 'この曲の歌詞が見つかりません', musLyricsNone: '歌詞はありません',
+      musSearchTitle: '検索：{q}', musSearching: '検索中...', musSearchEmpty: '関連する曲が見つかりません', musSearchEmptyTip: '別のキーワードをお試しください。Jamendo の client_id が設定されているかもご確認ください。',
+      musRecentEmpty: '最近の再生はありません', musRecentEmptyTip: '任意の曲をクリックして再生を開始', musLikedEmpty: 'お気に入りの曲はありません', musLikedEmptyTip: '♡ をクリックして好きな音楽を登録',
+      musColSong: '曲', musColArtist: 'アーティスト', musColDuration: '時間', musColAction: '操作', musNoDownload: 'ダウンロードは提供していません', musActionNoDownload: 'ダウンロードは提供していません'
     },
     ko: {
       genderMale: '남성', genderFemale: '여성', genderSecret: '비공개', genderLabel: '성별',
@@ -1272,7 +1491,27 @@
       engineLoadFailed: '테스트 엔진을 불러오지 못했습니다. 페이지를 새로고침해 주세요.',
       feedbackNameRequired: '이름을 입력하세요', feedbackEmailRequired: '이메일을 입력하세요', feedbackEmailInvalid: '이메일 형식이 올바르지 않습니다', feedbackContentRequired: '피드백 내용을 입력하세요', feedbackSubmitFailed: '제출 실패',
       feedbackSubject: 'APEXON 피드백', feedbackNameLabel: '이름：', feedbackEmailLabel: '이메일：', feedbackBodyLabel: '피드백 내용：', feedbackOpeningClient: '이메일 클라이언트를 여는 중…',
-      aimOverlayStart: '클릭하여 시작'
+      aimOverlayStart: '클릭하여 시작',
+      // 음악 페이지
+      musicDiscover: '발견', musicDailyRecom: '오늘의 추천', musicHotRecom: '인기', musicSearch: '음악 검색',
+      musicMyMusic: '내 음악', musicLiked: '좋아요', musicRecent: '최근 재생',
+      musicHeroDaily: '데일리 픽', musicHeroTitle: '저작권 없는 인디 음악 발견',
+      musicHeroDesc: 'APEXON Music은 전 세계 인디 아티스트들의 Creative Commons 라이선스 작품을 모았습니다. 모든 트랙을 무료로 온라인에서 들을 수 있으며 저작권 걱정이 필요 없습니다. 스마트 검색으로 원하는 노래를 빠르게 찾고, 일렉트로닉, 록, 팝, 재즈, 클래식, 앰비언트 등 카테고리 태그로 새로운 음악을 탐색하세요. 마음에 드는 곡은 원클릭으로 "좋아요"에 저장하고 "최근 재생"에서 언제든 다시 들을 수 있습니다. 플레이어에는 하단 고정 컨트롤 바가 있으며 탐색, 볼륨 조절, 목록 반복, 한 곡 반복, 셔플 등 세 가지 재생 모드를 지원합니다. 능력 테스트 후 휴식할 때든, 일이나 공부에 리듬이 필요할 때든 APEXON Music은 부드럽고 몰입감 있는 고품질 음악 경험을 선사합니다.',
+      musicPlayNow: '지금 재생',
+      musicSearchPlaceholder: '노래, 아티스트, 앨범 검색...', musicSearchResults: '검색 결과',
+      musicCatAll: '전체', musicCatElectronic: '일렉트로닉', musicCatRock: '록', musicCatPop: '팝',
+      musicCatJazz: '재즈', musicCatClassical: '클래식', musicCatAmbient: '앰비언트',
+      musicHotRecomTitle: '인기', musicHotRecomSub: '이번 주 가장 인기 있는 인디 음악', musicHotChartSub: '전체 인디 음악 인기 차트',
+      musicRecentTitle: '최근 재생', musicRecentSub: '방금 들었던 음악', musicRecentSubAll: '최근 200곡 재생 기록',
+      musicLikedTitle: '좋아하는 음악', musicLikedSub: '저장한 모든 노래', musicViewAll: '모두 보기',
+      musicLyrics: '가사', musicLyricsEmpty: '노래를 재생하면 가사가 표시됩니다',
+      musicModeTitle: '반복 모드', musicPrevTitle: '이전 곡', musicPlayPauseTitle: '재생/일시정지', musicNextTitle: '다음 곡', musicLikeTitle: '좋아요',
+      musPlayFirst: '먼저 노래를 재생해 주세요', musLoadFailed: '오디오를 불러오지 못했습니다. 네트워크를 확인하거나 나중에 다시 시도해 주세요', musPlayMode: '재생 모드: {mode}',
+      musModeLoop: '목록 반복', musModeSingle: '한 곡 반복', musModeRandom: '랜덤 재생', musPlayFailed: '재생에 실패했습니다. 네트워크 또는 오디오 링크가 유효하지 않을 수 있습니다',
+      musUnliked: '좋아요를 취소했습니다', musLikedMsg: '「좋아요」에 추가했습니다', musLyricsSearching: '가사를 검색 중...', musLyricsNotFound: '이 노래의 가사를 찾을 수 없습니다', musLyricsNone: '가사가 없습니다',
+      musSearchTitle: '검색: {q}', musSearching: '검색 중...', musSearchEmpty: '관련 노래를 찾지 못했습니다', musSearchEmptyTip: '다른 키워드로 시도하거나 Jamendo client_id가 설정되어 있는지 확인해 주세요.',
+      musRecentEmpty: '최근 재생이 없습니다', musRecentEmptyTip: '아무 노래나 클릭하여 감상을 시작하세요', musLikedEmpty: '좋아하는 노래가 없습니다', musLikedEmptyTip: '♡을 클릭하여 좋아하는 음악을 등록하세요',
+      musColSong: '노래', musColArtist: '아티스트', musColDuration: '시간', musColAction: '작업', musNoDownload: '다운로드를 제공하지 않습니다', musActionNoDownload: '다운로드를 제공하지 않습니다'
     },
     fr: {
       genderMale: 'Homme', genderFemale: 'Femme', genderSecret: 'Secret', genderLabel: 'Genre',
@@ -1316,7 +1555,27 @@
       engineLoadFailed: 'Échec du chargement du moteur de test. Veuillez rafraîchir la page.',
       feedbackNameRequired: 'Veuillez saisir votre nom', feedbackEmailRequired: 'Veuillez saisir votre email', feedbackEmailInvalid: 'Format d\'email invalide', feedbackContentRequired: 'Veuillez saisir votre feedback', feedbackSubmitFailed: 'Échec de l\'envoi',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nom : ', feedbackEmailLabel: 'Email : ', feedbackBodyLabel: 'Feedback :', feedbackOpeningClient: 'Ouverture du client de messagerie…',
-      aimOverlayStart: 'Cliquer pour commencer'
+      aimOverlayStart: 'Cliquer pour commencer',
+      // Page musique
+      musicDiscover: 'Découvrir', musicDailyRecom: 'Recommandations du jour', musicHotRecom: 'Tendances', musicSearch: 'Rechercher de la musique',
+      musicMyMusic: 'Ma musique', musicLiked: 'J\'aime', musicRecent: 'Lecture récente',
+      musicHeroDaily: 'Sélection du jour', musicHeroTitle: 'Découvrez la musique indépendante libre de droits',
+      musicHeroDesc: 'L\'APEXON Music rassemble des œuvres sous licence Creative Commons d\'artistes indépendants du monde entier. Tous les morceaux sont gratuits à écouter en ligne, sans souci de droits. Utilisez la recherche intelligente pour trouver rapidement la chanson qui vous convient, ou explorez de nouvelles musiques via des étiquettes de catégorie comme Électronique, Rock, Pop, Jazz, Classique et Ambient. Aimez une œuvre et enregistrez-la en un clic dans « J\'aime », puis retrouvez vos mélodies à tout moment dans « Lecture récente ». Le lecteur dispose d\'une barre de contrôle fixe en bas avec recherche, réglage du volume et trois modes de lecture : boucle de liste, boucle unique et lecture aléatoire. Que vous vous détendiez après un test d\'aptitude ou cherchiez un rythme d\'accompagnement pour travailler ou étudier, l\'APEXON Music offre une expérience audio fluide, immersive et de haute qualité.',
+      musicPlayNow: 'Écouter maintenant',
+      musicSearchPlaceholder: 'Rechercher chansons, artistes, albums...', musicSearchResults: 'Résultats de recherche',
+      musicCatAll: 'Tout', musicCatElectronic: 'Électronique', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classique', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Tendances', musicHotRecomSub: 'Meilleure musique indépendante cette semaine', musicHotChartSub: 'Classement de la musique indépendante',
+      musicRecentTitle: 'Lecture récente', musicRecentSub: 'La musique que vous venez d\'écouter', musicRecentSubAll: '200 dernières écoutes',
+      musicLikedTitle: 'Musique aimée', musicLikedSub: 'Toutes les chansons que vous avez enregistrées', musicViewAll: 'Tout voir',
+      musicLyrics: 'Paroles', musicLyricsEmpty: 'Écoutez un morceau pour voir les paroles',
+      musicModeTitle: 'Mode de boucle', musicPrevTitle: 'Précédent', musicPlayPauseTitle: 'Lecture/Pause', musicNextTitle: 'Suivant', musicLikeTitle: 'Aimer',
+      musPlayFirst: 'Veuillez d\'abord écouter une chanson', musLoadFailed: 'Échec du chargement audio, vérifiez votre réseau ou réessayez plus tard', musPlayMode: 'Mode de lecture : {mode}',
+      musModeLoop: 'Boucle de liste', musModeSingle: 'Répétition de piste', musModeRandom: 'Lecture aléatoire', musPlayFailed: 'Échec de la lecture, le réseau ou le lien audio est peut-être invalide',
+      musUnliked: 'Retiré des favoris', musLikedMsg: 'Ajouté à « Mes favoris »', musLyricsSearching: 'Recherche des paroles...', musLyricsNotFound: 'Aucune parole trouvée pour cette chanson', musLyricsNone: 'Aucune parole',
+      musSearchTitle: 'Recherche : {q}', musSearching: 'Recherche...', musSearchEmpty: 'Aucune chanson trouvée', musSearchEmptyTip: 'Essayez un autre mot-clé ou vérifiez que le client_id de Jamendo est configuré.',
+      musRecentEmpty: 'Aucune lecture récente', musRecentEmptyTip: 'Cliquez sur une chanson pour commencer à écouter', musLikedEmpty: 'Aucune chanson aimée', musLikedEmptyTip: 'Cliquez sur ♡ pour aimer de la musique',
+      musColSong: 'Chanson', musColArtist: 'Artiste', musColDuration: 'Durée', musColAction: 'Actions', musNoDownload: 'Téléchargement non disponible', musActionNoDownload: 'Téléchargement non disponible'
     },
     de: {
       genderMale: 'Männlich', genderFemale: 'Weiblich', genderSecret: 'Geheim', genderLabel: 'Geschlecht',
@@ -1360,7 +1619,27 @@
       engineLoadFailed: 'Test-Engine konnte nicht geladen werden. Bitte aktualisieren Sie die Seite.',
       feedbackNameRequired: 'Bitte Namen eingeben', feedbackEmailRequired: 'Bitte E-Mail eingeben', feedbackEmailInvalid: 'Ungültiges E-Mail-Format', feedbackContentRequired: 'Bitte Feedback eingeben', feedbackSubmitFailed: 'Senden fehlgeschlagen',
       feedbackSubject: 'APEXON Feedback', feedbackNameLabel: 'Name: ', feedbackEmailLabel: 'E-Mail: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'E-Mail-Client wird geöffnet…',
-      aimOverlayStart: 'Klicken zum Starten'
+      aimOverlayStart: 'Klicken zum Starten',
+      // Musikseite
+      musicDiscover: 'Entdecken', musicDailyRecom: 'Heutige Empfehlungen', musicHotRecom: 'Trends', musicSearch: 'Musik suchen',
+      musicMyMusic: 'Meine Musik', musicLiked: 'Gefällt mir', musicRecent: 'Zuletzt gehört',
+      musicHeroDaily: 'Tägliche Auswahl', musicHeroTitle: 'Lizenzfreie Independent-Musik entdecken',
+      musicHeroDesc: 'APEXON Music bündelt Creative-Commons-lizenzierte Werke unabhängiger Künstler aus aller Welt. Alle Titel sind kostenlos online hörbar, ganz ohne Urheberrechtsbedenken. Mit der smarten Suche findest du schnell den passenden Song oder erkundest über Kategorien wie Electronic, Rock, Pop, Jazz, Klassik und Ambient neue Musik. Gefällt dir ein Werk, speicherst du es mit einem Klick unter „Gefällt mir“, jederzeit wiederzufinden unter „Zuletzt gehört“. Der Player bietet eine fixierte Steuerleiste mit Scrubben, Lautstärke und drei Wiedergabemodi: Listen-Wiederholung, Einzeltitel-Wiederholung und Zufallswiedergabe. Ob zur Entspannung nach einem Test oder als Rhythmusbegleitung bei Arbeit und Studium – APEXON Music liefert ein flüssiges, immersives und hochwertiges Klangerlebnis.',
+      musicPlayNow: 'Jetzt abspielen',
+      musicSearchPlaceholder: 'Songs, Künstler, Alben suchen...', musicSearchResults: 'Suchergebnisse',
+      musicCatAll: 'Alle', musicCatElectronic: 'Electronic', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Klassik', musicCatAmbient: 'Ambient',
+      musicHotRecomTitle: 'Trends', musicHotRecomSub: 'Beliebteste Independent-Musik dieser Woche', musicHotChartSub: 'Independent-Musik-Bestenliste',
+      musicRecentTitle: 'Zuletzt gehört', musicRecentSub: 'Musik, die du gerade gehört hast', musicRecentSubAll: 'Letzte 200 Wiedergaben',
+      musicLikedTitle: 'Gefällt mir Musik', musicLikedSub: 'Alle gespeicherten Songs', musicViewAll: 'Alle ansehen',
+      musicLyrics: 'Liedtext', musicLyricsEmpty: 'Spiele einen Song, um die Liedtexte zu sehen',
+      musicModeTitle: 'Wiederholungsmodus', musicPrevTitle: 'Vorheriger', musicPlayPauseTitle: 'Abspielen/Pause', musicNextTitle: 'Nächster', musicLikeTitle: 'Gefällt mir',
+      musPlayFirst: 'Bitte spielen Sie zuerst einen Song ab', musLoadFailed: 'Audio konnte nicht geladen werden. Prüfen Sie die Netzwerkverbindung oder versuchen Sie es später erneut', musPlayMode: 'Wiedergabemodus: {mode}',
+      musModeLoop: 'Liste wiederholen', musModeSingle: 'Einzelnen Titel wiederholen', musModeRandom: 'Zufallswiedergabe', musPlayFailed: 'Wiedergabe fehlgeschlagen, Netzwerk oder Audio-Link ist möglicherweise ungültig',
+      musUnliked: 'Aus den Favoriten entfernt', musLikedMsg: 'Zu „Meine Favoriten" hinzugefügt', musLyricsSearching: 'Liedtexte werden gesucht...', musLyricsNotFound: 'Keine Liedtexte für dieses Lied gefunden', musLyricsNone: 'Keine Liedtexte',
+      musSearchTitle: 'Suche: {q}', musSearching: 'Suche läuft...', musSearchEmpty: 'Keine passenden Lieder gefunden', musSearchEmptyTip: 'Probieren Sie einen anderen Suchbegriff oder prüfen Sie, ob die Jamendo client_id konfiguriert ist.',
+      musRecentEmpty: 'Keine letzten Wiedergaben', musRecentEmptyTip: 'Klicken Sie auf einen beliebigen Song, um mit dem Hören zu beginnen', musLikedEmpty: 'Keine gemochten Lieder', musLikedEmptyTip: 'Klicken Sie auf ♡, um Musik zu markieren',
+      musColSong: 'Song', musColArtist: 'Interpret', musColDuration: 'Dauer', musColAction: 'Aktion', musNoDownload: 'Download nicht verfügbar', musActionNoDownload: 'Download nicht verfügbar'
     },
     es: {
       genderMale: 'Hombre', genderFemale: 'Mujer', genderSecret: 'Secreto', genderLabel: 'Género',
@@ -1404,7 +1683,27 @@
       engineLoadFailed: 'No se pudo cargar el motor de pruebas. Por favor, actualiza la página.',
       feedbackNameRequired: 'Introduce tu nombre', feedbackEmailRequired: 'Introduce tu email', feedbackEmailInvalid: 'Formato de email inválido', feedbackContentRequired: 'Introduce tu feedback', feedbackSubmitFailed: 'Envío fallido',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nombre: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Abriendo cliente de correo…',
-      aimOverlayStart: 'Clic para empezar'
+      aimOverlayStart: 'Clic para empezar',
+      // Página de música
+      musicDiscover: 'Descubrir', musicDailyRecom: 'Recomendaciones de hoy', musicHotRecom: 'Tendencias', musicSearch: 'Buscar música',
+      musicMyMusic: 'Mi música', musicLiked: 'Me gusta', musicRecent: 'Reproducidos recientemente',
+      musicHeroDaily: 'Selección diaria', musicHeroTitle: 'Descubre música independiente sin derechos de autor',
+      musicHeroDesc: 'APEXON Music reúne obras con licencia Creative Commons de artistas independientes de todo el mundo. Todos los temas se pueden escuchar gratis en línea, sin preocupaciones de derechos de autor. Usa la búsqueda inteligente para encontrar rápido la canción que quieres, o explora nueva música con etiquetas de categoría como Electrónica, Rock, Pop, Jazz, Clásica y Ambiental. Ama una obra y guárdala en «Me gusta» con un clic, para recuperar sus melodías en «Reproducidos recientemente» cuando quieras. El reproductor incluye una barra de control fija en la parte inferior con avance, ajuste de volumen y tres modos de reproducción: bucle de lista, bucle único y aleatorio. Ya sea para relajarte tras una prueba o buscar un ritmo para trabajar o estudiar, APEXON Music ofrece una experiencia de audio fluida, inmersiva y de alta calidad.',
+      musicPlayNow: 'Reproducir ahora',
+      musicSearchPlaceholder: 'Buscar canciones, artistas, álbumes...', musicSearchResults: 'Resultados de búsqueda',
+      musicCatAll: 'Todos', musicCatElectronic: 'Electrónica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Clásica', musicCatAmbient: 'Ambiental',
+      musicHotRecomTitle: 'Tendencias', musicHotRecomSub: 'Música independiente más popular esta semana', musicHotChartSub: 'Ranking de música independiente',
+      musicRecentTitle: 'Reproducidos recientemente', musicRecentSub: 'La música que acabas de escuchar', musicRecentSubAll: 'Últimas 200 reproducciones',
+      musicLikedTitle: 'Música que me gusta', musicLikedSub: 'Todas las canciones que has guardado', musicViewAll: 'Ver todo',
+      musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduce una canción para ver la letra',
+      musicModeTitle: 'Modo de bucle', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproducir/Pausar', musicNextTitle: 'Siguiente', musicLikeTitle: 'Me gusta',
+      musPlayFirst: 'Primero reproduce una canción', musLoadFailed: 'Error al cargar el audio, comprueba tu red o inténtalo de nuevo más tarde', musPlayMode: 'Modo de reproducción: {mode}',
+      musModeLoop: 'Repetir lista', musModeSingle: 'Repetir una canción', musModeRandom: 'Reproducción aleatoria', musPlayFailed: 'Error al reproducir, la red o el enlace de audio pueden no ser válidos',
+      musUnliked: 'Eliminado de favoritos', musLikedMsg: 'Añadido a «Mis favoritos»', musLyricsSearching: 'Buscando la letra...', musLyricsNotFound: 'No se encontró la letra de esta canción', musLyricsNone: 'Sin letra',
+      musSearchTitle: 'Buscar: {q}', musSearching: 'Buscando...', musSearchEmpty: 'No se encontraron canciones relacionadas', musSearchEmptyTip: 'Prueba con otra palabra clave o comprueba si el client_id de Jamendo está configurado.',
+      musRecentEmpty: 'Sin reproducciones recientes', musRecentEmptyTip: 'Haz clic en cualquier canción para empezar a escuchar', musLikedEmpty: 'Sin canciones favoritas', musLikedEmptyTip: 'Haz clic en ♡ para guardar la música que te gusta',
+      musColSong: 'Canción', musColArtist: 'Artista', musColDuration: 'Duración', musColAction: 'Acción', musNoDownload: 'Descarga no disponible', musActionNoDownload: 'Descarga no disponible'
     },
     ru: {
       genderMale: 'Мужской', genderFemale: 'Женский', genderSecret: 'Секрет', genderLabel: 'Пол',
@@ -1448,7 +1747,27 @@
       engineLoadFailed: 'Не удалось загрузить тестовый движок. Пожалуйста, обновите страницу.',
       feedbackNameRequired: 'Введите имя', feedbackEmailRequired: 'Введите email', feedbackEmailInvalid: 'Неверный формат email', feedbackContentRequired: 'Введите содержание отзыва', feedbackSubmitFailed: 'Ошибка отправки',
       feedbackSubject: 'Обратная связь APEXON', feedbackNameLabel: 'Имя: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Сообщение:', feedbackOpeningClient: 'Открывается почтовый клиент…',
-      aimOverlayStart: 'Нажмите для старта'
+      aimOverlayStart: 'Нажмите для старта',
+      // Музыкальная страница
+      musicDiscover: 'Обзор', musicDailyRecom: 'Рекомендации дня', musicHotRecom: 'Популярное', musicSearch: 'Поиск музыки',
+      musicMyMusic: 'Моя музыка', musicLiked: 'Нравится', musicRecent: 'Недавнее',
+      musicHeroDaily: 'Ежедневная подборка', musicHeroTitle: 'Открывайте свободную от авторских прав инди-музыку',
+      musicHeroDesc: 'APEXON Music объединяет произведения инди-артистов со всего мира под лицензией Creative Commons. Все треки можно бесплатно слушать онлайн без опасений по поводу авторских прав. С помощью умного поиска вы быстро найдете нужную песню или откроете новую музыку по категориям: электронная, рок, поп, джаз, классика, эмбиент и другим. Понравившееся произведение сохраняйте в избранное «Нравится» одним кликом и в любое время возвращайтесь к мелодиям в разделе «Недавнее». Плеер оснащен закрепленной панелью управления с перемоткой, регулировкой громкости и тремя режимами воспроизведения: по списку, повтором трека и случайным. Будь то отдых после теста или поиск ритма для работы и учебы, APEXON Music дарит плавное, захватывающее и качественное музыкальное впечатление.',
+      musicPlayNow: 'Слушать сейчас',
+      musicSearchPlaceholder: 'Искать песни, исполнителей, альбомы...', musicSearchResults: 'Результаты поиска',
+      musicCatAll: 'Все', musicCatElectronic: 'Электронная', musicCatRock: 'Рок', musicCatPop: 'Поп',
+      musicCatJazz: 'Джаз', musicCatClassical: 'Классика', musicCatAmbient: 'Эмбиент',
+      musicHotRecomTitle: 'Популярное', musicHotRecomSub: 'Самая популярная инди-музыка на этой неделе', musicHotChartSub: 'Рейтинг инди-музыки',
+      musicRecentTitle: 'Недавнее', musicRecentSub: 'Музыка, которую вы только что слушали', musicRecentSubAll: 'Последние 200 треков',
+      musicLikedTitle: 'Понравившаяся музыка', musicLikedSub: 'Все сохраненные песни', musicViewAll: 'Смотреть все',
+      musicLyrics: 'Текст песни', musicLyricsEmpty: 'Воспроизведите песню, чтобы увидеть текст',
+      musicModeTitle: 'Режим повтора', musicPrevTitle: 'Предыдущий', musicPlayPauseTitle: 'Играть/Пауза', musicNextTitle: 'Следующий', musicLikeTitle: 'Нравится',
+      musPlayFirst: 'Сначала воспроизведите песню', musLoadFailed: 'Не удалось загрузить аудио. Проверьте сеть или повторите позже', musPlayMode: 'Режим воспроизведения: {mode}',
+      musModeLoop: 'Повтор списка', musModeSingle: 'Повтор одной песни', musModeRandom: 'Случайное воспроизведение', musPlayFailed: 'Не удалось воспроизвести. Возможно, сети или аудио-ссылка недоступны',
+      musUnliked: 'Убрано из избранного', musLikedMsg: 'Добавлено в «Мне нравится»', musLyricsSearching: 'Поиск текста песни...', musLyricsNotFound: 'Текст для этой песни не найден', musLyricsNone: 'Нет текста',
+      musSearchTitle: 'Поиск: {q}', musSearching: 'Поиск...', musSearchEmpty: 'Подходящие песни не найдены', musSearchEmptyTip: 'Попробуйте другой запрос или проверьте, задан ли client_id Jamendo.',
+      musRecentEmpty: 'Нет недавних воспроизведений', musRecentEmptyTip: 'Нажмите на любую песню, чтобы начать прослушивание', musLikedEmpty: 'Нет понравившихся песен', musLikedEmptyTip: 'Нажмите ♡, чтобы добавить музыку в избранное',
+      musColSong: 'Песня', musColArtist: 'Исполнитель', musColDuration: 'Длительность', musColAction: 'Действие', musNoDownload: 'Скачивание недоступно', musActionNoDownload: 'Скачивание недоступно'
     },
     pt: {
       genderMale: 'Masculino', genderFemale: 'Feminino', genderSecret: 'Secreto', genderLabel: 'Gênero',
@@ -1492,7 +1811,27 @@
       engineLoadFailed: 'Falha ao carregar o motor de teste. Por favor, atualize a página.',
       feedbackNameRequired: 'Digite seu nome', feedbackEmailRequired: 'Digite seu email', feedbackEmailInvalid: 'Email inválido', feedbackContentRequired: 'Digite seu feedback', feedbackSubmitFailed: 'Falha ao enviar',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nome: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Abrindo cliente de email…',
-      aimOverlayStart: 'Clique para começar'
+      aimOverlayStart: 'Clique para começar',
+      // Página de música
+      musicDiscover: 'Descobrir', musicDailyRecom: 'Recomendações do dia', musicHotRecom: 'Tendências', musicSearch: 'Buscar música',
+      musicMyMusic: 'Minha música', musicLiked: 'Curtidas', musicRecent: 'Reproduzidas recentemente',
+      musicHeroDaily: 'Seleção diária', musicHeroTitle: 'Descubra música independente livre de direitos',
+      musicHeroDesc: 'O APEXON Music reúne obras licenciadas sob Creative Commons de artistas independentes do mundo todo. Todas as faixas podem ser ouvidas gratuitamente online, sem preocupação com direitos autorais. Use a busca inteligente para encontrar rapidamente a música que deseja ou explore novos sons por categorias como Eletrônica, Rock, Pop, Jazz, Clássica e Ambiental. Curta uma obra e salve-a em «Curtidas» com um clique, retomando a melodia em «Reproduzidas recentemente» quando quiser. O player tem uma barra de controle fixa na parte inferior com avanço, ajuste de volume e três modos de reprodução: repetir lista, repetir faixa e aleatório. Seja para relaxar após um teste ou buscar um ritmo de companhia no trabalho e nos estudos, o APEXON Music oferece uma experiência de áudio fluida, imersiva e de alta qualidade.',
+      musicPlayNow: 'Reproduzir agora',
+      musicSearchPlaceholder: 'Buscar músicas, artistas, álbuns...', musicSearchResults: 'Resultados da busca',
+      musicCatAll: 'Tudo', musicCatElectronic: 'Eletrônica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Clássica', musicCatAmbient: 'Ambiental',
+      musicHotRecomTitle: 'Tendências', musicHotRecomSub: 'Música independente mais popular da semana', musicHotChartSub: 'Ranking de música independente',
+      musicRecentTitle: 'Reproduzidas recentemente', musicRecentSub: 'A música que você acabou de ouvir', musicRecentSubAll: 'Últimas 200 reproduções',
+      musicLikedTitle: 'Música curtida', musicLikedSub: 'Todas as músicas que você salvou', musicViewAll: 'Ver tudo',
+      musicLyrics: 'Letras', musicLyricsEmpty: 'Reproduza uma música para ver a letra',
+      musicModeTitle: 'Modo de repetição', musicPrevTitle: 'Anterior', musicPlayPauseTitle: 'Reproduzir/Pausar', musicNextTitle: 'Próxima', musicLikeTitle: 'Curtir',
+      musPlayFirst: 'Reproduza uma música primeiro', musLoadFailed: 'Falha ao carregar o áudio. Verifique sua rede ou tente novamente mais tarde', musPlayMode: 'Modo de reprodução: {mode}',
+      musModeLoop: 'Repetir lista', musModeSingle: 'Repetir uma música', musModeRandom: 'Reprodução aleatória', musPlayFailed: 'Falha na reprodução. A rede ou o link de áudio pode estar inválido',
+      musUnliked: 'Removido dos favoritos', musLikedMsg: 'Adicionado aos favoritos', musLyricsSearching: 'Buscando a letra...', musLyricsNotFound: 'Letra não encontrada para esta música', musLyricsNone: 'Sem letra',
+      musSearchTitle: 'Busca: {q}', musSearching: 'Buscando...', musSearchEmpty: 'Nenhuma música relacionada encontrada', musSearchEmptyTip: 'Tente outra palavra-chave ou verifique se o client_id do Jamendo está configurado.',
+      musRecentEmpty: 'Sem reproduções recentes', musRecentEmptyTip: 'Clique em qualquer música para começar a ouvir', musLikedEmpty: 'Sem músicas favoritas', musLikedEmptyTip: 'Clique em ♡ para favoritar a música que você gosta',
+      musColSong: 'Música', musColArtist: 'Artista', musColDuration: 'Duração', musColAction: 'Ação', musNoDownload: 'Download não disponível', musActionNoDownload: 'Download não disponível'
     },
     it: {
       genderMale: 'Uomo', genderFemale: 'Donna', genderSecret: 'Segreto', genderLabel: 'Genere',
@@ -1536,7 +1875,27 @@
       engineLoadFailed: 'Impossibile caricare il motore di test. Aggiorna la pagina.',
       feedbackNameRequired: 'Inserisci il nome', feedbackEmailRequired: 'Inserisci l\'email', feedbackEmailInvalid: 'Email non valida', feedbackContentRequired: 'Inserisci il feedback', feedbackSubmitFailed: 'Invio fallito',
       feedbackSubject: 'Feedback APEXON', feedbackNameLabel: 'Nome: ', feedbackEmailLabel: 'Email: ', feedbackBodyLabel: 'Feedback:', feedbackOpeningClient: 'Apertura client email…',
-      aimOverlayStart: 'Clicca per iniziare'
+      aimOverlayStart: 'Clicca per iniziare',
+      // Pagina musicale
+      musicDiscover: 'Esplora', musicDailyRecom: 'Consigli di oggi', musicHotRecom: 'Tendenze', musicSearch: 'Cerca musica',
+      musicMyMusic: 'La mia musica', musicLiked: 'Mi piace', musicRecent: 'Ascoltati di recente',
+      musicHeroDaily: 'Selezione quotidiana', musicHeroTitle: 'Scopri musica indipendente libera da diritti',
+      musicHeroDesc: 'Lo APEXON Music riunisce opere con licenza Creative Commons di artisti indipendenti di tutto il mondo. Tutti i brani sono ascoltabili gratuitamente online, senza alcuna preoccupazione di copyright. Con la ricerca intelligente trovi rapidamente il brano che cerchi o esplori nuova musica con etichette di categoria come Elettronica, Rock, Pop, Jazz, Classica e Ambientale. Apprezza un\'opera e salvala in «Mi piace» con un clic, per ritrovare le melodie in «Ascoltati di recente» in qualsiasi momento. Il player dispone di una barra di controllo fissa in basso con trascinamento, regolazione del volume e tre modalità di riproduzione: ripetizione lista, ripetizione singola e casuale. Che tu voglia rilassarti dopo un test o cercare un ritmo per lavoro e studio, lo APEXON Music offre un\'esperienza audio fluida, immersiva e di alta qualità.',
+      musicPlayNow: 'Riproduci ora',
+      musicSearchPlaceholder: 'Cerca canzoni, artisti, album...', musicSearchResults: 'Risultati della ricerca',
+      musicCatAll: 'Tutti', musicCatElectronic: 'Elettronica', musicCatRock: 'Rock', musicCatPop: 'Pop',
+      musicCatJazz: 'Jazz', musicCatClassical: 'Classica', musicCatAmbient: 'Ambientale',
+      musicHotRecomTitle: 'Tendenze', musicHotRecomSub: 'La musica indipendente più popolare della settimana', musicHotChartSub: 'Classifica della musica indipendente',
+      musicRecentTitle: 'Ascoltati di recente', musicRecentSub: 'La musica che hai appena ascoltato', musicRecentSubAll: 'Ultime 200 riproduzioni',
+      musicLikedTitle: 'Musica che mi piace', musicLikedSub: 'Tutte le canzoni salvate', musicViewAll: 'Vedi tutto',
+      musicLyrics: 'Testo', musicLyricsEmpty: 'Riproduci un brano per vedere il testo',
+      musicModeTitle: 'Modalità di ripetizione', musicPrevTitle: 'Precedente', musicPlayPauseTitle: 'Riproduci/Pausa', musicNextTitle: 'Successivo', musicLikeTitle: 'Mi piace',
+      musPlayFirst: 'Riproduci prima una canzone', musLoadFailed: 'Caricamento audio non riuscito. Controlla la rete o riprova più tardi', musPlayMode: 'Modalità di riproduzione: {mode}',
+      musModeLoop: 'Ripeti lista', musModeSingle: 'Ripeti singolo brano', musModeRandom: 'Riproduzione casuale', musPlayFailed: 'Riproduzione non riuscita. La rete o il link audio potrebbe essere non valido',
+      musUnliked: 'Rimosso dai preferiti', musLikedMsg: 'Aggiunto a «I miei preferiti»', musLyricsSearching: 'Ricerca del testo...', musLyricsNotFound: 'Testo non trovato per questo brano', musLyricsNone: 'Nessun testo',
+      musSearchTitle: 'Cerca: {q}', musSearching: 'Ricerca in corso...', musSearchEmpty: 'Nessun brano correlato trovato', musSearchEmptyTip: 'Prova un\'altra parola chiave o verifica che il client_id di Jamendo sia configurato.',
+      musRecentEmpty: 'Nessuna riproduzione recente', musRecentEmptyTip: 'Fai clic su un brano per iniziare ad ascoltare', musLikedEmpty: 'Nessun brano preferito', musLikedEmptyTip: 'Fai clic su ♡ per aggiungere ai preferiti la musica che ti piace',
+      musColSong: 'Brano', musColArtist: 'Artista', musColDuration: 'Durata', musColAction: 'Azione', musNoDownload: 'Download non disponibile', musActionNoDownload: 'Download non disponibile'
     }
   };
 
