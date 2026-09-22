@@ -169,12 +169,14 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
       <h1>APEXON <span>Console</span></h1>
     </div>
     <p class="login-sub">双重验证登录</p>
+    <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
     <label>管理员口令</label>
     <input type="password" id="tokenInput" autocomplete="off" placeholder="输入口令">
     <label>动态验证码</label>
     <input type="text" id="totpInput" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="验证器 6 位数字">
     <div class="hint" id="loginHint"></div>
-    <button class="btn primary block" onclick="doLogin()">登 录</button>
+    <button class="btn primary block" type="submit">登 录</button>
+    </form>
     <div class="sep"></div>
     <button class="link" onclick="openSetup2FA()">首次使用？扫码 / 粘贴密钥绑定验证器 →</button>
   </div>
@@ -951,8 +953,6 @@ function renderAudit(){
 }
 
 /* init */
-$('tokenInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
-$('totpInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
 (function init(){
   if (sessionStorage.getItem(TOKEN_KEY)){ boot(); } else { $('loginView').style.display = 'flex'; }
 })();
