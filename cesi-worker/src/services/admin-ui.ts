@@ -233,7 +233,10 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script data-cfasync="false">
+// data-cfasync="false"：阻止 Cloudflare Rocket Loader / Auto-Minify 改写本内联脚本，
+// 否则线上会出现 "Uncaught SyntaxError: Invalid regular expression: missing /"，
+// 导致整页 JS 解析崩溃、后台黑屏无法使用。
 var API_PREFIX = '${API_PREFIX}';
 var TOKEN_KEY = 'apexon_admin_token';
 var state = { user: null, totpEnabled: true };
