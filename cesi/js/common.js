@@ -1176,7 +1176,11 @@
     getAnonId: Auth.getAnonId.bind(Auth),
     init: Auth.init.bind(Auth),
     _validateUsername: Auth._validateUsername.bind(Auth),
-    _validatePassword: Auth._validatePassword.bind(Auth)
+    _validatePassword: Auth._validatePassword.bind(Auth),
+    _validateEmail: Auth._validateEmail.bind(Auth),
+    emailRegister: Auth.emailRegister.bind(Auth),
+    emailLogin: Auth.emailLogin.bind(Auth),
+    sendMailCode: Auth.sendMailCode.bind(Auth)
   };
 
   // ===== 3. 音频 =====
