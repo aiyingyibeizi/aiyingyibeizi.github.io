@@ -28,7 +28,8 @@ export interface AnomalyResult {
 
 const BURST_PREFIX = 'anom:burst:';
 const BURST_WINDOW_SEC = 60;
-const BURST_THRESHOLD = 8; // 60s 内同类型 >= 8 条即判高频连发
+// 放宽连发阈值：真人连测同一类型很少超过 15 次/分钟，只在脚本级连发才判高频。
+const BURST_THRESHOLD = 15;
 
 /** 60s 滑动计数：命中阈值返回 true */
 async function burstHit(redis: Redis, userId: string, testType: string): Promise<boolean> {
@@ -71,16 +72,16 @@ export async function checkScoreAnomaly(
         return r.score_value != null && /^(valid|)$/.test(String(p.validity || ''));
       })
       .map((r) => r.score_value as number);
-    if (past.length >= 3) {
+    // 相对历史最佳异常提升：要求历史样本足够多、幅度足够离谱才判，宁宽勿窄。
+    // 玩家技能呈线性上升，突破 80% 单次提升且历史 >= 6 条才视为可疑，正常进步不会误杀。
+    if (past.length >= 6) {
       const best = lowerIsBetter ? Math.min(...past) : Math.max(...past);
-      // 相对历史最佳，要求改善幅度显著且并非首次冲线：>40% 视为异常
       const improve = lowerIsBetter
-        ? (value - best) / best // best 是有意义正数；负改善(数值更小=更好)时 improve<0
+        ? (value - best) / best
         : (value - best) / best;
-      // lowerIsBetter：数值显著变小才算"异常提升"
-      if (lowerIsBetter && best > 0 && improve < -0.4 && value < best) {
+      if (lowerIsBetter && best > 0 && improve < -0.8 && value < best) {
         reasons.push(`相对历史最佳异常提升（${Math.round((-improve) * 100)}%）`);
-      } else if (!lowerIsBetter && improve > 0.4) {
+      } else if (!lowerIsBetter && improve > 0.8) {
         reasons.push(`相对历史最佳异常提升（${Math.round(improve * 100)}%）`);
       }
     }

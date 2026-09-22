@@ -16,7 +16,10 @@
  */
 
 const SALT_BYTES = 32; // 256-bit 盐
-const DEFAULT_ITERATIONS = 600000; // PBKDF2-HMAC-SHA512（OWASP 2023 建议 ≥ 600k）
+// Cloudflare Workers 的 WebCrypto 实现将 PBKDF2 迭代次数上限限制为 100000，
+// 超过会抛 NotSupportedError（此前设 600k 导致注册/登录直接 500）。
+// 此处取平台允许的最大值 100000，兼顾安全与可用性。
+const DEFAULT_ITERATIONS = 100000; // PBKDF2-HMAC-SHA512（Cloudflare WebCrypto 上限 100000）
 const DEFAULT_HASH = 'SHA-512'; // 抗 GPU 并行强于 SHA-256
 
 /**
@@ -110,7 +113,8 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const expected = parts[4];
 
   // 防御：脏数据如果把迭代次数写成天文数字，这里会卡到超时。拦一道。
-  if (!iters || iters < 1 || iters > 10_000_000 || !salt.length || !expected) return false;
+  // 同时 Cloudflare WebCrypto 上限 100000，超过会抛 NotSupportedError，必须失败关闭而非抛错。
+  if (!iters || iters < 1 || iters > 100000 || !salt.length || !expected) return false;
 
   const derived = await derive(password, salt, iters, hashName);
   return safeEqual(toHex(derived), expected);

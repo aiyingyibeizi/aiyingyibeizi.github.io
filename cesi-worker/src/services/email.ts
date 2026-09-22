@@ -16,6 +16,14 @@ export interface EmailConfig {
   from: string;
 }
 
+export interface SendMailResult {
+  ok: boolean;
+  /** 邮件厂商返回的 HTTP 状态码（未发起请求或异常时为空） */
+  status?: number;
+  provider?: string;
+  detail?: string;
+}
+
 export function emailConfig(env: {
   MAIL_PROVIDER?: string;
   MAIL_API_KEY?: string;
@@ -41,7 +49,7 @@ export async function sendMail(
   subject: string,
   html: string,
   text: string
-): Promise<boolean> {
+): Promise<SendMailResult> {
   try {
     const body = cfg.provider === 'resend'
       ? buildResend(cfg, to, subject, html, text)
@@ -57,16 +65,21 @@ export async function sendMail(
         signal: controller.signal,
       });
       if (!res.ok) {
-        console.warn(`sendMail non-2xx (${cfg.provider}):`, res.status);
-        return false;
+        const detail = await res.text().catch(() => '');
+        console.warn(`sendMail non-2xx (${cfg.provider}):`, res.status, detail);
+        return { ok: false, status: res.status, provider: cfg.provider, detail: detail.slice(0, 200) };
       }
-      return true;
+      return { ok: true, status: res.status, provider: cfg.provider };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('sendMail failed:', msg);
+      return { ok: false, provider: cfg.provider, detail: msg.slice(0, 200) };
     } finally {
       clearTimeout(timer);
     }
   } catch (err) {
     console.error('sendMail failed:', err);
-    return false;
+    return { ok: false, provider: cfg.provider };
   }
 }
 

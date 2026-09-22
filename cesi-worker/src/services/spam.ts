@@ -40,6 +40,15 @@ const HARD_WORDS = [
   '炸彈製作', '恐怖襲擊', 'hs大v', '援交', '約炮',
 ];
 
+// 脏话/辱骂词（语气词、辱骂等，语义歧义低、正常交流用不到才入列；宁可少而精）
+const PROFANITY = [
+  '傻逼', '傻b', '傻x', '煞笔', '沙币', '操你妈', '去你妈', '他妈', '草泥马',
+  '你妈的', '狗日的', '婊子', '贱人', '畜生', '妈逼', 'cnm', 's.b',
+  'fuck', 'shit', 'bitch', 'asshole', 'motherfucker', '妈的',
+];
+// 过滤掉明显片语化的 DNS 干扰后做二次校验，避免“每他X妈都”等误伤
+const PROFANITY_RE = new RegExp('(' + PROFANITY.map((w) => w.replace(/[.+}{()|\\^$[\]*?-]/g, '\\$&')).join('|') + ')', 'i');
+
 const URL_RE = /(https?:\/\/[^\s]+|www\.[a-z0-9\-]+(?:\.[a-z]{2,})+)/i;
 const PHONE_RE = /1[3-9]\d{9}/;                         // 大陆手机号
 const DOMAIN_RE = /\.[a-z]{2,}\b/i;                     // xxx.com/.cn 等
@@ -54,6 +63,10 @@ export function detectHard(text: string): string | null {
   for (const w of ADS_PHRASES) {
     if (n.includes(w) || tl.includes(w)) return `含广告/引流话术（${w}）`;
   }
+
+  // 脏话/辱骂：命中即硬拦。词表短且语义歧义低，正常中文句子几乎不会误伤。
+  const profanityHit = tl.match(PROFANITY_RE);
+  if (profanityHit) return `含不适当用语（${profanityHit[0]}）`;
 
   if (URL_RE.test(text) || EMAIL_RE.test(text)) return '含外链或联系方式';
   if (PHONE_RE.test(n)) return '含手机号';

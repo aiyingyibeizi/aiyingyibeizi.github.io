@@ -587,10 +587,11 @@ app.post('/api/auth/send-code', async (c) => {
 </div>`;
 
   const sent = await sendMail(cfg, email, 'APEXON 验证码', html, text);
-  if (!sent) {
+  if (!sent.ok) {
     // 发送失败：清除刚生成的验证码，避免残留误用
     await redis.del(mailKey(email)).catch(() => {});
-    return c.json({ error: 'email send failed, please retry' }, 502);
+    const detail = sent.detail || (sent.status ? `HTTP ${sent.status}` : 'unknown');
+    return c.json({ error: 'email send failed, please retry', detail: `${sent.provider || ''}: ${detail}`.trim() }, 502);
   }
   return c.json({ ok: true, expires_in: MAIL_CODE_TTL_SEC });
 });

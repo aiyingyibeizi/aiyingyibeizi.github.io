@@ -137,7 +137,7 @@ export async function sendPublishNotification(
   for (const sub of subscribers) {
     const html = buildEmailHtml(title, bodyText, typeLabel, publicUrl);
     const ok = await sendMail(cfg, sub.email, title, html, `${bodyText}\n${publicUrl ? '查看：' + publicUrl : ''}`);
-    if (ok) sent += 1;
+    if (ok.ok) sent += 1;
     // 控制并发，避免打爆发信服务的免费额度
     await new Promise((r) => setTimeout(r, 120));
   }
