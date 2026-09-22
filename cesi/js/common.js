@@ -2659,10 +2659,18 @@
       const p = profile || {};
       const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       const avatar = '<div class="apex-profile-avatar">' + this._renderAvatarHTML(p.avatar_url) + '</div>';
+      // 安全链接：仅允许 http/https，拦截 javascript:/data:/vbscript:/file: 等脚本协议。
+      // 仅用 escapeHtml 转义无法阻止 href="javascript:..." 存储型 XSS，必须做协议白名单。
+      const safeUrl = (u) => {
+        const s = String(u || '').trim();
+        return /^https?:\/\//i.test(s) ? s : '';
+      };
       const bio = p.bio || t('bioEmpty', '这个人很懒，什么都没有写。');
       const location = p.location || t('unknown', '未知');
-      const website = p.website ? '<a href="' + esc(p.website) + '" target="_blank" rel="noopener">' + esc(p.website) + '</a>' : t('notFilled', '未填写');
-      const social = p.social_links ? '<a href="' + esc(p.social_links) + '" target="_blank" rel="noopener">' + esc(p.social_links) + '</a>' : t('notFilled', '未填写');
+      const websiteUrl = safeUrl(p.website);
+      const socialUrl = safeUrl(p.social_links);
+      const website = websiteUrl ? '<a href="' + esc(websiteUrl) + '" target="_blank" rel="noopener nofollow">' + esc(websiteUrl) + '</a>' : t('notFilled', '未填写');
+      const social = socialUrl ? '<a href="' + esc(socialUrl) + '" target="_blank" rel="noopener nofollow">' + esc(socialUrl) + '</a>' : t('notFilled', '未填写');
       return '<div class="apex-profile-header">' + avatar + '<div class="apex-profile-name">' + esc(username) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">' + t('genderLabel', '性别') + '</div><div class="apex-profile-value">' + esc(this._genderLabel(p.gender)) + '</div></div>' +
         '<div class="apex-profile-section"><div class="apex-profile-label">' + t('bioPlaceholder', '个人简介') + '</div><div class="apex-profile-value">' + esc(bio) + '</div></div>' +
