@@ -694,7 +694,7 @@ function askTotp(){
   var c = prompt('高危操作需二次验证：请输入验证器 6 位动态码', '');
   if (c === null) return null;
   c = String(c).trim();
-  if (!/^\d{6}$/.test(c)) { toast('请输入 6 位数字动态码', true); return null; }
+  if (!/^\\d{6}$/.test(c)) { toast('请输入 6 位数字动态码', true); return null; }
   return c;
 }
 
@@ -759,7 +759,7 @@ function openClass(name){
   }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
 }
 function batchSetClass(){
-  var ids = $('classIds').value.split(/[\r\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+  var ids = $('classIds').value.split(/[\\r\\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
   var cls = $('className').value.trim();
   if (!ids.length) { toast('请先填写 user_id 列表', true); return; }
   if (!cls) { toast('请填写班级名', true); return; }
@@ -823,7 +823,7 @@ function renderAntichat(){
         h += '<tr><td>' + st + '</td><td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
         h += '<td class="mono">' + esc(r.test_type) + '</td><td>' + esc(r.score_value) + '</td>';
         h += '<td>' + esc(trunc(r.flag_reason || '-',46)) + '</td><td>' + fmtDate(r.created_at) + '</td>';
-        h += '<td class="actions">' + (r.validity === 'invalid' ? '<button class="btn primary" onclick="setValidity(\\'' + esc(r.id) + '\\',\'valid\')">恢复</button>' : '<button class="btn danger" onclick="setValidity(\\'' + esc(r.id) + '\\',\'invalid\')">判无效</button>') + '</td></tr>';
+        h += '<td class="actions">' + (r.validity === 'invalid' ? '<button class="btn primary" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'valid\\')">恢复</button>' : '<button class="btn danger" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'invalid\\')">判无效</button>') + '</td></tr>';
       }
       h += '</table></div>';
     }
@@ -858,7 +858,7 @@ function renderAppeals(){
         var st = a.status === 'open' ? '<span class="badge warn">待处理</span>' : (a.status === 'approved' ? '<span class="badge ok">已通过</span>' : '<span class="badge danger">已驳回</span>');
         h += '<tr><td class="mono">' + esc(trunc(a.user_id,20)) + '</td><td class="mono">' + esc(a.test_type) + '</td><td>' + esc(a.score_value) + '</td>';
         h += '<td>' + esc(trunc(a.reason || '-',40)) + '</td><td>' + st + '</td><td>' + fmtDate(a.created_at) + '</td>';
-        h += '<td class="actions">' + (a.status === 'open' ? '<button class="btn primary" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\'approved\')">通过</button><button class="btn danger" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\'rejected\')">驳回</button>' : '<span class="muted">' + esc(a.admin_note || '') + '</span>') + '</td></tr>';
+        h += '<td class="actions">' + (a.status === 'open' ? '<button class="btn primary" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\\'approved\\')">通过</button><button class="btn danger" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\\'rejected\\')">驳回</button>' : '<span class="muted">' + esc(a.admin_note || '') + '</span>') + '</td></tr>';
       }
       h += '</table></div>';
     }
