@@ -1428,6 +1428,30 @@ app.post('/api/profiles', async (c) => {
   // 限 profile 体积，防止注入超大 payload 拖垮存储
   const serialized = JSON.stringify(body);
   if (serialized.length > 8192) return c.json({ error: 'profile too large' }, 413);
+
+  // 纵深防御：字段级消毒（前端渲染已转义，此为二次保险，防止原始存储含可利用载荷）。
+  // 仅保留安全字符串，拦截 javascript:/data:/vbscript:/file: 等协议与<script…>等标签。
+  const stripDangerous = (v: unknown): string => {
+    const s = typeof v === 'string' ? v.trim() : '';
+    return s.replace(/<\s*(script|iframe|object|embed|style|svg|math|meta|base|form)\b[\s\S]*?>/gi, '');
+  };
+  const safeStr = (v: unknown): string | undefined => {
+    const s = stripDangerous(v);
+    if (!s || s.length > 2000) return undefined;
+    return s;
+  };
+  const safeUrl = (v: unknown): string | undefined => {
+    const s = stripDangerous(v);
+    if (!s || s.length > 500) return undefined;
+    return /^https?:\/\//i.test(s) ? s : undefined;
+  };
+  body.bio = safeStr(body.bio) ?? '';
+  body.location = safeStr(body.location) ?? '';
+  body.gender = safeStr(body.gender) ?? '';
+  body.website = safeUrl(body.website) ?? '';
+  body.social_links = safeUrl(body.social_links) ?? '';
+  body.avatar_url = safeUrl(body.avatar_url) ?? undefined;
+
   const shard = await buildShardService(c.env);
 
   // Atomic-ish: write new profile first, then delete old ones
