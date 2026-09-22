@@ -1601,7 +1601,7 @@ app.post('/api/upload', async (c) => {
 // UI 页面（GET /admin），内联返回、无需静态资源；未配置 ADMIN_TOKEN 时仍能打开但登录会失败
 // 加入严格 CSP：禁止外联脚本/图片/字体与站点外请求，即使被 XSS 注入也无法外带数据。
 const ADMIN_CSP =
-  "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+  "default-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; " +
   "img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; " +
   "form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests";
 function serveAdmin(c: any) {
