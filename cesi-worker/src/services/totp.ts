@@ -99,7 +99,12 @@ export async function verifyTotp(
   atUnixSec?: number
 ): Promise<boolean> {
   try {
-    const cleanCode = String(code || '').replace(/\s/g, '').trim();
+    // 容错：去除空白/连字符，并把中文输入法常见的全角数字（０-９）转半角，
+    // 否则 /^\d{6}$/ 会误判为“格式错误”，表现为“验证码没输错却报错”。
+    const cleanCode = String(code || '')
+      .replace(/[\uFF10-\uFF19]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+      .replace(/\s/g, '')
+      .trim();
     if (!/^\d{6}$/.test(cleanCode)) return false;
     const secretRaw = normalizeSecret(secretBase32);
     if (!secretRaw) return false;
@@ -127,5 +132,8 @@ export async function verifyTotp(
  */
 export function buildOtpauthUri(secretBase32: string, issuer: string, account: string): string {
   const enc = (s: string) => encodeURIComponent(s);
-  return `otpauth://totp/${enc(account)}?secret=${enc(secretBase32)}&issuer=${enc(issuer)}&period=${STEP_SEC}&digits=6&algorithm=SHA1`;
+  // 统一规范化密钥（去空白/连字符并大写），确保绑定进验证器的密钥与校验时所用完全一致，
+  // 避免因环境变量里的大小写/空格差异导致“绑定正确却总是校验失败”。
+  const secret = normalizeSecret(secretBase32);
+  return `otpauth://totp/${enc(account)}?secret=${enc(secret)}&issuer=${enc(issuer)}&period=${STEP_SEC}&digits=6&algorithm=SHA1`;
 }

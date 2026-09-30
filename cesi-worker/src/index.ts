@@ -1729,9 +1729,8 @@ async function requireHighRiskTotp(c: any, body: { code?: unknown }): Promise<bo
 /** 管理接口统一入口：校验会话令牌（短期、带 TTL），通过后经 c.set 注入管理员标识供审计复用 */
 async function adminGw(c: any, next: any): Promise<Response | void> {
   const p = c.req.path;
-  // 登录/注销/2FA 首次绑定端点不走会话校验（它们各自处理鉴权：登录与绑定需持口令，注销只消会话）
-  if ((c.req.method === 'POST' && (p === '/api/admin/login' || p === '/api/admin/logout')) ||
-      (c.req.method === 'GET' && p === '/api/admin/2fa/setup')) {
+  // 登录/注销端点不走会话校验（它们各自处理鉴权：登录需持口令，注销只消会话）
+  if ((c.req.method === 'POST' && (p === '/api/admin/login' || p === '/api/admin/logout'))) {
     return next();
   }
   if (!c.env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
@@ -1849,20 +1848,6 @@ app.get('/api/admin/2fa', async (c) => {
   const uri = adminOtpauthUri(env);
   if (!uri) return c.json({ enabled: false, message: 'TOTP 未启用（未配置 ADMIN_TOTP_SECRET）' });
   return c.json({ enabled: true, otpauth: uri, secret: env.ADMIN_TOTP_SECRET, issuer: 'APEXON Admin' });
-});
-
-// 2FA 首次绑定端点：无需会话令牌，但必须持有管理员口令（常数时间比较），
-// 解决「先绑定验证器才能登录，但没登录就看不到密钥」的死锁。
-app.get('/api/admin/2fa/setup', async (c) => {
-  const env = c.env as Env;
-  if (!env.ADMIN_TOKEN) return c.json({ error: 'admin interface disabled' }, 404 as any);
-  const authHeader = c.req.header('Authorization');
-  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-  // 必须正确持有 ADMIN_TOKEN 才允许取回 2FA 绑定信息
-  if (!verifyAdminPassword(env, token)) return c.json({ error: 'forbidden' }, 403 as any);
-  const uri = adminOtpauthUri(env);
-  if (!uri) return c.json({ enabled: false, message: '尚未配置 ADMIN_TOTP_SECRET' });
-  return c.json({ enabled: true, secret: env.ADMIN_TOTP_SECRET, otpauth: uri });
 });
 
 app.get('/api/admin/overview', async (c) => {

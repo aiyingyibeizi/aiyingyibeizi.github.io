@@ -76,9 +76,6 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'He
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .btn.block{width:100%;margin-top:18px}
-.link{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-family:inherit}
-.link:hover{text-decoration:underline}
-.sep{height:1px;background:var(--line);margin:18px 0 6px}
 
 /* ---------- 布局 ---------- */
 #appView{display:flex;min-height:100vh}
@@ -140,10 +137,6 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 .modal-box h3{margin:0 0 14px;font-size:17px}
 .modal-close{float:right;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
-.secret-box{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;letter-spacing:2px;background:var(--bg2);border:1px dashed var(--accent);border-radius:10px;padding:14px;text-align:center;word-break:break-all;margin:10px 0}
-.steps{margin:10px 0;padding-left:20px;color:var(--muted);font-size:13px}
-.steps li{margin:6px 0}
-.apps{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 
 /* ---------- 提示 ---------- */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 18px;z-index:80;display:none;box-shadow:var(--shadow);font-size:13px;max-width:90vw}
@@ -173,12 +166,10 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
     <label>管理员口令</label>
     <input type="password" id="tokenInput" autocomplete="off" placeholder="输入口令">
     <label>动态验证码</label>
-    <input type="text" id="totpInput" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="验证器 6 位数字">
+    <input type="text" id="totpInput" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="验证器 6 位数字" oninput="normalizeCode(this)">
     <div class="hint" id="loginHint"></div>
     <button class="btn primary block" type="submit">登 录</button>
     </form>
-    <div class="sep"></div>
-    <button class="link" onclick="openSetup2FA()">首次使用？扫码 / 粘贴密钥绑定验证器 →</button>
   </div>
 </div>
 
@@ -226,11 +217,6 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 <!-- 用户详情弹窗 -->
 <div class="modal" id="userModal">
   <div class="modal-box" id="userModalBody"></div>
-</div>
-
-<!-- 2FA 绑定弹窗 -->
-<div class="modal" id="setupModal">
-  <div class="modal-box" id="setupModalBody"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -301,13 +287,31 @@ function badge(sev){
   return '<span class="badge ' + (m[sev] ? esc(sev) : 'off') + '">' + (m[sev] || esc(sev)) + '</span>';
 }
 
-/* ---------- 登录 / 登出 / 2FA 设置 ---------- */
+/* ---------- 登录 / 登出 ---------- */
+// 全角数字/空格容错：中文输入法下常打出全角数字，后端只认半角 6 位数字会误判。
+function normalizeCode(el){
+  var v = String(el.value || '')
+    .replace(/[\uFF10-\uFF19]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
+    .replace(/[^\d]/g, '')
+    .slice(0, 6);
+  if (v !== el.value) el.value = v;
+}
+// 后端错误码 → 友好中文提示
+function loginErrorText(data, status){
+  if (data && data.locked) return '失败次数过多，来源已临时冻结（15 分钟）';
+  var raw = (data && data.error) || '';
+  if (raw === 'Invalid password') return '管理员口令不正确';
+  if (raw === 'Invalid verification code') return '动态验证码不正确或已过期，请重新输入验证器当前 6 位数字';
+  if (status === 429) return '尝试过于频繁，请稍后再试';
+  return raw || ('登录失败（HTTP ' + status + '）');
+}
 function doLogin(){
   var t = $('tokenInput').value.trim();
+  normalizeCode($('totpInput'));
   var code = $('totpInput').value.trim();
   var hint = $('loginHint');
   if (!t) { hint.className='hint err'; hint.textContent = '请输入管理员口令'; return; }
-  if (!code) { hint.className='hint err'; hint.textContent = '请输入 6 位动态验证码'; return; }
+  if (!/^\d{6}$/.test(code)) { hint.className='hint err'; hint.textContent = '请输入 6 位动态验证码'; return; }
   hint.className='hint'; hint.textContent = '校验中…';
   fetch(API_PREFIX + '/login', {
     method: 'POST',
@@ -316,21 +320,15 @@ function doLogin(){
   }).then(function(res){
     return res.json().catch(function(){ return {}; }).then(function(data){
       if (res.status >= 400) {
-        var msg;
-        if (data && data.locked) {
-          msg = '失败次数过多，来源已临时冻结（15 分钟）';
-        } else {
-          msg = (data && data.error) || ('登录失败（HTTP ' + res.status + '）');
-        }
+        var msg = loginErrorText(data, res.status);
         hint.className='hint err';
         hint.textContent = msg;
-        var codeHint = data && data.code_mismatch ? '　请核对验证器动态码' : '';
-        hint.textContent = msg + codeHint;
         var e = new Error(msg); e.status = res.status; throw e;
       }
       return data;
     });
   }).then(function(data){
+    if (!data || !data.session) throw new Error('登录响应异常，请重试');
     sessionStorage.setItem(TOKEN_KEY, data.session);
     state.totpEnabled = data.totp_enabled !== false;
     boot();
@@ -372,54 +370,6 @@ function show(view){
   if (view === 'security') renderSecurity();
   if (view === 'audit') renderAudit();
 }
-function openSetup2FA(){
-  var t = $('tokenInput').value.trim();
-  if (!t) { toast('请先输入管理员口令', true); return; }
-  var body = $('setupModalBody');
-  body.innerHTML = '<h3>设置双重验证</h3><p class="muted">正在获取绑定信息…</p>';
-  $('setupModal').classList.add('show');
-  fetch(API_PREFIX + '/2fa/setup', { headers: { 'Authorization': 'Bearer ' + t } })
-    .then(function(res){ return res.json().catch(function(){ return {}; }).then(function(data){
-      if (res.status >= 400) throw new Error((data && data.error) || ('HTTP ' + res.status));
-      return data;
-    }); })
-    .then(function(d){
-      if (!d.enabled || !d.secret) { body.innerHTML = '<h3>设置双重验证</h3><div class="empty">后端未配置 ADMIN_TOTP_SECRET</div><button class="btn mt" onclick="closeSetup()">关闭</button>'; return; }
-      var grouped = String(d.secret).replace(/[^A-Za-z2-7]/g, '').toUpperCase();
-      var pretty = grouped.replace(/(.{4})/g, '$1 ');
-      body.innerHTML =
-        '<h3>绑定双重验证器</h3>' +
-        '<p class="muted">在你的验证器 App 中用下方密钥添加账户，然后回到登录页输入它生成的 6 位动态码。</p>' +
-        '<div class="apps">' +
-          '<span class="badge info">Google 身份验证器</span>' +
-          '<span class="badge info">Microsoft Authenticator</span>' +
-          '<span class="badge info">Authy</span>' +
-          '<span class="badge info">1Password</span>' +
-        '</div>' +
-        '<label class="muted" style="font-size:12px">密钥（Base32）</label>' +
-        '<div class="secret-box">' + esc(pretty) + '</div>' +
-        '<div class="actions">' +
-          '<button class="btn primary" onclick="copySecret(\\'' + esc(grouped) + '\\')">复制密钥</button>' +
-          '<button class="btn" onclick="window.open(\\'' + esc(String(d.otpauth||'')) + '\\')">用 otpauth 打开</button>' +
-          '<button class="btn ghost" onclick="closeSetup()">关闭</button>' +
-        '</div>' +
-        '<div class="sep"></div>' +
-        '<p class="muted" style="font-size:12px;margin:0">操作步骤：① 安装任意上面的一款验证器 App → ② 点“+”手动输入密钥 → ③ 粘贴密钥并保存 → ④ 回到登录页输入 App 里显示的 6 位动态码与口令即可登录。</p>';
-    })
-    .catch(function(e){
-      body.innerHTML = '<h3>设置双重验证</h3><div class="empty">' + esc(e.message || '获取失败') + '</div><button class="btn mt" onclick="closeSetup()">关闭</button>';
-    });
-}
-function copySecret(s){
-  (navigator.clipboard ? navigator.clipboard.writeText(s).then(function(){ toast('密钥已复制'); }, function(){ fallbackCopy(s); }) : fallbackCopy(s));
-}
-function fallbackCopy(s){
-  var ta = document.createElement('textarea');
-  ta.value = s; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
-  ta.select(); try { document.execCommand('copy'); toast('密钥已复制'); } catch(e){ toast('复制失败，请手动选中', true); }
-  document.body.removeChild(ta);
-}
-function closeSetup(){ $('setupModal').classList.remove('show'); }
 
 /* ---------- Overview ---------- */
 function renderOverview(){
@@ -862,7 +812,9 @@ function renderAppeals(){
       }
       h += '</table></div>';
     }
-    el.insertAdjacentHTML('beforeend', h);
+    var box = document.getElementById('appealBox');
+    if (!box) { el.insertAdjacentHTML('beforeend', '<div id="appealBox"></div>'); box = document.getElementById('appealBox'); }
+    if (box) box.innerHTML = h;
   }).catch(function(){});
 }
 function reviewAppeal(id, status){
