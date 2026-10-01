@@ -14,7 +14,7 @@ import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './u
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
 import { writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
-import { verifyAdminPassword, verifyAdminTotp, adminOtpauthUri, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
+import { verifyAdminPassword, verifyAdminTotp, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import { sendNotify } from './services/notify';
 import { toCsv, csvDownload, csvFilename } from './services/export';
 import { emailConfig, sendMail } from './services/email';
@@ -1842,13 +1842,8 @@ app.post('/api/admin/logout', async (c) => {
   return c.json({ ok: true });
 });
 
-// TOTP 绑定信息（供首次配置验证器使用）：需先用口令换到的会话令牌访问
-app.get('/api/admin/2fa', async (c) => {
-  const env = c.env as Env;
-  const uri = adminOtpauthUri(env);
-  if (!uri) return c.json({ enabled: false, message: 'TOTP 未启用（未配置 ADMIN_TOTP_SECRET）' });
-  return c.json({ enabled: true, otpauth: uri, secret: env.ADMIN_TOTP_SECRET, issuer: 'APEXON Admin' });
-});
+// 说明：原“首次登录？绑定双重验证”的 TOTP 绑定端点（GET /api/admin/2fa）已随登录页绑定入口一并移除，
+// 管理员现在仅通过已配置的 ADMIN_TOTP_SECRET 使用验证器；动态码校验（登录第二因素、高危操作二次校验）不受影响。
 
 app.get('/api/admin/overview', async (c) => {
   const shard = await buildShardService(c.env);

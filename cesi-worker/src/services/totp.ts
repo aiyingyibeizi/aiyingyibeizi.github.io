@@ -123,17 +123,3 @@ export async function verifyTotp(
     return false;
   }
 }
-
-/**
- * 生成 otpauth:// URI（供二维码/绑定环节展示），可用于兼容主流验证器 App。
- * @param secretBase32 Base32 密钥
- * @param issuer       发行者标识（展示名，如 'APEXON Admin'）
- * @param account      账号标识（展示名，如 'admin@apexon'）
- */
-export function buildOtpauthUri(secretBase32: string, issuer: string, account: string): string {
-  const enc = (s: string) => encodeURIComponent(s);
-  // 统一规范化密钥（去空白/连字符并大写），确保绑定进验证器的密钥与校验时所用完全一致，
-  // 避免因环境变量里的大小写/空格差异导致“绑定正确却总是校验失败”。
-  const secret = normalizeSecret(secretBase32);
-  return `otpauth://totp/${enc(account)}?secret=${enc(secret)}&issuer=${enc(issuer)}&period=${STEP_SEC}&digits=6&algorithm=SHA1`;
-}

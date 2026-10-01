@@ -4,7 +4,7 @@
  * 由 Worker 在 GET /admin 时内联返回，无需额外静态资源。
  * 鉴权：
  *   1) password（ADMIN_TOKEN）
- *   2) TOTP 6 位动态码（验证器 App 生成，/api/admin/2fa/setup 取回密钥绑定）
+ *   2) TOTP 6 位动态码（验证器 App 生成，对应已配置的 ADMIN_TOTP_SECRET）
  *   登录成功后发放短期会话令牌，接口只认会话令牌。
  *
  * 布局：现代后台风格 —— 左侧导航 + 顶栏 + 卡片式内容区。

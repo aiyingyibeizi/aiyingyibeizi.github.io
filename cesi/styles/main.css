@@ -856,7 +856,8 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   .apexon-header-logo {
     font-size: 1.05rem;
     gap: 8px;
-    flex-shrink: 1;
+    /* 品牌区不参与压缩，避免 Logo 图标与文字被挤成一条缝 */
+    flex-shrink: 0;
     min-width: 0;
     max-width: 100%;
   }
@@ -865,6 +866,7 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     width: 40px;
     height: 40px;
     border-radius: 10px;
+    flex-shrink: 0;
   }
 
   .apexon-header-logo span {
@@ -873,6 +875,7 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    min-width: 0;
   }
 
   /* 移动端（<=1023px）：Logo 右侧的明暗切换按钮，用户可按需调整以下参数 */
@@ -937,6 +940,24 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     flex: 0 0 auto;
     margin-right: 0;
     gap: 6px;
+  }
+
+  /* 移动端顶栏空间紧张：压缩「背景特效 / 主题配色」按钮，避免右区过宽挤压品牌文字 */
+  .header-actions .apex-style-picker {
+    margin-right: 4px !important;
+  }
+
+  .header-actions .apex-style-toggle,
+  .header-actions .apex-palette-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    font-size: 16px;
+  }
+
+  .header-actions .apex-palette-panel {
+    top: 46px;
+    width: min(240px, calc(100vw - var(--container-padding) * 2));
   }
 
   .apexon-header-dropdown {
@@ -1010,6 +1031,13 @@ html[data-bw="true"] .apexon-header-dropdown.open {
 
   .header-actions {
     gap: 4px;
+  }
+
+  .header-actions .apex-style-toggle,
+  .header-actions .apex-palette-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
   }
 }
 
@@ -8092,7 +8120,9 @@ html[data-style="cyberpunk"] .apex-primary-text {
    ============================================================ */
 @media (max-width: 767px) {
   .apex-container, .container, main {
-    padding: 10px 12px !important;
+    /* 只覆盖左右内边距；顶部内边距必须保留，否则内容会被固定顶栏（header）遮挡 */
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
   .card, .item-card, .apex-card {
     padding: 14px !important;
@@ -8110,8 +8140,19 @@ html[data-style="cyberpunk"] .apex-primary-text {
   .score-card {
     padding: 16px 14px !important;
   }
-  .apex-style-panel {
-    max-width: calc(100vw - 32px);
+  /* 「动态背景与特效」面板：在手机上右对齐视口，避免左侧被裁切 */
+  .header-actions .apex-style-picker {
+    position: static;
+  }
+  .header-actions .apex-style-panel {
+    right: 0;
+    left: auto;
+    min-width: 0;
+    width: min(320px, calc(100vw - 24px));
+    max-width: none;
+    max-height: 72vh;
+    overflow-y: auto;
+    padding: 16px;
   }
   .apex-style-grid {
     grid-template-columns: repeat(3, 1fr) !important;

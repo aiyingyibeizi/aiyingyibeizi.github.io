@@ -2,7 +2,7 @@ import type { Redis } from '@upstash/redis/cloudflare';
 import type { Env } from '../types/env';
 import type { MixedData } from '../types/models';
 import type { ShardService } from './shard';
-import { verifyTotp, buildOtpauthUri } from './totp';
+import { verifyTotp } from './totp';
 import { accountRisk } from './security';
 
 /**
@@ -350,12 +350,6 @@ export async function revokeAdminSession(redis: Redis, token: string): Promise<v
   } catch (err) {
     console.error('revokeAdminSession failed:', err);
   }
-}
-
-/** 生成 otpauth URI（供验证器绑定展示）。secret 为 Base32。 */
-export function adminOtpauthUri(env: Env): string | null {
-  if (!env.ADMIN_TOTP_SECRET) return null;
-  return buildOtpauthUri(env.ADMIN_TOTP_SECRET, 'APEXON Admin', 'admin@apexon.qzz.io');
 }
 
 /** 校验用户输入的 6 位 TOTP 动态码（带 ±1 时间窗容错）。返回 { ok, requiresTotp } */
