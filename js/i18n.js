@@ -2090,6 +2090,150 @@
     if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], SHARE_TRANSLATIONS[lang]);
   });
 
+  // 动态提示 / 校验类文案翻译（登录、保存、评论等运行期 toast 与错误提示）
+  const MISC_TRANSLATIONS = {
+    zh: {
+      needLogin: '请先登录或生成游客身份后再继续',
+      scoreSaved: '成绩已保存 ✓',
+      authExpired: '登录已过期，请刷新页面重试',
+      serverBusy: '服务器正忙，请稍后再试',
+      scoreSaveFailed: '成绩保存失败，请检查网络后重试',
+      commentPosted: '评论已发布 ✓',
+      invalidEmail: '邮箱格式不正确',
+      invalidCode: '验证码为 6 位数字',
+      leaderboardIneligible: '本次成绩因犯规过多，仅计入个人记录，不参与排行榜',
+      roundVoid: '作废'
+    },
+    en: {
+      needLogin: 'Please log in or create a guest identity to continue',
+      scoreSaved: 'Score saved ✓',
+      authExpired: 'Session expired, please refresh the page',
+      serverBusy: 'Server is busy, please try again later',
+      scoreSaveFailed: 'Failed to save score, check your network and retry',
+      commentPosted: 'Comment posted ✓',
+      invalidEmail: 'Invalid email format',
+      invalidCode: 'Verification code must be 6 digits',
+      leaderboardIneligible: 'Too many fouls this round — counted in personal records only, excluded from the leaderboard',
+      roundVoid: 'Void'
+    },
+    ja: {
+      needLogin: '続けるにはログインするかゲスト身份を作成してください',
+      scoreSaved: 'スコアを保存しました ✓',
+      authExpired: 'ログインの有効期限が切れました。ページを更新してください',
+      serverBusy: 'サーバーが混雑しています。しばらくしてから再試行してください',
+      scoreSaveFailed: 'スコアの保存に失敗しました。ネットワークを確認して再試行してください',
+      commentPosted: 'コメントを投稿しました ✓',
+      invalidEmail: 'メール形式が正しくありません',
+      invalidCode: '認証コードは6桁の数字です',
+      leaderboardIneligible: '今回のスコアは反則が多いため、個人記録のみに計上され、ランキングには参加しません',
+      roundVoid: '無効'
+    },
+    ko: {
+      needLogin: '계속하려면 로그인하거나 게스트 신원을 생성하세요',
+      scoreSaved: '점수가 저장되었습니다 ✓',
+      authExpired: '로그인이 만료되었습니다. 페이지를 새로고침하세요',
+      serverBusy: '서버가 혼잡합니다. 잠시 후 다시 시도하세요',
+      scoreSaveFailed: '점수 저장에 실패했습니다. 네트워크를 확인하고 다시 시도하세요',
+      commentPosted: '댓글이 게시되었습니다 ✓',
+      invalidEmail: '이메일 형식이 올바르지 않습니다',
+      invalidCode: '인증 코드는 6자리 숫자입니다',
+      leaderboardIneligible: '이번 점수는 반칙이 많아 개인 기록에만 반영되며 리더보드에 포함되지 않습니다',
+      roundVoid: '무효'
+    },
+    fr: {
+      needLogin: 'Connectez-vous ou créez une identité invité pour continuer',
+      scoreSaved: 'Score enregistré ✓',
+      authExpired: 'Session expirée, veuillez actualiser la page',
+      serverBusy: 'Serveur occupé, veuillez réessayer plus tard',
+      scoreSaveFailed: 'Échec de l\'enregistrement du score, vérifiez le réseau et réessayez',
+      commentPosted: 'Commentaire publié ✓',
+      invalidEmail: 'Format d\'e-mail invalide',
+      invalidCode: 'Le code de vérification doit comporter 6 chiffres',
+      leaderboardIneligible: 'Trop de fautes cette fois — comptabilisé uniquement dans les records personnels, exclu du classement',
+      roundVoid: 'Annulé'
+    },
+    de: {
+      needLogin: 'Bitte melde dich an oder erstelle eine Gastidentität, um fortzufahren',
+      scoreSaved: 'Punktzahl gespeichert ✓',
+      authExpired: 'Sitzung abgelaufen, bitte Seite neu laden',
+      serverBusy: 'Server ist ausgelastet, bitte später erneut versuchen',
+      scoreSaveFailed: 'Punktzahl konnte nicht gespeichert werden, Netzwerk prüfen und erneut versuchen',
+      commentPosted: 'Kommentar veröffentlicht ✓',
+      invalidEmail: 'Ungültiges E-Mail-Format',
+      invalidCode: 'Der Bestätigungscode muss 6 Ziffern haben',
+      leaderboardIneligible: 'Zu viele Fehler diesmal — zählt nur für persönliche Rekorde, nicht für die Rangliste',
+      roundVoid: 'Ungültig'
+    },
+    es: {
+      needLogin: 'Inicia sesión o crea una identidad de invitado para continuar',
+      scoreSaved: 'Puntuación guardada ✓',
+      authExpired: 'Sesión expirada, actualiza la página',
+      serverBusy: 'El servidor está ocupado, inténtalo más tarde',
+      scoreSaveFailed: 'No se pudo guardar la puntuación, revisa la red e inténtalo de nuevo',
+      commentPosted: 'Comentario publicado ✓',
+      invalidEmail: 'Formato de correo no válido',
+      invalidCode: 'El código de verificación debe tener 6 dígitos',
+      leaderboardIneligible: 'Demasiadas faltas esta vez — solo cuenta para registros personales, excluido de la clasificación',
+      roundVoid: 'Anulado'
+    },
+    ru: {
+      needLogin: 'Войдите или создайте гостевую учётную запись, чтобы продолжить',
+      scoreSaved: 'Результат сохранён ✓',
+      authExpired: 'Сессия истекла, обновите страницу',
+      serverBusy: 'Сервер занят, попробуйте позже',
+      scoreSaveFailed: 'Не удалось сохранить результат, проверьте сеть и повторите',
+      commentPosted: 'Комментарий опубликован ✓',
+      invalidEmail: 'Неверный формат почты',
+      invalidCode: 'Код подтверждения должен содержать 6 цифр',
+      leaderboardIneligible: 'Слишком много нарушений — результат учтён только в личных записях, без таблицы лидеров',
+      roundVoid: 'Не засчитано'
+    },
+    pt: {
+      needLogin: 'Faça login ou crie uma identidade de convidado para continuar',
+      scoreSaved: 'Pontuação salva ✓',
+      authExpired: 'Sessão expirada, atualize a página',
+      serverBusy: 'Servidor ocupado, tente novamente mais tarde',
+      scoreSaveFailed: 'Falha ao salvar a pontuação, verifique a rede e tente novamente',
+      commentPosted: 'Comentário publicado ✓',
+      invalidEmail: 'Formato de e-mail inválido',
+      invalidCode: 'O código de verificação deve ter 6 dígitos',
+      leaderboardIneligible: 'Muitas faltas desta vez — conta apenas para registros pessoais, fora do ranking',
+      roundVoid: 'Anulado'
+    },
+    it: {
+      needLogin: 'Accedi o crea un\'identità ospite per continuare',
+      scoreSaved: 'Punteggio salvato ✓',
+      authExpired: 'Sessione scaduta, aggiorna la pagina',
+      serverBusy: 'Server occupato, riprova più tardi',
+      scoreSaveFailed: 'Impossibile salvare il punteggio, controlla la rete e riprova',
+      commentPosted: 'Commento pubblicato ✓',
+      invalidEmail: 'Formato email non valido',
+      invalidCode: 'Il codice di verifica deve avere 6 cifre',
+      leaderboardIneligible: 'Troppi falli questa volta — conteggiato solo nei record personali, escluso dalla classifica',
+      roundVoid: 'Annullato'
+    }
+  };
+  Object.keys(MISC_TRANSLATIONS).forEach(lang => {
+    if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], MISC_TRANSLATIONS[lang]);
+  });
+
+  // 讨论区隐私说明（首页评论区底部提示）
+  const FORUM_TRANSLATIONS = {
+    zh: { forumPrivacyNote: '发表即代表你同意我们保存这条评论（含昵称与内容）用于展示和排序，不会挪作他用，具体见隐私政策。' },
+    en: { forumPrivacyNote: 'By posting you agree that we store this comment (with nickname and content) for display and sorting only, never for other purposes. See the Privacy Policy.' },
+    ja: { forumPrivacyNote: '投稿すると、このコメント（ニックネームと内容を含む）を表示・並べ替えのためにのみ保存することに同意したものとみなされます。他の目的には使用しません。詳細はプライバシーポリシーをご覧ください。' },
+    ko: { forumPrivacyNote: '게시하면 이 댓글(닉네임과 내용 포함)을 표시 및 정렬 목적으로만 저장하는 데 동의하는 것으로 간주됩니다. 다른 용도로는 사용하지 않습니다. 자세한 내용은 개인정보 처리방침을 참조하세요.' },
+    fr: { forumPrivacyNote: 'En publiant, vous acceptez que nous conservions ce commentaire (pseudo et contenu) pour l\'affichage et le tri uniquement, jamais à d\'autres fins. Voir la Politique de confidentialité.' },
+    de: { forumPrivacyNote: 'Mit dem Posten stimmst du zu, dass wir diesen Kommentar (mit Nickname und Inhalt) nur zur Anzeige und Sortierung speichern, niemals für andere Zwecke. Siehe Datenschutzerklärung.' },
+    es: { forumPrivacyNote: 'Al publicar aceptas que guardemos este comentario (con nombre y contenido) solo para mostrarlo y ordenarlo, nunca con otros fines. Consulta la Política de privacidad.' },
+    ru: { forumPrivacyNote: 'Публикуя, вы соглашаетесь на сохранение этого комментария (с ником и содержанием) только для отображения и сортировки, и ни для чего иного. См. Политику конфиденциальности.' },
+    pt: { forumPrivacyNote: 'Ao publicar, você concorda que guardemos este comentário (com apelido e conteúdo) apenas para exibição e ordenação, nunca para outros fins. Veja a Política de Privacidade.' },
+    it: { forumPrivacyNote: 'Pubblicando accetti che conserviamo questo commento (con nickname e contenuto) solo per visualizzazione e ordinamento, mai per altri scopi. Vedi l\'Informativa sulla privacy.' }
+  };
+  Object.keys(FORUM_TRANSLATIONS).forEach(lang => {
+    if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], FORUM_TRANSLATIONS[lang]);
+  });
+
   global.APEXON = global.APEXON || {};
   global.APEXON.i18n = i18n;
 

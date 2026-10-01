@@ -1881,8 +1881,11 @@
 
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'apex-style-toggle';
-        toggleBtn.title = '切换主题风格';
-        toggleBtn.innerHTML = '🎨';
+        // 彩色主题风格已下线，此按钮现仅承载「动态背景与粒子特效」设置，
+        // 使用 ✨ 与主题配色按钮（🎨）区分，避免两个相同图标造成混淆
+        toggleBtn.title = '动态背景与特效';
+        toggleBtn.setAttribute('aria-label', '动态背景与特效');
+        toggleBtn.innerHTML = '✨';
 
         const panel = document.createElement('div');
         panel.className = 'apex-style-panel';
@@ -2241,14 +2244,18 @@
           .apex-user-dropdown button { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
           .apex-profile-card { padding: 20px; }
         }
+        /* 移动端（<=600px）：顶栏空间紧张，用户栏只保留头像，否则会挤压品牌文字 */
+        @media (max-width: 600px) {
+          .apex-user-bar { gap: 4px; }
+          .apex-user-name { display: none; }
+          .apex-user-caret { display: none; }
+        }
         @media (max-width: 375px) {
           .apex-user-menu { margin-left: 4px; }
           .apex-user-bar { padding: 2px 4px 2px 3px; }
           .apex-avatar-wrap { width: 18px; height: 18px; }
           .apex-avatar { width: 18px; height: 18px; }
           .apex-avatar svg { width: 13px; height: 13px; }
-          .apex-user-name { display: none; }
-          .apex-user-caret { display: none; }
         }
       `;
       document.head.appendChild(style);
