@@ -328,39 +328,54 @@ app.use('*', async (c, next) => {
 app.get('/', (c) => c.text('APEXON Worker is running'));
 
 // Public auth endpoints (not protected by auth middleware).
+// 注册必须绑定邮箱：用户名 + 密码 + 邮箱 + 邮箱验证码，四者缺一不可（原「邮箱注册」已合并到此）。
 app.post('/api/auth/register', async (c) => {
-  const { username, password } = await c.req.json<{ username?: string; password?: string }>();
+  const env = c.env as Env;
+  if (!emailConfig(env)) return c.json({ error: 'email not configured' }, 503);
+
+  const body = await c.req
+    .json<{ username?: unknown; password?: unknown; email?: unknown; code?: unknown }>()
+    .catch((): { username?: unknown; password?: unknown; email?: unknown; code?: unknown } => ({}));
+  const username = str(body.username, 30).trim();
+  const password = str(body.password, 512);
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const code = str(body.code, 6).trim();
+
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
   if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
   if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
+  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+
+  const redis = getRedis(env);
 
   // 频率限制：按 IP 限注册，防脚本批量灌号
-  if (!(await rateLimit(getRedis(c.env), rlKey('register', clientIp(c)), 10, 60))) {
+  if (!(await rateLimit(redis, rlKey('register', clientIp(c)), 10, 60))) {
     return c.json({ error: 'Too many attempts, please try again later' }, 429);
   }
 
-  const shard = await buildShardService(c.env);
-  // Targeted query: only load accounts and check username match
+  const shard = await buildShardService(env);
+  // 先查唯一性，再校验验证码：避免 409 时把一次性验证码消耗掉，否则用户无法用同一验证码改用登录。
   const existing = await shard.readByType('account', { limit: 1000 });
-  const duplicate = existing.find((r) => {
-    try {
-      return JSON.parse(r.payload).username === username;
-    } catch {
-      return false;
-    }
-  });
-  if (duplicate) {
-    return c.json({ error: 'Username already exists' }, 409);
+  for (const r of existing) {
+    let p: any;
+    try { p = JSON.parse(r.payload); } catch { continue; }
+    if (p.username === username) return c.json({ error: 'Username already exists' }, 409);
+    if (String(p.email || '').toLowerCase() === email) return c.json({ error: 'Email already registered, please login' }, 409);
+  }
+
+  if (!(await verifyMailCode(redis, email, code))) {
+    return c.json({ error: 'Invalid or expired verification code' }, 400);
   }
 
   const userId = uuid();
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const createdAt = new Date().toISOString();
 
   // 密码哈希必须在后端完成，严禁在前端暴露哈希算法、盐值或迭代次数。
   const passwordHash = await hashPassword(password);
 
-  await shard.write({
+  const writeResult = await shard.write({
     id: uuid(),
     user_id: userId,
     type: 'account',
@@ -368,17 +383,21 @@ app.post('/api/auth/register', async (c) => {
     score_value: null,
     payload: JSON.stringify({
       username,
+      email,
+      email_verified: true,
       password_hash: passwordHash,
       session_token: sessionToken,
       session_expires_at: expiresAt,
+      last_login_ip: clientIp(c),
     }),
     file_url: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: createdAt,
+    updated_at: createdAt,
   }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
 
   // 登录/注册成功后立即写入 Redis 会话缓存，后续请求不再扫库
-  await cacheSession(getRedis(c.env), sessionToken, userId, expiresAt);
+  await cacheSession(redis, sessionToken, userId, expiresAt);
 
   // 注册异常检测：单 IP 短时大量注册触发告警（fire-and-forget）
   try {
@@ -531,7 +550,8 @@ app.post('/api/auth/login', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// 邮箱验证码登录/注册（供应商无关，见 services/email.ts）。未配置 MAIL_API_KEY 时禁用。
+// 邮箱验证码：发码（注册 + 邮箱登录共用）与邮箱验证码登录（供应商无关，见 services/email.ts）。
+// 注册必须绑定邮箱，其校验逻辑已合并进上方 /api/auth/register。未配置 MAIL_API_KEY 时上述接口整体禁用。
 // 注意：这些路由必须在 app.use('/api/*') 的鉴权中间件之前注册，保持公开。
 // ---------------------------------------------------------------------------
 
@@ -596,62 +616,7 @@ app.post('/api/auth/send-code', async (c) => {
   return c.json({ ok: true, expires_in: MAIL_CODE_TTL_SEC });
 });
 
-// ② 邮箱注册：username + email + 验证码
-app.post('/api/auth/email-register', async (c) => {
-  const env = c.env as Env;
-  const cfg = emailConfig(env);
-  if (!cfg) return c.json({ error: 'email not configured' }, 503);
-
-  const body = await c.req.json<{ username?: unknown; email?: unknown; code?: unknown }>().catch((): { username?: unknown; email?: unknown; code?: unknown } => ({}));
-  const username = str(body.username, 30).trim();
-  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-  const code = str(body.code, 6).trim();
-
-  if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
-  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
-
-  const redis = getRedis(env);
-
-  // 先查唯一性，再校验验证码：避免"邮箱已注册"等 409 时把一次性验证码消耗掉，
-  // 否则用户无法用同一验证码切换去登录。账号唯一性经 /register 本就可探测，无新增泄露。
-  const shard = await buildShardService(env);
-  const existing = await shard.readByType('account', { limit: 1000 });
-  for (const r of existing) {
-    let p: any;
-    try { p = JSON.parse(r.payload); } catch { continue; }
-    if (p.username === username) return c.json({ error: 'Username already exists' }, 409);
-    if (String(p.email || '').toLowerCase() === email) return c.json({ error: 'Email already registered, please login' }, 409);
-  }
-
-  // 限速（含验证码校验前的防刷）
-  if (!(await rateLimit(redis, rlKey('emailreg', clientIp(c)), 5, 60))) {
-    return c.json({ error: 'Too many attempts, please try again later' }, 429);
-  }
-  if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
-
-  const userId = uuid();
-  const sessionToken = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const createdAt = new Date().toISOString();
-
-  const writeResult = await shard.write({
-    id: uuid(),
-    user_id: userId,
-    type: 'account',
-    subtype: null,
-    score_value: null,
-    payload: JSON.stringify({ username, email, email_verified: true, session_token: sessionToken, session_expires_at: expiresAt, last_login_ip: clientIp(c) }),
-    file_url: null,
-    created_at: createdAt,
-    updated_at: createdAt,
-  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
-  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
-
-  await cacheSession(redis, sessionToken, userId, expiresAt);
-  return c.json({ user_id: userId, username, token: sessionToken, expires_at: expiresAt });
-});
-
-// ③ 邮箱登录：email + 验证码（无需密码）
+// ② 邮箱登录：email + 验证码（无需密码）
 app.post('/api/auth/email-login', async (c) => {
   const env = c.env as Env;
   const cfg = emailConfig(env);
