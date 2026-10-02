@@ -2377,13 +2377,109 @@
       });
     },
 
-    // 微交互：为关键按钮自动绑定涟漪效果（.btn / .item-card / .leaderboard-tab / .apex-login-btn 等）
+    // 微交互：为关键按钮自动绑定涟漪效果（.btn / .leaderboard-tab / .apex-login-btn 等）
+    // 注意：主页卡片已改用专用的点击特效（initCardClickFX），此处不再包含 .item-card
     bindGlobalRipple() {
       if (this._rippleBound) return;
       this._rippleBound = true;
-      const sel = '.btn, .item-card, .leaderboard-tab, .apex-login-btn, .apex-login-submit, .apex-profile-submit, .forum-btn, .search-box button';
+      const sel = '.btn, .leaderboard-tab, .apex-login-btn, .apex-login-submit, .apex-profile-submit, .forum-btn, .search-box button';
       const bind = () => Utils.bindRipple(document.querySelectorAll(sel));
       // 初始绑定 + DOM 变化后重新绑定（动态渲染的按钮也能享受涟漪）
+      bind();
+      if (window.MutationObserver) {
+        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        mo.observe(document.body, { childList: true, subtree: true });
+      }
+    },
+
+    // 微交互：主页卡片点击特效（按下回弹 + 光标聚光 + 扩散圆环 + 火花迸射）
+    // 仅作用于 .cards-grid 内的常规卡片；music 宽卡片（.item-card--wide）另行单独处理。
+    initCardClickFX() {
+      if (this._cardFxBound) return;
+      this._cardFxBound = true;
+
+      const SELECTOR = '.cards-grid .item-card:not(.item-card--wide)';
+      const SPARKS = 6;
+      const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 在 (x, y)（相对卡片左上角）生成一组特效元素
+      const burst = (card, x, y) => {
+        card.querySelectorAll('.apex-card-fx__glow, .apex-card-fx__ring, .apex-card-fx__spark').forEach(n => n.remove());
+        card.style.setProperty('--fx-x', x + 'px');
+        card.style.setProperty('--fx-y', y + 'px');
+
+        const glow = document.createElement('span');
+        glow.className = 'apex-card-fx__glow';
+        const ring = document.createElement('span');
+        ring.className = 'apex-card-fx__ring';
+        card.appendChild(glow);
+        card.appendChild(ring);
+
+        const base = Math.random() * Math.PI * 2;
+        for (let i = 0; i < SPARKS; i++) {
+          const spark = document.createElement('span');
+          spark.className = 'apex-card-fx__spark';
+          const ang = base + (Math.PI * 2 * i) / SPARKS + (Math.random() - 0.5) * 0.6;
+          const dist = 26 + Math.random() * 34;
+          spark.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+          spark.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+          spark.style.animationDelay = (i * 14) + 'ms';
+          card.appendChild(spark);
+        }
+        const pieces = card.querySelectorAll('.apex-card-fx__glow, .apex-card-fx__ring, .apex-card-fx__spark');
+        setTimeout(() => pieces.forEach(p => p.remove()), 900);
+      };
+
+      const bind = () => {
+        document.querySelectorAll(SELECTOR).forEach(card => {
+          if (card._apexCardFxBound) return;
+          card._apexCardFxBound = true;
+          card.classList.add('apex-card-fx');
+
+          card.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0 || reduced()) return;
+            const rect = card.getBoundingClientRect();
+            card.classList.add('is-pressing');
+            burst(card, e.clientX - rect.left, e.clientY - rect.top);
+          }, { passive: true });
+
+          const release = () => card.classList.remove('is-pressing');
+          card.addEventListener('pointerup', release, { passive: true });
+          card.addEventListener('pointercancel', release, { passive: true });
+          card.addEventListener('pointerleave', release, { passive: true });
+
+          // 键盘（Enter/Space）触发时的按下反馈
+          card.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            card.classList.add('is-pressing');
+            if (!reduced()) {
+              const rect = card.getBoundingClientRect();
+              burst(card, rect.width / 2, rect.height / 2);
+            }
+          });
+          card.addEventListener('keyup', release);
+
+          card.addEventListener('click', (e) => {
+            // 修饰键 / 新标签页 / 中键：交给浏览器默认行为
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            if (card._apexCardNavLock) { e.preventDefault(); return; }
+            const href = card.getAttribute('href');
+            if (!href || href.charAt(0) === '#') return;
+            if (reduced()) return; // 减弱动态效果：直接跳转，不延迟
+            e.preventDefault();
+            card._apexCardNavLock = true;
+            card.classList.remove('is-pressing');
+            card.classList.add('is-launching');
+            if (e.detail === 0) {
+              // 键盘触发没有 pointerdown，补一次中心特效
+              const rect = card.getBoundingClientRect();
+              burst(card, rect.width / 2, rect.height / 2);
+            }
+            setTimeout(() => { window.location.href = card.href; }, 180);
+          });
+        });
+      };
+
       bind();
       if (window.MutationObserver) {
         const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
@@ -3073,14 +3169,14 @@
     }
   };
 
-  // ===== 追加：UI.bindGlobalRipple（给 .btn / .item-card 加 apex-ripple class + pointerdown 涟漪） =====
+  // ===== 追加：UI.bindGlobalRipple（给 .btn 加 apex-ripple class + pointerdown 涟漪） =====
   const origBindGlobalRipple = UI.bindGlobalRipple;
   UI.bindGlobalRipple = function () {
     if (typeof origBindGlobalRipple === 'function') {
       try { origBindGlobalRipple.call(this); } catch (e) {}
     }
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const nodes = document.querySelectorAll('.btn, .item-card');
+    const nodes = document.querySelectorAll('.btn');
     Array.prototype.forEach.call(nodes, function (el) {
       if (el._apexGlobalRippleBound) return;
       el._apexGlobalRippleBound = true;
@@ -4649,6 +4745,8 @@
     UI.controlResultButtons();
     // 微交互：为关键按钮自动绑定涟漪效果
     UI.bindGlobalRipple();
+    // 微交互：主页卡片点击特效（music 宽卡片单独处理）
+    UI.initCardClickFX();
     document.addEventListener('apexon:langchange', () => {
       UI.updateUserDisplay();
     });

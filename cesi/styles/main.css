@@ -8873,3 +8873,127 @@ button[data-i18n="testAgain"][disabled] {
   transform: none !important;
 }
 
+/* ============================================================================
+   Section: 主页卡片点击特效
+   按下回弹 + 光标聚光 + 扩散圆环 + 火花迸射
+   仅作用于 .cards-grid 内的常规卡片；music 宽卡片（.item-card--wide）另行单独处理。
+   ============================================================================ */
+.cards-grid .item-card.apex-card-fx {
+  --fx-x: 50%;
+  --fx-y: 50%;
+  position: relative;
+  overflow: hidden;
+  /* 用独立的 translate / scale 属性做按压变形，
+     避免与滚动驱动动画 cardReveal 抢占 .cards-grid > * 的 transform */
+  transition:
+    translate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow var(--apex-transition-base),
+    border-color var(--apex-transition-base),
+    background-color var(--apex-transition-base);
+}
+
+/* 按下：轻微下沉，抬起时由回弹曲线复位 */
+.cards-grid .item-card.apex-card-fx.is-pressing {
+  translate: 0 2px;
+  scale: 0.972;
+  transition-duration: 110ms;
+  border-color: var(--apex-primary);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    var(--apex-shadow-glow);
+}
+
+/* 点击确认：上跳一拍后跳转 */
+.cards-grid .item-card.apex-card-fx.is-launching {
+  translate: 0 -6px;
+  scale: 0.99;
+  transition-duration: 180ms;
+  border-color: var(--game-card-border-hover);
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.5),
+    var(--apex-shadow-glow);
+}
+
+/* 光标处的柔光晕 */
+.cards-grid .item-card .apex-card-fx__glow {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  width: 360px;
+  height: 360px;
+  margin: -180px 0 0 -180px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, var(--apex-glow-primary) 0%, transparent 68%);
+  opacity: 0;
+  transform: scale(0.3);
+  animation: apex-card-fx-glow 640ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes apex-card-fx-glow {
+  0%   { opacity: 0; transform: scale(0.3); }
+  22%  { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+
+/* 从点击点扩散的圆环 */
+.cards-grid .item-card .apex-card-fx__ring {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  border: 2px solid var(--apex-primary);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  animation: apex-card-fx-ring 580ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes apex-card-fx-ring {
+  0%   { opacity: 0.9; transform: scale(0.4); }
+  65%  { opacity: 0.4; }
+  100% { opacity: 0; transform: scale(5.4); }
+}
+
+/* 火花粒子 */
+.cards-grid .item-card .apex-card-fx__spark {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  background: var(--apex-primary);
+  box-shadow: 0 0 8px var(--apex-glow-primary);
+  opacity: 0;
+  animation: apex-card-fx-spark 640ms cubic-bezier(0.15, 0.65, 0.3, 1) forwards;
+}
+
+@keyframes apex-card-fx-spark {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* 无障碍：系统开启“减弱动态效果”时关闭全部点击特效 */
+@media (prefers-reduced-motion: reduce) {
+  .cards-grid .item-card .apex-card-fx__glow,
+  .cards-grid .item-card .apex-card-fx__ring,
+  .cards-grid .item-card .apex-card-fx__spark {
+    display: none !important;
+  }
+
+  .cards-grid .item-card.apex-card-fx.is-pressing,
+  .cards-grid .item-card.apex-card-fx.is-launching {
+    translate: none;
+    scale: none;
+  }
+}
+
