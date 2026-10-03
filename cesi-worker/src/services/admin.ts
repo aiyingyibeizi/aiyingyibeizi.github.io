@@ -253,6 +253,18 @@ export function verifyAdminPassword(env: Env, password: string): boolean {
   return !!(env.ADMIN_TOKEN && safeEqual(password, env.ADMIN_TOKEN));
 }
 
+/** 管理员角色：普通管理员 / 站长（站长由管理员二次认证升级而来） */
+export type AdminRole = 'admin' | 'owner';
+
+/**
+ * 校验「站长」认证口令（常数时间比较）。
+ * 未配置 OWNER_TOKEN 时返回 false —— 站长认证整体禁用，管理员始终停留在 admin 角色。
+ */
+export function verifyOwnerPassword(env: Env, code: string): boolean {
+  return !!(env.OWNER_TOKEN && safeEqual(code, env.OWNER_TOKEN));
+}
+
+
 function adminFailKey(ip: string): string {
   return `${ADMIN_FAIL_PREFIX}${ip.replace(/[^\w.\-:@]+/g, '_').slice(0, 64) || 'anon'}`;
 }
@@ -310,13 +322,14 @@ export async function createAdminSession(
   redis: Redis,
   adminLabel: string,
   ip: string,
-  ttlSec: number
+  ttlSec: number,
+  role: AdminRole = 'admin'
 ): Promise<{ ok: boolean; token: string }> {
   const token = crypto.randomUUID();
   try {
     await redis.set(
       adminSessionKey(token),
-      JSON.stringify({ admin: adminLabel, ip, created_at: new Date().toISOString() }),
+      JSON.stringify({ admin: adminLabel, ip, role, created_at: new Date().toISOString() }),
       { ex: ttlSec }
     );
   } catch (err) {
@@ -326,17 +339,40 @@ export async function createAdminSession(
   return { ok: true, token };
 }
 
-/** 校验会话令牌；有效返回 { ok:true, admin, ip }，否则 { ok:false } */
+/** 升级/变更当前会话的角色（站长认证成功后调用）。保留 TTL。 */
+export async function setAdminSessionRole(redis: Redis, token: string, role: AdminRole): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const key = adminSessionKey(token);
+    const raw = await redis.get<string>(key);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    parsed.role = role;
+    parsed.role_updated_at = new Date().toISOString();
+    // 保留剩余 TTL：重新 set 时 TTL 会丢失，故读取剩余时间后再写回
+    let ttl: number | undefined;
+    try { ttl = await redis.ttl(key); } catch { ttl = undefined; }
+    const ex = typeof ttl === 'number' && ttl > 0 ? ttl : 2 * 3600;
+    await redis.set(key, JSON.stringify(parsed), { ex });
+    return true;
+  } catch (err) {
+    console.error('setAdminSessionRole failed:', err);
+    return false;
+  }
+}
+
+/** 校验会话令牌；有效返回 { ok:true, admin, ip, role }，否则 { ok:false } */
 export async function resolveAdminSession(
   redis: Redis,
   token: string
-): Promise<{ ok: true; admin: string; ip: string } | { ok: false }> {
+): Promise<{ ok: true; admin: string; ip: string; role: AdminRole } | { ok: false }> {
   if (!token) return { ok: false };
   try {
     const raw = await redis.get<string>(adminSessionKey(token));
     if (!raw) return { ok: false };
     const parsed = JSON.parse(raw);
-    return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || '') };
+    const role: AdminRole = parsed?.role === 'owner' ? 'owner' : 'admin';
+    return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || ''), role };
   } catch (err) {
     console.error('resolveAdminSession failed:', err);
     return { ok: false };

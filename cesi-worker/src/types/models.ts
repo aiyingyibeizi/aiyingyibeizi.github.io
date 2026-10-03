@@ -33,6 +33,8 @@ export interface DbConfig {
   selectLeaderboard?: (subtype: string, order: 'asc' | 'desc', limit: number) => Promise<MixedData[]>;
   // 可选：删除某类型中早于指定时间的记录（用于 online 心跳等易膨胀数据的清理）
   deleteOldByType?: (type: string, beforeIso: string) => Promise<number>;
+  // 可选：按用户名/邮箱精确查询账号（H4 修复：避免全量读账号再内存扫描）
+  selectAccountByField?: (field: 'username' | 'email' | 'session_token', value: string) => Promise<MixedData | undefined>;
 }
 
 export interface SelectOptions {

@@ -24,6 +24,7 @@ export type SecurityKind =
   | 'credential'     // 有效用户名+错误密码（撞库命中，仅高优先级事件）
   | 'register'       // 注册异常（单 IP 短时大量注册）
   | 'comment'        // 内容滥发告警（可选）
+  | 'report'         // 用户举报告警（人气榜/排行榜举报入口）
   | 'admin'          // 管理后台相关告警（如连续错误的口令）
   | 'anomaly';       // 通用异常兜底
 

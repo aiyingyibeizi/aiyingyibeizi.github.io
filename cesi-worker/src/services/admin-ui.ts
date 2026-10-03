@@ -24,12 +24,15 @@ const ICON_PATHS: Record<string, string> = {
   cap: '<path d="M12 4l10 4-10 4L2 8l10-4zM5.5 11.2V15c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-3.8M15 3.5v2.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
   flag: '<path d="M6 21V4M6 5c3-1.6 6 1.4 9 0v9c-3 1.4-6-1.6-9 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
   key: '<path d="M14 10a6 6 0 11-9.5-4.8A6 6 0 0114 10h6v3h-3v3M9 8h.01" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+  badge: '<path d="M12 3l2.4 1.7 2.9-.2.9 2.8 2.3 1.7-1.1 2.7 1.1 2.7-2.3 1.7-.9 2.8-2.9-.2L12 21l-2.4-1.7-2.9.2-.9-2.8-2.3-1.7L4.6 12 3.5 9.3l2.3-1.7.9-2.8 2.9.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 function iconSvg(id: string): string {
   return '<svg width="18" height="18" viewBox="0 0 24 24">' + (ICON_PATHS[id] || ICON_PATHS.grid) + '</svg>';
 }
 
-export function renderAdminUI(): string {
+export function renderAdminUI(nonce = ''): string {
+  // H5 修复：为内联脚本注入 nonce，配合 CSP 的 script-src-elem 精确放行本脚本。
+  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
   return `<!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
 <head>
@@ -96,6 +99,17 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'He
 .topbar .spacer{flex:1}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
 .chip.on{color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.08)}
+.chip.owner{color:var(--warn);border-color:rgba(245,184,75,.5);background:rgba(245,184,75,.12);font-weight:600}
+.cert-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.cert-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:10px}
+.cert-card.done{border-color:rgba(74,222,128,.45);box-shadow:inset 0 0 0 1px rgba(74,222,128,.14)}
+.cert-card h3{margin:0;font-size:16px;display:flex;align-items:center;gap:8px}
+.cert-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.cert-card .cert-actions{margin-top:6px;display:flex;gap:10px;flex-wrap:wrap}
+.cert-state{font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);color:var(--muted);align-self:flex-start}
+.cert-state.ok{color:var(--ok);border-color:rgba(74,222,128,.4)}
+.cert-state.owner{color:var(--warn);border-color:rgba(245,184,75,.5)}
+@media(max-width:760px){.chip.owner,.chip#roleChip{display:inline-flex}}
 .content{padding:24px;max-width:1360px;width:100%;margin:0 auto}
 
 /* ---------- 卡片 / 表格 ---------- */
@@ -188,6 +202,7 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
       <button class="nav-item" data-nav="antichat" onclick="show('antichat')">${iconSvg('flag')}<span>防刷分</span></button>
       <button class="nav-item" data-nav="alerts" onclick="show('alerts')">${iconSvg('bell')}<span>安全告警</span></button>
       <button class="nav-item" data-nav="security" onclick="show('security')">${iconSvg('key')}<span>登录加固</span></button>
+      <button class="nav-item" data-nav="certify" onclick="show('certify')">${iconSvg('badge')}<span>身份认证</span></button>
       <button class="nav-item" data-nav="audit" onclick="show('audit')">${iconSvg('list')}<span>审计日志</span></button>
     </nav>
     <div class="side-foot">
@@ -199,6 +214,7 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
     <div class="topbar">
       <h2 id="pageTitle">仪表盘</h2>
       <div class="spacer"></div>
+      <span class="chip" id="roleChip">管理员</span>
       <span class="chip on" id="totpChip">${iconSvg('shield')} 双重验证</span>
     </div>
     <div class="content">
@@ -209,6 +225,7 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
       <div id="view-antichat" style="display:none"></div>
       <div id="view-alerts" style="display:none"></div>
       <div id="view-security" style="display:none"></div>
+      <div id="view-certify" style="display:none"></div>
       <div id="view-audit" style="display:none"></div>
     </div>
   </div>
@@ -221,14 +238,14 @@ pre{background:var(--bg2);border:1px solid var(--line);border-radius:10px;paddin
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false">
+<script data-cfasync="false"${nonceAttr}>
 // data-cfasync="false"：阻止 Cloudflare Rocket Loader / Auto-Minify 改写本内联脚本，
 // 否则线上会出现 "Uncaught SyntaxError: Invalid regular expression: missing /"，
 // 导致整页 JS 解析崩溃、后台黑屏无法使用。
 var API_PREFIX = '${API_PREFIX}';
 var TOKEN_KEY = 'apexon_admin_token';
-var state = { user: null, totpEnabled: true };
-var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
+var state = { user: null, totpEnabled: true, role: 'admin', ownerAvailable: false, admin: '' };
+var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', certify:'身份认证', audit:'审计日志' };
 
 function $(id){ return document.getElementById(id); }
 // 会话失效（令牌缺失/过期/被拒绝）时回到登录页，避免后台卡在“全加载失败（forbidden）”
@@ -351,14 +368,34 @@ function boot(){
   var tip = state.totpEnabled ? '双重验证已开启' : '未开启 2FA';
   $('whoami').innerHTML = '会话已登录<br>' + tip;
   $('totpChip').style.display = state.totpEnabled ? '' : 'none';
+  // 拉取当前会话的认证角色（admin / owner），刷新徽章并解锁站长专属操作
+  api('/me').then(function(d){
+    state.role = (d && d.role) || 'admin';
+    state.ownerAvailable = !!(d && d.owner_cert_available);
+    state.admin = (d && d.admin) || 'admin';
+    renderRoleBadge();
+    if (document.querySelector('.nav-item[data-nav="certify"]').classList.contains('active')) renderCertify();
+  }).catch(function(){ /* 保底按管理员展示 */ renderRoleBadge(); });
   show('overview');
+}
+// 顶栏角色徽章：管理员 / 站长（站长可在「身份认证」页升级解锁）
+function renderRoleBadge(){
+  var chip = $('roleChip');
+  if (!chip) return;
+  if (state.role === 'owner') {
+    chip.className = 'chip owner';
+    chip.innerHTML = '站长认证已解锁';
+  } else {
+    chip.className = 'chip';
+    chip.innerHTML = '管理员';
+  }
 }
 function show(view){
   var items = document.querySelectorAll('.nav-item');
   for (var i=0;i<items.length;i++){
     items[i].classList.toggle('active', items[i].getAttribute('data-nav') === view);
   }
-  var views = ['overview','users','content','teaching','antichat','alerts','security','audit'];
+  var views = ['overview','users','content','teaching','antichat','alerts','security','certify','audit'];
   for (var j=0;j<views.length;j++){ $('view-' + views[j]).style.display = views[j] === view ? 'block' : 'none'; }
   $('pageTitle').textContent = TITLES[view] || view;
   if (view === 'overview') renderOverview();
@@ -368,6 +405,7 @@ function show(view){
   if (view === 'antichat') renderAntichat();
   if (view === 'alerts') renderAlerts();
   if (view === 'security') renderSecurity();
+  if (view === 'certify') renderCertify();
   if (view === 'audit') renderAudit();
 }
 
@@ -880,11 +918,77 @@ function addIpBan(){
   }).catch(function(e){ toast('失败：' + e.message, true); });
 }
 function removeIpBan(ip){
-  if (!confirm('确定解除 ' + ip + ' 的拉黑？')) return;
-  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip } }).then(function(){
+  if (!confirm('确定解除 ' + ip + ' 的拉黑？该操作仅限站长（需先完成站长认证）。')) return;
+  var code = askTotp();
+  if (!code) return;
+  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip, code: code } }).then(function(){
     toast('已解除');
     renderSecurity();
-  }).catch(function(e){ toast('失败：' + e.message, true); });
+  }).catch(function(e){
+    if (e.status === 403 && /站长/.test(e.message)) {
+      toast('该操作仅限站长：请到「身份认证」页完成站长认证', true);
+      show('certify');
+    } else {
+      toast('失败：' + e.message, true);
+    }
+  });
+}
+
+/* ---------- 身份认证（管理员 / 站长） ---------- */
+// 管理员认证：用 ADMIN_TOKEN 复核当前身份（写入审计）。
+// 站长认证：用 OWNER_TOKEN 把当前会话升级为 owner，解锁站长专属高危操作（如解除 IP 拉黑）。
+function renderCertify(){
+  var el = $('view-certify');
+  api('/me').then(function(d){
+    state.role = (d && d.role) || 'admin';
+    state.ownerAvailable = !!(d && d.owner_cert_available);
+    state.admin = (d && d.admin) || 'admin';
+    state.totpEnabled = d && d.totp_enabled !== false;
+    renderRoleBadge();
+    var isOwner = state.role === 'owner';
+    var h = '';
+    h += '<div class="card" style="margin-bottom:20px">';
+    h += '<h3 style="margin:0 0 8px">当前登录身份</h3>';
+    h += '<p class="muted" style="margin:0">账号：<span class="mono">' + esc(state.admin) + '</span>　角色：' +
+         (isOwner ? '<span class="chip owner">站长</span>' : '<span class="chip">管理员</span>') + '</p>';
+    h += '<p class="muted" style="margin:8px 0 0">' + (state.totpEnabled ? '双重验证已开启：高危操作仍需动态验证码二次确认。' : '未开启 2FA：建议尽快配置 ADMIN_TOTP_SECRET。') + '</p>';
+    h += '</div>';
+
+    h += '<div class="cert-grid">';
+    // 管理员认证
+    h += '<div class="cert-card' + '">';
+    h += '<h3>' + '管理员认证' + '</h3>';
+    h += '<span class="cert-state ok">已通过（登录即具备管理员权限）</span>';
+    h += '<p>用管理员口令（ADMIN_TOKEN）再次确认身份，用于在敏感操作前复核。认证结果会写入审计日志。</p>';
+    h += '<div class="cert-actions"><button class="btn" onclick="doCertify(\'admin\')">重新认证管理员</button></div>';
+    h += '</div>';
+    // 站长认证
+    h += '<div class="cert-card' + (isOwner ? ' done' : '') + '">';
+    h += '<h3>' + '站长认证' + '</h3>';
+    h += '<span class="cert-state ' + (isOwner ? 'owner' : '') + '">' + (isOwner ? '已升级为站长' : (state.ownerAvailable ? '未认证' : '未启用（未配置 OWNER_TOKEN）')) + '</span>';
+    h += '<p>输入站长口令（OWNER_TOKEN）把当前会话升级为「站长」，才能执行站长专属高危操作（例如解除 IP 拉黑）。口令错误会累计并可能临时冻结来源。</p>';
+    if (state.ownerAvailable) {
+      h += '<div class="cert-actions"><button class="btn primary" onclick="doCertify(\'owner\')"' + (isOwner ? ' disabled' : '') + '>' + (isOwner ? '已是站长' : '认证为站长') + '</button></div>';
+    } else {
+      h += '<p class="muted" style="font-size:12px">提示：在 Worker 环境变量中配置 <span class="mono">OWNER_TOKEN</span> 后此功能自动开启。</p>';
+    }
+    h += '</div>';
+    h += '</div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function doCertify(level){
+  var label = level === 'owner' ? '站长口令（OWNER_TOKEN）' : '管理员口令（ADMIN_TOKEN）';
+  var code = prompt('请输入' + label + '：');
+  if (code === null) return;
+  code = code.trim();
+  if (!code) { toast('口令不能为空', true); return; }
+  api('/certify', { method:'POST', body:{ level: level, code: code } }).then(function(d){
+    state.role = (d && d.role) || state.role;
+    renderRoleBadge();
+    toast(level === 'owner' ? '站长认证成功，已解锁站长权限' : '管理员认证成功');
+    renderCertify();
+  }).catch(function(e){ toast('认证失败：' + e.message, true); });
 }
 
 /* ---------- Audit ---------- */

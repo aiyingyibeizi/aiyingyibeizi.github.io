@@ -228,6 +228,40 @@ export class ShardService {
     return rows.slice(0, limit);
   }
 
+  /**
+   * H4/L3 修复：按用户名或邮箱精确查询账号。
+   * 优先走数据库层 json_extract 精确过滤；若无库支持则回退内存扫描（保证兼容）。
+   */
+  async findAccount(field: 'username' | 'email' | 'session_token', value: string): Promise<MixedData | undefined> {
+    const val = String(value || '').trim().toLowerCase();
+    if (!val) return undefined;
+
+    if (!this.dbs.some((db) => typeof db.selectAccountByField === 'function')) {
+      // 兜底：无精确查询能力的后端，退回内存扫描
+      const all = await this.readByType('account', { limit: 1000 });
+      return all.find((r) => {
+        try {
+          const p = JSON.parse(r.payload) as Record<string, unknown>;
+          return String(p[field] || '').toLowerCase() === val;
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    const queries = this.dbs.map(async (db) => {
+      if (!db.selectAccountByField) return undefined;
+      try {
+        return await withTimeout(db.selectAccountByField(field, val), DB_TIMEOUT_MS, `findAccount(${db.name})`);
+      } catch (err) {
+        console.error(`findAccount failed for ${db.name}`, err);
+        return undefined;
+      }
+    });
+    const results = await Promise.all(queries);
+    return results.find((r): r is MixedData => !!r);
+  }
+
   async readById(id: string): Promise<MixedData | undefined> {
     // 修复：并行查询所有库（此前串行循环，单库故障时最坏 3×8s=24s）
     const results = await Promise.allSettled(

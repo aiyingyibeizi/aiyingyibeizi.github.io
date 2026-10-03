@@ -171,8 +171,22 @@
       const options = { method, headers };
       if (body != null) options.body = JSON.stringify(body);
       try {
-        const res = await fetch(url, options);
-        const text = await res.text();
+        // H1 修复配套：服务端对匿名身份做 HMAC 签名校验。旧的无签名 anon token 会返回
+        // 401 { anon_refresh: true }，此处自动领取新的签名匿名身份并重试一次，用户无感。
+        let res = await fetch(url, options);
+        let text = await res.text();
+        if (res.status === 401) {
+          let probe = null;
+          try { probe = text ? JSON.parse(text) : null; } catch (e) { probe = null; }
+          if (probe && probe.anon_refresh && typeof Auth !== 'undefined' && Auth.refreshAnonId) {
+            const fresh = await Auth.refreshAnonId();
+            if (fresh) {
+              headers.Authorization = `Bearer ${fresh}`;
+              res = await fetch(url, options);
+              text = await res.text();
+            }
+          }
+        }
         let data = {};
         if (text) {
           try { data = JSON.parse(text); }
@@ -672,9 +686,14 @@
 
       // P2-14: 清理排行榜中的测试账号数据（testuser/stress/perf/e2e/diag 等压测占位账号）
       // 并按键去重，避免同一账号重复占位。测试账号由服务器压测注入，正式环境不应展示给用户。
-      // 额外识别常见垃圾/水军名（纯数字、占位占位、重复字符、乱码）与异常分数（NaN/Infinity）。
-      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder|guest|anonymous|systest|automation)[_\-\w]*$|realtest/i;
-      const GARBAGE_NAME_RE = /^(x{3,}|z{3,}|q{3,}|ad{2,}|tt{2,}|去{3,}|测试|垃圾|灌水)/i;
+      // 注意（脏数据剔除过严修复）：
+      //   1) 不再拦截 guest_/anonymous —— 游客是正常用户，之前把他们的成绩全部误杀，
+      //      会出现"已过滤 N 条（保留 0 条）"把有效数据清空的情况。
+      //   2) 纯数字用户名不再一律拦截 —— 用户名规则本就允许数字；仅拦截超长（≥12 位）
+      //      的纯数字串，这类才明显是 UUID/占位 ID 而非用户自选昵称。
+      //   3) 垃圾名规则收窄为"整名都是重复字符/广告词"，避免误伤正常昵称。
+      const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder|systest|automation)[_\-\w]*$|realtest/i;
+      const GARBAGE_NAME_RE = /^(x{4,}|z{4,}|q{4,}|去{4,}|灌水|垃圾数据)$/i;
       const PURE_DIGITS_RE = /^\d+$/;
       const seen = new Set();
       const list = [];
@@ -682,7 +701,7 @@
         const name = (r.username || '').trim();
         if (!name || TEST_ACCOUNT_RE.test(name)) continue;
         if (GARBAGE_NAME_RE.test(name)) continue;
-        if (PURE_DIGITS_RE.test(name) && name.length >= 6) continue; // 纯数字长名多为占位
+        if (PURE_DIGITS_RE.test(name) && name.length >= 12) continue; // 仅拦截超长纯数字（UUID/占位 ID）
         const rawScore = Number(r.score_value);
         if (!Number.isFinite(rawScore)) continue;
         const uid = r.user_id;
@@ -723,16 +742,19 @@
     },
 
     async addComment(userId, username, content, category) {
+      // 关键修复（讨论区过滤失效）：
+      // 不再在客户端用 filterDangerous 改写评论内容。此前客户端会把危险内容替换成「[内容已过滤]」、
+      // 把 HTML 标签剥掉后再上传，导致服务端 analyzeContent 永远看不到原文、无法做硬拦截或软标记，
+      // 「过滤无意义或危险内容」开关因此形同虚设（危险内容仍会以被改写的形态展示出来）。
+      // 现在原文直传，由服务端统一做「硬拦截 / 软标记」，前端仅根据服务端返回的 spam 标记做展示层过滤。
       const raw = String(content || '').trim();
-      const filtered = Security.filterDangerous(raw);
       const cat = ['bug', 'score', 'chat', 'suggestion'].includes(category) ? category : 'chat';
-      console.log('[addComment] raw length:', raw.length, 'filtered length:', filtered && filtered.length, 'category:', cat);
-      if (!filtered) {
+      if (!raw) {
         const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentEmpty') : '评论内容不能为空');
         APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
         return { success: false, error: msg };
       }
-      if (filtered.length > 500) {
+      if (raw.length > 500) {
         const msg = (window.APEXON && APEXON.i18n ? APEXON.i18n.t('commentTooLong') : '评论内容超过 500 字限制');
         APEXON.UI && APEXON.UI.toast && APEXON.UI.toast(msg, 2200, 'warning');
         return { success: false, error: msg };
@@ -748,7 +770,7 @@
         res = await WorkerAPI.request('/api/comments', 'POST', {
           user_id: userId,
           username: username,
-          content: filtered,
+          content: raw,
           category: cat
         }, token);
       } catch (e) {
@@ -763,9 +785,12 @@
         if (rawErr) console.error('[addComment] backend error:', res && res.status, rawErr);
         const hint = (res && res.status === 401)
           ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
-          : (res && res.status && res.status >= 500)
-            ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
-            : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
+          : (res && res.status === 400 && rawErr)
+            // 400 多为服务端内容反垃圾拦截（含广告/外链/不适当用语），直接展示后端给出的中文原因
+            ? rawErr
+            : (res && res.status && res.status >= 500)
+              ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('serverBusy') : '服务器正忙，请稍后再试')
+              : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('publishFailed') : '发布失败，请检查网络或稍后重试');
         return { success: false, error: hint };
       }
       WorkerAPI.invalidate('GET:/api/comments?');
@@ -861,6 +886,44 @@
       } catch (e) {
         return [];
       }
+    },
+
+    // 人气榜：随机刷新 / 搜索用户名 / 按性别筛选 / 按点赞数或最新排序
+    async getPopularity(opts = {}) {
+      const params = new URLSearchParams();
+      if (opts.q) params.set('q', String(opts.q).slice(0, 60));
+      if (opts.gender && opts.gender !== 'all') params.set('gender', opts.gender);
+      params.set('sort', opts.sort || 'likes');
+      params.set('limit', String(opts.limit || 60));
+      // 随机/最新刷新附带时间戳，绕过内存与浏览器缓存，保证每次结果不同
+      if (opts.sort === 'random' || opts.sort === 'new') params.set('_t', String(Date.now()));
+      try {
+        const res = await WorkerAPI.request(`/api/popularity?${params.toString()}`, 'GET');
+        if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
+        return res.data.data;
+      } catch (e) {
+        console.error('[getPopularity] failed:', e);
+        return [];
+      }
+    },
+
+    // 点赞 / 取消点赞（后端按当前身份 toggle，同一身份对同一目标只计一次）
+    async likePopularity(targetUserId) {
+      const token = Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request('/api/popularity/like', 'POST', { target_user_id: targetUserId }, token);
+      if (!res.ok) return { success: false, error: (res.data && res.data.error) || 'failed' };
+      return res.data || { success: true };
+    },
+
+    // 举报（落库 + 触发安全告警，管理员后台「安全告警」可复核）
+    async reportPopularity(targetUserId, reason) {
+      const token = Auth.getToken() || Auth.getUserId();
+      const res = await WorkerAPI.request('/api/popularity/report', 'POST', {
+        target_user_id: targetUserId,
+        reason: reason || ''
+      }, token);
+      if (!res.ok) return { success: false, error: (res.data && res.data.error) || 'failed' };
+      return res.data || { success: true };
     }
   };
 
@@ -880,6 +943,9 @@
     saveProfile: DB.saveProfile.bind(DB),
     changeUsername: DB.changeUsername.bind(DB),
     getProfilesForUsers: DB.getProfilesForUsers.bind(DB),
+    getPopularity: DB.getPopularity.bind(DB),
+    likePopularity: DB.likePopularity.bind(DB),
+    reportPopularity: DB.reportPopularity.bind(DB),
     getSiteStats: DB.getSiteStats.bind(DB)
   };
 
@@ -888,6 +954,8 @@
     currentUser: null,
     anonId: null,
     SESSION_DAYS: 7,
+    // 当前会话是否持久化在 localStorage（false = 仅存 sessionStorage）
+    _persisted: false,
 
     init() {
       let anonId = localStorage.getItem('apexon-anon-id');
@@ -896,8 +964,19 @@
         localStorage.setItem('apexon-anon-id', anonId);
       }
       this.anonId = anonId;
+      // 旧格式（无签名）匿名身份：后台异步向服务端换取签名身份，保证游客写数据不被 401 拦截。
+      if (!this._isSignedAnonId(this.anonId)) {
+        this.refreshAnonId();
+      }
 
-      const saved = localStorage.getItem('apexon-session');
+      // H2 修复：会话令牌默认只存放在 sessionStorage（关闭标签页即失效，缩小被 XSS 窃取后的暴露窗口）。
+      // 仅当用户显式勾选「记住我（30 天）」时才落 localStorage 持久化。读取时优先 sessionStorage。
+      let saved = null;
+      try { saved = sessionStorage.getItem('apexon-session'); } catch (e) { /* ignore */ }
+      let persisted = false;
+      if (!saved) {
+        try { saved = localStorage.getItem('apexon-session'); persisted = !!saved; } catch (e) { /* ignore */ }
+      }
       if (!saved) return;
       try {
         const session = JSON.parse(saved);
@@ -909,7 +988,20 @@
           this._clearSession();
           return;
         }
-        this.currentUser = { username: session.username, token: session.token, expiresAt: session.expiresAt };
+        // 关键修复：登录态必须保存服务端返回的真实 user_id（uuid），
+        // 否则用户 id 会被错误地当成用户名使用，导致「最近记录 / 我的成绩 / 个人资料」查询不到自己名下的数据。
+        // 旧版会话缺少 userId 字段（会把用户名当 id 用），直接作废促使用户重新登录以修正映射。
+        if (!session.userId) {
+          this._clearSession();
+          return;
+        }
+        this.currentUser = {
+          userId: session.userId,
+          username: session.username,
+          token: session.token,
+          expiresAt: session.expiresAt
+        };
+        this._persisted = persisted;
       } catch (e) {
         this._clearSession();
       }
@@ -949,7 +1041,7 @@
     },
 
     getUserId() {
-      return this.currentUser ? this.currentUser.username : this.anonId;
+      return this.currentUser ? (this.currentUser.userId || this.currentUser.username) : this.anonId;
     },
 
     getToken() {
@@ -968,9 +1060,8 @@
       await WorkerAPI.request('/api/auth/merge-anon', 'POST', { anon_id: anonId }, token)
         .catch(e => console.error('[merge] failed:', e));
 
-      const newAnonId = this._generateAnonId();
-      localStorage.setItem('apexon-anon-id', newAnonId);
-      this.anonId = newAnonId;
+      // 登录后为下一次匿名使用领取全新的「服务端签名」匿名身份
+      await this.refreshAnonId();
     },
 
     async changeUsername(newUsername, password) {
@@ -990,7 +1081,7 @@
         return { success: false, error: result && result.error ? result.error : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('changeFailed') : '修改失败') };
       }
 
-      this._setSession(u, token, this.currentUser.expiresAt);
+      this._setSession(this.currentUser.userId, u, token, this.currentUser.expiresAt);
       return { success: true };
     },
 
@@ -999,6 +1090,40 @@
         return 'anon_' + crypto.randomUUID();
       }
       return 'anon_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+    },
+
+    // 服务端签名的匿名身份格式：anon_<raw>.<hmac>（含 '.'）。旧格式无签名，必须向服务端换取。
+    _isSignedAnonId(id) {
+      return !!id && id.indexOf('anon_') === 0 && id.indexOf('.') > 0;
+    },
+
+    // 向服务端领取一个带 HMAC 签名的匿名身份（公开接口，无需登录）。
+    // 说明：直接使用 fetch 而非 WorkerAPI.request，避免与其 401 重试逻辑相互递归。
+    async refreshAnonId() {
+      try {
+        const res = await fetch(`${WORKER_API_URL}/api/auth/anon`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data && typeof data.anon_id === 'string' && data.anon_id.indexOf('anon_') === 0) {
+            this.anonId = data.anon_id;
+            try { localStorage.setItem('apexon-anon-id', this.anonId); } catch (e) { /* ignore */ }
+            return this.anonId;
+          }
+        }
+      } catch (e) {
+        // 网络异常：保留本地临时身份，后续请求再次触发刷新
+      }
+      return this.anonId;
+    },
+
+    // 确保当前匿名身份已签名；未签名则立即向服务端换取。
+    async ensureSignedAnonId() {
+      if (this._isSignedAnonId(this.anonId)) return this.anonId;
+      return this.refreshAnonId();
     },
 
     _validateUsername(u) {
@@ -1028,7 +1153,7 @@
       const passErr = this._validatePassword(password);
       if (passErr) return { success: false, error: passErr };
       if (!this._validateEmail(e)) return { success: false, error: t('invalidEmail', '邮箱格式不正确') };
-      if (!/^\d{6}$/.test(c)) return { success: false, error: t('invalidCode', '验证码为 6 位数字') };
+      if (!/^\d{8}$/.test(c)) return { success: false, error: t('invalidCode', '验证码为 8 位数字') };
 
       const res = await WorkerAPI.request('/api/auth/register', 'POST', { username: u, password: password, email: e, code: c });
       console.log('[register] worker result:', res.data);
@@ -1037,9 +1162,10 @@
       }
 
       const expiresAt = new Date(res.data.expires_at).getTime();
-      this._setSession(res.data.username || u, res.data.token, expiresAt);
+      const realUserId = res.data.user_id || res.data.username || u;
+      this._setSession(realUserId, res.data.username || u, res.data.token, expiresAt, !!remember);
 
-      await DB.saveProfile(res.data.username || u, res.data.username || u, {
+      await DB.saveProfile(realUserId, res.data.username || u, {
         bio: '',
         location: '',
         website: '',
@@ -1066,7 +1192,8 @@
       }
 
       const expiresAt = new Date(res.data.expires_at).getTime();
-      this._setSession(res.data.username || u, res.data.token, expiresAt);
+      const realUserId = res.data.user_id || res.data.username || u;
+      this._setSession(realUserId, res.data.username || u, res.data.token, expiresAt, !!remember);
       LocalStats.recordUser(res.data.username || u);
       await this.mergeAnonymousData();
       return { success: true };
@@ -1088,13 +1215,14 @@
       const e = String(email).trim().toLowerCase();
       const c = String(code).trim();
       if (!this._validateEmail(e)) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidEmail', '邮箱格式不正确') : '邮箱格式不正确') };
-      if (!/^\d{6}$/.test(c)) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCode', '验证码为 6 位数字') : '验证码为 6 位数字') };
+      if (!/^\d{8}$/.test(c)) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCode', '验证码为 8 位数字') : '验证码为 8 位数字') };
       const res = await WorkerAPI.request('/api/auth/email-login', 'POST', { email: e, code: c });
       if (!res.ok || !res.data || !res.data.token) {
         return { success: false, noAccount: res.status === 404, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed', '登录失败') : '登录失败') };
       }
       const expiresAt = new Date(res.data.expires_at).getTime();
-      this._setSession(res.data.username || e, res.data.token, expiresAt);
+      const realUserId = res.data.user_id || res.data.username || e;
+      this._setSession(realUserId, res.data.username || e, res.data.token, expiresAt, !!remember);
       LocalStats.recordUser(res.data.username || e);
       await this.mergeAnonymousData();
       return { success: true };
@@ -1110,21 +1238,35 @@
       await this.logout();
     },
 
-    _setSession(username, token, expiresAt) {
-      this.currentUser = { username, token, expiresAt };
-      localStorage.setItem('apexon-session', JSON.stringify(this.currentUser));
+    // 持久化策略（H2）：默认写 sessionStorage；persist=true（勾选「记住我」）才写 localStorage。
+    _writeSession(persist) {
+      const json = JSON.stringify(this.currentUser);
+      const keep = !!persist;
+      if (this._persisted !== keep) {
+        // 切换持久化级别：清理另一种存储，避免残留旧令牌
+        try { (keep ? sessionStorage : localStorage).removeItem('apexon-session'); } catch (e) { /* ignore */ }
+      }
+      this._persisted = keep;
+      try { (keep ? localStorage : sessionStorage).setItem('apexon-session', json); } catch (e) { /* ignore */ }
+    },
+
+    _setSession(userId, username, token, expiresAt, persist) {
+      this.currentUser = { userId, username, token, expiresAt };
+      this._writeSession(persist === undefined ? this._persisted : persist);
     },
 
     _clearSession() {
       this.currentUser = null;
-      localStorage.removeItem('apexon-session');
+      this._persisted = false;
+      try { localStorage.removeItem('apexon-session'); } catch (e) { /* ignore */ }
+      try { sessionStorage.removeItem('apexon-session'); } catch (e) { /* ignore */ }
     },
 
     _extendSession() {
       if (!this.currentUser) return;
-      const days = this.SESSION_DAYS;
+      const days = this._persisted ? 30 : this.SESSION_DAYS;
       this.currentUser.expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
-      localStorage.setItem('apexon-session', JSON.stringify(this.currentUser));
+      this._writeSession(this._persisted);
     },
 
     _computeExpires(remember) {
@@ -1154,6 +1296,8 @@
     deleteAccount: Auth.deleteAccount.bind(Auth),
     changeUsername: Auth.changeUsername.bind(Auth),
     getAnonId: Auth.getAnonId.bind(Auth),
+    refreshAnonId: Auth.refreshAnonId.bind(Auth),
+    ensureSignedAnonId: Auth.ensureSignedAnonId.bind(Auth),
     init: Auth.init.bind(Auth),
     _validateUsername: Auth._validateUsername.bind(Auth),
     _validatePassword: Auth._validatePassword.bind(Auth),
@@ -2322,6 +2466,67 @@
       });
     },
 
+    // L9/UI8 + UI14：测试页统一注入「面包屑导航」与「换个维度继续挑战」推荐区。
+    // 仅在测试页生效（按文件名匹配），使用 data-i18n 让后续语言切换自动跟随。
+    injectTestExtras() {
+      const TESTS = [
+        { file: 'reaction.html', key: 'navReaction', icon: '⚡' },
+        { file: 'type.html', key: 'navType', icon: '⌨️' },
+        { file: 'stick.html', key: 'navStick', icon: '🎯' },
+        { file: 'number.html', key: 'navNumber', icon: '🔢' },
+        { file: 'verbal.html', key: 'navVerbal', icon: '📖' },
+        { file: 'visual.html', key: 'navVisual', icon: '👁️' },
+        { file: 'sequence.html', key: 'navSequence', icon: '🧩' },
+        { file: 'aim.html', key: 'navAim', icon: '🖱️' },
+        { file: 'stroop.html', key: 'navStroop', icon: '🌈' },
+        { file: 'nback.html', key: 'navNback', icon: '🧠' },
+        { file: 'taskswitch.html', key: 'navTaskswitch', icon: '🔀' },
+        { file: 'visualsearch.html', key: 'navVisualsearch', icon: '🔍' }
+      ];
+      const file = (location.pathname.split('/').pop() || '').toLowerCase();
+      const current = TESTS.find(x => x.file === file);
+      const container = document.querySelector('.container');
+      if (!current || !container) return;
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function (k, fb) { return fb; };
+
+      // 面包屑（明确"首页 / 当前测试"路径，方便一步返回）
+      if (!container.querySelector('.apex-breadcrumb')) {
+        const bc = document.createElement('nav');
+        bc.className = 'apex-breadcrumb';
+        bc.setAttribute('data-i18n-aria-label', 'breadcrumbAria');
+        bc.setAttribute('aria-label', t('breadcrumbAria', '面包屑导航'));
+        bc.innerHTML =
+          '<a href="index.html" class="apex-breadcrumb__link"><span data-i18n="navHome">' + t('navHome', '首页') + '</span></a>' +
+          '<span class="apex-breadcrumb__sep" aria-hidden="true">/</span>' +
+          '<span class="apex-breadcrumb__current" data-i18n="' + current.key + '">' + t(current.key, current.file) + '</span>';
+        container.insertBefore(bc, container.firstChild);
+      }
+
+      // 下一个测试推荐（随机挑 3 个其它测试；作为相关导航常驻页面底部）
+      if (!container.querySelector('.apex-next-tests')) {
+        const pool = TESTS.filter(x => x.file !== file);
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        const picks = pool.slice(0, 3);
+        const wrap = document.createElement('section');
+        wrap.className = 'apex-next-tests';
+        wrap.innerHTML =
+          '<div class="apex-next-tests__head">' +
+            '<span class="apex-next-tests__title" data-i18n="nextTestTitle">' + t('nextTestTitle', '换个维度继续挑战') + '</span>' +
+            '<span class="apex-next-tests__desc" data-i18n="nextTestDesc">' + t('nextTestDesc', '这些测试也很适合你') + '</span>' +
+          '</div>' +
+          '<div class="apex-next-tests__grid">' +
+            picks.map(p => '<a class="apex-next-test" href="' + p.file + '">' +
+              '<span class="apex-next-test__icon" aria-hidden="true">' + p.icon + '</span>' +
+              '<span class="apex-next-test__name" data-i18n="' + p.key + '">' + Security.escapeHtml(t(p.key, p.file)) + '</span>' +
+            '</a>').join('') +
+          '</div>';
+        container.appendChild(wrap);
+      }
+    },
+
     // P2-18: 测试页“再来一次 / 分享成绩”在完成任一测试前禁用，避免点了没反应
     controlResultButtons() {
       const sel = 'button[data-i18n="shareScore"], button[data-i18n="testAgain"], button[data-i18n="retest"]';
@@ -2393,12 +2598,13 @@
     },
 
     // 微交互：主页卡片点击特效（按下回弹 + 光标聚光 + 扩散圆环 + 火花迸射）
-    // 仅作用于 .cards-grid 内的常规卡片；music 宽卡片（.item-card--wide）另行单独处理。
+    // 作用于 .cards-grid 内除 music 卡片以外的所有卡片（含人气榜等宽卡片）；
+    // music 宽卡片（.apex-music-card）有专属的旋律特效，见 initMusicCardFX。
     initCardClickFX() {
       if (this._cardFxBound) return;
       this._cardFxBound = true;
 
-      const SELECTOR = '.cards-grid .item-card:not(.item-card--wide)';
+      const SELECTOR = '.cards-grid .item-card:not(.apex-music-card)';
       const SPARKS = 6;
       const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -2476,6 +2682,127 @@
               burst(card, rect.width / 2, rect.height / 2);
             }
             setTimeout(() => { window.location.href = card.href; }, 180);
+          });
+        });
+      };
+
+      bind();
+      if (window.MutationObserver) {
+        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        mo.observe(document.body, { childList: true, subtree: true });
+      }
+    },
+
+    // music 宽卡片专用点击特效：旋律音符 + 三段声波涟漪 + 均衡器脉冲（节奏感）。
+    // 与常规卡片的"火花迸射"区分开，营造"点亮一段旋律"的柔和律动。
+    initMusicCardFX() {
+      if (this._musicFxBound) return;
+      this._musicFxBound = true;
+
+      const SELECTOR = '.cards-grid .item-card.apex-music-card';
+      const NOTES = ['♪', '♫', '♩', '♬', '🎵', '🎶'];
+      const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 在 (x, y)（相对卡片左上角）生成一组旋律特效
+      const playMelody = (card, x, y) => {
+        card.querySelectorAll('.apex-music-fx__note, .apex-music-fx__wave, .apex-music-fx__eq').forEach(n => n.remove());
+        card.style.setProperty('--fx-x', x + 'px');
+        card.style.setProperty('--fx-y', y + 'px');
+
+        // 三段式声波涟漪：对应"强-弱-弱"的节拍
+        [0, 130, 260].forEach((delay, i) => {
+          const wave = document.createElement('span');
+          wave.className = 'apex-music-fx__wave';
+          wave.style.animationDelay = delay + 'ms';
+          wave.style.setProperty('--wave-scale', (4.6 + i * 1.4).toFixed(2));
+          card.appendChild(wave);
+        });
+
+        // 上飘旋律音符：左右交错、颜色沿色轮渐变
+        const count = 7;
+        for (let i = 0; i < count; i++) {
+          const note = document.createElement('span');
+          note.className = 'apex-music-fx__note';
+          note.textContent = NOTES[i % NOTES.length];
+          const dir = i % 2 === 0 ? 1 : -1;
+          note.style.setProperty('--dx', (dir * (18 + Math.random() * 46)).toFixed(1) + 'px');
+          note.style.setProperty('--rot', (dir * (Math.random() * 16)).toFixed(1) + 'deg');
+          note.style.setProperty('--rot2', (dir * (18 + Math.random() * 24)).toFixed(1) + 'deg');
+          note.style.setProperty('--hue', String(190 + i * 20));
+          note.style.animationDelay = (i * 55) + 'ms';
+          card.appendChild(note);
+        }
+
+        // 底部均衡器脉冲
+        const eq = document.createElement('span');
+        eq.className = 'apex-music-fx__eq';
+        for (let b = 0; b < 9; b++) {
+          const bar = document.createElement('i');
+          bar.className = 'apex-music-fx__bar';
+          bar.style.setProperty('--d', (b * 45) + 'ms');
+          eq.appendChild(bar);
+        }
+        card.appendChild(eq);
+
+        const pieces = card.querySelectorAll('.apex-music-fx__note, .apex-music-fx__wave, .apex-music-fx__eq');
+        setTimeout(() => pieces.forEach(p => p.remove()), 1500);
+      };
+
+      const beat = (card) => {
+        card.classList.remove('is-beat');
+        // 强制回流以重启动画
+        void card.offsetWidth;
+        card.classList.add('is-beat');
+        setTimeout(() => card.classList.remove('is-beat'), 700);
+      };
+
+      const bind = () => {
+        document.querySelectorAll(SELECTOR).forEach(card => {
+          if (card._apexMusicFxBound) return;
+          card._apexMusicFxBound = true;
+          card.classList.add('apex-music-fx');
+
+          card.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0 || reduced()) return;
+            const rect = card.getBoundingClientRect();
+            card.classList.add('is-pressing');
+            beat(card);
+            playMelody(card, e.clientX - rect.left, e.clientY - rect.top);
+          }, { passive: true });
+
+          const release = () => card.classList.remove('is-pressing');
+          card.addEventListener('pointerup', release, { passive: true });
+          card.addEventListener('pointercancel', release, { passive: true });
+          card.addEventListener('pointerleave', release, { passive: true });
+
+          card.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            card.classList.add('is-pressing');
+            if (!reduced()) {
+              const rect = card.getBoundingClientRect();
+              beat(card);
+              playMelody(card, rect.width / 2, rect.height / 2);
+            }
+          });
+          card.addEventListener('keyup', release);
+
+          card.addEventListener('click', (e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            if (card._apexMusicNavLock) { e.preventDefault(); return; }
+            const href = card.getAttribute('href');
+            if (!href || href.charAt(0) === '#') return;
+            if (reduced()) return;
+            e.preventDefault();
+            card._apexMusicNavLock = true;
+            card.classList.remove('is-pressing');
+            card.classList.add('is-launching');
+            if (e.detail === 0) {
+              const rect = card.getBoundingClientRect();
+              beat(card);
+              playMelody(card, rect.width / 2, rect.height / 2);
+            }
+            // 留出一点时间让音符飘起，形成"旋律拉长"的退场感
+            setTimeout(() => { window.location.href = card.href; }, 220);
           });
         });
       };
@@ -2593,8 +2920,12 @@
     },
 
     _renderAvatarHTML(avatarUrl) {
-      if (avatarUrl) {
-        return '<img src="' + Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')">';
+      // M1 修复：头像 URL 做协议白名单校验，仅允许站内相对路径（assets/）或 http(s) 协议，
+      // 拦截 javascript:/data:/vbscript: 等脚本协议（此前仅做 HTML 转义，存在注入风险）。
+      const raw = String(avatarUrl || '').trim();
+      const safe = /^assets\//i.test(raw) || /^https?:\/\//i.test(raw) ? raw : '';
+      if (safe) {
+        return '<img src="' + Security.escapeHtml(safe) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')">';
       }
       return '<svg viewBox="0 0 64 64" style="width:62%;height:62%;"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg>';
     },
@@ -2891,7 +3222,7 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose" aria-label="关闭">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><div class="apex-login-methods" id="apexLoginMethods"><button class="apex-method-btn active" data-method="password">' + t('loginByUsername', '用户名登录') + '</button><button class="apex-method-btn" data-method="email">' + t('loginByEmail', '邮箱验证码登录') + '</button></div><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-mail-group" id="apexMailGroup" style="display:none;"><input type="email" id="apexMailEmail" placeholder="' + t('emailPlaceholder', '邮箱') + '" maxlength="120" autocomplete="email"><div class="apex-hint" id="apexMailEmailHint">' + t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') + '</div><div class="apex-password-wrap apex-code-wrap"><input type="text" id="apexMailCode" placeholder="' + t('mailCodePlaceholder', '6 位验证码') + '" maxlength="6" inputmode="numeric" autocomplete="one-time-code"><button class="apex-mail-send" id="apexMailSend" type="button">' + t('sendCode', '发送验证码') + '</button></div><div class="apex-hint" id="apexMailCodeHint"></div></div><div class="apex-password-wrap" id="apexPasswordWrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
+      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose" aria-label="关闭">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><div class="apex-login-methods" id="apexLoginMethods"><button class="apex-method-btn active" data-method="password">' + t('loginByUsername', '用户名登录') + '</button><button class="apex-method-btn" data-method="email">' + t('loginByEmail', '邮箱验证码登录') + '</button></div><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-mail-group" id="apexMailGroup" style="display:none;"><input type="email" id="apexMailEmail" placeholder="' + t('emailPlaceholder', '邮箱') + '" maxlength="120" autocomplete="email"><div class="apex-hint" id="apexMailEmailHint">' + t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') + '</div><div class="apex-password-wrap apex-code-wrap"><input type="text" id="apexMailCode" placeholder="' + t('mailCodePlaceholder', '8 位验证码') + '" maxlength="8" inputmode="numeric" autocomplete="one-time-code"><button class="apex-mail-send" id="apexMailSend" type="button">' + t('sendCode', '发送验证码') + '</button></div><div class="apex-hint" id="apexMailCodeHint"></div></div><div class="apex-password-wrap" id="apexPasswordWrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
       document.body.appendChild(modal);
 
       let a11yCleanup = null;
@@ -2982,7 +3313,7 @@
           const emailErr = em ? (APEXON.Auth._validateEmail(em) ? '' : t('invalidEmail', '邮箱格式不正确')) : '';
           emailHint.textContent = emailErr || (em ? t('validFormat', '格式正确') : (isRegister ? t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') : t('emailRule', '请输入用于登录/注册的邮箱')));
           emailHint.className = 'apex-hint' + (emailErr ? ' invalid' : (em ? ' valid' : ''));
-          const codeErr = !cd ? t('enterCode', '请输入 6 位验证码') : (!/^\d{6}$/.test(cd) ? t('invalidCode', '验证码为 6 位数字') : '');
+          const codeErr = !cd ? t('enterCode', '请输入 8 位验证码') : (!/^\d{8}$/.test(cd) ? t('invalidCode', '验证码为 8 位数字') : '');
           codeHint.textContent = codeErr || '';
           codeHint.className = 'apex-hint' + (codeErr ? ' invalid' : (cd ? ' valid' : ''));
           if (emailMode) {
@@ -3012,7 +3343,7 @@
         confirmHint.className = 'apex-hint' + (confirmErr ? ' invalid' : (confirmInput.value ? ' valid' : ''));
         const termsErr = termsCheckbox.checked ? null : t('agreeTermsRequired', '请同意服务条款和隐私政策');
         const emailErr = APEXON.Auth._validateEmail(emailInput.value.trim().toLowerCase()) ? '' : t('invalidEmail', '邮箱格式不正确');
-        const codeErr = /^\d{6}$/.test(codeInput.value.trim()) ? '' : t('invalidCode', '验证码为 6 位数字');
+        const codeErr = /^\d{8}$/.test(codeInput.value.trim()) ? '' : t('invalidCode', '验证码为 8 位数字');
 
         submitBtn.disabled = !!(nameErr || passErr || confirmErr || termsErr || emailErr || codeErr);
       };
@@ -4723,6 +5054,10 @@
     UI.initStylePicker();
     UI.bindPaletteButton();
     Auth.init();
+    // 游客：确保拿到服务端签名的匿名身份后再登记在线心跳/记录，避免用未签名 id 写库被 401。
+    if (!Auth.isLoggedIn()) {
+      try { await Auth.ensureSignedAnonId(); } catch (e) { /* 离线时降级为本地临时身份 */ }
+    }
     await Auth.validateSession();
     const userId = Auth.getUserId();
     LocalStats.recordUser(userId);
@@ -4741,12 +5076,16 @@
     UI.injectFooter();
     // 注入页面回到顶部控件
     UI.injectBackToTop();
+    // 测试页：注入面包屑导航 + 下一个测试推荐（L9/UI8、UI14）
+    UI.injectTestExtras();
     // P2-18：测试页成绩按钮受控（未完成测试前禁用）
     UI.controlResultButtons();
     // 微交互：为关键按钮自动绑定涟漪效果
     UI.bindGlobalRipple();
     // 微交互：主页卡片点击特效（music 宽卡片单独处理）
     UI.initCardClickFX();
+    // 微交互：music 宽卡片专属"旋律/节奏"特效
+    UI.initMusicCardFX();
     document.addEventListener('apexon:langchange', () => {
       UI.updateUserDisplay();
     });

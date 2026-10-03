@@ -7,8 +7,32 @@ import type { Redis } from '@upstash/redis/cloudflare';
  * 但对限流来说完全可接受：最坏情况只是让一个请求漏过或把窗口重置提前一到两个请求，
  * 不会造成越权或数据破坏。
  *
+ * H3 修复：Redis 不可用不再直接放行（旧 fail-open 会让所有限流失效）。
+ * 改为降级到"进程内备用限流"——Workers 单个 isolate 内近似生效，
+ * 跨 isolate 不共享，但仍能拦住单点脚本洪峰，属 fail-closed 姿态。
+ *
  * @returns true 表示放行，false 表示已超限
  */
+
+// 内存备用限流的桶（key → 计数 + 到期时间）
+const memBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function memRateLimit(key: string, limit: number, windowSec: number): boolean {
+  const now = Date.now();
+  const k = `mem:${key}`;
+  const b = memBuckets.get(k);
+  if (!b || b.resetAt <= now) {
+    // 容量保护：桶过多时清理过期项，防止 isolate 长期运行内存膨胀
+    if (memBuckets.size > 5000) {
+      for (const [bk, bv] of memBuckets) if (bv.resetAt <= now) memBuckets.delete(bk);
+    }
+    memBuckets.set(k, { count: 1, resetAt: now + windowSec * 1000 });
+    return true;
+  }
+  b.count += 1;
+  return b.count <= limit;
+}
+
 export async function rateLimit(
   redis: Redis,
   key: string,
@@ -24,8 +48,8 @@ export async function rateLimit(
     }
     return count <= limit;
   } catch {
-    // Redis 不可用时不要因限流把合法用户挡掉（fail-open，但上层另有防御）
-    return true;
+    // Redis 不可用：降级到内存限流（fail-closed），绝不无条件放行
+    return memRateLimit(key, limit, windowSec);
   }
 }
 

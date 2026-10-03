@@ -152,7 +152,8 @@ export async function tursoSelectLeaderboard(
   order: 'asc' | 'desc',
   limit: number
 ): Promise<MixedData[]> {
-  const dir = order === 'asc' ? 'ASC' : 'DESC';
+  // L5：ORDER BY 方向经白名单归一化（仅 'ASC' / 'DESC'），绝不拼接调用方原始字符串。
+  const dir: 'ASC' | 'DESC' = order === 'asc' ? 'ASC' : 'DESC';
   const rawLimit = Number(limit);
   const safeLimit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 100;
 
@@ -193,6 +194,29 @@ export async function tursoDeleteOldByType(
     args: [type, beforeIso],
   });
   return Number((result as unknown as { rowsAffected?: number }).rowsAffected) || 0;
+}
+
+/**
+ * H4 修复：按用户名或邮箱精确查询账号。
+ * 在数据库层用 json_extract 过滤（field 来自白名单字面量，无注入风险），
+ * 取代"拉取全部账号 + 在 JS 里逐条 JSON.parse 比对"，既避免账号数超限漏查，也缩小密码哈希的读取面。
+ */
+export async function tursoSelectAccountByField(
+  client: Client,
+  field: 'username' | 'email' | 'session_token',
+  value: string
+): Promise<MixedData | undefined> {
+  // field 只可能是这三个白名单字面量，拼接安全
+  const path = field === 'email' ? '$.email' : field === 'session_token' ? '$.session_token' : '$.username';
+  const result = await client.execute({
+    sql: `SELECT id, user_id, type, subtype, score_value, payload, file_url, created_at, updated_at
+          FROM mixed_data
+          WHERE type = 'account'
+            AND lower(json_extract(payload, '${path}')) = lower(?)
+          LIMIT 1`,
+    args: [value],
+  });
+  return (result.rows[0] as unknown as MixedData) ?? undefined;
 }
 
 export async function tursoSelectById(client: Client, id: string): Promise<MixedData | undefined> {

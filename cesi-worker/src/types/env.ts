@@ -23,6 +23,21 @@ export interface Env {
   // 管理接口（/api/admin/*）的访问令牌；未配置时管理接口直接禁用
   ADMIN_TOKEN?: string;
 
+  // 「站长」认证口令（可选）。管理员登录后，可在后台「认证」页用该口令把当前会话
+  // 升级为「站长」角色，解锁站长专属的高危操作。未配置时站长认证整体禁用。
+  OWNER_TOKEN?: string;
+
+  // 匿名 token（anon_xxx）的 HMAC 签名密钥（可选）。
+  // 未配置时会从其它服务端密钥派生，用于给匿名身份签名，防止伪造 anon_ 前缀刷分。
+  ANON_HMAC_SECRET?: string;
+
+  // Jamendo 音乐 API 的 client_id（可选）。配置后由 Worker 代理音乐接口，
+  // 前端不再持有 client_id（H6 修复）；未配置时音乐页退回内置演示曲库。
+  JAMENDO_CLIENT_ID?: string;
+
+  // 是否放行本地开发来源（http://localhost:*）进入 CORS 白名单。默认关闭，仅开发环境设 'on'。
+  ALLOW_LOCALHOST_ORIGIN?: string;
+
   // （可选）TOTP 双重验证密钥（Base32 编码，如 AAAA-BBBB-CCCC）。
   // 配置后，后台登录必须同时通过「口令 + 6 位动态码」双因素校验才发放会话令牌，
   // 可配合 Google Authenticator / 1Password / Authy 等 TOTP 验证器使用。

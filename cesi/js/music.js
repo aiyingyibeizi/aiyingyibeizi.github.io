@@ -3,14 +3,15 @@
 
   // =========================================
   // APEXON Music Player
-  // 使用 Jamendo API（需要 client_id）+ 内置演示曲库兜底
-  // 去 https://developer.jamendo.com 注册应用获取 client_id
+  // 曲库走 Cloudflare Worker 代理（/api/music/jamendo），client_id 不暴露在前端。
+  // 未配置时自动退回内置演示曲库。
   // =========================================
 
-  const JAMENDO_CLIENT_ID = '1ff4ae9b';
+  // 音乐代理 API 基址（与站点其它接口一致，统一指向 Worker）
+  const MUSIC_API_BASE = 'https://api.apexon.qzz.io';
 
   // 演示曲库：使用 SoundHelix 提供的 16 首示例曲目（稳定可播放）
-  // 如需接入数万首全网曲库，请在 JAMENDO_CLIENT_ID 填入 Jamendo 开发者 client_id
+  // 服务端配置 Jamendo client_id 后会自动切换到在线曲库
   const DEMO_TRACKS = [
     { id: 'demo-1', name: 'Neon Horizon', artist_name: 'SoundHelix', album_name: 'Electronic Dreams', duration: 186, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', image: 'https://picsum.photos/seed/neonhorizon/400/400', tags: ['electronic', 'pop'], url: 'https://www.soundhelix.com/' },
     { id: 'demo-2', name: 'Midnight Drive', artist_name: 'SoundHelix', album_name: 'Night Sessions', duration: 205, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', image: 'https://picsum.photos/seed/midnightdrive/400/400', tags: ['electronic', 'rock'], url: 'https://www.soundhelix.com/' },
@@ -81,11 +82,9 @@
     },
 
     hideNoticeIfConfigured() {
+      // H6：client_id 已迁移到服务端代理，前端无需用户配置，固定隐藏提示条。
       const notice = $('musicNotice');
-      if (!notice) return;
-      if (JAMENDO_CLIENT_ID && JAMENDO_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE') {
-        notice.style.display = 'none';
-      }
+      if (notice) notice.style.display = 'none';
     },
 
     loadStorage() {
@@ -661,13 +660,11 @@
     },
 
     async fetchJamendo(endpoint, params) {
-      if (!JAMENDO_CLIENT_ID || JAMENDO_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-        return this.fallbackSearch(params);
-      }
+      // H6：所有 Jamendo 请求经 Worker 代理转发，前端不持有 client_id。
       try {
-        const qs = new URLSearchParams({ client_id: JAMENDO_CLIENT_ID, format: 'json', ...params });
-        const url = 'https://api.jamendo.com/v3.0' + endpoint + '?' + qs.toString();
-        const res = await fetch(url);
+        const qs = new URLSearchParams({ endpoint, ...params });
+        const res = await fetch(MUSIC_API_BASE + '/api/music/jamendo?' + qs.toString());
+        if (!res.ok) return this.fallbackSearch(params);
         const data = await res.json();
         if (!data || !data.results) return this.fallbackSearch(params);
         return data.results.map(normalizeTrack);

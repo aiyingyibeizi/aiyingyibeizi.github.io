@@ -51,7 +51,7 @@ export async function issueCaptcha(redis: Redis): Promise<CaptchaChallenge | nul
 
 /**
  * 校验验证码：命中即删除（一次性）。返回 true 表示通过。
- * 注意：任何 Redis 异常都返回 true，绝不因验证码子系统故障把正常用户挡在登录外。
+ * 注意：Redis 异常时返回 false（fail-closed，见 H3 修复说明）。
  */
 export async function verifyCaptcha(redis: Redis, id: string, answer: string): Promise<boolean> {
   if (!id || !answer) return false;
@@ -64,18 +64,33 @@ export async function verifyCaptcha(redis: Redis, id: string, answer: string): P
     await redis.del(`${CAP_PREFIX}${safeKey(id)}`);
     return ok;
   } catch (err) {
+    // H3 修复：验证码子系统故障时不再无条件放行（fail-closed）。
+    // 说明：仅在"该来源已被判定需要验证码"时才会走到这里，因此不会影响正常用户。
     console.error('verifyCaptcha failed:', err);
-    return true; // fail-open
+    return false;
   }
 }
 
 // ---- IP 黑名单（累积式）----
+// M7 修复：IP 不再做字符替换+截断当 key（IPv6 会碰撞），改用 SHA-256 哈希定长做 key。
+// 同时拆分为「失败计数」与「黑名单标记」两个独立命名空间——
+// 此前两者共用同一个 key，导致任何一次登录失败都会让 isIpBlacklisted 立即返回 true（误封）。
+const IPFAIL_PREFIX = 'ipfail:';
 const IPBLACK_PREFIX = 'ipblack:';
+const IPBLACK_MAP_PREFIX = 'ipblackmap:';
+
+/** SHA-256(ip) 取前 40 位十六进制（160-bit），彻底消除碰撞且不泄露原始 IP */
+async function ipHash(ip: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
+  let out = '';
+  for (const b of new Uint8Array(digest)) out += b.toString(16).padStart(2, '0');
+  return out.slice(0, 40);
+}
 
 /** 记录一次登录失败（按 IP 累积）；返回该 IP 在窗口内的累计失败次数 */
 export async function countIpFailure(redis: Redis, ip: string, windowSec: number): Promise<number> {
   try {
-    const k = `${IPBLACK_PREFIX}${safeKey(ip)}`;
+    const k = `${IPFAIL_PREFIX}${await ipHash(ip)}`;
     const n = await redis.incr(k);
     if (n <= 1) await redis.expire(k, windowSec);
     return n;
@@ -85,43 +100,75 @@ export async function countIpFailure(redis: Redis, ip: string, windowSec: number
   }
 }
 
-/** 该 IP 是否已进入黑名单（黑名单 key 存活期间即视为拉黑） */
+/** 该 IP 是否已进入黑名单（仅黑名单标记 key 存活期间视为拉黑） */
 export async function isIpBlacklisted(redis: Redis, ip: string): Promise<boolean> {
   try {
-    return !!(await redis.get(`${IPBLACK_PREFIX}${safeKey(ip)}`));
+    const h = await ipHash(ip);
+    return !!(await redis.get(`${IPBLACK_PREFIX}${h}`));
   } catch (err) {
     console.error('isIpBlacklisted failed:', err);
     return false;
   }
 }
 
-/** 当累计失败达到阈值时，把该 IP 拉黑 durationSec 秒（在现有计数 key 上直接续命） */
+/** 把该 IP 拉黑 durationSec 秒；同时写入哈希→原始 IP 的映射供面板展示 */
 export async function blacklistIp(redis: Redis, ip: string, durationSec: number): Promise<void> {
   try {
-    const k = `${IPBLACK_PREFIX}${safeKey(ip)}`;
-    const n = await redis.incr(k);
-    if (n <= 1) await redis.expire(k, durationSec);
-    else await redis.expire(k, durationSec); // 延长
+    const h = await ipHash(ip);
+    await redis.set(`${IPBLACK_PREFIX}${h}`, '1', { ex: durationSec });
+    await redis.set(`${IPBLACK_MAP_PREFIX}${h}`, ip, { ex: durationSec });
   } catch (err) {
     console.error('blacklistIp failed:', err);
   }
 }
 
-/** 取黑名单计数（供面板展示失败次数） */
+/** 取该 IP 在窗口内的失败计数（供面板展示/验证码阈值判断） */
 export async function ipBlacklistCount(redis: Redis, ip: string): Promise<number> {
   try {
-    return (await redis.get<number>(`${IPBLACK_PREFIX}${safeKey(ip)}`)) || 0;
+    return (await redis.get<number>(`${IPFAIL_PREFIX}${await ipHash(ip)}`)) || 0;
   } catch (err) {
     console.error('ipBlacklistCount failed:', err);
     return 0;
   }
 }
 
-/** 手动解除某个 IP 的黑名单 */
+/** 手动解除某个 IP 的黑名单（同时清理失败计数与映射） */
 export async function clearIpBlacklist(redis: Redis, ip: string): Promise<void> {
   try {
-    await redis.del(`${IPBLACK_PREFIX}${safeKey(ip)}`);
+    const h = await ipHash(ip);
+    await redis.del(`${IPBLACK_PREFIX}${h}`);
+    await redis.del(`${IPFAIL_PREFIX}${h}`);
+    await redis.del(`${IPBLACK_MAP_PREFIX}${h}`);
   } catch (err) {
     console.error('clearIpBlacklist failed:', err);
   }
+}
+
+/**
+ * 列出所有已拉黑的 IP（供管理面板展示）。
+ * 返回原始 IP（经哈希→IP 映射还原）与 TTL；映射缺失时回退展示哈希前缀。
+ */
+export async function listIpBlacklist(
+  redis: Redis
+): Promise<Array<{ ip: string; ttl: number }>> {
+  let keys: string[] = [];
+  try {
+    keys = await redis.keys(`${IPBLACK_PREFIX}*`);
+  } catch (err) {
+    console.error('listIpBlacklist keys scan failed:', err);
+    return [];
+  }
+  const out: Array<{ ip: string; ttl: number }> = [];
+  for (const k of keys.slice(0, 200)) {
+    const h = k.replace(/^ipblack:/, '');
+    let ip = h.slice(0, 12) + '…';
+    let ttl = 0;
+    try {
+      const mapped = await redis.get<string>(`${IPBLACK_MAP_PREFIX}${h}`);
+      if (mapped) ip = mapped;
+    } catch { /* 映射读取失败则回退哈希 */ }
+    try { ttl = await redis.ttl(k); } catch { /* */ }
+    out.push({ ip, ttl });
+  }
+  return out;
 }

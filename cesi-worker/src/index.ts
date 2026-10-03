@@ -2,25 +2,26 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { Redis } from '@upstash/redis/cloudflare';
 import { createRedis } from './db/redis';
-import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectLeaderboard, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes } from './db/turso';
+import { createTursoClient, tursoMigrate, tursoInsert, tursoSelectByUser, tursoSelectByType, tursoSelectLeaderboard, tursoSelectById, tursoDeleteById, tursoCountByType, tursoGetMetaUsedBytes, tursoUpdateMetaUsedBytes, tursoSelectAccountByField } from './db/turso';
 // 已切换为仅使用 3 个 Turso 数据库（同厂商，延迟更低），Neon 和 Supabase 暂时注释掉
 // import { createClient } from '@supabase/supabase-js';
 // import { createNeonPool, neonMigrate, neonInsert, neonSelectByUser, neonSelectByType, neonSelectById, neonDeleteById, neonCountByType, neonGetMetaUsedBytes, neonUpdateMetaUsedBytes } from './db/neon';
 // import { createSupabasePgPool, supabasePgMigrate, supabasePgInsert, supabasePgSelectByUser, supabasePgSelectByType, supabasePgSelectById, supabasePgDeleteById, supabasePgCountByType, supabasePgGetMetaUsedBytes, supabasePgUpdateMetaUsedBytes } from './db/supabase-pg';
 import { ShardService } from './services/shard';
-import { createAuthMiddleware, cacheSession } from './services/auth';
+import { createAuthMiddleware, cacheSession, revokeSession, signAnonId } from './services/auth';
 import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
 import { writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
-import { verifyAdminPassword, verifyAdminTotp, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
+import { verifyAdminPassword, verifyAdminTotp, verifyOwnerPassword, setAdminSessionRole, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
+import type { AdminRole } from './services/admin';
 import { sendNotify } from './services/notify';
 import { toCsv, csvDownload, csvFilename } from './services/export';
 import { emailConfig, sendMail } from './services/email';
 import { renderAdminUI } from './services/admin-ui';
 import { parseCsv } from './services/csv';
-import { issueCaptcha, verifyCaptcha, countIpFailure, isIpBlacklisted, blacklistIp, ipBlacklistCount, clearIpBlacklist } from './services/captcha';
+import { issueCaptcha, verifyCaptcha, countIpFailure, isIpBlacklisted, blacklistIp, ipBlacklistCount, clearIpBlacklist, listIpBlacklist } from './services/captcha';
 import { checkScoreAnomaly } from './services/anomaly';
 import { analyzeContent } from './services/spam';
 import { createSnapshot, listSnapshots, getSnapshot } from './services/snapshot';
@@ -68,10 +69,30 @@ function scoreLowerIsBetter(testType: string): boolean {
 // 邮箱验证码辅助（Redis 存储，短期 TTL；全部 fail-open）
 // ---------------------------------------------------------------------------
 const MAIL_CODE_PREFIX = 'mailver:code:';
+const MAIL_ATTEMPT_PREFIX = 'mailver:try:';
 const MAIL_CODE_TTL_SEC = 10 * 60;
+// C1 修复：单个验证码最多允许校验 5 次，超过即作废。6 位码 + 5 次尝试把爆破成功率压到百万分之五以内。
+const MAIL_CODE_MAX_ATTEMPTS = 5;
 
 function mailKey(email: string): string {
   return MAIL_CODE_PREFIX + email.replace(/[^a-z0-9@._+-]/gi, '_').slice(0, 120);
+}
+
+/** 验证码尝试计数 key（与验证码同生命周期） */
+function mailAttemptKey(email: string): string {
+  return MAIL_ATTEMPT_PREFIX + email.replace(/[^a-z0-9@._+-]/gi, '_').slice(0, 120);
+}
+
+/** M3 修复：用 CSPRNG 生成 [0, max) 的整数，拒绝采样消除取模偏差 */
+function secureRandomInt(max: number): number {
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0xffffffff / max) * max;
+  let x = 0;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % max;
 }
 
 /** 天级计数器（key 含日期并按 2 天 TTL 过期），返回当日最新计数值；Redis 异常返回 0（不阻断） */
@@ -87,11 +108,13 @@ async function mailDayCount(redis: Redis, namespace: string, value: string): Pro
   }
 }
 
-/** 生成 6 位数字验证码并写入 Redis（带 TTL）；Redis 异常返回 null（调用方视为生成失败） */
+/** 生成 8 位数字验证码并写入 Redis（CSPRNG + TTL）；Redis 异常返回 null（调用方视为生成失败） */
 async function issueMailCode(redis: Redis, email: string): Promise<string | null> {
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(secureRandomInt(90000000) + 10000000); // CSPRNG：10000000-99999999
   try {
     await redis.set(mailKey(email), code, { ex: MAIL_CODE_TTL_SEC });
+    // 重新发码时清零旧尝试计数，避免上一轮的失败次数拖累新验证码
+    await redis.del(mailAttemptKey(email)).catch(() => {});
     return code;
   } catch (err) {
     console.error('issueMailCode failed:', err);
@@ -99,14 +122,27 @@ async function issueMailCode(redis: Redis, email: string): Promise<string | null
   }
 }
 
-/** 校验验证码：命中则删除（一次性），防止同一验证码被反复使用 */
+/**
+ * 校验验证码：命中则删除（一次性）。
+ * C1 修复：每次校验先自增尝试计数，超过 MAIL_CODE_MAX_ATTEMPTS 后直接作废验证码，
+ * 彻底堵死"8 位码 + 10 分钟有效期被高频枚举"的暴力破解路径。
+ */
 async function verifyMailCode(redis: Redis, email: string, code: string): Promise<boolean> {
-  if (!/^\d{6}$/.test(code)) return false;
+  if (!/^\d{8}$/.test(code)) return false;
+  const tryKey = mailAttemptKey(email);
   try {
+    const attempts = Number(await redis.incr(tryKey)) || 1;
+    if (attempts === 1) await redis.expire(tryKey, MAIL_CODE_TTL_SEC);
+    if (attempts > MAIL_CODE_MAX_ATTEMPTS) {
+      // 尝试次数耗尽：作废当前验证码，迫使重新发码（重新发码会重置计数）
+      await redis.del(mailKey(email)).catch(() => {});
+      return false;
+    }
     const expect = await redis.get<string>(mailKey(email));
     if (!expect) return false;
     if (expect !== code) return false;
     await redis.del(mailKey(email));
+    await redis.del(tryKey).catch(() => {});
     return true;
   } catch (err) {
     console.error('verifyMailCode failed:', err);
@@ -181,6 +217,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     deleteById: (id) => tursoDeleteById(tursoApexonClient, id),
     countByType: (type) => tursoCountByType(tursoApexonClient, type),
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexonClient, subtype, order, limit),
+    selectAccountByField: (field, value) => tursoSelectAccountByField(tursoApexonClient, field, value),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexonClient, 'APEXON'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexonClient, 'APEXON', 450 * 1024 * 1024, used),
   };
@@ -196,6 +233,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     deleteById: (id) => tursoDeleteById(tursoApexon1Client, id),
     countByType: (type) => tursoCountByType(tursoApexon1Client, type),
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon1Client, subtype, order, limit),
+    selectAccountByField: (field, value) => tursoSelectAccountByField(tursoApexon1Client, field, value),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon1Client, 'APEXON_1'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon1Client, 'APEXON_1', 450 * 1024 * 1024, used),
   };
@@ -211,6 +249,7 @@ async function buildShardService(env: Env): Promise<ShardService> {
     deleteById: (id) => tursoDeleteById(tursoApexon2Client, id),
     countByType: (type) => tursoCountByType(tursoApexon2Client, type),
     selectLeaderboard: (subtype, order, limit) => tursoSelectLeaderboard(tursoApexon2Client, subtype, order, limit),
+    selectAccountByField: (field, value) => tursoSelectAccountByField(tursoApexon2Client, field, value),
     getMetaUsedBytes: () => tursoGetMetaUsedBytes(tursoApexon2Client, 'APEXON_2'),
     updateMetaUsedBytes: (used) => tursoUpdateMetaUsedBytes(tursoApexon2Client, 'APEXON_2', 450 * 1024 * 1024, used),
   };
@@ -273,7 +312,13 @@ async function buildShardService(env: Env): Promise<ShardService> {
   return cachedShardService;
 }
 
-type Variables = { userId: string; adminToken?: string; adminSessionIp?: string };
+type Variables = {
+  userId: string;
+  adminToken?: string;
+  adminSessionIp?: string;
+  adminRole?: AdminRole;
+  adminSessionToken?: string;
+};
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 app.use('*', async (c, next) => {
@@ -282,9 +327,13 @@ app.use('*', async (c, next) => {
     'https://apexon.qzz.io',
     'https://www.apexon.qzz.io',
     'https://api.apexon.qzz.io',
-    'http://localhost:3000',
-    'http://localhost:5173',
   ];
+  // L2 修复：本地开发源默认不再放行；仅当显式设置 ALLOW_LOCALHOST_ORIGIN=on 时才加入白名单，
+  // 避免生产环境把 localhost 暴露为可信来源。
+  const envCors = c.env as Env;
+  if (String(envCors.ALLOW_LOCALHOST_ORIGIN || '').toLowerCase() === 'on') {
+    allowedOrigins.push('http://localhost:3000', 'http://localhost:5173', 'http://localhost:8788');
+  }
   // 只在来源明确时回显确切 Origin；不认识的来源一律不返回 ACAO，
   // 绝不回退成 '*'(与 Allow-Credentials 同用属于错误配置)。
   if (allowedOrigins.includes(origin)) {
@@ -339,7 +388,7 @@ app.post('/api/auth/register', async (c) => {
   const username = str(body.username, 30).trim();
   const password = str(body.password, 512);
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-  const code = str(body.code, 6).trim();
+  const code = str(body.code, 8).trim();
 
   if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
   if (username.length < 2 || username.length > 30) return c.json({ error: 'Username must be 2-30 characters' }, 400);
@@ -354,16 +403,28 @@ app.post('/api/auth/register', async (c) => {
   }
 
   const shard = await buildShardService(env);
-  // 先查唯一性，再校验验证码：避免 409 时把一次性验证码消耗掉，否则用户无法用同一验证码改用登录。
-  const existing = await shard.readByType('account', { limit: 1000 });
-  for (const r of existing) {
-    let p: any;
-    try { p = JSON.parse(r.payload); } catch { continue; }
-    if (p.username === username) return c.json({ error: 'Username already exists' }, 409);
-    if (String(p.email || '').toLowerCase() === email) return c.json({ error: 'Email already registered, please login' }, 409);
+  // L3 缓解（TOCTOU）：按用户名申请一个短 TTL 的 Redis 互斥锁，把「查重 → 落库」串行化，
+  // 降低并发重复注册同一用户名的竞态概率（该分片表以 JSON 存用户名，无法直接建唯一索引）。
+  // Redis 异常时 fail-open（放行），退化为原本的查重逻辑，绝不因缓存故障阻断注册。
+  const regLockKey = `lock:register:${username.toLowerCase()}`;
+  let regLockOk = true;
+  try {
+    regLockOk = (await redis.set(regLockKey, '1', { nx: true, ex: 20 })) === 'OK';
+  } catch {
+    regLockOk = true;
   }
+  if (!regLockOk) return c.json({ error: '该用户名正在注册中，请稍后重试' }, 429);
+  const releaseRegLock = async () => {
+    try { await redis.del(regLockKey); } catch { /* ignore */ }
+  };
+
+  // 先查唯一性，再校验验证码：避免 409 时把一次性验证码消耗掉，否则用户无法用同一验证码改用登录。
+  // H4/L3 修复：改用数据库层精确查询，不再拉取全部账号扫描（账号超 1000 也不会漏判）。
+  if (await shard.findAccount('username', username)) { await releaseRegLock(); return c.json({ error: 'Username already exists' }, 409); }
+  if (await shard.findAccount('email', email)) { await releaseRegLock(); return c.json({ error: 'Email already registered, please login' }, 409); }
 
   if (!(await verifyMailCode(redis, email, code))) {
+    await releaseRegLock();
     return c.json({ error: 'Invalid or expired verification code' }, 400);
   }
 
@@ -371,12 +432,13 @@ app.post('/api/auth/register', async (c) => {
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const createdAt = new Date().toISOString();
+  const recordId = uuid();
 
   // 密码哈希必须在后端完成，严禁在前端暴露哈希算法、盐值或迭代次数。
   const passwordHash = await hashPassword(password);
 
   const writeResult = await shard.write({
-    id: uuid(),
+    id: recordId,
     user_id: userId,
     type: 'account',
     subtype: null,
@@ -394,7 +456,19 @@ app.post('/api/auth/register', async (c) => {
     created_at: createdAt,
     updated_at: createdAt,
   }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
-  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
+  if (!writeResult.ok) {
+    await releaseRegLock();
+    return c.json({ error: writeResult.error }, 503);
+  }
+
+  // L3 写后校验：极端并发下若仍出现同名账号，撤销本次写入并返回冲突，保证「用户名最终唯一」。
+  const dup = await shard.findAccount('username', username);
+  if (dup && dup.user_id !== userId) {
+    try { await shard.deleteById(recordId); } catch (err) { console.error('rollback dup account failed:', err); }
+    await releaseRegLock();
+    return c.json({ error: 'Username already exists' }, 409);
+  }
+  await releaseRegLock();
 
   // 登录/注册成功后立即写入 Redis 会话缓存，后续请求不再扫库
   await cacheSession(redis, sessionToken, userId, expiresAt);
@@ -462,16 +536,8 @@ app.post('/api/auth/login', async (c) => {
   }
 
   const shard = await buildShardService(c.env);
-  // Targeted query: only load accounts and find matching username
-  const accounts = await shard.readByType('account', { limit: 1000 });
-  const account = accounts.find((r) => {
-    try {
-      const p = JSON.parse(r.payload);
-      return p.username === username;
-    } catch {
-      return false;
-    }
-  });
+  // H4 修复：数据库层精确查询用户名，取代"拉取全部账号逐条 JSON.parse"。
+  const account = await shard.findAccount('username', username);
 
   // 账号不存在：记入暴破失败计数（fire-and-forget，不拖慢登录响应）
   if (!account) {
@@ -506,6 +572,8 @@ app.post('/api/auth/login', async (c) => {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const loginIp = clientIp(c);
   const prevLoginIp = typeof payload.last_login_ip === 'string' ? payload.last_login_ip : '';
+  // M4 修复：记录旧会话令牌，登录成功（写库）后主动吊销，避免旧 token 在 TTL 内继续可用。
+  const previousToken = typeof payload.session_token === 'string' ? payload.session_token : '';
 
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
@@ -529,8 +597,11 @@ app.post('/api/auth/login', async (c) => {
   if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
   await shard.deleteById(account.id);
 
-  // 登录成功后写入 Redis 会话缓存
+  // 登录成功后写入 Redis 会话缓存，并主动吊销旧会话（M4）
   await cacheSession(getRedis(c.env), sessionToken, account.user_id, expiresAt);
+  if (previousToken && previousToken !== sessionToken) {
+    await revokeSession(getRedis(c.env), previousToken);
+  }
 
   // 异地登录提醒：来源 IP 变化且配置了通知渠道时推送（可选开关 GEO_DIFF_LOGIN_NOTIFY='off' 关闭）
   const env2 = c.env as Env;
@@ -610,8 +681,9 @@ app.post('/api/auth/send-code', async (c) => {
   if (!sent.ok) {
     // 发送失败：清除刚生成的验证码，避免残留误用
     await redis.del(mailKey(email)).catch(() => {});
-    const detail = sent.detail || (sent.status ? `HTTP ${sent.status}` : 'unknown');
-    return c.json({ error: 'email send failed, please retry', detail: `${sent.provider || ''}: ${detail}`.trim() }, 502);
+    // L4 修复：不再把供应商名、HTTP 状态、错误详情回传前端，仅记服务端日志，避免信息泄露。
+    console.error('sendMail failed:', sent.provider || '', sent.status || '', sent.detail || '');
+    return c.json({ error: 'email send failed, please retry' }, 502);
   }
   return c.json({ ok: true, expires_in: MAIL_CODE_TTL_SEC });
 });
@@ -624,7 +696,7 @@ app.post('/api/auth/email-login', async (c) => {
 
   const body = await c.req.json<{ email?: unknown; code?: unknown }>().catch((): { email?: unknown; code?: unknown } => ({}));
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-  const code = str(body.code, 6).trim();
+  const code = str(body.code, 8).trim();
   if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
 
   const redis = getRedis(env);
@@ -637,17 +709,17 @@ app.post('/api/auth/email-login', async (c) => {
   }
   // 先查账号，再校验验证码：避免首次登录(无账号)时把一次性验证码消耗掉，
   // 否则前端无法用同一验证码回退去注册。存在性本身经 /email-login|/register 已可探测，无新增泄露。
+  // H4 修复：数据库层按邮箱精确查询。
   const shard = await buildShardService(env);
-  const accounts = await shard.readByType('account', { limit: 1000 });
-  const account = accounts.find((r) => {
-    try { return String(JSON.parse(r.payload).email || '').toLowerCase() === email; } catch { return false; }
-  });
+  const account = await shard.findAccount('email', email);
   if (!account) return c.json({ error: 'No account with this email' }, 404);
   if (!(await verifyMailCode(redis, email, code))) return c.json({ error: 'Invalid or expired verification code' }, 400);
   const payload: any = JSON.parse(account.payload);
   if (payload.banned === true) return c.json({ error: 'No account with this email' }, 404);
 
   const prevIp = typeof payload.last_login_ip === 'string' ? payload.last_login_ip : '';
+  // M4 修复：邮箱登录同样吊销旧会话
+  const previousToken = typeof payload.session_token === 'string' ? payload.session_token : '';
   const sessionToken = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -670,6 +742,9 @@ app.post('/api/auth/email-login', async (c) => {
   await shard.deleteById(account.id);
 
   await cacheSession(redis, sessionToken, account.user_id, expiresAt);
+  if (previousToken && previousToken !== sessionToken) {
+    await revokeSession(redis, previousToken);
+  }
 
   // 异地登录提醒：IP 变化且有通知渠道时推送
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
@@ -771,10 +846,12 @@ app.get('/api/stats', async (c) => {
   // 总用户数：使用 account 类型的 count（每个注册账号一条记录）
   const total_users = await shard.countByType('account');
 
-  const dbs = shard.getDbs().map((db) => ({ name: db.name, maxBytes: db.maxBytes }));
+  // M6 修复：公开接口不再回传分片名与容量上限（防止暴露数据库架构）；
+  // 仅保留聚合后的总容量，供前端做整体容量展示。
+  const total_capacity = shard.getDbs().reduce((sum, db) => sum + (Number(db.maxBytes) || 0), 0);
   const body = {
     success: true,
-    data: { online, total_tests: totalTests, total_comments: totalComments, total_users, dbs },
+    data: { online, total_tests: totalTests, total_comments: totalComments, total_users, total_capacity },
   };
   try {
     await redis.set(STATS_CACHE_KEY, body, { ex: 30 });
@@ -803,12 +880,54 @@ async function logLoginFailure(c: { env: Env; executionCtx: any; req: { header: 
     console.error('logLoginFailure error:', err);
   }
 }
+// 领取一个服务端签名的匿名身份（公开）。H1 修复：匿名 token 需服务端 HMAC 签名方可写数据。
+// 必须在 app.use('/api/*', authOrAdmin) 之前注册，保持公开。
+app.post('/api/auth/anon', async (c) => {
+  const env = c.env as Env;
+  // 轻量限流：同一 IP 每分钟最多领取 30 个匿名身份，防止脚本批量铸造
+  if (!(await rateLimit(getRedis(env), rlKey('anon-issue', clientIp(c)), 30, 60))) {
+    return c.json({ error: 'Too many requests, please try again later' }, 429);
+  }
+  // raw 用两段 CSPRNG UUID 拼接，保证长度与熵
+  const raw = (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, '');
+  const anon_id = await signAnonId(env, raw);
+  return c.json({ anon_id });
+});
+
 // 下发一道算数验证码挑战（公开）。供登录前需要验证码时调用；能力缺失时返回 disabled。
 // 注意：必须在 app.use('/api/*', authOrAdmin) 之前注册，保持公开。
 app.get('/api/auth/captcha', async (c) => {
   const challenge = await issueCaptcha(getRedis(c.env));
   if (!challenge) return c.json({ enabled: false });
   return c.json({ enabled: true, ...challenge });
+});
+
+// H6 修复：Jamendo 音乐 API 代理。client_id 仅保存在 Worker 环境变量，前端不再持有，
+// 避免被提取后滥用配额。公开只读接口，带基础限流；仅放行白名单内的 Jamendo 端点。
+app.get('/api/music/jamendo', async (c) => {
+  const env = c.env as Env;
+  const clientId = env.JAMENDO_CLIENT_ID;
+  if (!clientId) return c.json({ error: 'music service disabled' }, 404);
+  if (!(await rateLimit(getRedis(env), rlKey('jamendo', clientIp(c)), 60, 60))) {
+    return c.json({ error: 'Too many requests, please try again later' }, 429);
+  }
+  const endpoint = str(c.req.query('endpoint'), 64).trim();
+  // 白名单：仅允许 /tracks、/playlists 等形如 /a_b 的端点，杜绝 SSRF/路径穿越
+  if (!/^\/[a-z0-9_]+$/i.test(endpoint)) return c.json({ error: 'invalid endpoint' }, 400);
+  const params = new URLSearchParams({ client_id: clientId, format: 'json' });
+  for (const [k, v] of Object.entries(c.req.query())) {
+    if (k === 'endpoint') continue;
+    if (typeof v === 'string' && v.length <= 200 && /^[a-z0-9_]+$/i.test(k)) params.set(k, v);
+  }
+  try {
+    const res = await fetch('https://api.jamendo.com/v3.0' + endpoint + '?' + params.toString());
+    if (!res.ok) return c.json({ error: 'upstream error' }, 502);
+    const data = await res.json();
+    return c.json(data);
+  } catch (err) {
+    console.error('jamendo proxy failed:', err);
+    return c.json({ error: 'upstream error' }, 502);
+  }
 });
 
 app.use('/api/*', authOrAdmin);
@@ -1348,9 +1467,13 @@ app.get('/api/profiles', async (c) => {
     };
   };
   if (userIdsQuery) {
-    const ids = userIdsQuery.split(',').map(s => s.trim()).filter((s) => s && s.length <= 64).slice(0, 200);
+    // 注意：服务端签名的匿名身份长度可达 74（anon_ + uuid + . + 32 位签名），
+    // 旧代码限制 64 会把游客 user_id 全部丢弃，导致游客头像/资料在榜单上加载不出来。
+    const ids = userIdsQuery.split(',').map(s => s.trim()).filter((s) => s && s.length <= 128).slice(0, 200);
     if (!ids.length) return c.json({ data: [] });
-    const rows = await shard.readByType('profile', { limit: Math.min(ids.length * 2, 1000) });
+    // 数据库层按 user_id IN (...) 精确查询（一次查询替代"读最新 N 条再内存过滤"），
+    // 仍保留内存过滤作为非 Turso 数据库的兜底。
+    const rows = await shard.readByType('profile', { userIds: ids, limit: Math.min(ids.length * 2, 1000) });
     const filtered = rows.filter(r => ids.includes(r.user_id));
     return c.json({ data: filtered.map(flattenProfile) });
   }
@@ -1410,12 +1533,21 @@ app.post('/api/profiles', async (c) => {
     if (!s || s.length > 500) return undefined;
     return /^https?:\/\//i.test(s) ? s : undefined;
   };
+  // 头像既支持外链 http(s)，也支持站内预置头像的相对路径（assets/avatars/...）。
+  // 此前只用 safeUrl 校验，导致预设头像（相对路径）被整体丢弃 → 资料/头像存不上、显示不出来。
+  const safeAvatar = (v: unknown): string | undefined => {
+    const s = stripDangerous(v);
+    if (!s || s.length > 500) return undefined;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^assets\//i.test(s) && !/[<>"']/.test(s)) return s;
+    return undefined;
+  };
   body.bio = safeStr(body.bio) ?? '';
   body.location = safeStr(body.location) ?? '';
   body.gender = safeStr(body.gender) ?? '';
   body.website = safeUrl(body.website) ?? '';
   body.social_links = safeUrl(body.social_links) ?? '';
-  body.avatar_url = safeUrl(body.avatar_url) ?? undefined;
+  body.avatar_url = safeAvatar(body.avatar_url) ?? undefined;
 
   const shard = await buildShardService(c.env);
 
@@ -1471,6 +1603,166 @@ app.post('/api/profiles/username', async (c) => {
     if (!result.ok) return c.json({ success: false, error: result.error }, 503);
   }
   return c.json({ success: true, username: newUsername });
+});
+
+// ===========================================================================
+// 人气榜（Popularity）
+//   GET  /api/popularity        随机刷新 / 搜索用户名 / 按性别筛选 / 点赞数排序
+//   POST /api/popularity/like   点赞 / 取消点赞（同一身份对同一目标只计一次）
+//   POST /api/popularity/report 举报（落库 + 触发安全告警，管理员可复核）
+// ===========================================================================
+app.get('/api/popularity', async (c) => {
+  const q = str(c.req.query('q'), 60).trim().toLowerCase();
+  const gender = str(c.req.query('gender'), 12).trim().toLowerCase();
+  const sort = (str(c.req.query('sort'), 12).trim().toLowerCase() || 'likes');
+  const limit = Math.min(Math.max(Number(c.req.query('limit')) || 60, 1), 200);
+
+  const shard = await buildShardService(c.env);
+  const [profiles, likes] = await Promise.all([
+    shard.readByType('profile', { limit: 1000 }),
+    shard.readByType('like', { limit: 1000 }),
+  ]);
+
+  // 点赞计数：同一投票者对被赞者只算一次（按 voter::target 去重）
+  const likeCount = new Map<string, number>();
+  const seenVoter = new Set<string>();
+  for (const l of likes) {
+    const target = l.subtype;
+    if (!target) continue;
+    const key = `${l.user_id}::${target}`;
+    if (seenVoter.has(key)) continue;
+    seenVoter.add(key);
+    likeCount.set(target, (likeCount.get(target) || 0) + 1);
+  }
+
+  // 每个用户保留最新一条 profile
+  const byUser = new Map<string, { user_id: string; username: string; gender: string; avatar_url: string | null; bio: string; updated_at: string }>();
+  for (const r of profiles) {
+    const p: any = safeJsonParse(r.payload) || {};
+    const prev = byUser.get(r.user_id);
+    if (!prev || new Date(r.updated_at).getTime() >= new Date(prev.updated_at).getTime()) {
+      byUser.set(r.user_id, {
+        user_id: r.user_id,
+        username: typeof p.username === 'string' && p.username ? p.username : r.user_id,
+        gender: typeof p.gender === 'string' && p.gender ? p.gender : 'secret',
+        avatar_url: typeof p.avatar_url === 'string' ? p.avatar_url : null,
+        bio: typeof p.bio === 'string' ? p.bio : '',
+        updated_at: r.updated_at,
+      });
+    }
+  }
+
+  let list = Array.from(byUser.values());
+  if (q) list = list.filter((u) => u.username.toLowerCase().includes(q));
+  if (gender === 'male' || gender === 'female' || gender === 'secret') {
+    list = list.filter((u) => u.gender === gender);
+  }
+  const withLikes = list.map((u) => ({ ...u, likes: likeCount.get(u.user_id) || 0 }));
+
+  if (sort === 'new') {
+    withLikes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  } else if (sort === 'random') {
+    // 服务端洗牌：保证每次「随机刷新」结果不同
+    for (let i = withLikes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [withLikes[i], withLikes[j]] = [withLikes[j], withLikes[i]];
+    }
+  } else {
+    withLikes.sort((a, b) => b.likes - a.likes || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  }
+
+  // 标记当前身份是否已点赞过（用于前端点亮爱心）
+  const myId = c.get('userId');
+  const likedSet = new Set<string>();
+  if (myId) {
+    const mine = await shard.readByType('like', { userId: myId, limit: 1000 });
+    for (const r of mine) if (r.subtype) likedSet.add(r.subtype);
+  }
+
+  return c.json({ data: withLikes.slice(0, limit).map((u) => ({ ...u, liked: likedSet.has(u.user_id) })) });
+});
+
+app.post('/api/popularity/like', async (c) => {
+  const voter = c.get('userId');
+  const body = await c.req.json<{ target_user_id?: string }>().catch(() => ({}) as { target_user_id?: string });
+  const target = str(body.target_user_id, 128).trim();
+  if (!target) return c.json({ error: 'target_user_id is required' }, 400);
+  if (target === voter) return c.json({ error: '不能给自己点赞' }, 400);
+
+  const env = c.env as Env;
+  if (!(await rateLimit(getRedis(env), rlKey('like', voter), 60, 60))) {
+    return c.json({ error: '操作过于频繁，请稍后再试' }, 429);
+  }
+
+  const shard = await buildShardService(env);
+  const existing = await shard.readByType('like', { userId: voter, subtype: target, limit: 10 });
+  const already = existing[0];
+  if (already) {
+    await shard.deleteById(already.id);
+  } else {
+    const now = new Date().toISOString();
+    const r = await shard.write({
+      id: uuid(),
+      user_id: voter,
+      type: 'like',
+      subtype: target,
+      score_value: null,
+      payload: JSON.stringify({ target_user_id: target, created_at: now }),
+      file_url: null,
+      created_at: now,
+      updated_at: now,
+    }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+    if (!r.ok) return c.json({ error: r.error }, 503);
+  }
+
+  const all = await shard.readByType('like', { subtype: target, limit: 1000 });
+  const unique = new Set(all.map((r) => r.user_id)).size;
+  return c.json({ success: true, liked: !already, likes: unique });
+});
+
+app.post('/api/popularity/report', async (c) => {
+  const reporter = c.get('userId');
+  const body = await c.req.json<{ target_user_id?: string; reason?: string }>().catch(() => ({}) as { target_user_id?: string; reason?: string });
+  const target = str(body.target_user_id, 128).trim();
+  const reason = str(body.reason, 200).trim();
+  if (!target) return c.json({ error: 'target_user_id is required' }, 400);
+
+  const env = c.env as Env;
+  if (!(await rateLimit(getRedis(env), rlKey('report', reporter), 10, 60))) {
+    return c.json({ error: '举报过于频繁，请稍后再试' }, 429);
+  }
+
+  const shard = await buildShardService(env);
+  const now = new Date().toISOString();
+  const r = await shard.write({
+    id: uuid(),
+    user_id: reporter,
+    type: 'report',
+    subtype: target,
+    score_value: null,
+    payload: JSON.stringify({ target_user_id: target, reason: reason || '未填写', reporter, created_at: now }),
+    file_url: null,
+    created_at: now,
+    updated_at: now,
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!r.ok) return c.json({ error: r.error }, 503);
+
+  // 落一条安全告警，管理员可在后台「安全告警」面板复核
+  try {
+    await recordAlert(getRedis(env), shard, c.executionCtx.waitUntil.bind(c.executionCtx), env, {
+      kind: 'report',
+      severity: 'warning',
+      source_ip: clientIp(c),
+      target,
+      message: '用户举报',
+      count: 1,
+      detail: reason || '未填写',
+    });
+  } catch (err) {
+    console.warn('popularity report alert failed:', err);
+  }
+
+  return c.json({ success: true });
 });
 
 // online_users 心跳（轻量级，失败不影响用户体验）
@@ -1590,13 +1882,26 @@ app.post('/api/upload', async (c) => {
 // ===== 管理后台 =====
 // UI 页面（GET /admin），内联返回、无需静态资源；未配置 ADMIN_TOKEN 时仍能打开但登录会失败
 // 加入严格 CSP：禁止外联脚本/图片/字体与站点外请求，即使被 XSS 注入也无法外带数据。
-const ADMIN_CSP =
-  "default-src 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; " +
-  "img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; " +
-  "form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests";
+// H5 修复：脚本改用 nonce 精确放行（script-src-elem 只认本页 nonce），
+// 从而彻底移除 script-src 上的 'unsafe-inline'——注入的 <script> 无法执行。
+// 说明：后台内联事件处理器（onclick= 等）由 script-src-attr 'unsafe-inline' 单独放行
+// （CSP3 允许把两者分开管控），避免重写 50+ 处内联处理器带来的回归风险；
+// 现代浏览器对 script-src-elem/attr 均支持，旧浏览器回退到 script-src（nonce）。
+function adminCsp(nonce: string): string {
+  return (
+    "default-src 'none'; " +
+    `script-src 'nonce-${nonce}' https://static.cloudflareinsights.com; ` +
+    `script-src-elem 'nonce-${nonce}' https://static.cloudflareinsights.com; ` +
+    "script-src-attr 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; " +
+    "form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests"
+  );
+}
 function serveAdmin(c: any) {
-  c.header('Content-Security-Policy', ADMIN_CSP);
-  return c.html(renderAdminUI());
+  const nonce = crypto.randomUUID().replace(/-/g, '');
+  c.header('Content-Security-Policy', adminCsp(nonce));
+  return c.html(renderAdminUI(nonce));
 }
 app.get('/admin', serveAdmin);
 app.get('/admin/*', serveAdmin);
@@ -1712,11 +2017,69 @@ async function adminGw(c: any, next: any): Promise<Response | void> {
 
   c.set('adminToken', sess.admin);
   c.set('adminSessionIp', sess.ip);
+  c.set('adminRole', sess.role);
+  c.set('adminSessionToken', token);
   return next();
 }
 app.use('/api/admin/*', adminGw);
 
 app.get('/api/admin/ping', async (c) => c.json({ ok: true }));
+
+// 当前登录态与认证角色（管理员 / 站长）。前端据此展示认证徽章与解锁站长专属操作。
+app.get('/api/admin/me', async (c) => {
+  const env = c.env as Env;
+  return c.json({
+    ok: true,
+    admin: c.get('adminToken') || 'admin',
+    role: c.get('adminRole') || 'admin',
+    owner_cert_available: !!env.OWNER_TOKEN,
+    totp_enabled: !!env.ADMIN_TOTP_SECRET,
+  });
+});
+
+// ---- 认证：管理员认证（复核 ADMIN_TOKEN）与站长认证（OWNER_TOKEN 升级角色） ----
+//   level='admin'  用管理员口令重新确认身份，写入审计；
+//   level='owner'  用站长口令把当前会话升级为 owner，解锁站长专属高危操作。
+app.post('/api/admin/certify', async (c) => {
+  const env = c.env as Env;
+  const redis = getRedis(env);
+  const shard = await buildShardService(env);
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  const ip = clientIp(c);
+  const token = c.get('adminSessionToken') || '';
+  const currentRole = c.get('adminRole') || 'admin';
+
+  const body = await c.req.json().catch(() => ({} as any));
+  const level = str(body?.level, 12).trim().toLowerCase();
+  const code = str(body?.code, 512);
+  if (level !== 'admin' && level !== 'owner') {
+    return c.json({ error: 'level 必须是 admin 或 owner' }, 400 as any);
+  }
+
+  if (level === 'admin') {
+    if (!verifyAdminPassword(env, code)) {
+      writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.failed', 'admin', `ip=${ip}`);
+      return c.json({ error: '管理员口令不正确' }, 401 as any);
+    }
+    writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.success', 'admin', `ip=${ip}`);
+    return c.json({ ok: true, role: currentRole, certified: 'admin' });
+  }
+
+  // level === 'owner'
+  if (!env.OWNER_TOKEN) return c.json({ error: '站长认证未启用（未配置 OWNER_TOKEN）' }, 404 as any);
+  if (!verifyOwnerPassword(env, code)) {
+    writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.failed', 'owner', `ip=${ip}`);
+    // 站长口令错误也计入失败计数，防止被高频穷举
+    const failCount = await recordAdminLoginFailure(redis, ip);
+    if (failCount >= ADMIN_FAIL_LOCK_THRESHOLD) await lockAdminSource(redis, ip);
+    return c.json({ error: '站长认证口令不正确' }, 401 as any);
+  }
+  if (!token || !(await setAdminSessionRole(redis, token, 'owner'))) {
+    return c.json({ error: '会话已失效，请重新登录后再认证' }, 401 as any);
+  }
+  writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.success', 'owner', `ip=${ip}`);
+  return c.json({ ok: true, role: 'owner', certified: 'owner' });
+});
 
 // ---- 双重验证（2FA）登录：口令 + TOTP 动态码都正确才发放会话令牌 ----
 app.post('/api/admin/login', async (c) => {
@@ -2254,21 +2617,15 @@ app.get('/api/admin/security', async (c) => {
 
 app.get('/api/admin/security/ipbans', async (c) => {
   const redis = getRedis(c.env);
-  let keys: string[] = [];
-  try {
-    keys = await redis.keys('ipblack:*');
-  } catch (err) {
-    console.error('ipbans keys scan failed:', err);
-    return c.json({ data: [] });
-  }
-  const list: Array<{ ip: string; failures: number; ttl: number }> = [];
-  for (const k of keys.slice(0, 200)) {
-    const ip = k.replace(/^ipblack:/, '');
-    let failures = 0, ttl = 0;
-    try { failures = (await redis.get<number>(k)) || 0; } catch { /* */ }
-    try { ttl = await redis.ttl(k); } catch { /* */ }
-    list.push({ ip, failures, ttl });
-  }
+  // M7 修复后：key 为 IP 的 SHA-256，面板通过 hash→IP 映射还原原始 IP 展示。
+  const rows = await listIpBlacklist(redis);
+  const list = await Promise.all(
+    rows.map(async (r) => ({
+      ip: r.ip,
+      failures: await ipBlacklistCount(redis, r.ip).catch(() => 0),
+      ttl: r.ttl,
+    }))
+  );
   list.sort((a, b) => a.ip.localeCompare(b.ip));
   return c.json({ data: list });
 });
@@ -2288,6 +2645,12 @@ app.post('/api/admin/security/ipbans/add', async (c) => {
 
 app.post('/api/admin/security/ipbans/remove', async (c) => {
   const body = await c.req.json().catch(() => ({}));
+  // M8 修复：解除 IP 黑名单同属高危管理写操作，统一要求 TOTP 二次验证。
+  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
+  // 站长专属：解除封禁会直接放行此前被拉黑的来源，仅「站长」角色可执行。
+  if (c.get('adminRole') !== 'owner') {
+    return c.json({ error: '该操作仅限站长，请先在「认证」页完成站长认证', need_owner: true }, 403 as any);
+  }
   const ip = str((body as { ip?: unknown }).ip, 64).trim();
   if (!ip) return c.json({ error: '无效的 IP' }, 400);
   await clearIpBlacklist(getRedis(c.env), ip);

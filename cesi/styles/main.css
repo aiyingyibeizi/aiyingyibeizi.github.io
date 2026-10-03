@@ -597,6 +597,7 @@ body.loaded .apexon-page {
 .apexon-header-dropdown a[data-i18n="navSequence"]::before { content: '🔀'; }
 .apexon-header-dropdown a[data-i18n="navAim"]::before { content: '🎯'; }
 .apexon-header-dropdown a[data-i18n="navMusic"]::before { content: '🎵'; }
+.apexon-header-dropdown a[data-i18n="navPopularity"]::before { content: '🏅'; }
 
 .apexon-header-dropdown a:hover {
   background: linear-gradient(135deg, rgba(109, 93, 252, 0.18) 0%, rgba(139, 92, 246, 0.12) 100%);
@@ -699,6 +700,45 @@ body.loaded .apexon-page {
   box-shadow:
     0 0 0 2px rgba(139, 92, 246, 0.35),
     0 4px 14px rgba(109, 93, 252, 0.35);
+}
+
+/* 顶部「人气榜」入口（金色渐变，与 Music 按钮区分） */
+.apex-popularity-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--apex-radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #3a2500;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 4px 14px rgba(245, 158, 11, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.apex-popularity-btn::before {
+  content: '\1F3C5';
+  font-size: 0.85rem;
+}
+
+.apex-popularity-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 6px 18px rgba(245, 158, 11, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.apex-popularity-btn.active {
+  box-shadow:
+    0 0 0 2px rgba(245, 158, 11, 0.45),
+    0 4px 14px rgba(245, 158, 11, 0.4);
 }
 
 html[data-theme="light"] .apexon-menu-btn,
@@ -823,7 +863,8 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     font-size: 0.92rem;
   }
 
-  .apex-music-btn {
+  .apex-music-btn,
+  .apex-popularity-btn {
     padding: 9px 20px;
     font-size: 0.92rem;
   }
@@ -915,9 +956,10 @@ html[data-bw="true"] .apexon-header-dropdown.open {
     position: relative;
   }
 
-  /* 手机端隐藏中心区的首页 pill 和 Music 按钮，它们已包含在下拉菜单 */
+  /* 手机端隐藏中心区的首页 pill 和 Music / 人气榜按钮，它们已包含在下拉菜单 */
   .apexon-header-center .apexon-header-nav,
-  .apexon-header-center .apex-music-btn {
+  .apexon-header-center .apex-music-btn,
+  .apexon-header-center .apex-popularity-btn {
     display: none;
   }
 
@@ -8703,7 +8745,8 @@ body {
   }
 
   .apexon-header-center .apexon-header-nav,
-  .apexon-header-center .apex-music-btn {
+  .apexon-header-center .apex-music-btn,
+  .apexon-header-center .apex-popularity-btn {
     display: none !important;
   }
 
@@ -8842,6 +8885,84 @@ a,
     width: 42px;
     height: 42px;
   }
+}
+
+/* ============================================================================
+   L9/UI8 + UI14 测试页面包屑导航 & 下一个测试推荐
+   由 common.js 的 UI.injectTestExtras() 注入，仅测试页出现。
+   ============================================================================ */
+.apex-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  margin: 0 0 14px;
+  color: var(--apex-text-secondary, rgba(255, 255, 255, 0.6));
+}
+.apex-breadcrumb__link {
+  color: var(--apex-text-secondary, rgba(255, 255, 255, 0.6));
+  text-decoration: none;
+  transition: color .18s ease;
+}
+.apex-breadcrumb__link:hover { color: #8b7efc; }
+.apex-breadcrumb__sep { opacity: .5; }
+.apex-breadcrumb__current {
+  color: var(--apex-text, #f5f5ff);
+  font-weight: 600;
+}
+
+.apex-next-tests {
+  margin: 34px 0 8px;
+  padding: 20px 20px 22px;
+  border-radius: 18px;
+  border: 1px solid var(--apex-border, rgba(255, 255, 255, 0.14));
+  background: var(--apex-surface, rgba(255, 255, 255, 0.05));
+}
+.apex-next-tests__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.apex-next-tests__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--apex-text, #f5f5ff);
+}
+.apex-next-tests__desc {
+  font-size: 0.82rem;
+  color: var(--apex-text-secondary, rgba(255, 255, 255, 0.6));
+}
+.apex-next-tests__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.apex-next-test {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--apex-text, #f5f5ff);
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: 1px solid var(--apex-border, rgba(255, 255, 255, 0.14));
+  background: linear-gradient(135deg, rgba(139, 126, 252, 0.10), rgba(52, 211, 153, 0.08));
+  transition: transform .18s cubic-bezier(0.34, 1.56, 0.64, 1), border-color .18s ease, box-shadow .18s ease;
+}
+.apex-next-test:hover {
+  transform: translateY(-3px);
+  border-color: rgba(139, 126, 252, 0.55);
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.22);
+}
+.apex-next-test__icon { font-size: 1.2rem; line-height: 1; }
+@media (max-width: 640px) {
+  .apex-next-tests__grid { grid-template-columns: 1fr; }
+  .apex-next-tests { padding: 16px 14px 18px; }
 }
 
 /* ============================================================================
@@ -8995,5 +9116,164 @@ button[data-i18n="testAgain"][disabled] {
     translate: none;
     scale: none;
   }
+}
+
+/* ============================================================================
+   Section: music 宽卡片专属点击特效（旋律 / 节奏）
+   节奏脉动 + 三段声波涟漪 + 上飘音符 + 均衡器脉冲
+   与常规卡片特效区分：更柔软、更有律动，像"点亮一段旋律"。
+   ============================================================================ */
+.cards-grid .item-card--wide.apex-music-fx {
+  --fx-x: 50%;
+  --fx-y: 50%;
+  position: relative;
+  overflow: hidden;
+  transition:
+    translate 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 340ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow var(--apex-transition-base),
+    border-color var(--apex-transition-base),
+    background-color var(--apex-transition-base);
+}
+
+.cards-grid .item-card--wide.apex-music-fx.is-pressing {
+  translate: 0 3px;
+  scale: 0.986;
+  transition-duration: 120ms;
+  border-color: var(--apex-primary);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.45),
+    var(--apex-shadow-glow);
+}
+
+/* 点击确认：像节拍一样轻轻一弹再跳转 */
+.cards-grid .item-card--wide.apex-music-fx.is-launching {
+  translate: 0 -5px;
+  scale: 1.006;
+  transition-duration: 200ms;
+  border-color: var(--game-card-border-hover);
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.5),
+    var(--apex-shadow-glow);
+}
+
+/* 节拍脉动：强-弱-弱三段式，模拟 4/4 拍的律动 */
+.cards-grid .item-card--wide.apex-music-fx.is-beat {
+  animation: apex-music-beat 660ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes apex-music-beat {
+  0%   { scale: 1; }
+  14%  { scale: 1.018; }
+  30%  { scale: 0.996; }
+  46%  { scale: 1.010; }
+  62%  { scale: 0.999; }
+  100% { scale: 1; }
+}
+
+/* 三段式声波涟漪 */
+.cards-grid .item-card--wide .apex-music-fx__wave {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 2px solid var(--apex-primary);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  animation: apex-music-wave 940ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes apex-music-wave {
+  0%   { opacity: 0; transform: scale(0.28); }
+  16%  { opacity: 0.85; }
+  100% { opacity: 0; transform: scale(var(--wave-scale, 5)); }
+}
+
+/* 上飘旋律音符 */
+.cards-grid .item-card--wide .apex-music-fx__note {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+  color: hsl(var(--hue, 200) 90% 68%);
+  text-shadow: 0 0 10px hsl(var(--hue, 200) 90% 62% / 0.85);
+  opacity: 0;
+  animation: apex-music-note 1150ms cubic-bezier(0.16, 0.84, 0.32, 1) forwards;
+}
+
+@keyframes apex-music-note {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(var(--rot, 0deg)); }
+  18%  { opacity: 1; }
+  70%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 104px)) scale(1.2) rotate(var(--rot2, 0deg)); }
+}
+
+/* 均衡器脉冲 */
+.cards-grid .item-card--wide .apex-music-fx__eq {
+  position: absolute;
+  left: var(--fx-x);
+  bottom: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 2;
+  height: 22px;
+}
+
+.cards-grid .item-card--wide .apex-music-fx__bar {
+  display: block;
+  width: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--apex-primary), hsl(280 85% 70%));
+  box-shadow: 0 0 8px var(--apex-glow-primary);
+  opacity: 0;
+  animation: apex-music-bar 660ms cubic-bezier(0.34, 1.2, 0.5, 1) forwards;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes apex-music-bar {
+  0%   { opacity: 0; height: 4px; }
+  26%  { opacity: 1; height: 20px; }
+  55%  { opacity: 1; height: 9px; }
+  78%  { opacity: 0.8; height: 16px; }
+  100% { opacity: 0; height: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards-grid .item-card--wide .apex-music-fx__wave,
+  .cards-grid .item-card--wide .apex-music-fx__note,
+  .cards-grid .item-card--wide .apex-music-fx__eq {
+    display: none !important;
+  }
+
+  .cards-grid .item-card--wide.apex-music-fx.is-beat {
+    animation: none;
+  }
+
+  .cards-grid .item-card--wide.apex-music-fx.is-pressing,
+  .cards-grid .item-card--wide.apex-music-fx.is-launching {
+    translate: none;
+    scale: none;
+  }
+}
+
+/* ---------- 人气榜宽卡片：金色描边，与顶部「人气榜」按钮呼应 ---------- */
+.cards-grid .item-card.apex-popularity-card {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(244, 114, 182, 0.08));
+}
+.cards-grid .item-card.apex-popularity-card:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 16px 36px rgba(245, 158, 11, 0.22);
 }
 

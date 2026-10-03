@@ -8,6 +8,74 @@ type Variables = { userId: string };
 
 const SESSION_PREFIX = 'sess:';
 
+// ---------------------------------------------------------------------------
+// 匿名 token 签名（H1 修复）
+// 此前任何 anon_xxxxxxxxxx 都被直接放行，可伪造任意匿名身份刷分。
+// 现在由服务端签发 anon_<raw>.<hmac>，中间件校验签名后才认。密钥从服务端已有密钥派生，
+// 无需新增配置；客户端永远拿不到密钥。
+// ---------------------------------------------------------------------------
+const ANON_PREFIX = 'anon_';
+const ANON_SIG_LEN = 32;
+
+/** 派生匿名签名密钥：优先专用变量，否则从服务端既有密钥回退（均不出现在前端） */
+function anonSecret(env: Env): string {
+  return (
+    env.ANON_HMAC_SECRET ||
+    env.ADMIN_TOKEN ||
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.UPSTASH_REDIS_TOKEN ||
+    env.TURSO_TOKEN_APEXON ||
+    ''
+  );
+}
+
+async function hmacHex(secret: string, msg: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg));
+  let out = '';
+  for (const b of new Uint8Array(sig)) out += b.toString(16).padStart(2, '0');
+  return out;
+}
+
+/** 常数时间字符串比较（防时序旁路） */
+function constantTimeEqual(a: string, b: string): boolean {
+  const len = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < len; i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+/** 用服务端密钥为原始匿名 ID 签名，返回可直接下发给前端的完整 token */
+export async function signAnonId(env: Env, raw: string): Promise<string> {
+  const secret = anonSecret(env);
+  if (!secret) return `${ANON_PREFIX}${raw}`; // 未配置任何密钥：退回未签名（极端兜底）
+  const sig = (await hmacHex(secret, raw)).slice(0, ANON_SIG_LEN);
+  return `${ANON_PREFIX}${raw}.${sig}`;
+}
+
+/** 校验结果：ok=通过；stale=旧格式未签名需刷新；bad=签名非法；disabled=服务端未配置密钥（放行并保持旧行为） */
+type AnonVerdict = 'ok' | 'stale' | 'bad' | 'disabled';
+
+async function verifyAnonId(env: Env, token: string): Promise<AnonVerdict> {
+  const secret = anonSecret(env);
+  if (!secret) return 'disabled';
+
+  const body = token.slice(ANON_PREFIX.length);
+  const dot = body.lastIndexOf('.');
+  if (dot < 0) return 'stale'; // 旧格式（无签名）
+  const raw = body.slice(0, dot);
+  const sig = body.slice(dot + 1);
+  if (!raw || raw.length < 8 || sig.length !== ANON_SIG_LEN) return 'bad';
+  const expected = (await hmacHex(secret, raw)).slice(0, ANON_SIG_LEN);
+  return constantTimeEqual(sig, expected) ? 'ok' : 'bad';
+}
+
 export function createAuthMiddleware(
   buildShardService: (env: Env) => Promise<ShardService>,
   getRedis: (env: Env) => Redis
@@ -26,10 +94,16 @@ export function createAuthMiddleware(
     // 1. Fast path: anonymous IDs are instantly recognisable and the most common case.
     //    Skip all network/DB work — every POST from a guest used to trigger a Supabase
     //    round-trip + a full account scan across all DBs before reaching this check.
+    //    H1 修复：匿名 token 必须带服务端 HMAC 签名，杜绝伪造 anon_ 前缀刷分。
     if (token.startsWith('anon_') && token.length >= 10) {
-      c.set('userId', token);
-      await next();
-      return;
+      const verdict = await verifyAnonId(c.env, token);
+      if (verdict === 'ok' || verdict === 'disabled') {
+        c.set('userId', token);
+        await next();
+        return;
+      }
+      // stale（旧的无签名 token）→ 前端据此重新领取签名 token 并重试
+      return c.json({ error: 'Invalid anonymous token', anon_refresh: true }, 401);
     }
 
     // 2. Redis session cache（修复认证热路径性能问题）：
@@ -67,31 +141,30 @@ export function createAuthMiddleware(
     }
 
     // 4. Fall back to custom session token stored in mixed_data (type='account').
+    //    H4 修复：改为按 session_token 在数据库层精确查询，不再拉取全部账号逐条比对。
     try {
       const shard = await buildShardService(c.env);
-      // limit 提升到 1000（此前 300：账号超过 300 后老用户的 token 校验会直接失败）
-      const accounts = await shard.readByType('account', { limit: 1000 });
-      const account = accounts.find((row) => {
-        try {
-          const payload = JSON.parse(row.payload);
-          const expiresAt = payload.session_expires_at ? new Date(payload.session_expires_at).getTime() : 0;
-          return payload.session_token === token && expiresAt > Date.now();
-        } catch {
-          return false;
-        }
-      });
-
+      const account = await shard.findAccount('session_token', token);
       if (account) {
-        c.set('userId', account.user_id);
-        // 回填 Redis 缓存，后续请求不再扫库
+        let payload: any = {};
         try {
-          const payload = JSON.parse(account.payload);
-          await cacheSession(getRedis(c.env), token, account.user_id, payload.session_expires_at);
+          payload = JSON.parse(account.payload);
         } catch {
-          /* 缓存回填失败不影响本次认证 */
+          payload = {};
         }
-        await next();
-        return;
+        const expiresAt = payload.session_expires_at ? new Date(payload.session_expires_at).getTime() : 0;
+        // 过期时间缺失时按「不过期」处理会放大风险；这里要求必须有未过期的到期时间
+        if (expiresAt > Date.now()) {
+          c.set('userId', account.user_id);
+          // 回填 Redis 缓存，后续请求不再扫库
+          try {
+            await cacheSession(getRedis(c.env), token, account.user_id, payload.session_expires_at);
+          } catch {
+            /* 缓存回填失败不影响本次认证 */
+          }
+          await next();
+          return;
+        }
       }
     } catch (err) {
       console.error('Custom token verification error:', err);
