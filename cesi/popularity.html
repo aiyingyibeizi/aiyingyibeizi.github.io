@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.clarity.ms https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self' data:; connect-src 'self' https://api.apexon.qzz.io https://www.clarity.ms https://api.jamendo.com https://lrclib.net https://lyrics.ovh https://ipwho.is https://ipapi.co https://trae-api-cn.mchost.guru; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'">
+<meta name="description" content="APEXON 人气榜：随机刷新一批玩家，按用户名搜索、按性别筛选，点赞支持喜欢的玩家，一键举报违规内容，点击头像查看资料。">
+    <meta name="keywords" content="人气榜,APEXON,玩家排行,点赞,排行榜">
+    <meta name="author" content="APEXON">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:title" content="APEXON 人气榜">
+    <meta property="og:description" content="随机刷新、搜索、性别筛选、点赞与举报，看看谁最受欢迎。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/popularity.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <title data-i18n="popularityPageTitle">人气榜 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=9">
+    <link rel="stylesheet" href="styles/main.css?v=27">
+    <style>
+        .pop-hero { padding-top: 28px; padding-bottom: 6px; text-align: center; }
+        .pop-hero__title { font-size: 1.9rem; font-weight: 800; margin: 0 0 8px; letter-spacing: .5px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #f472b6 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .pop-hero__desc { color: var(--apex-text-secondary); font-size: .95rem; max-width: 620px; margin: 0 auto; line-height: 1.7; }
+
+        .pop-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+            margin: 20px auto 8px; max-width: 900px; }
+        .pop-search { position: relative; flex: 1 1 260px; min-width: 200px; }
+        .pop-search input { width: 100%; padding: 11px 40px 11px 14px; border-radius: 12px;
+            border: 1px solid var(--apex-border, rgba(148,163,184,.25)); background: var(--apex-surface, rgba(148,163,184,.08));
+            color: var(--apex-text); font-size: .92rem; outline: none; transition: border-color .15s, box-shadow .15s; }
+        .pop-search input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.18); }
+        .pop-search__clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            border: none; background: transparent; color: var(--apex-text-tertiary, #94a3b8); cursor: pointer;
+            font-size: 1.1rem; line-height: 1; padding: 6px; display: none; }
+        .pop-search.has-value .pop-search__clear { display: block; }
+        .pop-select { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--apex-border, rgba(148,163,184,.25));
+            background: var(--apex-surface, rgba(148,163,184,.08)); color: var(--apex-text); font-size: .92rem; outline: none; cursor: pointer; }
+        .pop-sorts { display: flex; gap: 6px; padding: 4px; border-radius: 999px;
+            border: 1px solid var(--apex-border, rgba(148,163,184,.25)); background: var(--apex-surface, rgba(148,163,184,.08)); }
+        .pop-sort-btn { border: none; background: transparent; color: var(--apex-text-secondary); cursor: pointer;
+            padding: 8px 14px; border-radius: 999px; font-size: .84rem; font-weight: 600; white-space: nowrap; transition: all .15s ease; }
+        .pop-sort-btn:hover { color: var(--apex-text); }
+        .pop-sort-btn.active { color: #3a2500; background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 4px 12px rgba(245,158,11,.32); }
+        .pop-refresh { border: 1px solid var(--apex-border, rgba(148,163,184,.25)); background: transparent;
+            color: var(--apex-text); cursor: pointer; border-radius: 999px; padding: 10px 14px; font-size: .86rem; font-weight: 600;
+            transition: transform .15s ease, background .15s ease; }
+        .pop-refresh:hover { background: var(--apex-surface, rgba(148,163,184,.08)); }
+        .pop-refresh.spinning { animation: pop-spin .6s linear; }
+        @keyframes pop-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+        .pop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px;
+            margin: 18px 0 48px; }
+        .pop-card { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px 14px;
+            border-radius: 18px; border: 1px solid var(--apex-border, rgba(148,163,184,.2));
+            background: var(--apex-card-bg, rgba(148,163,184,.06)); overflow: hidden;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .pop-card:hover { transform: translateY(-3px); border-color: rgba(245,158,11,.5);
+            box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+        .pop-card__rank { position: absolute; top: 10px; right: 12px; font-size: .78rem; font-weight: 800;
+            padding: 3px 9px; border-radius: 999px; color: var(--apex-text-secondary);
+            background: var(--apex-surface, rgba(148,163,184,.12)); }
+        .pop-card__rank.r1 { color: #3a2500; background: linear-gradient(135deg, #fde047, #f59e0b); }
+        .pop-card__rank.r2 { color: #1f2937; background: linear-gradient(135deg, #e5e7eb, #9ca3af); }
+        .pop-card__rank.r3 { color: #3a1d0a; background: linear-gradient(135deg, #fdba74, #c2703b); }
+        .pop-card__head { display: flex; align-items: center; gap: 12px; }
+        .pop-avatar { width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; background: linear-gradient(135deg, rgba(245,158,11,.28), rgba(244,114,182,.28));
+            display: flex; align-items: center; justify-content: center; transition: transform .15s ease, border-color .15s ease; }
+        .pop-avatar:hover { transform: scale(1.06); border-color: #f59e0b; }
+        .pop-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .pop-avatar svg { width: 100%; height: 100%; }
+        .pop-name { font-weight: 700; font-size: 1rem; color: var(--apex-text); word-break: break-all; }
+        .pop-gender { font-size: .74rem; color: var(--apex-text-tertiary, #94a3b8); margin-top: 3px; }
+        .pop-bio { font-size: .82rem; color: var(--apex-text-secondary); line-height: 1.5; min-height: 2.4em;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .pop-actions { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+        .pop-like { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            border: 1px solid rgba(244,114,182,.4); background: rgba(244,114,182,.1); color: #f472b6;
+            border-radius: 999px; padding: 9px 12px; font-size: .86rem; font-weight: 700; cursor: pointer;
+            transition: all .15s ease; }
+        .pop-like:hover { background: rgba(244,114,182,.2); }
+        .pop-like.liked { color: #fff; background: linear-gradient(135deg, #f472b6, #ec4899); border-color: transparent;
+            box-shadow: 0 6px 16px rgba(236,72,153,.34); }
+        .pop-like:disabled { opacity: .6; cursor: progress; }
+        .pop-report { border: 1px solid var(--apex-border, rgba(148,163,184,.3)); background: transparent;
+            color: var(--apex-text-tertiary, #94a3b8); border-radius: 999px; padding: 9px 12px; font-size: .82rem;
+            cursor: pointer; transition: all .15s ease; }
+        .pop-report:hover { color: #f87171; border-color: rgba(248,113,113,.5); background: rgba(248,113,113,.08); }
+
+        .pop-skeleton { height: 168px; border-radius: 18px; border: 1px solid var(--apex-border, rgba(148,163,184,.15));
+            background: linear-gradient(100deg, rgba(148,163,184,.06) 30%, rgba(148,163,184,.14) 50%, rgba(148,163,184,.06) 70%);
+            background-size: 200% 100%; animation: pop-shimmer 1.3s infinite; }
+        @keyframes pop-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+        .pop-report-modal { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .pop-report-modal.show { display: flex; }
+        .pop-report-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(3px); }
+        .pop-report-card { position: relative; width: 100%; max-width: 380px; border-radius: 18px; padding: 20px;
+            border: 1px solid var(--apex-border, rgba(148,163,184,.25)); background: var(--apex-bg-elevated, #1b2130);
+            color: var(--apex-text); box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+        .pop-report-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+        .pop-report-card p { margin: 0 0 14px; font-size: .84rem; color: var(--apex-text-secondary); }
+        .pop-report-reasons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .pop-report-reason { border: 1px solid var(--apex-border, rgba(148,163,184,.3)); background: transparent;
+            color: var(--apex-text-secondary); border-radius: 999px; padding: 7px 12px; font-size: .82rem; cursor: pointer; }
+        .pop-report-reason.selected { color: #fff; background: linear-gradient(135deg, #f87171, #dc2626); border-color: transparent; }
+        .pop-report-btns { display: flex; gap: 10px; justify-content: flex-end; }
+        .pop-report-btns button { border-radius: 10px; padding: 9px 16px; font-size: .88rem; cursor: pointer; border: 1px solid var(--apex-border, rgba(148,163,184,.3)); background: transparent; color: var(--apex-text); }
+        .pop-report-btns .submit { background: linear-gradient(135deg, #f87171, #dc2626); border: none; color: #fff; font-weight: 700; }
+
+        @media (max-width: 560px) {
+            .pop-hero__title { font-size: 1.5rem; }
+            .pop-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+            .pop-card { padding: 14px 12px 12px; }
+            .pop-avatar { width: 44px; height: 44px; flex-basis: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+                <a href="popularity.html" class="apex-popularity-btn active" data-i18n="navPopularity">人气榜</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                    <a href="popularity.html" data-i18n="navPopularity">人气榜</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="pop-hero">
+            <h1 class="pop-hero__title">🏅 <span data-i18n="navPopularity">人气榜</span></h1>
+            <p class="pop-hero__desc" data-i18n="popularitySubtitle">每次进来都会随机刷新一批玩家。按用户名搜索、按性别筛选，点赞支持喜欢的人，遇到骚扰或违规一键举报，点击头像即可查看 TA 的资料。</p>
+        </div>
+
+        <div class="pop-toolbar">
+            <div class="pop-search" id="popSearchWrap">
+                <input id="popSearch" type="search" autocomplete="off" maxlength="60"
+                       data-i18n-placeholder="popularitySearchPlaceholder" placeholder="搜索用户名…" aria-label="搜索用户名">
+                <button class="pop-search__clear" id="popSearchClear" type="button" aria-label="清空">×</button>
+            </div>
+            <select class="pop-select" id="popGender" aria-label="按性别筛选">
+                <option value="all" data-i18n="popularityGenderAll">全部性别</option>
+                <option value="male" data-i18n="genderMale">男</option>
+                <option value="female" data-i18n="genderFemale">女</option>
+                <option value="secret" data-i18n="genderSecret">保密</option>
+            </select>
+            <div class="pop-sorts" role="tablist" aria-label="排序方式">
+                <button class="pop-sort-btn" data-sort="random" role="tab" data-i18n="popularitySortRandom">🎲 随机刷新</button>
+                <button class="pop-sort-btn active" data-sort="likes" role="tab" data-i18n="popularitySortLikes">👍 点赞最多</button>
+                <button class="pop-sort-btn" data-sort="new" role="tab" data-i18n="popularitySortNew">🆕 最新上榜</button>
+            </div>
+            <button class="pop-refresh" id="popRefreshBtn" type="button" data-i18n-title="popularityRefresh" title="重新随机刷新">🔄</button>
+        </div>
+
+        <div class="pop-grid" id="popGrid" aria-live="polite"></div>
+    </div>
+
+    <!-- 举报弹窗 -->
+    <div class="pop-report-modal" id="popReportModal">
+        <div class="pop-report-backdrop" onclick="Pop.closeReport()"></div>
+        <div class="pop-report-card" role="dialog" aria-modal="true">
+            <h3 data-i18n="popularityReportTitle">举报该用户</h3>
+            <p id="popReportTarget"></p>
+            <div class="pop-report-reasons" id="popReportReasons"></div>
+            <div class="pop-report-btns">
+                <button type="button" onclick="Pop.closeReport()" data-i18n="cancel">取消</button>
+                <button type="button" class="submit" id="popReportSubmit" data-i18n="popularityReportSubmit">提交举报</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=17"></script>
+    <script src="js/common.js?v=38"></script>
+    <script>
+    (function () {
+        'use strict';
+        var t = function (k, fb) { return (window.APEXON && APEXON.i18n) ? APEXON.i18n.t(k, fb) : fb; };
+        var grid = document.getElementById('popGrid');
+        var searchInput = document.getElementById('popSearch');
+        var searchWrap = document.getElementById('popSearchWrap');
+        var genderSel = document.getElementById('popGender');
+        var refreshBtn = document.getElementById('popRefreshBtn');
+
+        var state = { q: '', gender: 'all', sort: 'likes', list: [], loading: false, reqId: 0 };
+
+        if (window.APEXON && APEXON.Particles) APEXON.Particles.init();
+
+        // ---------- 头像 ----------
+        function avatarHTML(url) {
+            if (url && window.APEXON && APEXON.UI && APEXON.UI._renderAvatarHTML) {
+                try { return APEXON.UI._renderAvatarHTML(url); } catch (e) { /* fallthrough */ }
+            }
+            return '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg>';
+        }
+        function genderLabel(g) {
+            if (g === 'male') return '♂ ' + t('genderMale', '男');
+            if (g === 'female') return '♀ ' + t('genderFemale', '女');
+            return '⚧ ' + t('genderSecret', '保密');
+        }
+
+        // ---------- 渲染 ----------
+        function skeleton() {
+            grid.innerHTML = Array.from({ length: 8 }, function () { return '<div class="pop-skeleton"></div>'; }).join('');
+        }
+        function emptyState() {
+            var filtered = state.q || state.gender !== 'all';
+            return '<div class="apex-empty-state" style="grid-column:1/-1">' +
+                '<div class="apex-empty-state__icon">🏅</div>' +
+                '<div class="apex-empty-state__title">' + (filtered ? t('popularityEmptyFiltered', '没有符合条件的玩家') : t('popularityEmpty', '榜单还空着')) + '</div>' +
+                '<div class="apex-empty-state__desc">' + (filtered ? t('popularityEmptyFilteredDesc', '换个关键词或性别条件再试试。') : t('popularityEmptyDesc', '还没有人上榜，登录后完善资料就能出现在这里。')) + '</div>' +
+                '</div>';
+        }
+
+        function render() {
+            var esc = APEXON.Security.escapeHtml;
+            if (!state.list.length) { grid.innerHTML = emptyState(); return; }
+            grid.innerHTML = state.list.map(function (u, i) {
+                var rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+                var bio = u.bio ? esc(u.bio) : '<span style="opacity:.55">' + t('popularityNoBio', '这个人很神秘，什么都没写') + '</span>';
+                return '<div class="pop-card">' +
+                    '<span class="pop-card__rank ' + rankCls + '">#' + (i + 1) + '</span>' +
+                    '<div class="pop-card__head">' +
+                        '<div class="pop-avatar" data-uid="' + esc(u.user_id) + '" role="button" tabindex="0" title="' + t('popularityViewProfile', '查看资料') + '">' + avatarHTML(u.avatar_url) + '</div>' +
+                        '<div>' +
+                            '<div class="pop-name">' + esc(u.username) + '</div>' +
+                            '<div class="pop-gender">' + esc(genderLabel(u.gender)) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="pop-bio">' + bio + '</div>' +
+                    '<div class="pop-actions">' +
+                        '<button type="button" class="pop-like' + (u.liked ? ' liked' : '') + '" data-uid="' + esc(u.user_id) + '">' +
+                            '<span class="pop-like__heart">' + (u.liked ? '❤️' : '🤍') + '</span>' +
+                            '<span class="pop-like__count">' + Number(u.likes || 0) + '</span>' +
+                        '</button>' +
+                        '<button type="button" class="pop-report" data-uid="' + esc(u.user_id) + '" data-name="' + esc(u.username) + '" title="' + t('popularityReport', '举报') + '">🚩</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ---------- 数据加载 ----------
+        async function load() {
+            if (state.loading) return;
+            state.loading = true;
+            var myReq = ++state.reqId;
+            skeleton();
+            var data = await APEXON.DB.getPopularity({ q: state.q, gender: state.gender, sort: state.sort, limit: 60 });
+            if (myReq !== state.reqId) return; // 丢弃过期响应
+            state.list = Array.isArray(data) ? data : [];
+            state.loading = false;
+            render();
+        }
+
+        // ---------- 交互 ----------
+        var debounce = (window.APEXON && APEXON.Utils && APEXON.Utils.debounce)
+            ? APEXON.Utils.debounce.bind(APEXON.Utils)
+            : function (fn, wait) { var h; return function () { var a = arguments, self = this; clearTimeout(h); h = setTimeout(function () { fn.apply(self, a); }, wait); }; };
+
+        var onSearch = debounce(function () {
+            state.q = searchInput.value.trim().slice(0, 60);
+            searchWrap.classList.toggle('has-value', !!searchInput.value);
+            load();
+        }, 320);
+
+        searchInput.addEventListener('input', onSearch);
+        document.getElementById('popSearchClear').addEventListener('click', function () {
+            searchInput.value = '';
+            searchWrap.classList.remove('has-value');
+            state.q = '';
+            load();
+            searchInput.focus();
+        });
+        genderSel.addEventListener('change', function () {
+            state.gender = genderSel.value || 'all';
+            load();
+        });
+        document.querySelectorAll('.pop-sort-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (btn.classList.contains('active')) return;
+                document.querySelectorAll('.pop-sort-btn').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                state.sort = btn.dataset.sort || 'likes';
+                load();
+            });
+        });
+        refreshBtn.addEventListener('click', function () {
+            refreshBtn.classList.add('spinning');
+            setTimeout(function () { refreshBtn.classList.remove('spinning'); }, 620);
+            // 手动刷新：强制走服务端随机洗牌，保证每次结果不同
+            state.sort = 'random';
+            document.querySelectorAll('.pop-sort-btn').forEach(function (b) {
+                b.classList.toggle('active', b.dataset.sort === 'random');
+            });
+            load();
+        });
+
+        // 事件委托：头像 / 点赞 / 举报
+        grid.addEventListener('click', function (e) {
+            var avatar = e.target.closest('.pop-avatar');
+            if (avatar) { viewProfile(avatar.dataset.uid); return; }
+            var likeBtn = e.target.closest('.pop-like');
+            if (likeBtn) { toggleLike(likeBtn); return; }
+            var reportBtn = e.target.closest('.pop-report');
+            if (reportBtn) { openReport(reportBtn.dataset.uid, reportBtn.dataset.name); }
+        });
+        grid.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            var avatar = e.target.closest('.pop-avatar');
+            if (avatar) { e.preventDefault(); viewProfile(avatar.dataset.uid); }
+        });
+
+        function viewProfile(uid) {
+            if (uid && window.APEXON && APEXON.UI && APEXON.UI.showProfileModal) {
+                APEXON.UI.showProfileModal('view', uid);
+            }
+        }
+
+        async function toggleLike(btn) {
+            var uid = btn.dataset.uid;
+            if (!uid || btn.disabled) return;
+            btn.disabled = true;
+            var res = await APEXON.DB.likePopularity(uid);
+            btn.disabled = false;
+            if (!res || !res.success) {
+                APEXON.UI.toast((res && res.error) || t('popularityLikeFailed', '操作失败，请稍后再试'));
+                return;
+            }
+            var item = state.list.find(function (u) { return u.user_id === uid; });
+            if (item) {
+                item.liked = !!res.liked;
+                item.likes = Number(res.likes || 0);
+                btn.classList.toggle('liked', item.liked);
+                btn.querySelector('.pop-like__heart').textContent = item.liked ? '❤️' : '🤍';
+                btn.querySelector('.pop-like__count').textContent = item.likes;
+            }
+        }
+
+        // ---------- 举报弹窗 ----------
+        var reportReasons = [
+            { key: 'harass', label: '骚扰 / 辱骂' },
+            { key: 'spam', label: '垃圾广告' },
+            { key: 'fake', label: '虚假信息' },
+            { key: 'inappropriate', label: '不当内容' },
+            { key: 'other', label: '其他' }
+        ];
+        var reportState = { uid: '', reason: '' };
+
+        function openReport(uid, name) {
+            reportState.uid = uid;
+            reportState.reason = '';
+            document.getElementById('popReportTarget').textContent = '『' + (name || uid) + '』';
+            var box = document.getElementById('popReportReasons');
+            box.innerHTML = reportReasons.map(function (r) {
+                return '<button type="button" class="pop-report-reason" data-key="' + r.key + '">' + r.label + '</button>';
+            }).join('');
+            box.querySelectorAll('.pop-report-reason').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    reportState.reason = b.textContent;
+                    box.querySelectorAll('.pop-report-reason').forEach(function (x) { x.classList.remove('selected'); });
+                    b.classList.add('selected');
+                });
+            });
+            document.getElementById('popReportModal').classList.add('show');
+        }
+
+        function closeReport() {
+            document.getElementById('popReportModal').classList.remove('show');
+        }
+
+        document.getElementById('popReportSubmit').addEventListener('click', async function () {
+            if (!reportState.uid) return;
+            if (!reportState.reason) { APEXON.UI.toast(t('popularityReportPickReason', '请选择举报理由')); return; }
+            var btn = this;
+            btn.disabled = true;
+            var res = await APEXON.DB.reportPopularity(reportState.uid, reportState.reason);
+            btn.disabled = false;
+            closeReport();
+            if (!res || !res.success) {
+                APEXON.UI.toast((res && res.error) || t('popularityReportFailed', '举报提交失败，请稍后再试'));
+                return;
+            }
+            APEXON.UI.toast(t('popularityReportThanks', '已收到举报，我们会尽快处理'));
+        });
+
+        // 暴露给内联 onclick
+        window.Pop = { closeReport: closeReport };
+
+        // 语言切换后重渲染（性别标签等）
+        document.addEventListener('apexon:langchange', function () { render(); });
+
+        // 初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', load);
+        } else {
+            load();
+        }
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>
