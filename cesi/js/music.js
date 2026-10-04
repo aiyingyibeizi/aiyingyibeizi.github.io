@@ -539,7 +539,11 @@
         // 静默失败
       }
 
-      body.innerHTML = '<div class="music-lyrics-panel__empty">' + t('musLyricsNotFound', '未找到该歌曲的歌词') + '</div>';
+      // UI12：歌词源可能临时不可用，提供「重新加载」按钮，让用户可手动重试
+      body.innerHTML = '<div class="music-lyrics-panel__empty">' + t('musLyricsNotFound', '未找到该歌曲的歌词') +
+        '<button type="button" class="music-lyrics-panel__retry">' + t('lyricsRetry', '重新加载歌词') + '</button></div>';
+      const retryBtn = body.querySelector('.music-lyrics-panel__retry');
+      if (retryBtn) retryBtn.addEventListener('click', () => this.loadLyrics(track));
     },
 
     parseLyrics(text) {

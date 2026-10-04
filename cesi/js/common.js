@@ -1029,13 +1029,31 @@
       return !this.isLoggedIn();
     },
 
+    // UI11 修复：游客可自定义昵称（此前自动分配 guest_xxxx 且无法更改）。
+    // 游客昵称仅保存在本机（localStorage），登录后以账号用户名为准，互不影响。
+    getGuestNickname() {
+      try { return (localStorage.getItem('apexon-guest-nickname') || '').trim(); } catch (e) { return ''; }
+    },
+
+    setGuestNickname(name) {
+      const u = String(name || '').trim().slice(0, 30);
+      const err = this._validateUsername(u);
+      if (err) return { success: false, error: err };
+      try { localStorage.setItem('apexon-guest-nickname', u); } catch (e) { return { success: false, error: '保存失败，请重试' }; }
+      return { success: true, username: u };
+    },
+
     getUser() {
       if (this.currentUser) return this.currentUser.username;
+      const nick = this.getGuestNickname();
+      if (nick) return nick;
       return 'guest_' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
     },
 
     getDisplayUser() {
       if (this.currentUser) return this.currentUser.username;
+      const nick = this.getGuestNickname();
+      if (nick) return nick;
       const prefix = window.APEXON && APEXON.i18n ? APEXON.i18n.t('guestPrefix', '游客') : '游客';
       return prefix + ' ' + (this.anonId ? this.anonId.slice(-4) : 'xxxx');
     },
@@ -1288,6 +1306,8 @@
     isLoggedIn: Auth.isLoggedIn.bind(Auth),
     getUser: Auth.getUser.bind(Auth),
     getDisplayUser: Auth.getDisplayUser.bind(Auth),
+    getGuestNickname: Auth.getGuestNickname.bind(Auth),
+    setGuestNickname: Auth.setGuestNickname.bind(Auth),
     getUserId: Auth.getUserId.bind(Auth),
     getToken: Auth.getToken.bind(Auth),
     register: Auth.register.bind(Auth),
@@ -2890,7 +2910,9 @@
       if (menu) {
         const miniIcon = '<svg viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(124,58,237,0.3));"><defs><linearGradient id="miniGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#60A5FA"/></linearGradient></defs><path d="M12 2l10 6-10 6L2 8l10-6z" fill="url(#miniGrad)"/></svg>';
         if (!isLoggedIn) {
-          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="login">' + (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginRegister') : '登录 / 注册') + '</button></div>';
+          // UI11：游客也提供「修改昵称」入口（本地昵称，登录后可同步到账号）
+          const tg = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function (k) { return k; };
+          menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="guest-nickname">' + tg('editNickname', '修改昵称') + '</button><button data-action="login">' + tg('loginRegister', '登录 / 注册') + '</button></div>';
         } else {
           const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k) { return k; };
           menu.innerHTML = '<div class="apex-user-bar" id="apexUserBar"><div class="apex-avatar-wrap"><div class="apex-avatar" id="apexHeaderAvatar">' + this._renderAvatarHTML(null) + '</div></div><div class="apex-mini-icon">' + miniIcon + '</div><span class="apex-user-name">' + Security.escapeHtml(name) + '</span><span class="apex-user-caret">▼</span></div><div class="apex-user-dropdown" id="apexUserDropdown"><button data-action="edit-profile">' + t('editProfile') + '</button><button data-action="change-username">' + t('editUsername') + '</button><button data-action="logout">' + t('logoutAccount') + '</button><button data-action="delete-account" class="danger">' + t('deleteAccount') + '</button></div>';
@@ -2963,6 +2985,7 @@
         const action = btn.dataset.action;
         try {
           if (action === 'login') this.showLoginModal();
+          else if (action === 'guest-nickname') this.showGuestNicknameModal();
           else if (action === 'edit-profile') this.showProfileModal('edit', APEXON.Auth.getUserId());
           else if (action === 'change-username') this.showChangeUsernameModal();
           else if (action === 'logout') APEXON.Auth.logout();
@@ -3160,6 +3183,53 @@
           }
         });
       }
+    },
+
+    // UI11：游客昵称设置（本地保存，登录后以账号用户名为准）
+    showGuestNicknameModal() {
+      if (APEXON.Auth.isLoggedIn()) return;
+      let modal = document.getElementById('apex-guest-nickname-modal');
+      if (modal) modal.remove();
+
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function (k, fb) { return fb; };
+      modal = document.createElement('div');
+      modal.id = 'apex-guest-nickname-modal';
+      modal.className = 'apex-profile-modal';
+      modal.innerHTML = '<div class="apex-profile-backdrop"></div><div class="apex-profile-card"><button class="apex-profile-close" id="apexGuestNickClose" aria-label="关闭">×</button><div class="apex-profile-header"><div class="apex-profile-name">' + t('guestNicknameTitle', '设置昵称') + '</div></div><div class="apex-profile-body"><div class="apex-profile-section" style="margin-bottom:12px;"><div class="apex-profile-label">' + t('currentUsername', '当前用户名') + '</div><div class="apex-profile-value">' + Security.escapeHtml(APEXON.Auth.getDisplayUser()) + '</div></div><input type="text" id="apexGuestNickInput" placeholder="' + t('guestNicknamePlaceholder', '输入你喜欢的昵称') + '" maxlength="30" value="' + Security.escapeHtml(APEXON.Auth.getGuestNickname()) + '"><div class="apex-hint" id="apexGuestNickHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-hint" style="opacity:.7;margin-top:6px;">' + t('guestNicknameTip', '游客昵称仅保存在本机，登录后可同步到账号。') + '</div><div class="apex-profile-error" id="apexGuestNickError"></div><button class="apex-profile-submit" id="apexGuestNickSubmit">' + t('saveProfile', '保存资料') + '</button></div></div>';
+      document.body.appendChild(modal);
+
+      let a11yCleanup = null;
+      const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
+      modal.querySelector('#apexGuestNickClose').addEventListener('click', close);
+      modal.querySelector('.apex-profile-backdrop').addEventListener('click', close);
+
+      const input = modal.querySelector('#apexGuestNickInput');
+      const hint = modal.querySelector('#apexGuestNickHint');
+      const submit = modal.querySelector('#apexGuestNickSubmit');
+      const validate = () => {
+        const err = APEXON.Auth._validateUsername(input.value.trim());
+        hint.textContent = err || (input.value.trim() ? t('validFormat', '格式正确') : t('usernameRule', '2-30 位，支持中英文、数字、下划线'));
+        hint.className = 'apex-hint' + (err ? ' invalid' : (input.value.trim() ? ' valid' : ''));
+        submit.disabled = !!err;
+      };
+      input.addEventListener('input', validate);
+      submit.addEventListener('click', () => {
+        const errorEl = modal.querySelector('#apexGuestNickError');
+        errorEl.textContent = '';
+        const result = APEXON.Auth.setGuestNickname(input.value);
+        if (result.success) {
+          UI.toast(t('nicknameSaved', '昵称已更新'), 2200, 'success');
+          close();
+          this.updateUserDisplay();
+        } else {
+          errorEl.textContent = result.error || t('saveFailed', '保存失败，请重试');
+        }
+      });
+
+      requestAnimationFrame(() => modal.classList.add('show'));
+      a11yCleanup = this._setupModalA11y(modal, { closeBtn: modal.querySelector('#apexGuestNickClose'), onClean: close });
+      validate();
+      setTimeout(() => input.focus(), 60);
     },
 
     showChangeUsernameModal() {

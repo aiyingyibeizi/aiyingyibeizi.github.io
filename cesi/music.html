@@ -18,7 +18,7 @@
     <title>APEXON Music - 在线音乐播放器</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles/variables.css?v=9">
-    <link rel="stylesheet" href="styles/main.css?v=27">
+    <link rel="stylesheet" href="styles/main.css?v=28">
     <style>
         :root {
             --music-sidebar-width: 240px;
@@ -975,7 +975,30 @@
             color: rgba(255, 255, 255, 0.35);
             font-size: 0.9375rem;
             margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
         }
+
+        /* UI12：歌词加载失败时的手动重试按钮 */
+        .music-lyrics-panel__retry {
+            padding: 8px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .music-lyrics-panel__retry:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--music-highlight);
+            transform: translateY(-1px);
+        }
+        .music-lyrics-panel__retry:active { transform: translateY(0); }
 
         .music-lyrics-panel__line {
             margin: 8px 0;
@@ -2461,9 +2484,9 @@
 
     <audio id="musicAudio"></audio>
 
-    <script src="js/i18n.js?v=17"></script>
-    <script src="js/common.js?v=38"></script>
-    <script src="js/music.js?v=7"></script>
+    <script src="js/i18n.js?v=18"></script>
+    <script src="js/common.js?v=39"></script>
+    <script src="js/music.js?v=8"></script>
     <script>
         if (window.APEXON && APEXON.Particles) APEXON.Particles.init();
         document.body.classList.add('loaded');

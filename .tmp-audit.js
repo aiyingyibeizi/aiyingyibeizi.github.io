@@ -7,7 +7,7 @@ const problems = [];
 // global i18n.js keys
 const i18nSrc = fs.readFileSync(path.join(root, 'js/i18n.js'), 'utf8');
 const globalKeys = new Set();
-for (const m of i18nSrc.matchAll(/(?<![A-Za-z0-9_$])([A-Za-z][A-Za-z0-9_]*)\s*:/g)) globalKeys.add(m[1]);
+for (const m of i18nSrc.matchAll(/(?<![A-Za-z0-9_$])["']?([A-Za-z][A-Za-z0-9_]*)["']?\s*:/g)) globalKeys.add(m[1]);
 
 const assetRefs = [];
 const internalLinks = [];
@@ -16,7 +16,7 @@ for (const f of files) {
   const p = path.join(root, f);
   const html = fs.readFileSync(p, 'utf8');
   const pageKeys = new Set(globalKeys);
-  for (const m of html.matchAll(/(?<![A-Za-z0-9_$.])([A-Za-z][A-Za-z0-9_]*)\s*:/g)) pageKeys.add(m[1]);
+  for (const m of html.matchAll(/(?<![A-Za-z0-9_$.])["']?([A-Za-z][A-Za-z0-9_]*)["']?\s*:/g)) pageKeys.add(m[1]);
 
   const ids = [];
   for (const m of html.matchAll(/\sid\s*=\s*"([^"]+)"/g)) ids.push(m[1]);
