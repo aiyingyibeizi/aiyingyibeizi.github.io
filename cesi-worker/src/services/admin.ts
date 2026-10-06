@@ -344,9 +344,11 @@ export async function setAdminSessionRole(redis: Redis, token: string, role: Adm
   if (!token) return false;
   try {
     const key = adminSessionKey(token);
-    const raw = await redis.get<string>(key);
+    const raw = await redis.get<string | Record<string, unknown>>(key);
     if (!raw) return false;
-    const parsed = JSON.parse(raw);
+    // Upstash 客户端默认开启 automaticDeserialization：JSON 字符串读回时已被解析成对象。
+    // 因此这里必须兼容“已是对象”的情况，否则 JSON.parse(object) 会抛错导致会话判定失败。
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
     parsed.role = role;
     parsed.role_updated_at = new Date().toISOString();
     // 保留剩余 TTL：重新 set 时 TTL 会丢失，故读取剩余时间后再写回
@@ -368,9 +370,10 @@ export async function resolveAdminSession(
 ): Promise<{ ok: true; admin: string; ip: string; role: AdminRole } | { ok: false }> {
   if (!token) return { ok: false };
   try {
-    const raw = await redis.get<string>(adminSessionKey(token));
+    const raw = await redis.get<string | Record<string, unknown>>(adminSessionKey(token));
     if (!raw) return { ok: false };
-    const parsed = JSON.parse(raw);
+    // 兼容 Upstash 自动反序列化：读回的 JSON 可能已是对象（见 setAdminSessionRole 注释）。
+    const parsed = (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>;
     const role: AdminRole = parsed?.role === 'owner' ? 'owner' : 'admin';
     return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || ''), role };
   } catch (err) {
