@@ -13,7 +13,7 @@ import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
-import { writeAudit, searchAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { writeAudit, listAccountsWithStats, getUserDetail, flattenAccount, listContent } from './services/admin';
 import { verifyAdminPassword, verifyAdminTotp, verifyOwnerPassword, setAdminSessionRole, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import type { AdminRole } from './services/admin';
 import { sendNotify } from './services/notify';
@@ -2209,10 +2209,10 @@ app.get('/api/admin/overview', async (c) => {
 
 app.get('/api/admin/users', async (c) => {
   const q = str(c.req.query('q'), 100);
-  const limit = Number(c.req.query('limit') || 300);
+  const limit = Number(c.req.query('limit') || 1000);
   const shard = await buildShardService(c.env);
-  const rows = await searchAccounts(shard, q, limit);
-  return c.json({ data: rows.map(flattenAccount) });
+  const rows = await listAccountsWithStats(shard, q, limit);
+  return c.json({ data: rows, total: rows.length });
 });
 
 app.get('/api/admin/users/:userId', async (c) => {
@@ -2436,10 +2436,12 @@ app.get('/api/admin/stats/trends', async (c) => {
 app.get('/api/admin/export/users', async (c) => {
   const q = str(c.req.query('q'), 100);
   const shard = await buildShardService(c.env);
-  const rows = await searchAccounts(shard, q, 1000);
-  const headers = ['user_id', 'username', 'email', 'banned', 'banned_reason', 'created_at', 'updated_at'];
-  const body = rows.map(flattenAccount).map((u) => [
-    u.user_id, u.username, u.email || '', u.banned ? '1' : '0', u.banned_reason || '', u.created_at, u.updated_at,
+  const rows = await listAccountsWithStats(shard, q, 1000);
+  const headers = ['user_id', 'username', 'email', 'email_verified', 'last_login_ip', 'score_count', 'comment_count', 'feedback_count', 'last_seen', 'banned', 'banned_reason', 'created_at', 'updated_at'];
+  const body = rows.map((u) => [
+    u.user_id, u.username, u.email || '', u.email_verified ? '1' : '0', u.last_login_ip || '',
+    u.score_count, u.comment_count, u.feedback_count, u.last_seen || '',
+    u.banned ? '1' : '0', u.banned_reason || '', u.created_at, u.updated_at,
   ]);
   return csvDownload(toCsv(headers, body), csvFilename('users'));
 });

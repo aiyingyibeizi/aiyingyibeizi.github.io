@@ -102,8 +102,10 @@ export function flattenAccount(row: MixedData): {
   user_id: string;
   username: string;
   email: string | null;
+  email_verified: boolean;
   banned: boolean;
   banned_reason: string | null;
+  last_login_ip: string | null;
   created_at: string;
   updated_at: string;
 } {
@@ -113,34 +115,82 @@ export function flattenAccount(row: MixedData): {
     user_id: row.user_id,
     username: typeof p.username === 'string' ? p.username : row.user_id,
     email: typeof p.email === 'string' ? p.email : null,
+    email_verified: Boolean(p.email_verified),
     banned: Boolean(p.banned),
     banned_reason: typeof p.banned_reason === 'string' ? p.banned_reason : null,
+    last_login_ip: typeof p.last_login_ip === 'string' && p.last_login_ip ? p.last_login_ip : null,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
 }
 
-/** 按用户名/ID 模糊搜索账号（排除压测账号，纯过滤不改排序）。 */
-export async function searchAccounts(
+/** 用户列表行：账号基础信息 + 各项统计（评分/评论/反馈/最近在线） */
+export type AdminUserRow = ReturnType<typeof flattenAccount> & {
+  score_count: number;
+  comment_count: number;
+  feedback_count: number;
+  last_seen: string | null;
+};
+
+/**
+ * 后台用户管理列表：返回全部（上限 1000，受 DB 层限制）账号，并附带各项数值详情。
+ * 统计采用「一次性分组」而非逐用户 N+1 查询：读 score/comment/feedback/online 各一批，
+ * 再按 user_id 归并计数。数据量小，成本可控。
+ */
+export async function listAccountsWithStats(
   shard: ShardService,
   q: string,
   limit: number
-): Promise<MixedData[]> {
-  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 50, 1), 1000);
-  const accounts = await shard.readByType('account', { limit: safeLimit });
+): Promise<AdminUserRow[]> {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 1000, 1), 1000);
+  const [accounts, scores, comments, feedback, online] = await Promise.all([
+    shard.readByType('account', { limit: safeLimit }),
+    shard.readByType('score', { limit: 1000 }),
+    shard.readByType('comment', { limit: 1000 }),
+    shard.readByType('feedback', { limit: 1000 }),
+    shard.readByType('online', { limit: 1000 }),
+  ]);
+
+  const tally = (rows: MixedData[]): Map<string, number> => {
+    const m = new Map<string, number>();
+    for (const r of rows) m.set(r.user_id, (m.get(r.user_id) || 0) + 1);
+    return m;
+  };
+  const scoreMap = tally(scores);
+  const commentMap = tally(comments);
+  const feedbackMap = tally(feedback);
+
+  const seenMap = new Map<string, string>();
+  for (const r of online) {
+    const p = safeJsonParse(r.payload);
+    const last = (p && typeof p.last_seen === 'string' && p.last_seen) || r.updated_at || r.created_at;
+    if (!last) continue;
+    const prev = seenMap.get(r.user_id);
+    if (!prev || new Date(last).getTime() > new Date(prev).getTime()) seenMap.set(r.user_id, last);
+  }
+
   const needle = q.trim().toLowerCase();
-  return accounts.filter((row) => {
-    const ua = flattenAccount(row);
-    // 排除压测账号，保持与排行榜一致的通告口径
-    const name = ua.username.trim();
-    if (name && TEST_ACCOUNT_RE.test(name)) return false;
-    if (!needle) return true;
-    return (
-      ua.username.toLowerCase().includes(needle) ||
-      ua.user_id.toLowerCase().includes(needle) ||
-      ua.id.toLowerCase().includes(needle)
-    );
-  });
+  return accounts
+    .map((row) => ({
+      ...flattenAccount(row),
+      score_count: scoreMap.get(row.user_id) || 0,
+      comment_count: commentMap.get(row.user_id) || 0,
+      feedback_count: feedbackMap.get(row.user_id) || 0,
+      last_seen: seenMap.get(row.user_id) || null,
+    }))
+    .filter((u) => {
+      // 排除压测账号，保持与排行榜一致的口径
+      const name = u.username.trim();
+      if (name && TEST_ACCOUNT_RE.test(name)) return false;
+      if (!needle) return true;
+      return (
+        u.username.toLowerCase().includes(needle) ||
+        u.user_id.toLowerCase().includes(needle) ||
+        u.id.toLowerCase().includes(needle) ||
+        (u.email || '').toLowerCase().includes(needle) ||
+        (u.last_login_ip || '').toLowerCase().includes(needle)
+      );
+    });
 }
 
 /** 拉取某用户的综合档案（account + profile + 统计），用于详情页 */

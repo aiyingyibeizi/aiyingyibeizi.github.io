@@ -127,6 +127,7 @@ tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.02)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
 .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.user-search{flex:1;min-width:220px;max-width:460px}
 input,select,textarea{background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 11px;font-size:13px;outline:none}
 input:focus,select:focus{border-color:var(--accent)}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
@@ -529,26 +530,47 @@ function openSnapshot(id){
 var userFilter = '';
 function renderUsers(){
   var el = $('view-users');
-  var q = prompt('搜索用户（用户名 / user_id；留空显示全部）', userFilter);
-  userFilter = q === null ? userFilter : q.trim();
-  var url = '/users?limit=300' + (userFilter ? ('&q=' + encodeURIComponent(userFilter)) : '');
-  el.innerHTML = '<p class="muted">加载中…</p>';
+  el.innerHTML = '<div class="toolbar">' +
+    '<input id="userSearchInput" class="user-search" placeholder="搜索用户名 / user_id / 邮箱 / IP…" value="' + esc(userFilter) + '">' +
+    '<button class="btn" onclick="applyUserSearch()">搜索</button>' +
+    '<button class="btn ghost" onclick="clearUserSearch()">显示全部</button>' +
+    '</div><div id="userList"><p class="muted">加载中…</p></div>';
+  var inp = $('userSearchInput');
+  if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyUserSearch(); });
+  loadUsers();
+}
+function applyUserSearch(){ var i = $('userSearchInput'); userFilter = i ? i.value.trim() : ''; loadUsers(); }
+function clearUserSearch(){ userFilter = ''; var i = $('userSearchInput'); if (i) i.value = ''; loadUsers(); }
+function loadUsers(){
+  var box = $('userList');
+  if (!box) return;
+  box.innerHTML = '<p class="muted">加载中…</p>';
+  var url = '/users?limit=1000' + (userFilter ? ('&q=' + encodeURIComponent(userFilter)) : '');
   api(url).then(function(d){
     var rows = d.data || [];
-    if (!rows.length){ el.innerHTML = '<div class="empty">没有匹配的用户</div>'; return; }
-    var h = '<div class="toolbar"><button class="btn ghost" onclick="renderUsers()">重新搜索</button><span class="muted">共 ' + rows.length + ' 个账号</span></div>';
-    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>状态</th><th>注册时间</th><th>操作</th></tr>';
+    if (!rows.length){ box.innerHTML = '<div class="empty">没有匹配的用户</div>'; return; }
+    var h = '<div class="toolbar"><span class="muted">共 ' + rows.length + ' 个账号' + (userFilter ? '（关键词：' + esc(userFilter) + '）' : '') + '</span></div>';
+    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>邮箱</th><th>IP</th><th>评分</th><th>评论</th><th>反馈</th><th>状态</th><th>注册时间</th><th>最近在线</th><th>操作</th></tr>';
     for (var i=0;i<rows.length;i++){
       var u = rows[i];
-      h += '<tr><td>' + esc(u.username) + '</td><td class="mono">' + esc(trunc(u.user_id,28)) + '</td>';
+      h += '<tr>';
+      h += '<td>' + esc(u.username) + '</td>';
+      h += '<td class="mono">' + esc(trunc(u.user_id,28)) + '</td>';
+      h += '<td>' + (u.email ? esc(u.email) + ' ' + (u.email_verified ? '<span class="badge ok">已验证</span>' : '<span class="badge off">未验证</span>') : '<span class="muted">—</span>') + '</td>';
+      h += '<td class="mono">' + (u.last_login_ip ? esc(u.last_login_ip) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (u.score_count||0) + '</td>';
+      h += '<td>' + (u.comment_count||0) + '</td>';
+      h += '<td>' + (u.feedback_count||0) + '</td>';
       h += '<td>' + (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>') + '</td>';
       h += '<td>' + fmtDate(u.created_at) + '</td>';
+      h += '<td>' + (u.last_seen ? fmtDate(u.last_seen) : '<span class="muted">—</span>') + '</td>';
       h += '<td class="actions"><button class="btn" onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
-      h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></td></tr>';
+      h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></td>';
+      h += '</tr>';
     }
     h += '</table></div>';
-    el.innerHTML = h;
-  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+    box.innerHTML = h;
+  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
 }
 function openUser(userId){
   var body = $('userModalBody');
@@ -558,7 +580,14 @@ function openUser(userId){
     var u = d.data || {};
     var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>' + esc(u.username) + '</h3>';
     h += '<p class="muted mono">' + esc(u.user_id) + '</p>';
-    h += '<div class="field-row">';
+    h += '<div class="table-wrap mt"><table>';
+    h += '<tr><th>邮箱</th><td>' + (u.email ? esc(u.email) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>最近登录 IP</th><td class="mono">' + (u.last_login_ip ? esc(u.last_login_ip) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>最近在线</th><td>' + (u.online_last_seen ? fmtDate(u.online_last_seen) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>注册时间</th><td>' + fmtDate(u.account_created_at) + '</td></tr>';
+    h += '<tr><th>风险等级</th><td>' + (u.risk ? esc(u.risk.level) + '（' + (u.risk.score||0) + '）' : '<span class="muted">—</span>') + '</td></tr>';
+    h += '</table></div>';
+    h += '<div class="field-row mt">';
     h += '<div class="card"><div class="num">' + (u.score_count||0) + '</div><div class="label">评分次数</div></div>';
     h += '<div class="card"><div class="num">' + (u.comment_count||0) + '</div><div class="label">评论数</div></div>';
     h += '<div class="card"><div class="num">' + (u.feedback_count||0) + '</div><div class="label">反馈数</div></div>';
