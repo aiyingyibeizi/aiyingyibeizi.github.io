@@ -308,8 +308,8 @@ function badge(sev){
 // 全角数字/空格容错：中文输入法下常打出全角数字，后端只认半角 6 位数字会误判。
 function normalizeCode(el){
   var v = String(el.value || '')
-    .replace(/[\uFF10-\uFF19]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
-    .replace(/[^\d]/g, '')
+    .replace(/[\\uFF10-\\uFF19]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
+    .replace(/[^\\d]/g, '')
     .slice(0, 6);
   if (v !== el.value) el.value = v;
 }
@@ -328,7 +328,7 @@ function doLogin(){
   var code = $('totpInput').value.trim();
   var hint = $('loginHint');
   if (!t) { hint.className='hint err'; hint.textContent = '请输入管理员口令'; return; }
-  if (!/^\d{6}$/.test(code)) { hint.className='hint err'; hint.textContent = '请输入 6 位动态验证码'; return; }
+  if (!/^\\d{6}$/.test(code)) { hint.className='hint err'; hint.textContent = '请输入 6 位动态验证码'; return; }
   hint.className='hint'; hint.textContent = '校验中…';
   fetch(API_PREFIX + '/login', {
     method: 'POST',
