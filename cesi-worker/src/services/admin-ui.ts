@@ -272,7 +272,6 @@ function api(path, opts){
         var e = new Error((data && data.error) || ('HTTP ' + res.status));
         e.status = res.status;
         // 401（无/无效令牌）或 403-forbidden（会话校验不过）＝会话已失效 → 自动回登录页。
-        // 注意：后台高危操作的“需要有效的动态验证码”也是 403，但其 error 文本不同，不会误触发。
         if (res.status === 401 || (res.status === 403 && data && data.error === 'forbidden')) {
           sessionExpired();
         }
@@ -706,15 +705,6 @@ function delAlert(id){
   api('/alerts/' + encodeURIComponent(id), { method:'DELETE' }).then(function(){ toast('已删除'); renderAlerts(); }).catch(function(e){ toast('失败：' + e.message, true); });
 }
 
-/* ---------- 高危二次验证 ---------- */
-function askTotp(){
-  var c = prompt('高危操作需二次验证：请输入验证器 6 位动态码', '');
-  if (c === null) return null;
-  c = String(c).trim();
-  if (!/^\\d{6}$/.test(c)) { toast('请输入 6 位数字动态码', true); return null; }
-  return c;
-}
-
 /* ---------- 教学管理 ---------- */
 function renderTeaching(){
   var el = $('view-teaching');
@@ -780,8 +770,7 @@ function batchSetClass(){
   var cls = $('className').value.trim();
   if (!ids.length) { toast('请先填写 user_id 列表', true); return; }
   if (!cls) { toast('请填写班级名', true); return; }
-  var code = askTotp(); if (code === null) return;
-  api('/users/batch/class', { method:'POST', body:{ userIds: ids, class: cls, code: code } }).then(function(r){
+  api('/users/batch/class', { method:'POST', body:{ userIds: ids, class: cls } }).then(function(r){
     toast('完成：设置 ' + r.done + '，失败 ' + r.failed);
     renderTeaching();
   }).catch(function(e){ toast('失败：' + e.message, true); });
@@ -800,9 +789,8 @@ function previewImport(){
   }).catch(function(e){ $('importResult').innerHTML = '<div class="empty">校验失败：' + esc(e.message) + '</div>'; });
 }
 function commitImport(){
-  var code = askTotp(); if (code === null) return;
   $('importResult').innerHTML = '<p class="muted">导入中…</p>';
-  api('/scores/import', { method:'POST', body:{ csv: $('importCsv').value, dry_run: false, code: code } }).then(function(d){
+  api('/scores/import', { method:'POST', body:{ csv: $('importCsv').value, dry_run: false } }).then(function(d){
     toast('已导入 ' + d.added + ' 条，错误 ' + d.error_count);
     var hh = '<div class="card mt"><b>导入结果</b><div class="dbinfo"><span>成功 ' + d.added + '，失败 ' + d.error_count + '</span></div>';
     if (d.errors && d.errors.length){ hh += '<div class="table-wrap"><table><tr><th>行</th><th>原因</th></tr>'; for (var i=0;i<d.errors.length;i++){ hh += '<tr><td>' + d.errors[i].row + '</td><td>' + esc(d.errors[i].message) + '</td></tr>'; } hh += '</table></div>'; }
@@ -850,8 +838,7 @@ function renderAntichat(){
 }
 function setValidity(id, v){
   var reason = prompt(v === 'invalid' ? '判定无效原因（可选）' : '恢复原因（可选）') || '';
-  var code = askTotp(); if (code === null) return;
-  api('/scores/' + encodeURIComponent(id) + '/validity', { method:'PATCH', body:{ validity: v, reason: reason, code: code } }).then(function(){
+  api('/scores/' + encodeURIComponent(id) + '/validity', { method:'PATCH', body:{ validity: v, reason: reason } }).then(function(){
     toast(v === 'invalid' ? '已判无效' : '已恢复，可重新上榜');
     renderAntichat();
   }).catch(function(e){ toast('失败：' + e.message, true); });
@@ -886,8 +873,7 @@ function renderAppeals(){
 }
 function reviewAppeal(id, status){
   var note = prompt((status === 'approved' ? '通过' : '驳回') + '备注（可选）') || '';
-  var code = askTotp(); if (code === null) return;
-  api('/appeals/' + encodeURIComponent(id), { method:'PATCH', body:{ status: status, note: note, code: code } }).then(function(){
+  api('/appeals/' + encodeURIComponent(id), { method:'PATCH', body:{ status: status, note: note } }).then(function(){
     toast(status === 'approved' ? '已通过，成绩已恢复上榜' : '已驳回');
     renderAntichat();
   }).catch(function(e){ toast('失败：' + e.message, true); });
@@ -938,8 +924,7 @@ function addIpBan(){
   if (ip === null || !ip.trim()) return;
   var hours = prompt('拉黑时长（小时，留空用默认）：', '24');
   var dur = hours === null ? '' : hours.trim();
-  var bodyB = { ip: ip.trim(), code: askTotp() };
-  if (!bodyB.code) return;
+  var bodyB = { ip: ip.trim() };
   if (dur) bodyB.hours = Number(dur);
   api('/security/ipbans/add', { method:'POST', body: bodyB }).then(function(){
     toast('已拉黑 ' + ip.trim());
@@ -948,9 +933,7 @@ function addIpBan(){
 }
 function removeIpBan(ip){
   if (!confirm('确定解除 ' + ip + ' 的拉黑？该操作仅限站长（需先完成站长认证）。')) return;
-  var code = askTotp();
-  if (!code) return;
-  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip, code: code } }).then(function(){
+  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip } }).then(function(){
     toast('已解除');
     renderSecurity();
   }).catch(function(e){
@@ -980,7 +963,7 @@ function renderCertify(){
     h += '<h3 style="margin:0 0 8px">当前登录身份</h3>';
     h += '<p class="muted" style="margin:0">账号：<span class="mono">' + esc(state.admin) + '</span>　角色：' +
          (isOwner ? '<span class="chip owner">站长</span>' : '<span class="chip">管理员</span>') + '</p>';
-    h += '<p class="muted" style="margin:8px 0 0">' + (state.totpEnabled ? '双重验证已开启：高危操作仍需动态验证码二次确认。' : '未开启 2FA：建议尽快配置 ADMIN_TOTP_SECRET。') + '</p>';
+    h += '<p class="muted" style="margin:8px 0 0">' + (state.totpEnabled ? '双重验证已开启：动态验证码仅用于登录。' : '未开启 2FA：建议尽快配置 ADMIN_TOTP_SECRET。') + '</p>';
     h += '</div>';
 
     h += '<div class="cert-grid">';

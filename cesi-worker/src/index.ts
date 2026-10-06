@@ -1989,13 +1989,6 @@ async function applyUserBan(
   return { ok: true };
 }
 
-/** 高危操作二次校验（2FA）：已启用 TOTP 时，要求请求体中的动态码有效；未启用则放行 */
-async function requireHighRiskTotp(c: any, body: { code?: unknown }): Promise<boolean> {
-  const env = c.env as Env;
-  const t = await verifyAdminTotp(env, String(body?.code || '').trim());
-  return t.requiresTotp ? t.ok : true;
-}
-
 /** 管理接口统一入口：校验会话令牌（短期、带 TTL），通过后经 c.set 注入管理员标识供审计复用 */
 async function adminGw(c: any, next: any): Promise<Response | void> {
   const p = c.req.path;
@@ -2171,7 +2164,7 @@ app.post('/api/admin/logout', async (c) => {
 });
 
 // 说明：原“首次登录？绑定双重验证”的 TOTP 绑定端点（GET /api/admin/2fa）已随登录页绑定入口一并移除，
-// 管理员现在仅通过已配置的 ADMIN_TOTP_SECRET 使用验证器；动态码校验（登录第二因素、高危操作二次校验）不受影响。
+// 管理员现在仅通过已配置的 ADMIN_TOTP_SECRET 使用验证器；动态码仅在登录时作为第二因素校验。
 
 app.get('/api/admin/overview', async (c) => {
   const shard = await buildShardService(c.env);
@@ -2222,8 +2215,6 @@ app.get('/api/admin/users/:userId', async (c) => {
 });
 
 app.delete('/api/admin/users/:userId', async (c) => {
-  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const userId = c.req.param('userId');
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
@@ -2242,8 +2233,7 @@ app.delete('/api/admin/users/:userId', async (c) => {
 });
 
 async function setBan(c: any, banned: boolean) {
-  const body = await c.req.json().catch(() => ({} as { code?: unknown; reason?: unknown }));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403) as any;
+  const body = await c.req.json().catch(() => ({} as { reason?: unknown }));
   const shard = await buildShardService(c.env);
   const userId = c.req.param('userId');
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
@@ -2284,8 +2274,6 @@ app.get('/api/admin/content/:id', async (c) => {
 });
 
 app.delete('/api/admin/content/:id', async (c) => {
-  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
   const row = await shard.readById(c.req.param('id'));
@@ -2342,8 +2330,6 @@ app.patch('/api/admin/alerts/:id', async (c) => {
 });
 
 app.delete('/api/admin/alerts/:id', async (c) => {
-  const body = await c.req.json().catch(() => ({} as { code?: unknown }));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const shard = await buildShardService(c.env);
   const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
   const id = c.req.param('id');
@@ -2464,7 +2450,7 @@ app.get('/api/admin/export/audit', async (c) => {
   return csvDownload(toCsv(headers, body), csvFilename('audit'));
 });
 
-// ---- 批量操作（D1）：批量删除 / 封禁 / 解封（均需 2FA 动态码）----
+// ---- 批量操作（D1）：批量删除 / 封禁 / 解封 ----
 function adminUserIdList(body: any): string[] {
   if (!Array.isArray(body?.userIds)) return [];
   return body.userIds.filter((x: unknown) => typeof x === 'string' && x.trim()).map((x: string) => String(x).trim().slice(0, 128)).slice(0, 500);
@@ -2472,7 +2458,6 @@ function adminUserIdList(body: any): string[] {
 
 app.post('/api/admin/users/batch/delete', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const userIds = adminUserIdList(body);
   if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
   const shard = await buildShardService(c.env);
@@ -2496,7 +2481,6 @@ app.post('/api/admin/users/batch/delete', async (c) => {
 
 app.post('/api/admin/users/batch/ban', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const userIds = adminUserIdList(body);
   if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
   const reason = str((body as { reason?: unknown }).reason, 300).trim() || '批量封禁';
@@ -2522,7 +2506,6 @@ app.post('/api/admin/users/batch/ban', async (c) => {
 
 app.post('/api/admin/users/batch/unban', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const userIds = adminUserIdList(body);
   if (!userIds.length) return c.json({ error: 'userIds 不能为空' }, 400);
   const shard = await buildShardService(c.env);
@@ -2634,7 +2617,6 @@ app.get('/api/admin/security/ipbans', async (c) => {
 
 app.post('/api/admin/security/ipbans/add', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const ip = str((body as { ip?: unknown }).ip, 64).trim();
   if (!/^[\w.:\-\[\]]+$/.test(ip) || !ip) return c.json({ error: '无效的 IP' }, 400);
   const hours = Number((body as { hours?: unknown }).hours);
@@ -2647,8 +2629,6 @@ app.post('/api/admin/security/ipbans/add', async (c) => {
 
 app.post('/api/admin/security/ipbans/remove', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  // M8 修复：解除 IP 黑名单同属高危管理写操作，统一要求 TOTP 二次验证。
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   // 站长专属：解除封禁会直接放行此前被拉黑的来源，仅「站长」角色可执行。
   if (c.get('adminRole') !== 'owner') {
     return c.json({ error: '该操作仅限站长，请先在「认证」页完成站长认证', need_owner: true }, 403 as any);
@@ -2690,7 +2670,6 @@ app.get('/api/admin/scores/flagged', async (c) => {
 app.patch('/api/admin/scores/:id/validity', async (c) => {
   const env = c.env as Env;
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const validity = str((body as { validity?: unknown }).validity, 16).trim();
   if (validity !== 'valid' && validity !== 'invalid') return c.json({ error: 'validity 只能为 valid 或 invalid' }, 400);
   const id = c.req.param('id');
@@ -2735,7 +2714,6 @@ app.get('/api/admin/appeals', async (c) => {
 
 app.patch('/api/admin/appeals/:id', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const id = c.req.param('id');
   const status = str((body as { status?: unknown }).status, 16).trim();
   const note = str((body as { note?: unknown }).note, 300).trim();
@@ -2784,7 +2762,6 @@ app.patch('/api/admin/appeals/:id', async (c) => {
 // ---- 教师端：班级管理 + 成绩 CSV 导入 + 发布订阅 ----
 app.post('/api/admin/users/:userId/class', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const cls = normClass((body as { class?: unknown }).class);
   const userId = c.req.param('userId');
   const shard = await buildShardService(c.env);
@@ -2797,7 +2774,6 @@ app.post('/api/admin/users/:userId/class', async (c) => {
 
 app.post('/api/admin/users/batch/class', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const cls = normClass((body as { class?: unknown }).class);
   if (!cls) return c.json({ error: 'class 不能为空' }, 400);
   const userIds = adminUserIdList(body);
@@ -2890,7 +2866,6 @@ app.get('/api/admin/classes/:name/export', async (c) => {
 app.post('/api/admin/scores/import', async (c) => {
   const env = c.env as Env;
   const body = await c.req.json().catch(() => ({}));
-  if (!(await requireHighRiskTotp(c, body))) return c.json({ error: '需要有效的动态验证码' }, 403 as any);
   const csv = str((body as { csv?: unknown }).csv, 2_000_000);
   const dryRun = (body as { dry_run?: unknown }).dry_run !== false;
   const rows = parseCsv(csv);
