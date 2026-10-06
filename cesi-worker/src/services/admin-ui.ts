@@ -960,7 +960,7 @@ function renderCertify(){
     h += '<h3>' + '管理员认证' + '</h3>';
     h += '<span class="cert-state ok">已通过（登录即具备管理员权限）</span>';
     h += '<p>用管理员口令（ADMIN_TOKEN）再次确认身份，用于在敏感操作前复核。认证结果会写入审计日志。</p>';
-    h += '<div class="cert-actions"><button class="btn" onclick="doCertify(\'admin\')">重新认证管理员</button></div>';
+    h += '<div class="cert-actions"><button class="btn" onclick="doCertify(\\'admin\\')">重新认证管理员</button></div>';
     h += '</div>';
     // 站长认证
     h += '<div class="cert-card' + (isOwner ? ' done' : '') + '">';
@@ -968,7 +968,7 @@ function renderCertify(){
     h += '<span class="cert-state ' + (isOwner ? 'owner' : '') + '">' + (isOwner ? '已升级为站长' : (state.ownerAvailable ? '未认证' : '未启用（未配置 OWNER_TOKEN）')) + '</span>';
     h += '<p>输入站长口令（OWNER_TOKEN）把当前会话升级为「站长」，才能执行站长专属高危操作（例如解除 IP 拉黑）。口令错误会累计并可能临时冻结来源。</p>';
     if (state.ownerAvailable) {
-      h += '<div class="cert-actions"><button class="btn primary" onclick="doCertify(\'owner\')"' + (isOwner ? ' disabled' : '') + '>' + (isOwner ? '已是站长' : '认证为站长') + '</button></div>';
+      h += '<div class="cert-actions"><button class="btn primary" onclick="doCertify(\\'owner\\')"' + (isOwner ? ' disabled' : '') + '>' + (isOwner ? '已是站长' : '认证为站长') + '</button></div>';
     } else {
       h += '<p class="muted" style="font-size:12px">提示：在 Worker 环境变量中配置 <span class="mono">OWNER_TOKEN</span> 后此功能自动开启。</p>';
     }
