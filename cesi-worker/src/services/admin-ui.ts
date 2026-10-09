@@ -100,6 +100,24 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'He
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;border-radius:20px;border:1px solid var(--line);color:var(--muted)}
 .chip.on{color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.08)}
 .chip.owner{color:var(--warn);border-color:rgba(245,184,75,.5);background:rgba(245,184,75,.12);font-weight:600}
+
+/* ---------- 身份标识（站长金牌皇冠 / 管理员蓝盾） ---------- */
+.role-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;vertical-align:middle;line-height:1;white-space:nowrap}
+.role-badge svg{width:14px;height:14px;display:block;flex:0 0 auto}
+.role-badge.role-owner{color:#3a2a05;background:linear-gradient(135deg,#ffe9a8,#f5b84b 45%,#c98a1f);border:1px solid rgba(245,184,75,.75);box-shadow:0 0 12px rgba(245,184,75,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+.role-badge.role-admin{color:#08131f;background:linear-gradient(135deg,#cfe3ff,#6c8cff 55%,#3f5fd6);border:1px solid rgba(108,140,255,.75);box-shadow:0 0 12px rgba(108,140,255,.4),inset 0 1px 0 rgba(255,255,255,.55)}
+.role-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.role-hero .emblem{width:76px;height:76px;flex:0 0 76px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
+.role-hero .emblem::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(255,255,255,.18)}
+.role-hero .emblem svg{width:42px;height:42px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.role-hero .emblem.role-owner{background:radial-gradient(circle at 35% 25%,#fff4cf,#f5b84b 48%,#a86f10);box-shadow:0 0 26px rgba(245,184,75,.55),inset 0 -7px 16px rgba(120,70,0,.35);color:#4a3203}
+.role-hero .emblem.role-admin{background:radial-gradient(circle at 35% 25%,#e8f1ff,#6c8cff 48%,#2c46a8);box-shadow:0 0 26px rgba(108,140,255,.5),inset 0 -7px 16px rgba(10,30,90,.4);color:#081b3d}
+.role-hero .who{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.role-hero .sub{color:var(--muted);font-size:12px;margin-top:5px}
+@keyframes role-shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.role-badge.role-owner,.role-badge.role-admin{background-size:200% 200%;animation:role-shine 3.5s linear infinite}
+@media(prefers-reduced-motion:reduce){.role-badge.role-owner,.role-badge.role-admin{animation:none}}
+
 .cert-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
 .cert-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:10px}
 .cert-card.done{border-color:rgba(74,222,128,.45);box-shadow:inset 0 0 0 1px rgba(74,222,128,.14)}
@@ -378,17 +396,27 @@ function boot(){
   }).catch(function(){ /* 保底按管理员展示 */ renderRoleBadge(); });
   show('overview');
 }
-// 顶栏角色徽章：管理员 / 站长（站长可在「身份认证」页升级解锁）
+// 身份标识图形：站长=金色皇冠，管理员=蓝色盾牌（内联 SVG，运行时使用，无需外部图片）
+var ROLE_SVG = {
+  owner: '<path d="M3 18h18M3 18l-1.4-9.2 5.2 3.1L12 5l5.2 6.9 5.2-3.1L21 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="15" r="1.6" fill="currentColor"/>',
+  admin: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+function roleEmblemSvg(role){
+  return '<svg viewBox="0 0 24 24">' + (role === 'owner' ? ROLE_SVG.owner : ROLE_SVG.admin) + '</svg>';
+}
+// 名字后面的帅气标识：站长金牌 / 管理员蓝盾
+function roleBadgeHtml(role){
+  var isOwner = role === 'owner';
+  return '<span class="role-badge ' + (isOwner ? 'role-owner' : 'role-admin') + '">' + roleEmblemSvg(role) + (isOwner ? '站长' : '管理员') + '</span>';
+}
+// 顶栏角色标识：管理员 / 站长（站长可在「身份认证」页升级解锁）
 function renderRoleBadge(){
   var chip = $('roleChip');
   if (!chip) return;
-  if (state.role === 'owner') {
-    chip.className = 'chip owner';
-    chip.innerHTML = '站长认证已解锁';
-  } else {
-    chip.className = 'chip';
-    chip.innerHTML = '管理员';
-  }
+  chip.className = '';
+  chip.innerHTML = roleBadgeHtml(state.role);
+  var who = $('whoami');
+  if (who && state.admin) who.innerHTML = esc(state.admin) + ' ' + roleBadgeHtml(state.role) + '<br>' + (state.totpEnabled ? '双重验证已开启' : '未开启 2FA');
 }
 function show(view){
   var items = document.querySelectorAll('.nav-item');
@@ -960,10 +988,14 @@ function renderCertify(){
     var isOwner = state.role === 'owner';
     var h = '';
     h += '<div class="card" style="margin-bottom:20px">';
-    h += '<h3 style="margin:0 0 8px">当前登录身份</h3>';
-    h += '<p class="muted" style="margin:0">账号：<span class="mono">' + esc(state.admin) + '</span>　角色：' +
-         (isOwner ? '<span class="chip owner">站长</span>' : '<span class="chip">管理员</span>') + '</p>';
-    h += '<p class="muted" style="margin:8px 0 0">' + (state.totpEnabled ? '双重验证已开启：动态验证码仅用于登录。' : '未开启 2FA：建议尽快配置 ADMIN_TOTP_SECRET。') + '</p>';
+    h += '<h3 style="margin:0 0 14px">当前登录身份</h3>';
+    h += '<div class="role-hero">';
+    h += '<div class="emblem ' + (isOwner ? 'role-owner' : 'role-admin') + '">' + roleEmblemSvg(state.role) + '</div>';
+    h += '<div>';
+    h += '<div class="who">' + esc(state.admin) + roleBadgeHtml(state.role) + '</div>';
+    h += '<div class="sub">' + (state.totpEnabled ? '双重验证已开启：动态验证码仅用于登录。' : '未开启 2FA：建议尽快配置 ADMIN_TOTP_SECRET。') + '</div>';
+    h += '</div>';
+    h += '</div>';
     h += '</div>';
 
     h += '<div class="cert-grid">';
