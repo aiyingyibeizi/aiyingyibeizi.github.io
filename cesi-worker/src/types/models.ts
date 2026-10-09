@@ -29,10 +29,17 @@ export interface DbConfig {
   countByType: (type: string) => Promise<number>;
   getMetaUsedBytes: () => Promise<number>;
   updateMetaUsedBytes: (usedBytes: number) => Promise<void>;
+  // 可选：数据库端排行榜聚合（每个用户只取最佳成绩再排序）；不支持时回退到通用 readByType 路径
+  selectLeaderboard?: (subtype: string, order: 'asc' | 'desc', limit: number) => Promise<MixedData[]>;
+  // 可选：删除某类型中早于指定时间的记录（用于 online 心跳等易膨胀数据的清理）
+  deleteOldByType?: (type: string, beforeIso: string) => Promise<number>;
+  // 可选：按用户名/邮箱精确查询账号（H4 修复：避免全量读账号再内存扫描）
+  selectAccountByField?: (field: 'username' | 'email' | 'session_token', value: string) => Promise<MixedData | undefined>;
 }
 
 export interface SelectOptions {
   userId?: string;
+  userIds?: string[];
   subtype?: string;
   limit?: number;
   orderByScore?: 'asc' | 'desc';

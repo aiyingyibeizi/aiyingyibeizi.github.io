@@ -3,14 +3,15 @@
 
   // =========================================
   // APEXON Music Player
-  // 使用 Jamendo API（需要 client_id）+ 内置演示曲库兜底
-  // 去 https://developer.jamendo.com 注册应用获取 client_id
+  // 曲库走 Cloudflare Worker 代理（/api/music/jamendo），client_id 不暴露在前端。
+  // 未配置时自动退回内置演示曲库。
   // =========================================
 
-  const JAMENDO_CLIENT_ID = '1ff4ae9b';
+  // 音乐代理 API 基址（与站点其它接口一致，统一指向 Worker）
+  const MUSIC_API_BASE = 'https://api.apexon.qzz.io';
 
   // 演示曲库：使用 SoundHelix 提供的 16 首示例曲目（稳定可播放）
-  // 如需接入数万首全网曲库，请在 JAMENDO_CLIENT_ID 填入 Jamendo 开发者 client_id
+  // 服务端配置 Jamendo client_id 后会自动切换到在线曲库
   const DEMO_TRACKS = [
     { id: 'demo-1', name: 'Neon Horizon', artist_name: 'SoundHelix', album_name: 'Electronic Dreams', duration: 186, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', image: 'https://picsum.photos/seed/neonhorizon/400/400', tags: ['electronic', 'pop'], url: 'https://www.soundhelix.com/' },
     { id: 'demo-2', name: 'Midnight Drive', artist_name: 'SoundHelix', album_name: 'Night Sessions', duration: 205, audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', image: 'https://picsum.photos/seed/midnightdrive/400/400', tags: ['electronic', 'rock'], url: 'https://www.soundhelix.com/' },
@@ -47,6 +48,14 @@
     return m + ':' + s;
   }
 
+  // 国际化取文案；若 i18n 模块不可用则回退到中文原文
+  function t(key, fallback) {
+    if (window.APEXON && window.APEXON.i18n && typeof window.APEXON.i18n.t === 'function') {
+      return window.APEXON.i18n.t(key, fallback);
+    }
+    return fallback;
+  }
+
   const MusicPlayer = {
     audio: null,
     currentTrack: null,
@@ -73,11 +82,9 @@
     },
 
     hideNoticeIfConfigured() {
+      // H6：client_id 已迁移到服务端代理，前端无需用户配置，固定隐藏提示条。
       const notice = $('musicNotice');
-      if (!notice) return;
-      if (JAMENDO_CLIENT_ID && JAMENDO_CLIENT_ID !== 'YOUR_CLIENT_ID_HERE') {
-        notice.style.display = 'none';
-      }
+      if (notice) notice.style.display = 'none';
     },
 
     loadStorage() {
@@ -173,7 +180,7 @@
 
       d.heroLikeBtn.addEventListener('click', () => {
         if (this.currentTrack) this.toggleLike(this.currentTrack.id);
-        else this.showToast('请先播放一首歌曲');
+        else this.showToast(t('musPlayFirst', '请先播放一首歌曲'));
       });
 
       d.playPauseBtn.addEventListener('click', () => this.togglePlay());
@@ -344,7 +351,7 @@
       });
 
       this.audio.addEventListener('error', () => {
-        this.showToast('音频加载失败，请检查网络或稍后重试');
+        this.showToast(t('musLoadFailed', '音频加载失败，请检查网络或稍后重试'));
       });
     },
 
@@ -367,8 +374,8 @@
       const idx = (MODES.indexOf(this.playMode) + 1) % MODES.length;
       this.playMode = MODES[idx];
       this.dom.modeBtn.textContent = MODE_ICONS[this.playMode];
-      const labels = { loop: '列表循环', single: '单曲循环', random: '随机播放' };
-      this.showToast('播放模式：' + labels[this.playMode]);
+      const labels = { loop: t('musModeLoop', '列表循环'), single: t('musModeSingle', '单曲循环'), random: t('musModeRandom', '随机播放') };
+      this.showToast(t('musPlayMode', '播放模式：{mode}').replace('{mode}', labels[this.playMode]));
     },
 
     togglePlay() {
@@ -388,14 +395,13 @@
 
       this.audio.src = track.audio;
       this.audio.play().catch(() => {
-        this.showToast('播放失败，可能是网络或音频链接失效');
+        this.showToast(t('musPlayFailed', '播放失败，可能是网络或音频链接失效'));
       });
 
       this.updatePlayerUI();
       this.updateHeroUI();
       this.addToHistory(track);
       this.highlightPlaying();
-      this.applyGlow(track.image);
       this.currentLyrics = null;
       if (this.dom.lyricsPanel && this.dom.lyricsPanel.classList.contains('open')) {
         this.loadLyrics(track);
@@ -422,14 +428,6 @@
         this.dom.heroLikeBtn.textContent = this.liked.has(String(t.id)) ? '♥' : '♡';
         this.dom.heroLikeBtn.style.color = this.liked.has(String(t.id)) ? '#ff4757' : '#fff';
       }
-    },
-
-    applyGlow(imageUrl) {
-      if (!imageUrl) {
-        document.body.classList.remove('music-glow');
-        return;
-      }
-      document.body.classList.add('music-glow');
     },
 
     playPrev() {
@@ -474,10 +472,10 @@
       id = String(id);
       if (this.liked.has(id)) {
         this.liked.delete(id);
-        this.showToast('已取消喜欢');
+        this.showToast(t('musUnliked', '已取消喜欢'));
       } else {
         this.liked.add(id);
-        this.showToast('已添加到"我喜欢"');
+        this.showToast(t('musLikedMsg', '已添加到"我喜欢"'));
       }
       this.saveStorage();
       this.updatePlayerUI();
@@ -506,7 +504,7 @@
       const body = this.dom.lyricsBody;
       if (!body) return;
       this.currentLyrics = null;
-      body.innerHTML = '<div class="music-lyrics-panel__empty">正在搜索歌词...</div>';
+      body.innerHTML = '<div class="music-lyrics-panel__empty">' + t('musLyricsSearching', '正在搜索歌词...') + '</div>';
       try {
         // 1. 优先尝试 LRCLIB（支持同步歌词）
         const q = encodeURIComponent(track.name + ' ' + track.artist_name);
@@ -541,7 +539,11 @@
         // 静默失败
       }
 
-      body.innerHTML = '<div class="music-lyrics-panel__empty">未找到该歌曲的歌词</div>';
+      // UI12：歌词源可能临时不可用，提供「重新加载」按钮，让用户可手动重试
+      body.innerHTML = '<div class="music-lyrics-panel__empty">' + t('musLyricsNotFound', '未找到该歌曲的歌词') +
+        '<button type="button" class="music-lyrics-panel__retry">' + t('lyricsRetry', '重新加载歌词') + '</button></div>';
+      const retryBtn = body.querySelector('.music-lyrics-panel__retry');
+      if (retryBtn) retryBtn.addEventListener('click', () => this.loadLyrics(track));
     },
 
     parseLyrics(text) {
@@ -568,7 +570,7 @@
       const body = this.dom.lyricsBody;
       if (!body || !this.currentLyrics) return;
       if (!this.currentLyrics.length) {
-        body.innerHTML = '<div class="music-lyrics-panel__empty">暂无歌词</div>';
+        body.innerHTML = '<div class="music-lyrics-panel__empty">' + t('musLyricsNone', '暂无歌词') + '</div>';
         return;
       }
       body.innerHTML = this.currentLyrics.map((line, i) =>
@@ -624,8 +626,8 @@
       }
       if (q.length > 100) q = q.slice(0, 100);
       this.switchView('search');
-      this.dom.searchTitle.textContent = '搜索：' + q;
-      this.dom.searchContent.innerHTML = '<div class="music-loading"><div class="music-loading__spinner"></div><div>正在搜索...</div></div>';
+      this.dom.searchTitle.textContent = t('musSearchTitle', '搜索：{q}').replace('{q}', q);
+      this.dom.searchContent.innerHTML = '<div class="music-loading"><div class="music-loading__spinner"></div><div>' + t('musSearching', '正在搜索...') + '</div></div>';
 
       const tracks = await this.searchTracks(q);
       this.renderSearchResults(tracks, q);
@@ -662,13 +664,11 @@
     },
 
     async fetchJamendo(endpoint, params) {
-      if (!JAMENDO_CLIENT_ID || JAMENDO_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-        return this.fallbackSearch(params);
-      }
+      // H6：所有 Jamendo 请求经 Worker 代理转发，前端不持有 client_id。
       try {
-        const qs = new URLSearchParams({ client_id: JAMENDO_CLIENT_ID, format: 'json', ...params });
-        const url = 'https://api.jamendo.com/v3.0' + endpoint + '?' + qs.toString();
-        const res = await fetch(url);
+        const qs = new URLSearchParams({ endpoint, ...params });
+        const res = await fetch(MUSIC_API_BASE + '/api/music/jamendo?' + qs.toString());
+        if (!res.ok) return this.fallbackSearch(params);
         const data = await res.json();
         if (!data || !data.results) return this.fallbackSearch(params);
         return data.results.map(normalizeTrack);
@@ -710,7 +710,7 @@
 
     renderSearchResults(tracks, q) {
       if (!tracks.length) {
-        this.dom.searchContent.innerHTML = this.emptyHTML('没有找到相关歌曲', '换个关键词试试，或者检查一下 Jamendo client_id 是否已配置。');
+        this.dom.searchContent.innerHTML = this.emptyHTML(t('musSearchEmpty', '没有找到相关歌曲'), t('musSearchEmptyTip', '换个关键词试试，或者检查一下 Jamendo client_id 是否已配置。'));
         return;
       }
       this.dom.searchContent.innerHTML = this.trackListHTML(tracks, true);
@@ -721,7 +721,7 @@
     renderHistoryPreview() {
       const tracks = this.history.slice(0, 5);
       if (!tracks.length) {
-        this.dom.recentList.innerHTML = this.emptyHTML('暂无最近播放', '点击任意歌曲开始收听');
+        this.dom.recentList.innerHTML = this.emptyHTML(t('musRecentEmpty', '暂无最近播放'), t('musRecentEmptyTip', '点击任意歌曲开始收听'));
         return;
       }
       this.dom.recentList.innerHTML = this.trackListHTML(tracks, false);
@@ -731,7 +731,7 @@
 
     renderHistory() {
       if (!this.history.length) {
-        this.dom.historyList.innerHTML = this.emptyHTML('暂无最近播放', '点击任意歌曲开始收听');
+        this.dom.historyList.innerHTML = this.emptyHTML(t('musRecentEmpty', '暂无最近播放'), t('musRecentEmptyTip', '点击任意歌曲开始收听'));
         return;
       }
       this.dom.historyList.innerHTML = this.trackListHTML(this.history, false);
@@ -742,7 +742,7 @@
     renderLiked() {
       const likedTracks = this.history.filter(t => this.isLiked(t.id));
       if (!likedTracks.length) {
-        this.dom.likedList.innerHTML = this.emptyHTML('暂无喜欢的歌曲', '点击 ♡ 收藏喜欢的音乐');
+        this.dom.likedList.innerHTML = this.emptyHTML(t('musLikedEmpty', '暂无喜欢的歌曲'), t('musLikedEmptyTip', '点击 ♡ 收藏喜欢的音乐'));
         return;
       }
       this.dom.likedList.innerHTML = this.trackListHTML(likedTracks, false);
@@ -767,11 +767,13 @@
     trackListHTML(tracks, showIndex) {
       let html = '<div class="music-list__row music-list__row--header">' +
         '<div>' + (showIndex ? '#' : '') + '</div>' +
-        '<div>歌曲</div>' +
-        '<div class="music-list__artist-name">艺人</div>' +
-        '<div class="music-list__duration">时长</div>' +
-        '<div>操作</div>' +
+        '<div>' + t('musColSong', '歌曲') + '</div>' +
+        '<div class="music-list__artist-name">' + t('musColArtist', '艺人') + '</div>' +
+        '<div class="music-list__duration">' + t('musColDuration', '时长') + '</div>' +
+        '<div>' + t('musColAction', '操作') + '</div>' +
       '</div>';
+      const likeTitleStr = t('musicLikeTitle', '喜欢');
+      const noDlTitleStr = t('musNoDownload', '暂不提供下载');
       html += tracks.map((t, i) => {
         const title = escapeHtml(t.name);
         const artist = escapeHtml(t.artist_name);
@@ -786,8 +788,8 @@
           '<div class="music-list__artist" title="' + artist + '">' + artist + '</div>' +
           '<div class="music-list__duration">' + formatTime(t.duration) + '</div>' +
           '<div class="music-list__actions">' +
-            '<span class="music-list__action ' + (liked ? 'liked' : '') + '" data-action="like" title="喜欢">' + (liked ? '♥' : '♡') + '</span>' +
-            '<span class="music-list__action disabled" data-action="download" title="暂不提供下载">⬇</span>' +
+            '<span class="music-list__action ' + (liked ? 'liked' : '') + '" data-action="like" title="' + likeTitleStr + '">' + (liked ? '♥' : '♡') + '</span>' +
+            '<span class="music-list__action disabled" data-action="download" title="' + noDlTitleStr + '">⬇</span>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -826,7 +828,7 @@
         if (dlBtn) {
           dlBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.showToast('暂不提供下载功能');
+            this.showToast(t('musActionNoDownload', '暂不提供下载功能'));
           });
         }
       });
