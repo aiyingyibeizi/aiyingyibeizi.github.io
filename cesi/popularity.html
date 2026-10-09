@@ -277,12 +277,14 @@
             grid.innerHTML = state.list.map(function (u, i) {
                 var rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
                 var bio = u.bio ? esc(u.bio) : '<span style="opacity:.55">' + t('popularityNoBio', '这个人很神秘，什么都没写') + '</span>';
+                var roleBadge = (APEXON.UI && APEXON.UI.roleBadge) ? APEXON.UI.roleBadge(u.role) : '';
+                var roleRing = (APEXON.UI && APEXON.UI.roleRingClass) ? APEXON.UI.roleRingClass(u.role) : '';
                 return '<div class="pop-card">' +
                     '<span class="pop-card__rank ' + rankCls + '">#' + (i + 1) + '</span>' +
                     '<div class="pop-card__head">' +
-                        '<div class="pop-avatar" data-uid="' + esc(u.user_id) + '" role="button" tabindex="0" title="' + t('popularityViewProfile', '查看资料') + '">' + avatarHTML(u.avatar_url) + '</div>' +
+                        '<div class="pop-avatar ' + roleRing + '" data-uid="' + esc(u.user_id) + '" role="button" tabindex="0" title="' + t('popularityViewProfile', '查看资料') + '">' + avatarHTML(u.avatar_url) + '</div>' +
                         '<div>' +
-                            '<div class="pop-name">' + esc(u.username) + '</div>' +
+                            '<div class="pop-name">' + esc(u.username) + roleBadge + '</div>' +
                             '<div class="pop-gender">' + esc(genderLabel(u.gender)) + '</div>' +
                         '</div>' +
                     '</div>' +

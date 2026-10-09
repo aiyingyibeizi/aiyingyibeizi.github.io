@@ -1461,6 +1461,7 @@ app.get('/api/profiles', async (c) => {
       social_links: payload.social_links || '',
       avatar_url: payload.avatar_url || null,
       gender: payload.gender || null,
+      role: payload.role === 'owner' || payload.role === 'admin' ? payload.role : null,
       created_at: r.created_at,
       updated_at: r.updated_at,
       payload,
@@ -1503,6 +1504,7 @@ app.get('/api/profiles/:userId', async (c) => {
       social_links: payload.social_links || '',
       avatar_url: payload.avatar_url || null,
       gender: payload.gender || null,
+      role: payload.role === 'owner' || payload.role === 'admin' ? payload.role : null,
       created_at: r.created_at,
       updated_at: r.updated_at,
       payload,
@@ -1550,6 +1552,14 @@ app.post('/api/profiles', async (c) => {
   body.avatar_url = safeAvatar(body.avatar_url) ?? undefined;
 
   const shard = await buildShardService(c.env);
+
+  // 公开身份标识（站长 / 管理员）只能由后台授予：忽略客户端传入的 role，
+  // 并保留已授予的角色，避免用户保存资料时自我提权或误清除标识。
+  delete body.role;
+  const existingProfiles = await shard.readByUserAndType(userId, 'profile', 1);
+  const existingPayload: any = existingProfiles.length ? (safeJsonParse(existingProfiles[0].payload) || {}) : {};
+  const existingRole = existingPayload.role === 'owner' || existingPayload.role === 'admin' ? existingPayload.role : null;
+  if (existingRole) body.role = existingRole;
 
   // Atomic-ish: write new profile first, then delete old ones
   const result = await shard.write({
@@ -1636,7 +1646,7 @@ app.get('/api/popularity', async (c) => {
   }
 
   // 每个用户保留最新一条 profile
-  const byUser = new Map<string, { user_id: string; username: string; gender: string; avatar_url: string | null; bio: string; updated_at: string }>();
+  const byUser = new Map<string, { user_id: string; username: string; gender: string; avatar_url: string | null; bio: string; role: string | null; updated_at: string }>();
   for (const r of profiles) {
     const p: any = safeJsonParse(r.payload) || {};
     const prev = byUser.get(r.user_id);
@@ -1647,6 +1657,7 @@ app.get('/api/popularity', async (c) => {
         gender: typeof p.gender === 'string' && p.gender ? p.gender : 'secret',
         avatar_url: typeof p.avatar_url === 'string' ? p.avatar_url : null,
         bio: typeof p.bio === 'string' ? p.bio : '',
+        role: p.role === 'owner' || p.role === 'admin' ? p.role : null,
         updated_at: r.updated_at,
       });
     }
@@ -2254,6 +2265,43 @@ async function setBan(c: any, banned: boolean) {
 
 app.post('/api/admin/users/:userId/ban', async (c) => setBan(c, true));
 app.post('/api/admin/users/:userId/unban', async (c) => setBan(c, false));
+
+// 设置用户的公开身份标识（站长 / 管理员 / 取消），写入其 profile 的 role 字段；
+// 榜单、人气榜、评论区据此在名字后展示专属徽章。role 为空串/none 表示取消标识。
+app.post('/api/admin/users/:userId/role', async (c) => {
+  const shard = await buildShardService(c.env);
+  const userId = c.req.param('userId');
+  const body = await c.req.json().catch(() => ({} as { role?: unknown }));
+  const raw = str((body as { role?: unknown }).role, 16).trim();
+  const role = raw === 'owner' || raw === 'admin' ? raw : null;
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+
+  const profiles = await shard.readByUserAndType(userId, 'profile', 10);
+  const payload: any = profiles.length ? (safeJsonParse(profiles[0].payload) || {}) : {};
+  if (!payload.username) {
+    const account = (await shard.readByUserAndType(userId, 'account', 1))[0];
+    const ap: any = account ? safeJsonParse(account.payload) : {};
+    payload.username = (ap && ap.username) || userId;
+  }
+  if (role) payload.role = role; else delete payload.role;
+
+  const result = await shard.write({
+    id: uuid(),
+    user_id: userId,
+    type: 'profile',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: profiles.length ? profiles[0].created_at : new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }, { waitUntil });
+  if (!result.ok) return c.json({ error: result.error }, 503);
+  for (const row of profiles) await shard.deleteById(row.id);
+
+  await writeAudit(shard, waitUntil, c.get('adminToken') || '', role ? ('user.role.' + role) : 'user.role.clear', userId);
+  return c.json({ success: true, role });
+});
 
 app.get('/api/admin/content', async (c) => {
   const type = str(c.req.query('type'), 40).trim() || 'comment';

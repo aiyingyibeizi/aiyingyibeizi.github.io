@@ -2941,6 +2941,24 @@
       document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: name } }));
     },
 
+    // 公开身份标识：站长（金色皇冠）/ 管理员（蓝色盾牌）。
+    // 仅接受 'owner' / 'admin'，其余返回空串，避免脏数据渲染出伪标识。
+    roleBadge(role) {
+      if (role !== 'owner' && role !== 'admin') return '';
+      const isOwner = role === 'owner';
+      const svg = isOwner
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l-1.4-9.2 5.2 3.1L12 5l5.2 6.9 5.2-3.1L21 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="15" r="1.6" fill="currentColor"/></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      return '<span class="apex-role-badge ' + (isOwner ? 'is-owner' : 'is-admin') + '">' + svg + (isOwner ? '站长' : '管理员') + '</span>';
+    },
+
+    // 头像专属光圈：站长金环 / 管理员蓝环；普通用户返回空串。
+    roleRingClass(role) {
+      if (role === 'owner') return 'apex-role-ring is-owner';
+      if (role === 'admin') return 'apex-role-ring is-admin';
+      return '';
+    },
+
     _renderAvatarHTML(avatarUrl) {
       // M1 修复：头像 URL 做协议白名单校验，仅允许站内相对路径（assets/）或 http(s) 协议，
       // 拦截 javascript:/data:/vbscript: 等脚本协议（此前仅做 HTML 转义，存在注入风险）。

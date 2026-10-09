@@ -9277,3 +9277,57 @@ button[data-i18n="testAgain"][disabled] {
   box-shadow: 0 16px 36px rgba(245, 158, 11, 0.22);
 }
 
+/* ---------- 公开身份标识：站长（金色皇冠）/ 管理员（蓝色盾牌） ---------- */
+.apex-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  vertical-align: middle;
+  white-space: nowrap;
+  background-size: 200% 200%;
+  animation: apex-role-shine 3.5s linear infinite;
+}
+.apex-role-badge svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  flex: 0 0 auto;
+}
+.apex-role-badge.is-owner {
+  color: #3a2a05;
+  background-image: linear-gradient(135deg, #ffe9a8, #f5b84b 45%, #c98a1f);
+  border: 1px solid rgba(201, 138, 31, 0.75);
+  box-shadow: 0 0 10px rgba(245, 184, 75, 0.45);
+}
+.apex-role-badge.is-admin {
+  color: #08131f;
+  background-image: linear-gradient(135deg, #cfe3ff, #6c8cff 55%, #3f5fd6);
+  border: 1px solid rgba(63, 95, 214, 0.7);
+  box-shadow: 0 0 10px rgba(108, 140, 255, 0.4);
+}
+@keyframes apex-role-shine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .apex-role-badge { animation: none; }
+}
+
+/* 头像专属光圈：站长金环 / 管理员蓝环（outline 不会被头像的 overflow:hidden 裁掉） */
+.apex-role-ring.is-owner {
+  outline: 2px solid rgba(245, 184, 75, 0.95);
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(245, 184, 75, 0.5);
+}
+.apex-role-ring.is-admin {
+  outline: 2px solid rgba(108, 140, 255, 0.95);
+  outline-offset: 1px;
+  box-shadow: 0 0 10px rgba(108, 140, 255, 0.45);
+}
+

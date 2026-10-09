@@ -394,8 +394,9 @@
                 const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
                 const val = e.score_value || 0;
                 const profile = profileMap.get(e.user_id);
-                const avatar = '<div class="leaderboard-avatar" data-uid="' + esc(e.user_id) + '" onclick="viewProfile(this.dataset.uid)">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
-                return '<div class="leaderboard-row"><div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div>' + avatar + '<div class="leaderboard-name">' + esc(e.username) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
+                const role = profile && profile.role;
+                const avatar = '<div class="leaderboard-avatar ' + APEXON.UI.roleRingClass(role) + '" data-uid="' + esc(e.user_id) + '" onclick="viewProfile(this.dataset.uid)">' + APEXON.UI._renderAvatarHTML(profile && profile.avatar_url) + '</div>';
+                return '<div class="leaderboard-row"><div class="leaderboard-rank ' + rankClass + '">' + (i + 1) + '</div>' + avatar + '<div class="leaderboard-name">' + esc(e.username) + APEXON.UI.roleBadge(role) + '</div><div class="leaderboard-score">' + esc(val) + ' ' + unit + '</div></div>';
             }).join('');
         }
 
@@ -568,11 +569,12 @@
         };
 
         // 论坛头像渲染
-        function renderForumAvatar(avatarUrl) {
+        function renderForumAvatar(avatarUrl, role) {
+            const ring = (window.APEXON && APEXON.UI && APEXON.UI.roleRingClass) ? APEXON.UI.roleRingClass(role) : '';
             if (avatarUrl) {
-                return '<div class="forum-avatar"><img src="' + APEXON.Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')"></div>';
+                return '<div class="forum-avatar ' + ring + '"><img src="' + APEXON.Security.escapeHtml(avatarUrl) + '" alt="avatar" onerror="this.style.display=\'none\'; this.parentNode.classList.add(\'fallback\')"></div>';
             }
-            return '<div class="forum-avatar"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg></div>';
+            return '<div class="forum-avatar ' + ring + '"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#fff" fill-opacity="0.2"/><circle cx="32" cy="24" r="10" fill="#fff" fill-opacity="0.95"/><path d="M16 52c0-12 8-18 16-18s16 6 16 18" fill="#fff" fill-opacity="0.95"/></svg></div>';
         }
 
         async function loadComments() {
@@ -618,11 +620,12 @@
             listEl.innerHTML = pageItems.map(c => {
                 const profile = c.user_id ? commentProfiles[c.user_id] : null;
                 const avatarUrl = profile && profile.avatar_url ? profile.avatar_url : null;
+                const role = profile && profile.role;
                 return '<div class="forum-item">' +
                     '<div class="forum-item-header">' +
                         '<div class="forum-item-user" data-uid="' + esc(c.user_id || '') + '" onclick="window.showForumProfile && window.showForumProfile(this.dataset.uid)">' +
-                            renderForumAvatar(avatarUrl) +
-                            '<span>' + esc(c.username) + '</span>' +
+                            renderForumAvatar(avatarUrl, role) +
+                            '<span>' + esc(c.username) + APEXON.UI.roleBadge(role) + '</span>' +
                         '</div>' +
                         '<span class="forum-item-category ' + esc(c.category) + '" data-cat="' + esc(c.category) + '">' + esc(COMMENT_CATEGORIES[c.category] || c.category) + '</span>' +
                         '<div class="forum-item-time">' + esc(new Date(c.created_at).toLocaleString(window.APEXON && APEXON.i18n ? APEXON.i18n.getDateLocale() : 'zh-CN')) + '</div>' +

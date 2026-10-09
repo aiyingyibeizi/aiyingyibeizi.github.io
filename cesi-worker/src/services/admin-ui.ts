@@ -613,6 +613,8 @@ function openUser(userId){
     h += '<tr><th>最近在线</th><td>' + (u.online_last_seen ? fmtDate(u.online_last_seen) : '<span class="muted">—</span>') + '</td></tr>';
     h += '<tr><th>注册时间</th><td>' + fmtDate(u.account_created_at) + '</td></tr>';
     h += '<tr><th>风险等级</th><td>' + (u.risk ? esc(u.risk.level) + '（' + (u.risk.score||0) + '）' : '<span class="muted">—</span>') + '</td></tr>';
+    var roleVal = u.profile && (u.profile.role === 'owner' || u.profile.role === 'admin') ? u.profile.role : null;
+    h += '<tr><th>公开身份</th><td>' + (roleVal ? roleBadgeHtml(roleVal) : '<span class="muted">普通用户</span>') + '</td></tr>';
     h += '</table></div>';
     h += '<div class="field-row mt">';
     h += '<div class="card"><div class="num">' + (u.score_count||0) + '</div><div class="label">评分次数</div></div>';
@@ -627,6 +629,9 @@ function openUser(userId){
     else { h += '<div class="table-wrap"><table><tr><th>类型</th><th>分数</th><th>时间</th></tr>'; for (var i=0;i<sc.length;i++){ h += '<tr><td class="mono">' + esc(sc[i].subtype) + '</td><td>' + esc(sc[i].score_value) + '</td><td>' + fmtDate(sc[i].created_at) + '</td></tr>'; } h += '</table></div>'; }
     h += '</div>';
     h += '<div class="actions mt">';
+    h += '<button class="btn" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'owner\\')"' + (roleVal === 'owner' ? ' disabled' : '') + '>设为站长</button>';
+    h += '<button class="btn" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'admin\\')"' + (roleVal === 'admin' ? ' disabled' : '') + '>设为管理员</button>';
+    if (roleVal) h += '<button class="btn ghost" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'none\\')">取消身份标识</button>';
     h += (u.banned ? '<button class="btn primary" onclick="setBan(\\'' + esc(u.user_id) + '\\',false)">解除封禁</button>' : '<button class="btn danger" onclick="setBan(\\'' + esc(u.user_id) + '\\',true)">封禁</button>');
     h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除账号及全部数据</button>';
     h += '<button class="btn ghost" onclick="closeModal()">关闭</button>';
@@ -634,6 +639,12 @@ function openUser(userId){
     body.innerHTML = h;
     $('userModal').classList.add('show');
   }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div><div class="mt"><button class="btn" onclick="closeModal()">关闭</button></div>'; });
+}
+function setUserRole(userId, role){
+  api('/users/' + encodeURIComponent(userId) + '/role', { method:'POST', body:{ role: role } }).then(function(){
+    toast(role === 'owner' ? '已设为站长' : role === 'admin' ? '已设为管理员' : '已取消身份标识');
+    openUser(userId);
+  }).catch(function(e){ toast('操作失败：' + e.message, true); });
 }
 function setBan(userId, ban){
   var p = '/users/' + encodeURIComponent(userId) + (ban ? '/ban' : '/unban');
