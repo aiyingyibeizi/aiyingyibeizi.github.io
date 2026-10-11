@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:check": "wrangler deploy --dry-run --outdir dist",
+    "secrets": "wrangler secret bulk .dev.vars",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

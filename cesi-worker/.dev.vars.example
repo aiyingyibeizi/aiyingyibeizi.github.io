@@ -1,0 +1,53 @@
+# 复制为 .dev.vars 并填入真实值：cp .dev.vars.example .dev.vars
+# .dev.vars 已在 .gitignore 中，不会被提交；deploy.sh 会读取它并上报密钥。
+# 也可改用 secrets.json（JSON 形式 {"KEY":"VALUE"}）以获得更强的删除/覆盖控制。
+
+# ---- 部署认证（本地专用，deploy.sh 上报密钥时会自动剔除）----
+CLOUDFLARE_API_TOKEN=
+# CLOUDFLARE_ACCOUNT_ID=
+# ALLOW_LOCALHOST_ORIGIN=on
+
+# ---- Turso（3 个数据库，必填）----
+TURSO_URL_APEXON=
+TURSO_TOKEN_APEXON=
+TURSO_URL_APEXON_1=
+TURSO_TOKEN_APEXON_1=
+TURSO_URL_APEXON_2=
+TURSO_TOKEN_APEXON_2=
+
+# ---- Supabase（必填）----
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# ---- Upstash Redis（必填）----
+UPSTASH_REDIS_URL=
+UPSTASH_REDIS_TOKEN=
+
+# ---- 管理后台（强烈建议配置 TOTP 双重验证）----
+ADMIN_TOKEN=
+ADMIN_TOTP_SECRET=
+# ADMIN_SESSION_TTL_SEC=3600
+# ADMIN_ALERT_WEBHOOK=
+
+# ---- 邮件验证码登录 / 注册（可选，不配则相关接口禁用）----
+# MAIL_PROVIDER=brevo
+# MAIL_API_KEY=
+# MAIL_FROM=
+# MAIL_DAILY_PER_EMAIL=5
+# MAIL_DAILY_PER_IP=30
+
+# ---- 其它可选 ----
+# ANON_HMAC_SECRET=
+# JAMENDO_CLIENT_ID=
+# GEO_DIFF_LOGIN_NOTIFY=on
+# CAPTCHA_ALWAYS=off
+# CAPTCHA_REQUIRE_AFTER_FAIL=3
+# IP_BLACKLIST_THRESHOLD=20
+# IP_BLACKLIST_WINDOW_SEC=3600
+# IP_BLACKLIST_DURATION_SEC=86400
+# CONTENT_FILTER=on
+# OBSERVABILITY_SAMPLE=0
+# OBSERVABILITY_WEBHOOK=
+# NOTIFY_PUBLIC_URL=
+# IMPORT_MAX_ROWS=1000
+# SNAPSHOT_TOP_N=20
