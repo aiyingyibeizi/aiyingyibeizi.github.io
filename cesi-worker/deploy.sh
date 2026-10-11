@@ -93,16 +93,17 @@ if [ "$SKIP_SECRETS" = "0" ]; then
       > "$SECRETS_FILE" || true
   fi
 
+  # 若无待更新的密钥（例如线上密钥已配好、只是发版），自动跳过上传
+  if [ -n "$SECRETS_FILE" ] && ! grep -qE '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=' "$SECRETS_FILE"; then
+    SECRETS_FILE=""
+  fi
+
   if [ -n "$SECRETS_FILE" ]; then
-    log "上传密钥（wrangler secret bulk）"
+    log "上传密钥（wrangler secret bulk $SECRETS_FILE）"
     $WRANGLER secret bulk "$SECRETS_FILE"
     ok "密钥已上传"
   else
-    warn "未找到 secrets.json / .dev.vars，跳过密钥上传"
-  fi
-
-  if [ ! -f secrets.json ] && [ -f .dev.vars ] && grep -qiE '^[[:space:]]*ADMIN_TOKEN[[:space:]]*=' .dev.vars; then
-    warn "建议设置 ADMIN_TOTP_SECRET 开启登录双重验证（口令 + 6 位动态码）"
+    warn "无待更新的密钥，跳过上传（线上既有密钥保持不变）"
   fi
 fi
 
