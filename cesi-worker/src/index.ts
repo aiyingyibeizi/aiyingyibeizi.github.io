@@ -13,9 +13,8 @@ import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
-import { writeAudit, listAccountsWithStats, getUserDetail, flattenAccount, listContent } from './services/admin';
-import { verifyAdminPassword, verifyAdminTotp, verifyOwnerPassword, setAdminSessionRole, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
-import type { AdminRole } from './services/admin';
+import { writeAudit, listAccountsWithStats, listTestAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { verifyAdminPassword, verifyAdminTotp, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import { sendNotify } from './services/notify';
 import { toCsv, csvDownload, csvFilename } from './services/export';
 import { emailConfig, sendMail } from './services/email';
@@ -178,6 +177,18 @@ function uuid(): string {
   return crypto.randomUUID();
 }
 
+/**
+ * 在账号 payload 上追加一条登录来源 IP（设备 IP 历史）。
+ * 去重：同一 IP 只保留最近一次，最新在前，最多保留 12 条，避免 payload 无限膨胀。
+ */
+function pushLoginIp(payload: Record<string, any>, ip: string, at = new Date().toISOString()): void {
+  if (!ip) return;
+  const list: { ip: string; at: string }[] = Array.isArray(payload.login_ips)
+    ? payload.login_ips.filter((e: any) => e && typeof e.ip === 'string' && e.ip)
+    : [];
+  payload.login_ips = [{ ip, at }].concat(list.filter((e) => e.ip !== ip)).slice(0, 12);
+}
+
 async function buildShardService(env: Env): Promise<ShardService> {
   // Return cached instance if available
   if (cachedShardService) {
@@ -316,7 +327,6 @@ type Variables = {
   userId: string;
   adminToken?: string;
   adminSessionIp?: string;
-  adminRole?: AdminRole;
   adminSessionToken?: string;
 };
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -451,6 +461,7 @@ app.post('/api/auth/register', async (c) => {
       session_token: sessionToken,
       session_expires_at: expiresAt,
       last_login_ip: clientIp(c),
+      login_ips: [{ ip: clientIp(c), at: createdAt }],
     }),
     file_url: null,
     created_at: createdAt,
@@ -578,6 +589,7 @@ app.post('/api/auth/login', async (c) => {
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
   payload.last_login_ip = loginIp;
+  pushLoginIp(payload, loginIp);
 
   // Atomic-ish: write new record first, then delete old one.
   // If write succeeds but delete fails, we have a duplicate (harmless).
@@ -726,6 +738,7 @@ app.post('/api/auth/email-login', async (c) => {
   payload.session_token = sessionToken;
   payload.session_expires_at = expiresAt;
   payload.last_login_ip = ip;
+  pushLoginIp(payload, ip);
 
   const writeResult = await shard.write({
     id: uuid(),
@@ -2021,7 +2034,6 @@ async function adminGw(c: any, next: any): Promise<Response | void> {
 
   c.set('adminToken', sess.admin);
   c.set('adminSessionIp', sess.ip);
-  c.set('adminRole', sess.role);
   c.set('adminSessionToken', token);
   return next();
 }
@@ -2029,60 +2041,14 @@ app.use('/api/admin/*', adminGw);
 
 app.get('/api/admin/ping', async (c) => c.json({ ok: true }));
 
-// 当前登录态与认证角色（管理员 / 站长）。前端据此展示认证徽章与解锁站长专属操作。
+// 当前登录态。动态验证码只在登录时校验，登录后不再有任何二次验证。
 app.get('/api/admin/me', async (c) => {
   const env = c.env as Env;
   return c.json({
     ok: true,
     admin: c.get('adminToken') || 'admin',
-    role: c.get('adminRole') || 'admin',
-    owner_cert_available: !!env.OWNER_TOKEN,
     totp_enabled: !!env.ADMIN_TOTP_SECRET,
   });
-});
-
-// ---- 认证：管理员认证（复核 ADMIN_TOKEN）与站长认证（OWNER_TOKEN 升级角色） ----
-//   level='admin'  用管理员口令重新确认身份，写入审计；
-//   level='owner'  用站长口令把当前会话升级为 owner，解锁站长专属高危操作。
-app.post('/api/admin/certify', async (c) => {
-  const env = c.env as Env;
-  const redis = getRedis(env);
-  const shard = await buildShardService(env);
-  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
-  const ip = clientIp(c);
-  const token = c.get('adminSessionToken') || '';
-  const currentRole = c.get('adminRole') || 'admin';
-
-  const body = await c.req.json().catch(() => ({} as any));
-  const level = str(body?.level, 12).trim().toLowerCase();
-  const code = str(body?.code, 512);
-  if (level !== 'admin' && level !== 'owner') {
-    return c.json({ error: 'level 必须是 admin 或 owner' }, 400 as any);
-  }
-
-  if (level === 'admin') {
-    if (!verifyAdminPassword(env, code)) {
-      writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.failed', 'admin', `ip=${ip}`);
-      return c.json({ error: '管理员口令不正确' }, 401 as any);
-    }
-    writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.success', 'admin', `ip=${ip}`);
-    return c.json({ ok: true, role: currentRole, certified: 'admin' });
-  }
-
-  // level === 'owner'
-  if (!env.OWNER_TOKEN) return c.json({ error: '站长认证未启用（未配置 OWNER_TOKEN）' }, 404 as any);
-  if (!verifyOwnerPassword(env, code)) {
-    writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.failed', 'owner', `ip=${ip}`);
-    // 站长口令错误也计入失败计数，防止被高频穷举
-    const failCount = await recordAdminLoginFailure(redis, ip);
-    if (failCount >= ADMIN_FAIL_LOCK_THRESHOLD) await lockAdminSource(redis, ip);
-    return c.json({ error: '站长认证口令不正确' }, 401 as any);
-  }
-  if (!token || !(await setAdminSessionRole(redis, token, 'owner'))) {
-    return c.json({ error: '会话已失效，请重新登录后再认证' }, 401 as any);
-  }
-  writeAudit(shard, waitUntil, c.get('adminToken') || '', 'admin.certify.success', 'owner', `ip=${ip}`);
-  return c.json({ ok: true, role: 'owner', certified: 'owner' });
 });
 
 // ---- 双重验证（2FA）登录：口令 + TOTP 动态码都正确才发放会话令牌 ----
@@ -2216,6 +2182,13 @@ app.get('/api/admin/users', async (c) => {
   const limit = Number(c.req.query('limit') || 1000);
   const shard = await buildShardService(c.env);
   const rows = await listAccountsWithStats(shard, q, limit);
+  return c.json({ data: rows, total: rows.length });
+});
+
+// 测试 / 压测账号（含被「用户管理」过滤掉的账号）及其登录来源 IP 历史，用于查看设备 IP。
+app.get('/api/admin/test-accounts', async (c) => {
+  const shard = await buildShardService(c.env);
+  const rows = await listTestAccounts(shard);
   return c.json({ data: rows, total: rows.length });
 });
 
@@ -2677,10 +2650,6 @@ app.post('/api/admin/security/ipbans/add', async (c) => {
 
 app.post('/api/admin/security/ipbans/remove', async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  // 站长专属：解除封禁会直接放行此前被拉黑的来源，仅「站长」角色可执行。
-  if (c.get('adminRole') !== 'owner') {
-    return c.json({ error: '该操作仅限站长，请先在「认证」页完成站长认证', need_owner: true }, 403 as any);
-  }
   const ip = str((body as { ip?: unknown }).ip, 64).trim();
   if (!ip) return c.json({ error: '无效的 IP' }, 400);
   await clearIpBlacklist(getRedis(c.env), ip);

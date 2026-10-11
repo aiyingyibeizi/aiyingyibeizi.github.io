@@ -23,10 +23,6 @@ export interface Env {
   // 管理接口（/api/admin/*）的访问令牌；未配置时管理接口直接禁用
   ADMIN_TOKEN?: string;
 
-  // 「站长」认证口令（可选）。管理员登录后，可在后台「认证」页用该口令把当前会话
-  // 升级为「站长」角色，解锁站长专属的高危操作。未配置时站长认证整体禁用。
-  OWNER_TOKEN?: string;
-
   // 匿名 token（anon_xxx）的 HMAC 签名密钥（可选）。
   // 未配置时会从其它服务端密钥派生，用于给匿名身份签名，防止伪造 anon_ 前缀刷分。
   ANON_HMAC_SECRET?: string;

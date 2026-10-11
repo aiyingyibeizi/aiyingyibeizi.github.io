@@ -15,7 +15,12 @@ import { accountRisk } from './security';
  * 建议使用本仓库工具生成的 512 位（128 位十六进制）随机口令，配合 PBKDF2（见 password.ts）。
  */
 
-const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder)[_\-\w]*$|realtest/i;
+export const TEST_ACCOUNT_RE = /^(test|testuser|verify|stress|stresstest|perf|loadtest|e2e|diag|dummy|benchmark|failcase|placeholder)[_\-\w]*$|realtest/i;
+
+/** 是否为压测 / 测试账号（与排行榜、用户列表口径一致） */
+export function isTestAccount(name: string): boolean {
+  return TEST_ACCOUNT_RE.test(String(name || '').trim());
+}
 
 function safeJsonParse(payload: string): any {
   try {
@@ -23,6 +28,24 @@ function safeJsonParse(payload: string): any {
   } catch {
     return {};
   }
+}
+
+/** 登录来源 IP 历史条目 */
+export type LoginIp = { ip: string; at: string };
+
+/** 从账号 payload 解析登录来源 IP 历史（最新在前，最多 20 条），兼容仅有 last_login_ip 的旧账号 */
+function parseLoginIps(p: any, fallbackAt: string): LoginIp[] {
+  const arr = Array.isArray(p?.login_ips) ? p.login_ips : [];
+  const list: LoginIp[] = [];
+  for (const e of arr) {
+    if (!e || typeof e.ip !== 'string' || !e.ip) continue;
+    list.push({ ip: e.ip, at: typeof e.at === 'string' ? e.at : '' });
+    if (list.length >= 20) break;
+  }
+  if (!list.length && typeof p?.last_login_ip === 'string' && p.last_login_ip) {
+    list.push({ ip: p.last_login_ip, at: fallbackAt });
+  }
+  return list;
 }
 
 /** 常数时间比较两个字符串（防止管理口令被时序旁路探测） */
@@ -106,6 +129,7 @@ export function flattenAccount(row: MixedData): {
   banned: boolean;
   banned_reason: string | null;
   last_login_ip: string | null;
+  login_ips: LoginIp[];
   created_at: string;
   updated_at: string;
 } {
@@ -119,6 +143,7 @@ export function flattenAccount(row: MixedData): {
     banned: Boolean(p.banned),
     banned_reason: typeof p.banned_reason === 'string' ? p.banned_reason : null,
     last_login_ip: typeof p.last_login_ip === 'string' && p.last_login_ip ? p.last_login_ip : null,
+    login_ips: parseLoginIps(p, row.updated_at || row.created_at),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -191,6 +216,24 @@ export async function listAccountsWithStats(
         (u.last_login_ip || '').toLowerCase().includes(needle)
       );
     });
+}
+
+/** 测试 / 压测账号行：基础信息 + 登录来源 IP 历史（供控制台「测试账号」页查看设备 IP） */
+export type TestAccountRow = ReturnType<typeof flattenAccount> & {
+  ip_count: number;
+};
+
+/**
+ * 列出全部测试 / 压测账号（按用户名规则识别），附带其登录来源 IP 历史。
+ * 与「用户管理」相反：这里专门保留被过滤掉的测试账号，便于排查脚本来源。
+ */
+export async function listTestAccounts(shard: ShardService): Promise<TestAccountRow[]> {
+  const accounts = await shard.readByType('account', { limit: 1000 });
+  return accounts
+    .map((row) => flattenAccount(row))
+    .filter((u) => isTestAccount(u.username))
+    .map((u) => ({ ...u, ip_count: u.login_ips.length }))
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 }
 
 /** 拉取某用户的综合档案（account + profile + 统计），用于详情页 */
@@ -303,18 +346,6 @@ export function verifyAdminPassword(env: Env, password: string): boolean {
   return !!(env.ADMIN_TOKEN && safeEqual(password, env.ADMIN_TOKEN));
 }
 
-/** 管理员角色：普通管理员 / 站长（站长由管理员二次认证升级而来） */
-export type AdminRole = 'admin' | 'owner';
-
-/**
- * 校验「站长」认证口令（常数时间比较）。
- * 未配置 OWNER_TOKEN 时返回 false —— 站长认证整体禁用，管理员始终停留在 admin 角色。
- */
-export function verifyOwnerPassword(env: Env, code: string): boolean {
-  return !!(env.OWNER_TOKEN && safeEqual(code, env.OWNER_TOKEN));
-}
-
-
 function adminFailKey(ip: string): string {
   return `${ADMIN_FAIL_PREFIX}${ip.replace(/[^\w.\-:@]+/g, '_').slice(0, 64) || 'anon'}`;
 }
@@ -372,14 +403,13 @@ export async function createAdminSession(
   redis: Redis,
   adminLabel: string,
   ip: string,
-  ttlSec: number,
-  role: AdminRole = 'admin'
+  ttlSec: number
 ): Promise<{ ok: boolean; token: string }> {
   const token = crypto.randomUUID();
   try {
     await redis.set(
       adminSessionKey(token),
-      JSON.stringify({ admin: adminLabel, ip, role, created_at: new Date().toISOString() }),
+      JSON.stringify({ admin: adminLabel, ip, created_at: new Date().toISOString() }),
       { ex: ttlSec }
     );
   } catch (err) {
@@ -389,43 +419,18 @@ export async function createAdminSession(
   return { ok: true, token };
 }
 
-/** 升级/变更当前会话的角色（站长认证成功后调用）。保留 TTL。 */
-export async function setAdminSessionRole(redis: Redis, token: string, role: AdminRole): Promise<boolean> {
-  if (!token) return false;
-  try {
-    const key = adminSessionKey(token);
-    const raw = await redis.get<string | Record<string, unknown>>(key);
-    if (!raw) return false;
-    // Upstash 客户端默认开启 automaticDeserialization：JSON 字符串读回时已被解析成对象。
-    // 因此这里必须兼容“已是对象”的情况，否则 JSON.parse(object) 会抛错导致会话判定失败。
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    parsed.role = role;
-    parsed.role_updated_at = new Date().toISOString();
-    // 保留剩余 TTL：重新 set 时 TTL 会丢失，故读取剩余时间后再写回
-    let ttl: number | undefined;
-    try { ttl = await redis.ttl(key); } catch { ttl = undefined; }
-    const ex = typeof ttl === 'number' && ttl > 0 ? ttl : 2 * 3600;
-    await redis.set(key, JSON.stringify(parsed), { ex });
-    return true;
-  } catch (err) {
-    console.error('setAdminSessionRole failed:', err);
-    return false;
-  }
-}
-
-/** 校验会话令牌；有效返回 { ok:true, admin, ip, role }，否则 { ok:false } */
+/** 校验会话令牌；有效返回 { ok:true, admin, ip }，否则 { ok:false } */
 export async function resolveAdminSession(
   redis: Redis,
   token: string
-): Promise<{ ok: true; admin: string; ip: string; role: AdminRole } | { ok: false }> {
+): Promise<{ ok: true; admin: string; ip: string } | { ok: false }> {
   if (!token) return { ok: false };
   try {
     const raw = await redis.get<string | Record<string, unknown>>(adminSessionKey(token));
     if (!raw) return { ok: false };
-    // 兼容 Upstash 自动反序列化：读回的 JSON 可能已是对象（见 setAdminSessionRole 注释）。
+    // 兼容 Upstash 自动反序列化：读回的 JSON 可能已是对象。
     const parsed = (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>;
-    const role: AdminRole = parsed?.role === 'owner' ? 'owner' : 'admin';
-    return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || ''), role };
+    return { ok: true, admin: String(parsed?.admin || 'admin'), ip: String(parsed?.ip || '') };
   } catch (err) {
     console.error('resolveAdminSession failed:', err);
     return { ok: false };
