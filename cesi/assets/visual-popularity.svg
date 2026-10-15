@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" width="160" height="110" role="img" aria-label="Popularity">
+  <defs>
+    <linearGradient id="pPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241735"/>
+      <stop offset="1" stop-color="#0f0a1f"/>
+    </linearGradient>
+    <linearGradient id="pGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.5" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#pPanel)"/>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#pGold)" opacity="0.08"/>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="none" stroke="#fbbf24" stroke-opacity="0.28"/>
+  <path d="M48 40 C30 40 30 68 50 70" fill="none" stroke="url(#pGold)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M112 40 C130 40 130 68 110 70" fill="none" stroke="url(#pGold)" stroke-width="5" stroke-linecap="round"/>
+  <rect x="42" y="30" width="76" height="9" rx="4.5" fill="#fde68a"/>
+  <path d="M46 39 H114 L109 72 C106 83 92 88 80 88 C68 88 54 83 51 72 Z" fill="url(#pGold)"/>
+  <rect x="76" y="88" width="8" height="7" fill="#d97706"/>
+  <path d="M58 95 H102 L106 104 H54 Z" fill="url(#pGold)"/>
+  <g>
+    <ellipse cx="52" cy="26" rx="7" ry="3.4" transform="rotate(-28 52 26)" fill="#34d399"/>
+    <ellipse cx="108" cy="26" rx="7" ry="3.4" transform="rotate(28 108 26)" fill="#34d399"/>
+    <ellipse cx="80" cy="30" rx="7" ry="3.4" fill="#34d399"/>
+    <g transform="translate(58,20)"><circle r="12" fill="#f9a8d4"/><circle r="8" fill="#f472b6"/><circle r="4.5" fill="#fbcfe8"/><circle r="2" fill="#be185d"/></g>
+    <g transform="translate(84,13)"><circle r="12" fill="#f9a8d4"/><circle r="8" fill="#ec4899"/><circle r="4.5" fill="#fbcfe8"/><circle r="2" fill="#be185d"/></g>
+    <g transform="translate(108,21)"><circle r="11" fill="#f9a8d4"/><circle r="7.5" fill="#f472b6"/><circle r="4" fill="#fbcfe8"/><circle r="1.8" fill="#be185d"/></g>
+    <g transform="translate(71,29)"><circle r="10" fill="#fbcfe8"/><circle r="6.5" fill="#ec4899"/><circle r="3.4" fill="#f9a8d4"/><circle r="1.6" fill="#be185d"/></g>
+    <g transform="translate(96,30)"><circle r="10" fill="#fbcfe8"/><circle r="6.5" fill="#f472b6"/><circle r="3.4" fill="#f9a8d4"/><circle r="1.6" fill="#be185d"/></g>
+  </g>
+</svg>

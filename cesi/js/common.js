@@ -7,6 +7,27 @@
   'use strict';
   const APEXON = global.APEXON = global.APEXON || {};
 
+  // ===== 静默降级日志 =====
+  // 接口失败（跨域被拦、离线、服务端 5xx、预览环境网络受限等）不应在控制台刷屏报错。
+  // 默认完全静默；仅在显式开启调试时才输出，便于排查而不打扰普通访问者：
+  //   控制台执行 localStorage.setItem('apex_debug','1') 后刷新，
+  //   或在地址后追加 ?debug=1 。
+  const DEBUG = (function () {
+    try {
+      if (localStorage.getItem('apex_debug') === '1') return true;
+    } catch (e) {}
+    try {
+      return /(?:^|[?&])debug=1(?:&|$)/.test(global.location && global.location.search || '');
+    } catch (e) { return false; }
+  })();
+  function debugLog(level) {
+    if (!DEBUG) return;
+    try {
+      const fn = console[level] || console.log;
+      fn.apply(console, Array.prototype.slice.call(arguments, 1));
+    } catch (e) {}
+  }
+
   // 全局菜单切换：下拉菜单与三条杠对齐，首页 Pill 始终保留
   global.toggleMenu = function () {
     const dropdown = document.getElementById('headerDropdown');
@@ -132,6 +153,11 @@
     // 内存缓存：GET 请求 60 秒 TTL，避免重复请求拖慢页面
     _cache: new Map(),
     _CACHE_TTL: 60000,
+    // 熔断状态：连续网络层失败后短暂冷却，避免在受限网络下反复请求
+    _failStreak: 0,
+    _openUntil: 0,
+    _FAIL_THRESHOLD: 3,
+    _COOLDOWN_MS: 30000,
 
     _cacheGet(key) {
       const entry = this._cache.get(key);
@@ -154,6 +180,11 @@
     },
 
     async request(path, method = 'GET', body, token) {
+      // 熔断：连续网络层失败后进入冷却期，冷却期内直接返回失败、不再发起请求，
+      // 从而在预览/离线等受限网络下避免反复的失败请求把控制台刷屏。
+      if (this._openUntil > Date.now()) {
+        return { ok: false, status: 0, data: null, degraded: true };
+      }
       // GET 请求走缓存（可缓存路径前缀白名单）
       const cacheable = method === 'GET' && (
         path.startsWith('/api/scores?leaderboard=') ||
@@ -180,6 +211,9 @@
         // H1 修复配套：服务端对匿名身份做 HMAC 签名校验。旧的无签名 anon token 会返回
         // 401 { anon_refresh: true }，此处自动领取新的签名匿名身份并重试一次，用户无感。
         let res = await fetch(url, options);
+        // 拿到 HTTP 响应即说明网络可达，重置熔断计数
+        this._failStreak = 0;
+        this._openUntil = 0;
         let text = await res.text();
         if (res.status === 401) {
           let probe = null;
@@ -198,19 +232,25 @@
           try { data = JSON.parse(text); }
           catch (parseErr) {
             // 服务端返回非 JSON（如 HTML 错误页）：保留真实 HTTP 状态码，避免误判为网络错误
-            console.error(`[WorkerAPI ${method}] ${path} JSON parse failed (status ${res.status}):`, text.slice(0, 200));
+            debugLog('error', `[WorkerAPI ${method}] ${path} JSON parse failed (status ${res.status}):`, text.slice(0, 200));
             if (!res.ok) return { ok: false, status: res.status, data: null };
             return { ok: true, status: res.status, data: { raw: text } };
           }
         }
         if (!res.ok) {
-          console.error(`[WorkerAPI ${method}] ${path} ${res.status}:`, data);
+          debugLog('error', `[WorkerAPI ${method}] ${path} ${res.status}:`, data);
           return { ok: false, status: res.status, data };
         }
         if (cacheable) this._cacheSet(method + ':' + path, data);
         return { ok: true, status: res.status, data };
       } catch (e) {
-        console.error('[WorkerAPI request failed]', path, method, e);
+        // 网络层失败（离线 / 跨域被拦 / DNS 失败等）静默降级，返回失败结果由上层兜底
+        debugLog('error', '[WorkerAPI request failed]', path, method, e);
+        this._failStreak += 1;
+        if (this._failStreak >= this._FAIL_THRESHOLD) {
+          this._openUntil = Date.now() + this._COOLDOWN_MS;
+          this._failStreak = 0;
+        }
         return { ok: false, status: 0, data: null };
       }
     }
@@ -579,7 +619,7 @@
         const remote = (stats.total_users > 0 || stats.total_tests > 0 || stats.online > 0) ? stats : (await this._fallbackSiteStats());
         return LocalStats.mergeRemote(remote);
       }
-      console.error('[getSiteStats] failed:', res.status, res.data);
+      debugLog('error', '[getSiteStats] failed:', res.status, res.data);
       return LocalStats.mergeRemote(await this._fallbackSiteStats());
     },
 
@@ -621,12 +661,12 @@
 
     async saveScore(userId, username, testType, data) {
       if (!userId) {
-        console.error('saveScore rejected: missing userId');
+        debugLog('error', 'saveScore rejected: missing userId');
         APEXON.UI && APEXON.UI.toast && APEXON.UI.toast((window.APEXON && APEXON.i18n ? APEXON.i18n.t('needLogin') : '请先登录或生成游客身份后再保存'), 2400, 'warning');
         return false;
       }
       if (!Security.validateRecord(testType, data)) {
-        console.warn('[saveScore] validation failed:', testType, data);
+        debugLog('warn', '[saveScore] validation failed:', testType, data);
         return false;
       }
       const scoreValue = parseFloat(data.avg || data.score || 0);
@@ -647,10 +687,10 @@
           }
         }, token);
       } catch (e) {
-        console.error('[saveScore] uncaught:', e);
+        debugLog('error', '[saveScore] uncaught:', e);
         res = { ok: false, status: 0, data: null };
       }
-      console.log('[saveScore]', testType, scoreValue, 'result:', res && res.data);
+      debugLog('log', '[saveScore]', testType, scoreValue, 'result:', res && res.data);
       if (res && res.ok) {
         LocalStats.recordTest(userId);
         // 统一维护分享卡片所需的全局成绩数据（所有测试页共用，避免各页遗漏赋值导致分享卡片恒为 0 分）
@@ -780,15 +820,15 @@
           category: cat
         }, token);
       } catch (e) {
-        console.error('[addComment] uncaught:', e);
+        debugLog('error', '[addComment] uncaught:', e);
         res = { ok: false, status: 0, data: null };
       }
-      console.log('[addComment] result:', res && res.data);
+      debugLog('log', '[addComment] result:', res && res.data);
       if (!res || !res.ok) {
-        // 原始后端错误只写控制台便于排查，不再直接弹给用户（避免出现一长串英文数据库报错）。
+        // 原始后端错误只写调试日志便于排查，不再直接弹给用户（避免出现一长串英文数据库报错）。
         // 提示语统一用本地化文案；同时此方法不再自行弹 toast，由调用方（postComment）统一弹一次，避免双击弹两个失败提示。
         const rawErr = (res && res.data && res.data.error) || null;
-        if (rawErr) console.error('[addComment] backend error:', res && res.status, rawErr);
+        if (rawErr) debugLog('error', '[addComment] backend error:', res && res.status, rawErr);
         const hint = (res && res.status === 401)
           ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('authExpired') : '登录已过期，请刷新页面重试')
           : (res && res.status === 400 && rawErr)
@@ -872,12 +912,12 @@
           token: token
         }, token);
         if (!res.ok) {
-          console.error('[changeUsername] failed:', res.status, res.data);
+          debugLog('error', '[changeUsername] failed:', res.status, res.data);
           return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('changeFailed') : '修改失败，请重试') };
         }
         return res.data || { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('unknownError') : '未知错误') };
       } catch (e) {
-        console.error('[changeUsername] failed:', e);
+        debugLog('error', '[changeUsername] failed:', e);
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('networkError') : '网络错误') };
       }
     },
@@ -908,7 +948,7 @@
         if (!res.ok || !Array.isArray(res.data && res.data.data)) return [];
         return res.data.data;
       } catch (e) {
-        console.error('[getPopularity] failed:', e);
+        debugLog('error', '[getPopularity] failed:', e);
         return [];
       }
     },
@@ -1082,7 +1122,7 @@
       const token = this.currentUser.token;
 
       await WorkerAPI.request('/api/auth/merge-anon', 'POST', { anon_id: anonId }, token)
-        .catch(e => console.error('[merge] failed:', e));
+        .catch(e => debugLog('error', '[merge] failed:', e));
 
       // 登录后为下一次匿名使用领取全新的「服务端签名」匿名身份
       await this.refreshAnonId();
@@ -1180,7 +1220,7 @@
       const u = String(username).trim().slice(0, 30);
       const e = String(email).trim().toLowerCase();
       const c = String(code).trim();
-      console.log('[register] start', u);
+      debugLog('log', '[register] start', u);
       const nameErr = this._validateUsername(u);
       if (nameErr) return { success: false, error: nameErr };
       const passErr = this._validatePassword(password);
@@ -1189,7 +1229,7 @@
       if (!/^\d{8}$/.test(c)) return { success: false, error: t('invalidCode', '验证码为 8 位数字') };
 
       const res = await WorkerAPI.request('/api/auth/register', 'POST', { username: u, password: password, email: e, code: c });
-      console.log('[register] worker result:', res.data);
+      debugLog('log', '[register] worker result:', res.data);
       if (!res.ok || !res.data || !res.data.token) {
         return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerFailed') : '注册失败，请重试') };
       }
@@ -1205,7 +1245,7 @@
         social: '',
         gender: ['male', 'female', 'secret'].includes(gender) ? gender : 'secret'
       });
-      console.log('[register] profile saved');
+      debugLog('log', '[register] profile saved');
 
       LocalStats.recordUser(res.data.username || u);
       await this.mergeAnonymousData();
@@ -1217,9 +1257,9 @@
       if (!u || !password) {
         return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('enterCredentials') : '请输入用户名和密码') };
       }
-      console.log('[login] start', u);
+      debugLog('log', '[login] start', u);
       const res = await WorkerAPI.request('/api/auth/login', 'POST', { username: u, password: password });
-      console.log('[login] worker result:', res.data);
+      debugLog('log', '[login] worker result:', res.data);
       if (!res.ok || !res.data || !res.data.token) {
         return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
       }
@@ -3024,7 +3064,7 @@
           else if (action === 'logout') APEXON.Auth.logout();
           else if (action === 'delete-account') APEXON.Auth.deleteAccount();
         } catch (err) {
-          console.error('[UserMenu] action error:', action, err);
+          debugLog('error', '[UserMenu] action error:', action, err);
         }
       };
       dropdown.addEventListener('click', this._dropdownClickHandler);
