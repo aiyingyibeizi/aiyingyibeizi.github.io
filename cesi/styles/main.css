@@ -741,6 +741,45 @@ body.loaded .apexon-page {
     0 4px 14px rgba(245, 158, 11, 0.4);
 }
 
+/* 顶部「APP」入口（青绿渐变，与 Music / 人气榜 区分） */
+.apex-apps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--apex-radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #052e2b;
+  background: linear-gradient(135deg, #2dd4bf 0%, #22d3ee 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 4px 14px rgba(34, 211, 238, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.apex-apps-btn::before {
+  content: '\1F4F1';
+  font-size: 0.85rem;
+}
+
+.apex-apps-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 6px 18px rgba(34, 211, 238, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.apex-apps-btn.active {
+  box-shadow:
+    0 0 0 2px rgba(34, 211, 238, 0.45),
+    0 4px 14px rgba(34, 211, 238, 0.4);
+}
+
 html[data-theme="light"] .apexon-menu-btn,
 html[data-bw="true"] .apexon-menu-btn,
 html[data-theme="light"] .apex-music-btn,
@@ -864,7 +903,8 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   }
 
   .apex-music-btn,
-  .apex-popularity-btn {
+  .apex-popularity-btn,
+  .apex-apps-btn {
     padding: 9px 20px;
     font-size: 0.92rem;
   }
@@ -959,7 +999,8 @@ html[data-bw="true"] .apexon-header-dropdown.open {
   /* 手机端隐藏中心区的首页 pill 和 Music / 人气榜按钮，它们已包含在下拉菜单 */
   .apexon-header-center .apexon-header-nav,
   .apexon-header-center .apex-music-btn,
-  .apexon-header-center .apex-popularity-btn {
+  .apexon-header-center .apex-popularity-btn,
+  .apexon-header-center .apex-apps-btn {
     display: none;
   }
 
