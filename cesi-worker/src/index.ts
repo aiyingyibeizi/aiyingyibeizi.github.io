@@ -1535,8 +1535,15 @@ app.post('/api/profiles', async (c) => {
   // 纵深防御：字段级消毒（前端渲染已转义，此为二次保险，防止原始存储含可利用载荷）。
   // 仅保留安全字符串，拦截 javascript:/data:/vbscript:/file: 等协议与<script…>等标签。
   const stripDangerous = (v: unknown): string => {
-    const s = typeof v === 'string' ? v.trim() : '';
-    return s.replace(/<\s*(script|iframe|object|embed|style|svg|math|meta|base|form)\b[\s\S]*?>/gi, '');
+    let s = typeof v === 'string' ? v.trim() : '';
+    // 反复替换至稳定：单次替换会被嵌套/畸形标签绕过（如 <scr<script>ipt>），
+    // 残留可执行标签。循环至不再变化可彻底清除（CodeQL: incomplete multi-character sanitization）。
+    let prev: string;
+    do {
+      prev = s;
+      s = s.replace(/<\s*\/?\s*(script|iframe|object|embed|style|svg|math|meta|base|form)\b[\s\S]*?>/gi, '');
+    } while (s !== prev);
+    return s;
   };
   const safeStr = (v: unknown): string | undefined => {
     const s = stripDangerous(v);

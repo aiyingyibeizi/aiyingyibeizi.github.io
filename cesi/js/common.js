@@ -42,9 +42,15 @@
 
     function isLocalLink(href) {
       if (!href) return false;
+      const raw = String(href).trim();
+      // 跳过锚点链接，避免对纯锚点做整页过渡
+      if (raw.startsWith('#')) return false;
       try {
-        const url = new URL(href, location.href);
-        return url.origin === location.origin && !href.startsWith('#') && !href.startsWith('javascript:');
+        const url = new URL(raw, location.href);
+        // 仅放行同源的 http/https 链接；javascript:/data:/vbscript: 等可执行协议
+        // 不在白名单内，天然被排除，避免漏检（CodeQL: incomplete URL scheme check）。
+        return url.origin === location.origin
+          && (url.protocol === 'http:' || url.protocol === 'https:');
       } catch (e) {
         return false;
       }
@@ -1104,10 +1110,19 @@
     },
 
     _generateAnonId() {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return 'anon_' + crypto.randomUUID();
+      // 匿名身份会作为 x-anon-id 参与鉴权，必须使用密码学安全随机源，
+      // 避免 Math.random() 可被预测（CodeQL: insecure randomness）。
+      const c = (typeof crypto !== 'undefined') ? crypto : null;
+      if (c && c.randomUUID) {
+        return 'anon_' + c.randomUUID();
       }
-      return 'anon_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+      if (c && c.getRandomValues) {
+        const bytes = new Uint8Array(16);
+        c.getRandomValues(bytes);
+        return 'anon_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      }
+      // 极旧环境无 Web Crypto（现代浏览器不会发生）：仅作本地临时标识，服务端会重新签发签名身份
+      return 'anon_' + Date.now().toString(36);
     },
 
     // 服务端签名的匿名身份格式：anon_<raw>.<hmac>（含 '.'）。旧格式无签名，必须向服务端换取。
