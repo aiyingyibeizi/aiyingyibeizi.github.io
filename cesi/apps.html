@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.clarity.ms https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self' data:; connect-src 'self' https://api.apexon.qzz.io https://www.clarity.ms https://api.jamendo.com https://lrclib.net https://lyrics.ovh https://ipwho.is https://ipapi.co https://trae-api-cn.mchost.guru; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'">
+    <meta name="description" content="APEXON APP 下载：APEXON 移动应用的官方发布与更新页面，下载最新版安装包（APK），查看版本更新日志。">
+    <meta name="keywords" content="APEXON,APP下载,APK下载,应用市场,版本更新,安卓应用">
+    <meta name="author" content="APEXON">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="APEXON APP 下载">
+    <meta property="og:description" content="APEXON 移动应用的官方发布与更新页面，下载最新版安装包并查看更新日志。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://apexon.qzz.io/apps.html">
+    <meta property="og:image" content="https://apexon.qzz.io/assets/images/preview-final-hero.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <title data-i18n="appsPageTitle">APP 下载 - APEXON</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles/variables.css?v=9">
+    <link rel="stylesheet" href="styles/main.css?v=29">
+    <style>
+        /* ===== APP 下载页 · 应用市场风格 ===== */
+        .app-hero { padding-top: 28px; padding-bottom: 6px; text-align: center; }
+        .app-hero__title { font-size: 1.9rem; font-weight: 800; margin: 0 0 8px; letter-spacing: .5px;
+            background: linear-gradient(135deg, #22d3ee 0%, #8b7efc 55%, #f472b6 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .app-hero__desc { color: var(--apex-text-secondary); font-size: .95rem; max-width: 640px; margin: 0 auto; line-height: 1.7; }
+
+        .app-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 22px 0 40px; }
+
+        .app-card {
+            display: grid;
+            grid-template-columns: 84px minmax(0, 1fr) auto;
+            grid-template-areas: "icon info action" "log log log";
+            gap: 4px 18px;
+            padding: 20px;
+            border-radius: var(--apex-radius-lg);
+            border: 1px solid var(--game-card-border);
+            background: var(--game-card-bg);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .05);
+            position: relative; overflow: hidden;
+            transition: transform var(--apex-transition-base), box-shadow var(--apex-transition-base), border-color var(--apex-transition-base);
+        }
+        .app-card::before { content: ""; position: absolute; inset: 0; background: var(--game-card-glow);
+            opacity: .6; pointer-events: none; z-index: 0; transition: opacity var(--apex-transition-base); }
+        .app-card:hover { transform: translateY(-3px); border-color: var(--game-card-border-hover);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, .5), 0 0 20px rgba(148, 163, 184, .08), inset 0 1px 0 rgba(255, 255, 255, .08); }
+        .app-card:hover::before { opacity: 1; }
+
+        .app-icon { grid-area: icon; width: 84px; height: 84px; border-radius: 20px; overflow: hidden;
+            background: linear-gradient(135deg, rgba(34, 211, 238, .22) 0%, rgba(139, 92, 246, .22) 100%);
+            border: 1px solid var(--game-card-border);
+            display: flex; align-items: center; justify-content: center; z-index: 1; }
+        .app-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .app-info { grid-area: info; min-width: 0; z-index: 1; display: flex; flex-direction: column; }
+        .app-name { font-size: 1.08rem; font-weight: 800; color: var(--game-card-title); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .app-tagline { font-size: .8rem; color: var(--game-card-desc); margin-top: 3px; }
+        .app-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .app-chip { font-size: .72rem; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+            border: 1px solid var(--apex-border); background: var(--apex-surface); color: var(--apex-text-secondary); }
+        .app-chip--ver { color: var(--apex-primary-light); border-color: rgba(139, 126, 252, .35); }
+        .app-chip--plat { color: var(--apex-accent-cyan); border-color: rgba(34, 211, 238, .35); }
+
+        .app-desc { font-size: .85rem; color: var(--game-card-desc); line-height: 1.62; margin: 12px 0 0; }
+        .app-feats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .app-feat { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: .72rem; font-weight: 600;
+            border-radius: 999px; background: var(--apex-surface); border: 1px solid var(--apex-border); color: var(--apex-text); }
+
+        .app-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; font-size: .76rem; color: var(--apex-text-tertiary); }
+        .app-meta b { color: var(--apex-text-secondary); font-weight: 700; margin-left: 4px; }
+
+        .app-action { grid-area: action; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; }
+        .app-dl { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
+            padding: 10px 20px; border-radius: var(--apex-radius-full); font-size: .88rem; font-weight: 700;
+            color: #052e2b; text-decoration: none;
+            background: linear-gradient(135deg, #2dd4bf 0%, #22d3ee 100%);
+            border: 1px solid rgba(255, 255, 255, .28);
+            box-shadow: 0 6px 18px rgba(34, 211, 238, .34), inset 0 1px 0 rgba(255, 255, 255, .35);
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+        .app-dl:hover { transform: translateY(-1px); filter: brightness(1.06);
+            box-shadow: 0 8px 22px rgba(34, 211, 238, .46), inset 0 1px 0 rgba(255, 255, 255, .4); }
+        .app-dl.is-soon { color: var(--apex-text-secondary); background: var(--apex-surface);
+            border-color: var(--apex-border); box-shadow: none; cursor: not-allowed; }
+
+        .app-log { grid-area: log; z-index: 1; margin-top: 12px; border-top: 1px solid var(--apex-border-subtle); padding-top: 10px; }
+        .app-log__title { font-size: .78rem; font-weight: 700; color: var(--apex-text-secondary); cursor: pointer; list-style: none; }
+        .app-log__title::-webkit-details-marker { display: none; }
+        .app-log__title::before { content: "▸ "; display: inline-block; transition: transform .15s ease; }
+        .app-log[open] .app-log__title::before { content: "▾ "; }
+        .app-log__list { margin: 8px 0 0; padding-left: 18px; font-size: .79rem; color: var(--apex-text-secondary); line-height: 1.7; }
+
+        .app-empty { grid-column: 1 / -1; }
+
+        /* 打赏：低存在感的自愿支持入口 */
+        .app-donate { margin: 8px 0 44px; padding: 20px; border-radius: var(--apex-radius-lg);
+            border: 1px dashed var(--apex-border); background: var(--apex-surface); text-align: center; }
+        .app-donate__title { font-size: .95rem; font-weight: 700; color: var(--apex-text); margin-bottom: 8px; }
+        .app-donate__desc { font-size: .82rem; color: var(--apex-text-secondary); line-height: 1.7; max-width: 620px; margin: 0 auto 6px; }
+        .app-donate__thanks { font-size: .8rem; color: var(--apex-text-tertiary); line-height: 1.7; max-width: 620px; margin: 0 auto 14px; font-style: italic; }
+        .app-donate__btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 999px; font-size: .85rem; font-weight: 700;
+            color: #fff; background: linear-gradient(135deg, #f472b6, #ec4899); border: 1px solid rgba(255, 255, 255, .22);
+            box-shadow: 0 6px 16px rgba(236, 72, 153, .3); cursor: pointer; transition: transform .15s ease, filter .15s ease; }
+        .app-donate__btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+        .app-donate__warn { font-size: .72rem; color: var(--apex-text-tertiary); margin-top: 14px; line-height: 1.6; }
+
+        @media (max-width: 600px) {
+            .app-hero__title { font-size: 1.5rem; }
+            .app-card { grid-template-columns: 64px minmax(0, 1fr); grid-template-areas: "icon info" "action action" "log log";
+                padding: 16px; gap: 8px 14px; }
+            .app-icon { width: 64px; height: 64px; border-radius: 16px; }
+            .app-action { flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
+            .app-meta { gap: 6px 14px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+
+    <header class="apexon-header">
+        <div class="apexon-header__inner">
+            <div class="apexon-header-left">
+                <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
+                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <span>APEXON</span>
+                </a>
+                <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
+                    <input type="checkbox" id="bwToggleInput" data-i18n-aria-label="themeToggle" aria-label="切换主题">
+                    <span class="apex-bw-toggle__track">
+                        <span class="apex-bw-toggle__thumb">
+                            <span class="apex-bw-toggle__icon" id="bwToggleIcon">🌈</span>
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div class="apexon-header-center">
+                <button class="apexon-menu-btn" onclick="toggleMenu()" data-i18n-title="menuOpen" aria-label="打开菜单">☰</button>
+                <nav class="apexon-header-nav" id="headerPill">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                </nav>
+                <a href="music.html" class="apex-music-btn" data-i18n="navMusic">Music</a>
+                <a href="popularity.html" class="apex-popularity-btn" data-i18n="navPopularity">人气榜</a>
+                <a href="apps.html" class="apex-apps-btn active" data-i18n="navApp">APP</a>
+
+                <nav class="apexon-header-dropdown" id="headerDropdown">
+                    <a href="index.html" class="nav-main" data-i18n="navHome">首页</a>
+                    <a href="reaction.html" data-i18n="navReaction">反应测试</a>
+                    <a href="type.html" data-i18n="navType">打字测试</a>
+                    <a href="stick.html" data-i18n="navStick">注意力测试</a>
+                    <a href="number.html" data-i18n="navNumber">数字记忆</a>
+                    <a href="verbal.html" data-i18n="navVerbal">单词记忆</a>
+                    <a href="visual.html" data-i18n="navVisual">视觉记忆</a>
+                    <a href="sequence.html" data-i18n="navSequence">序列记忆</a>
+                    <a href="aim.html" data-i18n="navAim">瞄准训练</a>
+                    <a href="stroop.html" data-i18n="navStroop">Stroop 测试</a>
+                    <a href="nback.html" data-i18n="navNback">N-Back 测试</a>
+                    <a href="taskswitch.html" data-i18n="navTaskswitch">Task Switching</a>
+                    <a href="visualsearch.html" data-i18n="navVisualsearch">Visual Search</a>
+                    <a href="music.html" data-i18n="navMusic">Music</a>
+                    <a href="popularity.html" data-i18n="navPopularity">人气榜</a>
+                    <a href="apps.html" data-i18n="navApp">APP</a>
+                </nav>
+            </div>
+            <div class="header-actions" style="position: relative;">
+                <div class="apex-style-picker" style="margin-right: 8px;"></div>
+                <button class="apex-palette-btn" title="切换主题配色">🎨</button>
+                <div class="apex-palette-panel" hidden>
+                    <h6>主题配色</h6>
+                    <div class="apex-palette-row">
+                        <div class="apex-palette-swatch" data-accent="cyan" style="background:#8b7efc;"></div>
+                        <div class="apex-palette-swatch" data-accent="emerald" style="background:#34d399;"></div>
+                        <div class="apex-palette-swatch" data-accent="amber" style="background:#fbbf24;"></div>
+                        <div class="apex-palette-swatch" data-accent="rose" style="background:#f472b6;"></div>
+                        <div class="apex-palette-swatch" data-accent="indigo" style="background:#818cf8;"></div>
+                        <div class="apex-palette-swatch" data-accent="coral" style="background:#fb923c;"></div>
+                        <div class="apex-palette-swatch" data-accent="sunset" style="background:#f97316;"></div>
+                        <div class="apex-palette-swatch" data-accent="mint" style="background:#2dd4bf;"></div>
+                        <div class="apex-palette-swatch" data-accent="crimson" style="background:#f43f5e;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="app-hero">
+            <h1 class="app-hero__title">📱 <span data-i18n="navApp">APP</span></h1>
+            <p class="app-hero__desc" data-i18n="appsSubtitle">APEXON 的移动应用在这里发布与更新。挑一个下载安装，装上就能用；新版发布后，应用内也会提示你更新。</p>
+        </div>
+
+        <div class="app-grid" id="appGrid" aria-live="polite"></div>
+
+        <!-- 打赏：自愿、低存在感。接入柠檬挤压（Lemon Squeezy）时，把下面按钮改成对应的 checkout 链接即可 -->
+        <section class="app-donate" id="appDonate" aria-label="自愿打赏">
+            <div class="app-donate__title" data-i18n="appsDonateTitle">☕ 请开发者喝杯咖啡</div>
+            <p class="app-donate__desc" data-i18n="appsDonateDesc">APEXON 的全部应用与测试都免费开放。如果它帮到了你，欢迎随缘打赏，让服务器和更新维护能走得更久一点。</p>
+            <p class="app-donate__thanks" data-i18n="appsDonateThanks">谢谢你路过还愿意留下一点善意。愿每一次抬头看天气，都有好心情。</p>
+            <button type="button" class="app-donate__btn" id="appDonateBtn" data-i18n="appsDonateBtn">❤ 自愿打赏</button>
+            <p class="app-donate__warn" data-i18n="appsDonateWarn">未成年人请在监护人同意与陪同下操作；打赏完全自愿，不影响任何功能的使用。</p>
+        </section>
+    </div>
+
+    <script src="js/i18n.js?v=19"></script>
+    <script src="js/common.js?v=40"></script>
+    <script>
+    (function () {
+        'use strict';
+        var t = function (k, fb) { return (window.APEXON && APEXON.i18n) ? APEXON.i18n.t(k, fb) : fb; };
+        var grid = document.getElementById('appGrid');
+        var MANIFEST = 'apps/apps.json';
+
+        if (window.APEXON && APEXON.Particles) APEXON.Particles.init();
+
+        function esc(s) {
+            if (window.APEXON && APEXON.Security && APEXON.Security.escapeHtml) return APEXON.Security.escapeHtml(s);
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function arr(v) { return Array.isArray(v) ? v : []; }
+
+        function platformLabel(p) {
+            var m = { android: 'Android', ios: 'iOS', windows: 'Windows', macos: 'macOS', linux: 'Linux', web: 'Web' };
+            return m[String(p || '').toLowerCase()] || 'Android';
+        }
+        function platformIcon(p) {
+            var k = String(p || '').toLowerCase();
+            return k === 'android' ? '🤖' : k === 'ios' ? '🍎' : k === 'windows' ? '🪟' : '📦';
+        }
+
+        function emptyState() {
+            return '<div class="apex-empty-state app-empty">' +
+                '<div class="apex-empty-state__icon">📦</div>' +
+                '<div class="apex-empty-state__title">' + esc(t('appsEmptyTitle', '暂时还没有可下载的应用')) + '</div>' +
+                '<div class="apex-empty-state__desc">' + esc(t('appsEmptyDesc', '安装包上传后会自动出现在这里，稍后再来看看吧。')) + '</div>' +
+                '</div>';
+        }
+
+        function skeleton() {
+            return '<div class="apex-skeleton-row" style="grid-column:1/-1">' +
+                '<div class="apex-skeleton apex-skeleton-line" style="width:50%"></div>' +
+                '<div class="apex-skeleton apex-skeleton-line" style="width:80%"></div>' +
+                '<div class="apex-skeleton apex-skeleton-line" style="width:35%"></div>' +
+                '</div>';
+        }
+
+        async function loadManifest() {
+            try {
+                var res = await fetch(MANIFEST, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                return (data && Array.isArray(data.apps)) ? data.apps : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 探测安装包是否已上传；探测失败时不阻断，交给点击时判定
+        async function isAvailable(url) {
+            try {
+                var r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                return r.ok;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        function cardHTML(app, available) {
+            var latest = app.latest || {};
+            var file = latest.file || '';
+            var feats = arr(app.highlights);
+            var logs = arr(latest.changelog);
+
+            var dlHTML = (file && available)
+                ? '<a class="app-dl" href="' + esc(file) + '" download rel="noopener">' + esc(t('appsDownload', '📥 下载安装包')) + '</a>'
+                : '<span class="app-dl is-soon" title="' + esc(t('appsPending', '⏳ 安装包待上传')) + '">' + esc(t('appsPending', '⏳ 安装包待上传')) + '</span>';
+
+            var meta = [];
+            if (latest.version) meta.push('<span>' + esc(t('appsLabelVersion', '版本')) + '<b>' + esc(latest.version) + '</b></span>');
+            if (latest.size) meta.push('<span>' + esc(t('appsLabelSize', '大小')) + '<b>' + esc(latest.size) + '</b></span>');
+            if (latest.date) meta.push('<span>' + esc(t('appsLabelUpdated', '更新于')) + '<b>' + esc(latest.date) + '</b></span>');
+            if (app.requirements) meta.push('<span>' + esc(t('appsLabelRequires', '系统要求')) + '<b>' + esc(app.requirements) + '</b></span>');
+
+            var logHTML = logs.length
+                ? '<details class="app-log"><summary class="app-log__title">' + esc(t('appsChangelog', '更新日志')) + '</summary>' +
+                  '<ul class="app-log__list">' + logs.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></details>'
+                : '';
+
+            return '<article class="app-card">' +
+                '<div class="app-icon">' +
+                    (app.icon ? '<img src="' + esc(app.icon) + '" alt="' + esc(app.name || '') + '" loading="lazy">' : '') +
+                '</div>' +
+                '<div class="app-info">' +
+                    '<div class="app-name">' + esc(app.name || app.id || '') +
+                        '<span class="app-chip app-chip--ver">' + esc(t('appsLabelVersion', '版本')) + ' ' + esc(latest.version || '—') + '</span>' +
+                    '</div>' +
+                    (app.tagline ? '<div class="app-tagline">' + esc(app.tagline) + '</div>' : '') +
+                    '<div class="app-chips">' +
+                        '<span class="app-chip app-chip--plat">' + platformIcon(app.platform) + ' ' + esc(platformLabel(app.platform)) + '</span>' +
+                        (latest.packageType ? '<span class="app-chip">' + esc(String(latest.packageType).toUpperCase()) + '</span>' : '') +
+                    '</div>' +
+                    (app.description ? '<p class="app-desc">' + esc(app.description) + '</p>' : '') +
+                    (feats.length ? '<div class="app-feats">' + feats.map(function (f) { return '<span class="app-feat">' + esc(f) + '</span>'; }).join('') + '</div>' : '') +
+                    (meta.length ? '<div class="app-meta">' + meta.join('') + '</div>' : '') +
+                '</div>' +
+                '<div class="app-action">' + dlHTML + '</div>' +
+                logHTML +
+                '</article>';
+        }
+
+        async function render() {
+            grid.innerHTML = skeleton();
+            var apps = await loadManifest();
+            if (!apps.length) { grid.innerHTML = emptyState(); return; }
+            var avail = await Promise.all(apps.map(function (a) {
+                var f = a && a.latest && a.latest.file;
+                return f ? isAvailable(f) : Promise.resolve(false);
+            }));
+            grid.innerHTML = apps.map(function (a, i) { return cardHTML(a, avail[i]); }).join('');
+        }
+
+        // 打赏入口占位：接入柠檬挤压后替换为真实链接
+        var donateBtn = document.getElementById('appDonateBtn');
+        if (donateBtn) donateBtn.addEventListener('click', function () {
+            if (window.APEXON && APEXON.UI && APEXON.UI.toast) APEXON.UI.toast(t('appsDonateSoon', '打赏入口即将接入，感谢你的支持 ❤'));
+        });
+
+        // 语言切换后重渲染（标签与按钮文案）
+        document.addEventListener('apexon:langchange', function () { render(); });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', render);
+        } else {
+            render();
+        }
+        document.body.classList.add('loaded');
+    })();
+    </script>
+</body>
+</html>

@@ -225,15 +225,23 @@
         // accent selection
         const accentWrap = document.createElement('div'); accentWrap.style.display = 'flex'; accentWrap.style.gap = '6px'; accentWrap.style.flexWrap = 'wrap';
         const accentLabel = document.createElement('div'); accentLabel.textContent = 'Accent'; accentLabel.style.fontWeight = '600'; accentLabel.style.marginBottom = '4px'; panel.appendChild(accentLabel);
-        const accents = ['cyan','emerald','amber','rose','indigo','coral'];
+        const accents = ['cyan','emerald','amber','rose','indigo','coral','sunset','mint','crimson'];
         const currentAccent = localStorage.getItem('apex_accent') || document.documentElement.getAttribute('data-accent') || 'cyan';
         accents.forEach(ac => {
-          const b = document.createElement('button'); b.textContent = ac[0].toUpperCase(); b.title = ac; b.style.width='30px'; b.style.height='30px'; b.style.borderRadius='8px'; b.style.border='none'; b.style.cursor='pointer'; b.style.fontWeight='700'; b.style.color='#fff'; b.style.background='linear-gradient(135deg,#7C3AED 0,#60A5FA 100%)';
-          // simple color mapping for preview
-          const m = { cyan:'#0ea5a4', emerald:'#10b981', amber:'#f59e0b', rose:'#fb7185', indigo:'#6366f1', coral:'#fb923c' };
-          b.style.background = m[ac];
-          if (ac === currentAccent) b.style.boxShadow = '0 6px 18px rgba(0,0,0,0.25)';
-          b.addEventListener('click', () => { document.documentElement.setAttribute('data-accent', ac); localStorage.setItem('apex_accent', ac); panel.querySelectorAll('button').forEach(btn => btn.style.boxShadow=''); b.style.boxShadow = '0 6px 18px rgba(0,0,0,0.25)'; });
+          const b = document.createElement('button'); b.textContent = ac[0].toUpperCase(); b.title = ac; b.style.width='30px'; b.style.height='30px'; b.style.borderRadius='8px'; b.style.border='none'; b.style.cursor='pointer'; b.style.fontWeight='700'; b.style.color='#fff';
+          // 9 套配色的按钮预览色
+          const m = { cyan:'#22d3ee', emerald:'#34d399', amber:'#fbbf24', rose:'#f472b6', indigo:'#818cf8', coral:'#fb923c', sunset:'#f97316', mint:'#2dd4bf', crimson:'#f43f5e' };
+          b.style.background = m[ac] || '#7C3AED';
+          if (ac === currentAccent) { b.style.boxShadow = '0 6px 18px rgba(0,0,0,0.35)'; b.style.outline = '2px solid #fff'; }
+          b.addEventListener('click', () => {
+            document.documentElement.setAttribute('data-accent', ac);
+            localStorage.setItem('apex_accent', ac);
+            panel.querySelectorAll('.accent-btn').forEach(btn => { btn.style.boxShadow=''; btn.style.outline=''; });
+            b.classList.add('accent-btn');
+            b.style.boxShadow = '0 6px 18px rgba(0,0,0,0.35)';
+            b.style.outline = '2px solid #fff';
+          });
+          b.classList.add('accent-btn');
           accentWrap.appendChild(b);
         });
         panel.appendChild(accentWrap);

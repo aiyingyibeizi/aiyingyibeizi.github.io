@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "updated": "2026-10-16T23:00:52+08:00",
+  "note": "这是 APEXON 的安装包版本清单。网站 /apps.html 与手机 APP 端都读取本文件。更新版本时只改这里，再上传对应安装包即可。详细步骤见同目录 README.txt。",
+  "apps": [
+    {
+      "id": "apexon-weather",
+      "name": "APEXON 天气",
+      "ename": "APEXON Weather",
+      "platform": "android",
+      "icon": "apps/apexon-weather-icon.png",
+      "tagline": "轻量 · 干净 · 打开即用",
+      "description": "APEXON 天气：轻量干净的天气应用，提供实时天气、多日预报与空气质量查询。",
+      "highlights": ["实时天气", "多日预报", "空气质量"],
+      "requirements": "Android 7.0 及以上",
+      "latest": {
+        "version": "2.4.1",
+        "versionCode": 18,
+        "packageType": "apk",
+        "date": "2026-10-16",
+        "size": "36.17 MB",
+        "file": "apps/apexon-weather-2.4.1.apk",
+        "sha256": "3be587e8016615f5bc86dd5608db724862fa5fe9acf99dce66b3da5e07c9cd64",
+        "minSdk": 24,
+        "changelog": [
+          "修复「检查更新」失效：App 与官网现在读同一份版本清单，官网显示最新时 App 也能检测到并下载",
+          "修复空气质量与天气预警不显示：和风旧接口已下线，改用新版接口，AQI 面板与预警恢复",
+          "更新包支持断点续传：下载中断后从断点继续，不必重下整个安装包；非 Wi-Fi 环境会先提示流量",
+          "首页新增极端天气吸顶提示条；城市列表支持长按拖拽排序、左滑删除",
+          "逐小时预报改为吸附滚动；加载占位与真实布局对齐，减少首屏跳动；过长文案自动截断"
+        ]
+      },
+      "history": [
+        {
+          "version": "2.4.0",
+          "versionCode": 17,
+          "packageType": "apk",
+          "date": "2026-10-16",
+          "size": "36.1 MB",
+          "file": "apps/apexon-weather-2.4.0.apk",
+          "sha256": "714d417c208e4186e3d6341d007fd7479a55c6caf1c2d3112f2cd146a69c1740",
+          "minSdk": 24,
+          "changelog": [
+            "版本 2.4.0（构建号 17）发布"
+          ]
+        },
+        {
+          "version": "2.3.2",
+          "versionCode": 16,
+          "packageType": "apk",
+          "date": "2026-10-16",
+          "size": "36.1 MB",
+          "file": "apps/apexon-weather-2.3.2.apk",
+          "sha256": "3ad572b86922ad4e0d1e6f1c6654ac42b7b335e0fa31466c65db356b35e100e8",
+          "minSdk": 24,
+          "changelog": [
+            "版本 2.3.2（构建号 16）发布"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,10 +7,12 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:check": "wrangler deploy --dry-run --outdir dist",
+    "secrets": "wrangler secret bulk .dev.vars",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@libsql/client": "^0.7.0",
+    "@libsql/client": "^0.15.15",
     "@supabase/supabase-js": "^2.44.4",
     "@upstash/redis": "^1.34.0",
     "hono": "^4.4.13",

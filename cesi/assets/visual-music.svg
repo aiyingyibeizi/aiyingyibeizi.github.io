@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" width="160" height="110" role="img" aria-label="Music">
+  <defs>
+    <linearGradient id="mGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b7efc"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="mPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161d3a"/>
+      <stop offset="1" stop-color="#0a0f1f"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#mPanel)"/>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#mGrad)" opacity="0.10"/>
+  <rect x="3" y="3" width="154" height="104" rx="18" fill="none" stroke="#8b7efc" stroke-opacity="0.30"/>
+  <ellipse cx="63" cy="76" rx="13" ry="10" transform="rotate(-20 63 76)" fill="url(#mGrad)"/>
+  <ellipse cx="108" cy="66" rx="13" ry="10" transform="rotate(-20 108 66)" fill="url(#mGrad)"/>
+  <rect x="73" y="26" width="4.5" height="50" rx="2.2" fill="url(#mGrad)"/>
+  <rect x="118" y="16" width="4.5" height="50" rx="2.2" fill="url(#mGrad)"/>
+  <path d="M73 26 L122.5 16 L122.5 24 L73 34 Z" fill="url(#mGrad)"/>
+</svg>

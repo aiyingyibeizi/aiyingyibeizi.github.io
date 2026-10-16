@@ -1,7 +1,8 @@
 name = "cesi-worker"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
-compatibility_flags = ["nodejs_compat"]
+# L6 修复：使用版本化的 nodejs_compat_v2（行为稳定、可预期），而非随运行时漂移的 nodejs_compat。
+compatibility_flags = ["nodejs_compat_v2"]
 
 # API subdomain for China-accessible backend endpoint.
 # Traffic to api.apexon.qzz.io will be handled by this Worker.

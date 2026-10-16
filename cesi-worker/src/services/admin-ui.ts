@@ -1,0 +1,1063 @@
+/**
+ * 后台管理面板 —— 单文件自包含页面
+ *
+ * 由 Worker 在 GET /admin 时内联返回，无需额外静态资源。
+ * 鉴权：
+ *   1) password（ADMIN_TOKEN）
+ *   2) TOTP 6 位动态码（验证器 App 生成，对应已配置的 ADMIN_TOTP_SECRET）
+ *   登录成功后发放短期会话令牌，接口只认会话令牌。
+ *
+ * 布局：现代后台风格 —— 左侧导航 + 顶栏 + 卡片式内容区。
+ */
+
+const API_PREFIX = '/api/admin';
+
+/** 侧边导航 / 顶栏图标（在模板渲染阶段输出为内联 SVG） */
+const ICON_PATHS: Record<string, string> = {
+  grid: '<path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" fill="none" stroke="currentColor" stroke-width="1.7"/>',
+  users: '<path d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  doc: '<path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h6M9 16h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+  bell: '<path d="M12 4a5 5 0 015 5v4l2 3H5l2-3V9a5 5 0 015-5zM10 20a2 2 0 004 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+  logout: '<path d="M9 4h8v16H9M4 12h11M12 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+  shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  cap: '<path d="M12 4l10 4-10 4L2 8l10-4zM5.5 11.2V15c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-3.8M15 3.5v2.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  flag: '<path d="M6 21V4M6 5c3-1.6 6 1.4 9 0v9c-3 1.4-6-1.6-9 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
+  key: '<path d="M14 10a6 6 0 11-9.5-4.8A6 6 0 0114 10h6v3h-3v3M9 8h.01" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+  badge: '<path d="M12 3l2.4 1.7 2.9-.2.9 2.8 2.3 1.7-1.1 2.7 1.1 2.7-2.3 1.7-.9 2.8-2.9-.2L12 21l-2.4-1.7-2.9.2-.9-2.8-2.3-1.7L4.6 12 3.5 9.3l2.3-1.7.9-2.8 2.9.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  device: '<path d="M9 3h6a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M11 18h2M8 6.5h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+};
+function iconSvg(id: string): string {
+  return '<svg width="18" height="18" viewBox="0 0 24 24">' + (ICON_PATHS[id] || ICON_PATHS.grid) + '</svg>';
+}
+
+export function renderAdminUI(nonce = ''): string {
+  // H5 修复：为内联脚本注入 nonce，配合 CSP 的 script-src-elem 精确放行本脚本。
+  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
+  return `<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>APEXON Console · 管理后台</title>
+<style>
+:root{
+  --bg:#070b16;--bg2:#0c1223;--bg3:#111a30;
+  --panel:rgba(20,28,50,.72);--panel-solid:#141c32;--panel2:rgba(124,140,255,.08);
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.16);
+  --text:#eef3ff;--muted:#93a0c8;
+  --accent:#7c8cff;--accent2:#5eead4;--accent3:#c084fc;
+  --danger:#ff6b81;--warn:#f5b84b;--info:#7c8cff;--ok:#4ade80;
+  --radius:16px;--radius-sm:11px;
+  --shadow:0 18px 50px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'PingFang SC','Microsoft YaHei',sans-serif;color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 620px at 82% -12%, rgba(124,140,255,.20), transparent 60%),
+    radial-gradient(900px 540px at -8% 6%, rgba(94,234,212,.12), transparent 56%),
+    radial-gradient(760px 500px at 50% 120%, rgba(192,132,252,.12), transparent 60%),
+    var(--bg);
+  background-attachment:fixed}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:20px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2);background-clip:padding-box}
+::-webkit-scrollbar-track{background:transparent}
+::selection{background:rgba(124,140,255,.35)}
+
+/* ---------- 登录 ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;position:relative;overflow:hidden}
+.login-wrap::before,.login-wrap::after{content:'';position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;pointer-events:none}
+.login-wrap::before{width:420px;height:420px;background:rgba(124,140,255,.45);top:-120px;right:-60px}
+.login-wrap::after{width:360px;height:360px;background:rgba(94,234,212,.3);bottom:-140px;left:-80px}
+.login-card{position:relative;width:100%;max-width:410px;background:linear-gradient(160deg,rgba(28,38,66,.9),rgba(12,18,35,.92));border:1px solid var(--line2);border-radius:22px;padding:34px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(14px)}
+.login-card::before{content:'';position:absolute;inset:0;border-radius:22px;padding:1px;background:linear-gradient(140deg,rgba(124,140,255,.6),rgba(94,234,212,.25),transparent 60%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#08111f;font-size:19px;box-shadow:0 8px 22px rgba(124,140,255,.45)}
+.brand h1{font-size:20px;margin:0;letter-spacing:.3px}
+.brand h1 span{background:linear-gradient(90deg,var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.login-sub{color:var(--muted);font-size:13px;margin:0 0 4px}
+.login-card label{display:block;margin:16px 0 7px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px}
+.login-card input{width:100%;background:rgba(8,13,26,.7);border:1px solid var(--line2);color:var(--text);border-radius:12px;padding:12px 13px;font-size:14px;outline:none;transition:border-color .18s,box-shadow .18s}
+.login-card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,140,255,.18)}
+.row{display:flex;gap:8px;align-items:center}
+.hint{min-height:18px;font-size:12px;margin:12px 0 2px}
+.hint.err{color:var(--danger)}
+.hint.ok{color:var(--ok)}
+.hint.warn{color:var(--warn)}
+.btn{position:relative;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--text);border-radius:var(--radius-sm);padding:10px 16px;font-size:13.5px;cursor:pointer;font-family:inherit;transition:transform .12s,background .16s,border-color .16s,box-shadow .16s;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#08111f;font-weight:700;box-shadow:0 10px 26px rgba(124,140,255,.4)}
+.btn.primary:hover{filter:brightness(1.08);box-shadow:0 14px 30px rgba(124,140,255,.5)}
+.btn.danger{background:rgba(255,107,129,.08);border-color:rgba(255,107,129,.45);color:var(--danger)}
+.btn.danger:hover{background:rgba(255,107,129,.16)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.block{width:100%;margin-top:20px;padding:13px}
+
+/* ---------- 布局 ---------- */
+#appView{display:flex;min-height:100vh}
+.sidebar{width:248px;flex:0 0 248px;background:linear-gradient(180deg,rgba(12,18,35,.86),rgba(7,11,22,.9));border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;backdrop-filter:blur(12px)}
+.side-brand{display:flex;align-items:center;gap:12px;padding:22px 20px;border-bottom:1px solid var(--line)}
+.side-brand h2{font-size:16px;margin:0}
+.side-brand h2 span{background:linear-gradient(90deg,var(--accent2),var(--accent3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.nav-item{position:relative;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;cursor:pointer;color:var(--muted);border:1px solid transparent;background:transparent;font-size:14px;font-family:inherit;text-align:left;width:100%;transition:color .15s,background .15s,border-color .15s}
+.nav-item svg{flex:0 0 auto;transition:filter .15s}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.045)}
+.nav-item.active{color:var(--text);background:linear-gradient(90deg,rgba(124,140,255,.22),rgba(124,140,255,.03));border-color:rgba(124,140,255,.28);font-weight:600;box-shadow:0 8px 22px rgba(124,140,255,.16)}
+.nav-item.active::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:3px;background:linear-gradient(180deg,var(--accent2),var(--accent))}
+.nav-item.active svg{filter:drop-shadow(0 0 6px rgba(124,140,255,.7))}
+.side-foot{padding:14px;border-top:1px solid var(--line)}
+.side-foot .who{color:var(--muted);font-size:12px;margin-bottom:10px;word-break:break-all}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:15px 26px;background:rgba(7,11,22,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar h2{margin:0;font-size:18px;font-weight:800;letter-spacing:.2px}
+.topbar .spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--line2);color:var(--muted);background:rgba(255,255,255,.03)}
+.chip.on{color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.1)}
+
+/* ---------- 身份标识（用户公开身份显示） ---------- */
+.role-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;vertical-align:middle;line-height:1;white-space:nowrap}
+.role-badge svg{width:14px;height:14px;display:block;flex:0 0 auto}
+.role-badge.role-owner{color:#3a2a05;background:linear-gradient(135deg,#ffe9a8,#f5b84b 45%,#c98a1f);border:1px solid rgba(245,184,75,.75);box-shadow:0 0 12px rgba(245,184,75,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+.role-badge.role-admin{color:#08131f;background:linear-gradient(135deg,#cfe3ff,#7c8cff 55%,#3f5fd6);border:1px solid rgba(124,140,255,.75);box-shadow:0 0 12px rgba(124,140,255,.4),inset 0 1px 0 rgba(255,255,255,.55)}
+@keyframes role-shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.role-badge.role-owner,.role-badge.role-admin{background-size:200% 200%;animation:role-shine 3.5s linear infinite}
+@media(prefers-reduced-motion:reduce){.role-badge.role-owner,.role-badge.role-admin{animation:none}}
+.content{padding:26px;max-width:1380px;width:100%;margin:0 auto}
+.content>div{animation:viewIn .28s ease}
+@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- 卡片 / 表格 ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:22px}
+.card{position:relative;background:linear-gradient(160deg,rgba(28,38,66,.6),rgba(14,20,38,.72));border:1px solid var(--line);border-radius:var(--radius);padding:19px;box-shadow:0 10px 28px rgba(0,0,0,.28);transition:transform .16s,border-color .16s,box-shadow .16s}
+.card:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.card .num{font-size:30px;font-weight:800;letter-spacing:.3px;background:linear-gradient(120deg,#fff,#b9c6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card .label{color:var(--muted);font-size:12px;margin-top:3px}
+.card h3{margin:0 0 12px;font-size:15px}
+.section-title{font-size:15px;font-weight:700;margin:26px 0 12px;color:var(--text);display:flex;align-items:center;gap:9px}
+.section-title::before{content:'';width:4px;height:15px;border-radius:3px;background:linear-gradient(180deg,var(--accent2),var(--accent))}
+.table-wrap{background:linear-gradient(180deg,rgba(20,28,50,.6),rgba(12,18,35,.6));border:1px solid var(--line);border-radius:var(--radius);overflow:auto;box-shadow:0 10px 28px rgba(0,0,0,.24)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:12px 15px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px}
+th{color:var(--muted);font-weight:600;background:rgba(124,140,255,.06);font-size:12px;letter-spacing:.4px;position:sticky;top:0;backdrop-filter:blur(6px);text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+table tr:hover td{background:rgba(124,140,255,.06)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
+.ip-chip{display:inline-flex;align-items:center;gap:5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;padding:3px 9px;border-radius:8px;background:rgba(94,234,212,.1);border:1px solid rgba(94,234,212,.28);color:#9ff0e0}
+.ip-chip em{font-style:normal;color:var(--muted);font-size:11px}
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.test-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.test-name{font-size:15px;font-weight:700;letter-spacing:.2px;margin-right:9px}
+.test-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--muted);margin-bottom:13px}
+.test-meta b{color:var(--text)}
+.ip-list{display:flex;flex-wrap:wrap;gap:7px;min-height:26px;align-items:center}
+.toolbar{display:flex;gap:9px;margin-bottom:13px;flex-wrap:wrap;align-items:center}
+.user-search{flex:1;min-width:220px;max-width:460px}
+input,select,textarea{background:rgba(8,13,26,.7);border:1px solid var(--line2);color:var(--text);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;outline:none;transition:border-color .16s,box-shadow .16s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,140,255,.16)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge.critical{background:rgba(255,107,129,.15);color:var(--danger)}
+.badge.warning{background:rgba(245,184,75,.15);color:var(--warn)}
+.badge.info{background:rgba(124,140,255,.15);color:var(--info)}
+.badge.ok{background:rgba(74,222,128,.14);color:var(--ok)}
+.badge.off{background:rgba(255,255,255,.08);color:var(--muted)}
+.empty{color:var(--muted);padding:42px;text-align:center;font-size:13px}
+.bar{background:rgba(255,255,255,.08);border-radius:8px;height:8px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:8px;transition:width .4s ease}
+.bar.warn>i{background:linear-gradient(90deg,var(--warn),#ffd894)}
+.bar.danger>i{background:linear-gradient(90deg,var(--danger),#ff9db0)}
+.dbinfo{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:5px 0}
+pre{background:rgba(8,13,26,.75);border:1px solid var(--line);border-radius:12px;padding:13px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-size:12px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ---------- 弹窗 ---------- */
+.modal{position:fixed;inset:0;background:rgba(4,6,12,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+.modal.show{display:flex}
+.modal-box{background:linear-gradient(160deg,rgba(24,33,58,.98),rgba(12,18,35,.98));border:1px solid var(--line2);border-radius:18px;max-width:880px;width:100%;max-height:88vh;overflow:auto;padding:24px;box-shadow:var(--shadow);animation:riseIn .22s ease}
+.modal-box h3{margin:0 0 14px;font-size:17px}
+.modal-close{float:right;background:rgba(255,255,255,.06);border:none;color:var(--muted);width:30px;height:30px;border-radius:9px;font-size:18px;cursor:pointer;line-height:1;transition:background .15s,color .15s}
+.modal-close:hover{background:rgba(255,107,129,.16);color:var(--danger)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+
+/* ---------- 提示 ---------- */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(160deg,rgba(24,33,58,.98),rgba(12,18,35,.98));border:1px solid var(--line2);border-radius:12px;padding:12px 20px;z-index:80;display:none;box-shadow:var(--shadow);font-size:13px;max-width:90vw}
+.toast.show{display:block;animation:pop .2s ease}
+.toast.err{border-color:rgba(255,107,129,.6)}
+@keyframes pop{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.muted{color:var(--muted)}
+.mt{margin-top:14px}
+.content textarea{width:100%;font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;resize:vertical}
+.content code{background:rgba(124,140,255,.12);border:1px solid var(--line2);border-radius:6px;padding:1px 6px;font-size:12px;color:#c7d2ff}
+@media(max-width:760px){.sidebar{width:66px;flex-basis:66px}.side-brand h2,.nav-item span,.side-foot .who{display:none}.nav-item{justify-content:center}.field-row{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.content{padding:18px}.topbar{padding:13px 16px}}
+</style>
+</head>
+<body>
+
+<!-- ============ 登录 ============ -->
+<div id="loginView" class="login-wrap" style="display:none">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <h1>APEXON <span>Console</span></h1>
+    </div>
+    <p class="login-sub">双重验证登录</p>
+    <form id="loginForm" onsubmit="event.preventDefault(); doLogin();">
+    <label>管理员口令</label>
+    <input type="password" id="tokenInput" autocomplete="off" placeholder="输入口令">
+    <label>动态验证码</label>
+    <input type="text" id="totpInput" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="验证器 6 位数字" oninput="normalizeCode(this)">
+    <div class="hint" id="loginHint"></div>
+    <button class="btn primary block" type="submit">登 录</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ 主界面 ============ -->
+<div id="appView" style="display:none">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="brand-mark">A</div>
+      <h2>APEXON <span>Console</span></h2>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-nav="overview" onclick="show('overview')">${iconSvg('grid')}<span>仪表盘</span></button>
+      <button class="nav-item" data-nav="users" onclick="show('users')">${iconSvg('users')}<span>用户管理</span></button>
+      <button class="nav-item" data-nav="testaccounts" onclick="show('testaccounts')">${iconSvg('device')}<span>测试账号</span></button>
+      <button class="nav-item" data-nav="content" onclick="show('content')">${iconSvg('doc')}<span>内容审核</span></button>
+      <button class="nav-item" data-nav="teaching" onclick="show('teaching')">${iconSvg('cap')}<span>教学管理</span></button>
+      <button class="nav-item" data-nav="antichat" onclick="show('antichat')">${iconSvg('flag')}<span>防刷分</span></button>
+      <button class="nav-item" data-nav="alerts" onclick="show('alerts')">${iconSvg('bell')}<span>安全告警</span></button>
+      <button class="nav-item" data-nav="security" onclick="show('security')">${iconSvg('key')}<span>登录加固</span></button>
+      <button class="nav-item" data-nav="audit" onclick="show('audit')">${iconSvg('list')}<span>审计日志</span></button>
+    </nav>
+    <div class="side-foot">
+      <div class="who" id="whoami"></div>
+      <button class="btn ghost block" onclick="logout()">${iconSvg('logout')} 退出登录</button>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">仪表盘</h2>
+      <div class="spacer"></div>
+      <span class="chip on" id="totpChip">${iconSvg('shield')} 双重验证</span>
+    </div>
+    <div class="content">
+      <div id="view-overview"></div>
+      <div id="view-users" style="display:none"></div>
+      <div id="view-testaccounts" style="display:none"></div>
+      <div id="view-content" style="display:none"></div>
+      <div id="view-teaching" style="display:none"></div>
+      <div id="view-antichat" style="display:none"></div>
+      <div id="view-alerts" style="display:none"></div>
+      <div id="view-security" style="display:none"></div>
+      <div id="view-audit" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 用户详情弹窗 -->
+<div class="modal" id="userModal">
+  <div class="modal-box" id="userModalBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script data-cfasync="false"${nonceAttr}>
+// data-cfasync="false"：阻止 Cloudflare Rocket Loader / Auto-Minify 改写本内联脚本，
+// 否则线上会出现 "Uncaught SyntaxError: Invalid regular expression: missing /"，
+// 导致整页 JS 解析崩溃、后台黑屏无法使用。
+var API_PREFIX = '${API_PREFIX}';
+var TOKEN_KEY = 'apexon_admin_token';
+var state = { user: null, totpEnabled: true, admin: '' };
+var TITLES = { overview:'仪表盘', users:'用户管理', testaccounts:'测试账号', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
+
+function $(id){ return document.getElementById(id); }
+// 会话失效（令牌缺失/过期/被拒绝）时回到登录页，避免后台卡在“全加载失败（forbidden）”
+function sessionExpired(){
+  sessionStorage.removeItem(TOKEN_KEY);
+  var app = $('appView'), log = $('loginView'), hint = $('loginHint');
+  if (app) app.style.display = 'none';
+  if (log) log.style.display = 'flex';
+  if (hint){ hint.className = 'hint warn'; hint.textContent = '登录已过期或验证未通过，请重新登录'; }
+  var tq = $('tokenInput'), cq = $('totpInput');
+  if (tq) tq.value = ''; if (cq) cq.value = '';
+}
+function api(path, opts){
+  opts = opts || {};
+  var headers = opts.headers || {};
+  headers['Content-Type'] = 'application/json';
+  headers['Authorization'] = 'Bearer ' + sessionStorage.getItem(TOKEN_KEY);
+  var init = { method: opts.method || 'GET', headers: headers };
+  if (opts.body) init.body = JSON.stringify(opts.body);
+  return fetch(API_PREFIX + path, init).then(function(res){
+    return res.json().catch(function(){ return { success:false, error:'响应解析失败' }; }).then(function(data){
+      if (res.status >= 400) {
+        var e = new Error((data && data.error) || ('HTTP ' + res.status));
+        e.status = res.status;
+        // 401（无/无效令牌）或 403-forbidden（会话校验不过）＝会话已失效 → 自动回登录页。
+        if (res.status === 401 || (res.status === 403 && data && data.error === 'forbidden')) {
+          sessionExpired();
+        }
+        throw e;
+      }
+      return data;
+    });
+  });
+}
+function toast(msg, isErr){
+  var t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className = 'toast'; }, 2600);
+}
+function esc(s){
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(s){
+  if (!s) return '-';
+  var d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return d.toLocaleString();
+}
+function trunc(s, n){ s = String(s||''); return s.length > n ? (s.slice(0,n) + '…') : s; }
+function badge(sev){
+  var m = { critical:'危险', warning:'警告', info:'信息', ok:'正常' };
+  return '<span class="badge ' + (m[sev] ? esc(sev) : 'off') + '">' + (m[sev] || esc(sev)) + '</span>';
+}
+
+/* ---------- 登录 / 登出 ---------- */
+// 全角数字/空格容错：中文输入法下常打出全角数字，后端只认半角 6 位数字会误判。
+function normalizeCode(el){
+  var v = String(el.value || '')
+    .replace(/[\\uFF10-\\uFF19]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
+    .replace(/[^\\d]/g, '')
+    .slice(0, 6);
+  if (v !== el.value) el.value = v;
+}
+// 后端错误码 → 友好中文提示
+function loginErrorText(data, status){
+  if (data && data.locked) return '失败次数过多，来源已临时冻结（15 分钟）';
+  var raw = (data && data.error) || '';
+  if (raw === 'Invalid password') return '管理员口令不正确';
+  if (raw === 'Invalid verification code') return '动态验证码不正确或已过期，请重新输入验证器当前 6 位数字';
+  if (status === 429) return '尝试过于频繁，请稍后再试';
+  return raw || ('登录失败（HTTP ' + status + '）');
+}
+function doLogin(){
+  var t = $('tokenInput').value.trim();
+  normalizeCode($('totpInput'));
+  var code = $('totpInput').value.trim();
+  var hint = $('loginHint');
+  if (!t) { hint.className='hint err'; hint.textContent = '请输入管理员口令'; return; }
+  if (!/^\\d{6}$/.test(code)) { hint.className='hint err'; hint.textContent = '请输入 6 位动态验证码'; return; }
+  hint.className='hint'; hint.textContent = '校验中…';
+  fetch(API_PREFIX + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: t, code: code })
+  }).then(function(res){
+    return res.json().catch(function(){ return {}; }).then(function(data){
+      if (res.status >= 400) {
+        var msg = loginErrorText(data, res.status);
+        hint.className='hint err';
+        hint.textContent = msg;
+        var e = new Error(msg); e.status = res.status; throw e;
+      }
+      return data;
+    });
+  }).then(function(data){
+    if (!data || !data.session) throw new Error('登录响应异常，请重试');
+    sessionStorage.setItem(TOKEN_KEY, data.session);
+    state.totpEnabled = data.totp_enabled !== false;
+    boot();
+  }).catch(function(){ /* hint already set */ });
+}
+function logout(){
+  var s = sessionStorage.getItem(TOKEN_KEY);
+  if (s) {
+    fetch(API_PREFIX + '/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + s } }).catch(function(){});
+  }
+  sessionStorage.removeItem(TOKEN_KEY);
+  $('appView').style.display = 'none';
+  $('loginView').style.display = 'flex';
+  $('tokenInput').value = '';
+  $('totpInput').value = '';
+}
+function boot(){
+  $('loginView').style.display = 'none';
+  $('appView').style.display = 'flex';
+  var tip = state.totpEnabled ? '双重验证已开启' : '未开启 2FA';
+  $('whoami').innerHTML = '会话已登录<br>' + tip;
+  $('totpChip').style.display = state.totpEnabled ? '' : 'none';
+  // 拉取当前会话标识与 2FA 状态。动态验证码仅在登录时校验，登录后不再有任何二次验证。
+  api('/me').then(function(d){
+    state.totpEnabled = !d || d.totp_enabled !== false;
+    state.admin = (d && d.admin) || 'admin';
+    $('totpChip').style.display = state.totpEnabled ? '' : 'none';
+    $('whoami').innerHTML = esc(state.admin) + '<br>' + (state.totpEnabled ? '双重验证已开启' : '未开启 2FA');
+  }).catch(function(){ /* 保留登录时的兜底展示 */ });
+  show('overview');
+}
+// 公开身份标识图形：站长=金色皇冠，管理员=蓝色盾牌（用于用户公开身份徽章）
+var ROLE_SVG = {
+  owner: '<path d="M3 18h18M3 18l-1.4-9.2 5.2 3.1L12 5l5.2 6.9 5.2-3.1L21 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="15" r="1.6" fill="currentColor"/>',
+  admin: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15 10.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+function roleEmblemSvg(role){
+  return '<svg viewBox="0 0 24 24">' + (role === 'owner' ? ROLE_SVG.owner : ROLE_SVG.admin) + '</svg>';
+}
+// 名字后面的帅气标识：站长金牌 / 管理员蓝盾
+function roleBadgeHtml(role){
+  var isOwner = role === 'owner';
+  return '<span class="role-badge ' + (isOwner ? 'role-owner' : 'role-admin') + '">' + roleEmblemSvg(role) + (isOwner ? '站长' : '管理员') + '</span>';
+}
+function show(view){
+  var items = document.querySelectorAll('.nav-item');
+  for (var i=0;i<items.length;i++){
+    items[i].classList.toggle('active', items[i].getAttribute('data-nav') === view);
+  }
+  var views = ['overview','users','testaccounts','content','teaching','antichat','alerts','security','audit'];
+  for (var j=0;j<views.length;j++){ $('view-' + views[j]).style.display = views[j] === view ? 'block' : 'none'; }
+  $('pageTitle').textContent = TITLES[view] || view;
+  if (view === 'overview') renderOverview();
+  if (view === 'users') renderUsers();
+  if (view === 'testaccounts') renderTestAccounts();
+  if (view === 'content') renderContent();
+  if (view === 'teaching') renderTeaching();
+  if (view === 'antichat') renderAntichat();
+  if (view === 'alerts') renderAlerts();
+  if (view === 'security') renderSecurity();
+  if (view === 'audit') renderAudit();
+}
+
+/* ---------- Overview ---------- */
+function renderOverview(){
+  var el = $('view-overview');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api('/overview').then(function(d){
+    var data = d.data || {};
+    var online = data.online || 0, users = data.total_users || 0;
+    var tests = data.total_tests || 0, comments = data.total_comments || 0;
+    var feedback = data.feedback || 0, openAl = data.open_alerts || 0;
+    var dbs = data.dbs || [];
+    var html = '<div class="grid">';
+    html += '<div class="card"><div class="num">' + online + '</div><div class="label">在线（5 分钟内）</div></div>';
+    html += '<div class="card"><div class="num">' + users + '</div><div class="label">注册用户</div></div>';
+    html += '<div class="card"><div class="num">' + tests + '</div><div class="label">测试成绩</div></div>';
+    html += '<div class="card"><div class="num">' + comments + '</div><div class="label">评论</div></div>';
+    html += '<div class="card"><div class="num">' + feedback + '</div><div class="label">反馈</div></div>';
+    html += '<div class="card"><div class="num" style="color:' + (openAl ? 'var(--danger)' : 'var(--ok)') + '">' + openAl + '</div><div class="label">未解决安全告警</div></div>';
+    html += '</div>';
+    html += '<div class="section-title">存储（分片）</div><div class="grid">';
+    for (var i=0;i<dbs.length;i++){
+      var db = dbs[i];
+      var pct = db.max_bytes ? Math.min(100, (db.used_bytes/db.max_bytes)*100) : 0;
+      var cls = pct > 85 ? 'danger' : (pct > 65 ? 'warn' : '');
+      html += '<div class="card">';
+      html += '<div class="label">' + esc(db.name) + '</div>';
+      html += '<div class="dbinfo"><span>' + fmtBytes(db.used_bytes) + ' / ' + fmtBytes(db.max_bytes) + '</span><span>' + pct.toFixed(1) + '%</span></div>';
+      html += '<div class="bar ' + cls + '"><i style="width:' + pct.toFixed(1) + '%"></i></div>';
+      html += '<div class="dbinfo"><span class="' + (db.healthy ? 'badge ok' : 'badge critical') + '">' + (db.healthy ? '正常' : '异常') + '</span></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<div class="section-title">最近未解决告警</div>';
+    el.innerHTML = html;
+    renderAlertMini(el);
+    renderSnapshots();
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function renderAlertMini(el){
+  if (!el) return;
+  el.insertAdjacentHTML('beforeend', '<div id="miniAlertList"><p class="muted">加载中…</p></div>');
+  var box = document.getElementById('miniAlertList');
+  if (!box) return;
+  api('/alerts?status=open&limit=5').then(function(d){
+    var rows = d.data || [];
+    if (!rows.length) { box.innerHTML = '<div class="empty">暂无待处理告警 🎉</div>'; return; }
+    var h = '<div class="table-wrap"><table><tr><th>等级</th><th>类型</th><th>消息</th><th>来源</th><th>时间</th></tr>';
+    for (var i=0;i<rows.length;i++){
+      var r = rows[i];
+      h += '<tr><td>' + badge(r.severity) + '</td><td class="mono">' + esc(r.kind) + '</td><td>' + esc(trunc(r.message,60)) + '</td><td class="mono">' + esc(r.source_ip || r.target || '-') + '</td><td>' + fmtDate(r.created_at) + '</td></tr>';
+    }
+    h += '</table></div>';
+    box.innerHTML = h;
+  }).catch(function(){ box.innerHTML = '<div class="empty">暂无待处理告警</div>'; });
+}
+function fmtBytes(b){
+  b = Number(b) || 0;
+  if (b >= 1073741824) return (b/1073741824).toFixed(2) + ' GB';
+  if (b >= 1048576) return (b/1048576).toFixed(2) + ' MB';
+  if (b >= 1024) return (b/1024).toFixed(1) + ' KB';
+  return b + ' B';
+}
+
+/* ---------- 榜单快照 ---------- */
+function renderSnapshots(){
+  var el = $('view-overview');
+  el.insertAdjacentHTML('beforeend', '<div class="section-title">榜单快照 · 历史排名</div><div class="toolbar"><button class="btn" onclick="createSnapshot()">立即生成快照</button><button class="btn ghost" onclick="loadSnapshots()">刷新</button></div><div id="snapList"><p class="muted">加载中…</p></div>');
+  loadSnapshots();
+}
+function loadSnapshots(){
+  var el = document.getElementById('snapList');
+  if (!el) return;
+  api('/snapshots').then(function(d){
+    var rows = d.data || [];
+    if (!rows.length){ el.innerHTML = '<div class="empty">暂无快照，点击「立即生成」固化当前排行榜（供事后回放）。</div>'; return; }
+    var h = '<div class="table-wrap"><table><tr><th>快照</th><th>题型数</th><th>上榜数</th><th>时间</th><th>操作</th></tr>';
+    for (var i=0;i<rows.length;i++){
+      var r = rows[i];
+      h += '<tr><td class="mono">' + esc(trunc(r.id,12)) + '</td><td>' + esc(r.type_count) + '</td><td>' + esc(r.entry_count) + '</td><td>' + fmtDate(r.created_at) + '</td>';
+      h += '<td class="actions"><button class="btn" onclick="openSnapshot(\\'' + esc(r.id) + '\\')">查看</button></td></tr>';
+    }
+    h += '</table></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function createSnapshot(){
+  api('/snapshots', { method:'POST' }).then(function(){
+    toast('快照已生成');
+    loadSnapshots();
+  }).catch(function(e){ toast('生成失败：' + e.message, true); });
+}
+function openSnapshot(id){
+  var body = $('userModalBody');
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  $('userModal').classList.add('show');
+  api('/snapshots/' + encodeURIComponent(id)).then(function(d){
+    var s = d.data || {};
+    var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>榜单快照（' + fmtDate(s.created_at) + '）</h3><p class="muted">' + esc(s.summary) + '</p>';
+    var types = Object.keys(s.per_type || {});
+    if (!types.length){ h += '<div class="empty">快照无数据</div>'; }
+    else {
+      for (var j=0;j<types.length;j++){
+        var t = types[j];
+        var arr = s.per_type[t] || [];
+        h += '<div class="section-title">' + esc(t) + '</div>';
+        if (!arr.length){ h += '<div class="empty">无数据</div>'; continue; }
+        h += '<div class="table-wrap"><table><tr><th>名次</th><th>用户名</th><th>user_id</th><th>分数</th></tr>';
+        for (var k=0;k<arr.length;k++){ var e = arr[k]; h += '<tr><td>' + e.rank + '</td><td>' + esc(e.username) + '</td><td class="mono">' + esc(trunc(e.user_id,20)) + '</td><td>' + esc(e.score_value) + '</td></tr>'; }
+        h += '</table></div>';
+      }
+    }
+    h += '<div class="actions mt"><button class="btn ghost" onclick="closeModal()">关闭</button></div>';
+    body.innerHTML = h;
+    $('userModal').classList.add('show');
+  }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
+}
+
+/* ---------- Users ---------- */
+var userFilter = '';
+function renderUsers(){
+  var el = $('view-users');
+  el.innerHTML = '<div class="toolbar">' +
+    '<input id="userSearchInput" class="user-search" placeholder="搜索用户名 / user_id / 邮箱 / IP…" value="' + esc(userFilter) + '">' +
+    '<button class="btn" onclick="applyUserSearch()">搜索</button>' +
+    '<button class="btn ghost" onclick="clearUserSearch()">显示全部</button>' +
+    '</div><div id="userList"><p class="muted">加载中…</p></div>';
+  var inp = $('userSearchInput');
+  if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyUserSearch(); });
+  loadUsers();
+}
+function applyUserSearch(){ var i = $('userSearchInput'); userFilter = i ? i.value.trim() : ''; loadUsers(); }
+function clearUserSearch(){ userFilter = ''; var i = $('userSearchInput'); if (i) i.value = ''; loadUsers(); }
+function loadUsers(){
+  var box = $('userList');
+  if (!box) return;
+  box.innerHTML = '<p class="muted">加载中…</p>';
+  var url = '/users?limit=1000' + (userFilter ? ('&q=' + encodeURIComponent(userFilter)) : '');
+  api(url).then(function(d){
+    var rows = d.data || [];
+    if (!rows.length){ box.innerHTML = '<div class="empty">没有匹配的用户</div>'; return; }
+    var h = '<div class="toolbar"><span class="muted">共 ' + rows.length + ' 个账号' + (userFilter ? '（关键词：' + esc(userFilter) + '）' : '') + '</span></div>';
+    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>邮箱</th><th>IP</th><th>评分</th><th>评论</th><th>反馈</th><th>状态</th><th>注册时间</th><th>最近在线</th><th>操作</th></tr>';
+    for (var i=0;i<rows.length;i++){
+      var u = rows[i];
+      h += '<tr>';
+      h += '<td>' + esc(u.username) + '</td>';
+      h += '<td class="mono">' + esc(trunc(u.user_id,28)) + '</td>';
+      h += '<td>' + (u.email ? esc(u.email) + ' ' + (u.email_verified ? '<span class="badge ok">已验证</span>' : '<span class="badge off">未验证</span>') : '<span class="muted">—</span>') + '</td>';
+      h += '<td class="mono">' + (u.last_login_ip ? esc(u.last_login_ip) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (u.score_count||0) + '</td>';
+      h += '<td>' + (u.comment_count||0) + '</td>';
+      h += '<td>' + (u.feedback_count||0) + '</td>';
+      h += '<td>' + (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>') + '</td>';
+      h += '<td>' + fmtDate(u.created_at) + '</td>';
+      h += '<td>' + (u.last_seen ? fmtDate(u.last_seen) : '<span class="muted">—</span>') + '</td>';
+      h += '<td class="actions"><button class="btn" onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
+      h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></td>';
+      h += '</tr>';
+    }
+    h += '</table></div>';
+    box.innerHTML = h;
+  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+// 删除用户后，刷新当前可见的用户类视图（用户管理 / 测试账号）
+function refreshUserViews(){
+  if ($('view-testaccounts') && $('view-testaccounts').style.display !== 'none') renderTestAccounts();
+  if ($('view-users') && $('view-users').style.display !== 'none') renderUsers();
+}
+
+/* ---------- Test Accounts（测试 / 压测账号及其设备 IP） ---------- */
+function renderTestAccounts(){
+  var el = $('view-testaccounts');
+  el.innerHTML = '<div class="toolbar"><span class="muted" id="testAccountSummary">加载中…</span><button class="btn ghost" onclick="renderTestAccounts()">刷新</button></div><div id="testAccountList"></div>';
+  loadTestAccounts();
+}
+function loadTestAccounts(){
+  var box = $('testAccountList');
+  if (!box) return;
+  box.innerHTML = '<p class="muted">加载中…</p>';
+  api('/test-accounts').then(function(d){
+    var rows = d.data || [];
+    var sum = $('testAccountSummary');
+    if (!rows.length){
+      if (sum) sum.textContent = '共 0 个测试账号';
+      box.innerHTML = '<div class="empty">暂无测试 / 压测账号</div>';
+      return;
+    }
+    var totalIps = 0;
+    for (var n=0;n<rows.length;n++) totalIps += ((rows[n].login_ips || []).length);
+    if (sum) sum.textContent = '共 ' + rows.length + ' 个测试账号 · ' + totalIps + ' 条登录 IP 记录';
+    var h = '<div class="test-grid">';
+    for (var i=0;i<rows.length;i++){
+      var u = rows[i];
+      h += '<div class="card test-card">';
+      h += '<div class="test-head"><div><span class="test-name">' + esc(u.username) + '</span>';
+      h += (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>');
+      h += '</div><span class="muted mono">' + esc(trunc(u.user_id, 30)) + '</span></div>';
+      h += '<div class="test-meta">';
+      h += '<span>邮箱：' + (u.email ? esc(u.email) : '<span class="muted">—</span>') + '</span>';
+      h += '<span>设备 IP 数：<b>' + (u.ip_count || 0) + '</b></span>';
+      h += '<span>注册：' + fmtDate(u.created_at) + '</span>';
+      h += '</div>';
+      h += '<div class="ip-list">';
+      var ips = u.login_ips || [];
+      if (!ips.length) h += '<span class="muted">暂无登录 IP 记录</span>';
+      else {
+        for (var j=0;j<ips.length;j++){
+          var e = ips[j];
+          h += '<span class="ip-chip"><span>' + esc(e.ip) + '</span>' + (e.at ? '<em>' + fmtDate(e.at) + '</em>' : '') + '</span>';
+        }
+      }
+      h += '</div>';
+      h += '<div class="actions mt"><button class="btn" onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
+      h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></div>';
+      h += '</div>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function openUser(userId){
+  var body = $('userModalBody');
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  $('userModal').classList.add('show');
+  api('/users/' + encodeURIComponent(userId)).then(function(d){
+    var u = d.data || {};
+    var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>' + esc(u.username) + '</h3>';
+    h += '<p class="muted mono">' + esc(u.user_id) + '</p>';
+    h += '<div class="table-wrap mt"><table>';
+    h += '<tr><th>邮箱</th><td>' + (u.email ? esc(u.email) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>最近登录 IP</th><td class="mono">' + (u.last_login_ip ? esc(u.last_login_ip) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>最近在线</th><td>' + (u.online_last_seen ? fmtDate(u.online_last_seen) : '<span class="muted">—</span>') + '</td></tr>';
+    h += '<tr><th>注册时间</th><td>' + fmtDate(u.account_created_at) + '</td></tr>';
+    h += '<tr><th>风险等级</th><td>' + (u.risk ? esc(u.risk.level) + '（' + (u.risk.score||0) + '）' : '<span class="muted">—</span>') + '</td></tr>';
+    var roleVal = u.profile && (u.profile.role === 'owner' || u.profile.role === 'admin') ? u.profile.role : null;
+    h += '<tr><th>公开身份</th><td>' + (roleVal ? roleBadgeHtml(roleVal) : '<span class="muted">普通用户</span>') + '</td></tr>';
+    h += '</table></div>';
+    h += '<div class="field-row mt">';
+    h += '<div class="card"><div class="num">' + (u.score_count||0) + '</div><div class="label">评分次数</div></div>';
+    h += '<div class="card"><div class="num">' + (u.comment_count||0) + '</div><div class="label">评论数</div></div>';
+    h += '<div class="card"><div class="num">' + (u.feedback_count||0) + '</div><div class="label">反馈数</div></div>';
+    h += '<div class="card"><div class="num">' + (u.banned ? '封' : '正') + '</div><div class="label">账号状态</div></div>';
+    h += '</div>';
+    if (u.banned_reason) h += '<p class="muted">封禁原因：' + esc(u.banned_reason) + '</p>';
+    h += '<div class="card mt"><h3>最近成绩（前 20）</h3>';
+    var sc = u.recent_scores || [];
+    if (!sc.length) h += '<div class="empty">暂无成绩</div>';
+    else { h += '<div class="table-wrap"><table><tr><th>类型</th><th>分数</th><th>时间</th></tr>'; for (var i=0;i<sc.length;i++){ h += '<tr><td class="mono">' + esc(sc[i].subtype) + '</td><td>' + esc(sc[i].score_value) + '</td><td>' + fmtDate(sc[i].created_at) + '</td></tr>'; } h += '</table></div>'; }
+    h += '</div>';
+    h += '<div class="actions mt">';
+    h += '<button class="btn" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'owner\\')"' + (roleVal === 'owner' ? ' disabled' : '') + '>设为站长</button>';
+    h += '<button class="btn" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'admin\\')"' + (roleVal === 'admin' ? ' disabled' : '') + '>设为管理员</button>';
+    if (roleVal) h += '<button class="btn ghost" onclick="setUserRole(\\'' + esc(u.user_id) + '\\',\\'none\\')">取消身份标识</button>';
+    h += (u.banned ? '<button class="btn primary" onclick="setBan(\\'' + esc(u.user_id) + '\\',false)">解除封禁</button>' : '<button class="btn danger" onclick="setBan(\\'' + esc(u.user_id) + '\\',true)">封禁</button>');
+    h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除账号及全部数据</button>';
+    h += '<button class="btn ghost" onclick="closeModal()">关闭</button>';
+    h += '</div>';
+    body.innerHTML = h;
+    $('userModal').classList.add('show');
+  }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div><div class="mt"><button class="btn" onclick="closeModal()">关闭</button></div>'; });
+}
+function setUserRole(userId, role){
+  api('/users/' + encodeURIComponent(userId) + '/role', { method:'POST', body:{ role: role } }).then(function(){
+    toast(role === 'owner' ? '已设为站长' : role === 'admin' ? '已设为管理员' : '已取消身份标识');
+    openUser(userId);
+  }).catch(function(e){ toast('操作失败：' + e.message, true); });
+}
+function setBan(userId, ban){
+  var p = '/users/' + encodeURIComponent(userId) + (ban ? '/ban' : '/unban');
+  var bodyBody = {};
+  if (ban){
+    var reason = prompt('封禁原因（可选）') || '管理员封禁';
+    bodyBody.reason = String(reason).slice(0,300);
+  }
+  api(p, { method:'POST', body: bodyBody }).then(function(){
+    toast(ban ? '已封禁' : '已解除封禁');
+    openUser(userId);
+  }).catch(function(e){ toast('操作失败：' + e.message, true); });
+}
+function delUser(userId, name){
+  if (!confirm('确定删除账号 "' + name + '" 及其全部成绩/评论/资料/反馈？此操作不可恢复。')) return;
+  api('/users/' + encodeURIComponent(userId), { method:'DELETE' }).then(function(){
+    toast('已删除用户');
+    $('userModal').classList.remove('show');
+    refreshUserViews();
+  }).catch(function(e){ toast('删除失败：' + e.message, true); });
+}
+function closeModal(){ $('userModal').classList.remove('show'); }
+
+/* ---------- Content ---------- */
+var contentType = 'comment';
+function renderContent(){
+  var el = $('view-content');
+  var q = prompt('内容关键词（可留空）：', state.contentQuery || '');
+  state.contentQuery = q === null ? state.contentQuery : q.trim();
+  var url = '/content?type=' + encodeURIComponent(contentType) + '&limit=200' + (state.contentQuery ? ('&q=' + encodeURIComponent(state.contentQuery)) : '');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="toolbar"><select onchange="contentType=this.value;renderContent()">';
+    var tys = ['comment','feedback','score','profile'];
+    for (var i=0;i<tys.length;i++){ h += '<option value="' + tys[i] + '"' + (contentType===tys[i] ? ' selected' : '') + '>' + tys[i] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderContent()">搜索</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ el.innerHTML = h + '<div class="empty">暂无内容</div>'; return; }
+    h += '<div class="table-wrap"><table><tr><th>类型</th><th>用户</th><th>内容</th><th>时间</th><th>操作</th></tr>';
+    for (var j=0;j<rows.length;j++){
+      var r = rows[j];
+      var bodyText = r.content || r.message || JSON.stringify(r.payload || {}).slice(0,80);
+      h += '<tr><td class="mono">' + esc(r.type || r.subtype || contentType) + '</td>';
+      h += '<td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
+      h += '<td>' + esc(trunc(bodyText,80)) + '</td>';
+      h += '<td>' + fmtDate(r.created_at) + '</td>';
+      h += '<td class="actions"><button class="btn" onclick="viewContent(\\'' + esc(r.id) + '\\')">查看</button><button class="btn danger" onclick="delContent(\\'' + esc(r.id) + '\\')">删除</button></td></tr>';
+    }
+    h += '</table></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function viewContent(id){
+  var el = $('view-content');
+  api('/content/' + encodeURIComponent(id)).then(function(d){
+    el.insertAdjacentHTML('afterbegin', '<div class="card mt"><div class="row"><b>记录详情</b><button class="btn ghost" onclick="this.parentElement.parentElement.remove()">收起</button></div><pre>' + esc(JSON.stringify(d.data, null, 2)) + '</pre></div>');
+  }).catch(function(){});
+}
+function delContent(id){
+  if (!confirm('确定删除该记录？')) return;
+  api('/content/' + encodeURIComponent(id), { method:'DELETE' }).then(function(){
+    toast('已删除');
+    renderContent();
+  }).catch(function(e){ toast('删除失败：' + e.message, true); });
+}
+
+/* ---------- Alerts ---------- */
+var alertStatus = 'open';
+function renderAlerts(){
+  var el = $('view-alerts');
+  var url = '/alerts?status=' + encodeURIComponent(alertStatus) + '&limit=300';
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="toolbar"><select onchange="alertStatus=this.value;renderAlerts()">';
+    var ss = [['open','未解决'],['all','全部'],['resolved','已解决']];
+    for (var i=0;i<ss.length;i++){ h += '<option value="' + ss[i][0] + '"' + (alertStatus===ss[i][0]?' selected':'') + '>' + ss[i][1] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderAlerts()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ el.innerHTML = h + '<div class="empty">暂无告警</div>'; return; }
+    h += '<div class="table-wrap"><table><tr><th>等级</th><th>类型</th><th>消息</th><th>来源</th><th>时间</th><th>操作</th></tr>';
+    for (var j=0;j<rows.length;j++){
+      var r = rows[j];
+      h += '<tr><td>' + badge(r.severity) + '</td><td class="mono">' + esc(r.kind) + '</td>';
+      h += '<td>' + esc(trunc(r.message,70)) + '</td><td class="mono">' + esc(r.source_ip || r.target || '-') + '</td>';
+      h += '<td>' + fmtDate(r.created_at) + '</td>';
+      h += '<td class="actions">' + (r.resolved ? '' : '<button class="btn primary" onclick="resolveAlert(\\'' + esc(r.id) + '\\')">标记解决</button>') + '<button class="btn danger" onclick="delAlert(\\'' + esc(r.id) + '\\')">删除</button></td></tr>';
+    }
+    h += '</table></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function resolveAlert(id){
+  api('/alerts/' + encodeURIComponent(id), { method:'PATCH', body:{ resolved:true } }).then(function(){ toast('已解决'); renderAlerts(); }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+function delAlert(id){
+  if (!confirm('确定删除该告警？')) return;
+  api('/alerts/' + encodeURIComponent(id), { method:'DELETE' }).then(function(){ toast('已删除'); renderAlerts(); }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+
+/* ---------- 教学管理 ---------- */
+function renderTeaching(){
+  var el = $('view-teaching');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api('/classes').then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">班级列表</div>';
+    h += '<div class="toolbar"><button class="btn ghost" onclick="renderTeaching()">刷新</button><span class="muted">' + rows.length + ' 个班级</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无班级（在「用户管理」给账号设置班级后出现）</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>班级</th><th>人数</th><th>操作</th></tr>';
+      for (var i=0;i<rows.length;i++){
+        var c = rows[i];
+        h += '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.member_count) + '</td>';
+        h += '<td class="actions"><button class="btn" onclick="openClass(\\'' + esc(c.name).replace(/\\\\/g,'\\\\\\\\') + '\\')">成员</button>';
+        h += '<a class="btn" href="' + API_PREFIX + '/classes/' + encodeURIComponent(c.name) + '/export">导出榜单</a></td></tr>';
+      }
+      h += '</table></div>';
+    }
+    h += '<div class="section-title">批量设置班级</div>';
+    h += '<div class="card"><div class="row"><b>给用户批量分配班级</b></div><p class="muted">在下方文本域每行填一个 user_id，配合一个班级名一次性批量设置。</p>';
+    h += '<textarea id="classIds" rows="3" placeholder="每行一个 user_id"></textarea>';
+    h += '<div class="row" style="margin-top:8px"><input id="className" placeholder="班级名，例如：高三(1)班" style="flex:1"><button class="btn primary" onclick="batchSetClass()">批量设置</button></div></div>';
+
+    h += '<div class="section-title">成绩批量导入</div>';
+    h += '<div class="card"><div class="row"><b>CSV 导入（教师端）</b></div>';
+    h += '<p class="muted">表头：<code>username,test_type,score_value[,accuracy,wpm,cpm]</code>。先「预览校验」，无误后再「确认导入」（已接入异常检测，可疑成绩自动标记）。</p>';
+    h += '<textarea id="importCsv" rows="8" placeholder="username,test_type,score_value&#10;小测A,typing,380&#10;小测A,math,92"></textarea>';
+    h += '<div class="actions"><button class="btn" onclick="previewImport()">预览校验</button><button class="btn primary" onclick="commitImport()">确认导入</button></div>';
+    h += '<div id="importResult"></div></div>';
+
+    h += '<div class="section-title">发布成绩通知</div>';
+    h += '<div class="card"><div class="row"><b>邮件通知订阅用户</b></div>';
+    h += '<div class="row" style="margin-top:8px"><input id="pubType" placeholder="test_type（留空 = 全部订阅者）" style="flex:1"></div>';
+    h += '<div class="row" style="margin-top:8px"><input id="pubSubject" placeholder="邮件标题（留空用默认）" style="flex:1"></div>';
+    h += '<div class="row" style="margin-top:8px"><textarea id="pubMsg" rows="3" placeholder="邮件正文（留空用默认）"></textarea></div>';
+    h += '<div class="actions"><button class="btn primary" onclick="publishNotify()">发送通知</button></div>';
+    h += '<div id="pubResult"></div></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function openClass(name){
+  var body = $('userModalBody');
+  body.innerHTML = '<p class="muted">加载中…</p>';
+  $('userModal').classList.add('show');
+  api('/classes/' + encodeURIComponent(name) + '/members').then(function(d){
+    var rows = d.data || [];
+    var h = '<h3><button class="modal-close" onclick="closeModal()">×</button>班级 ' + esc(name) + ' 成员</h3>';
+    h += '<p class="muted">' + rows.length + ' 人</p>';
+    if (!rows.length){ h += '<div class="empty">暂无成员</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>注册时间</th></tr>';
+      for (var i=0;i<rows.length;i++){ var m = rows[i]; h += '<tr><td>' + esc(m.username) + '</td><td class="mono">' + esc(m.user_id) + '</td><td>' + fmtDate(m.created_at) + '</td></tr>'; }
+      h += '</table></div>';
+    }
+    h += '<div class="actions mt"><a class="btn primary" href="' + API_PREFIX + '/classes/' + encodeURIComponent(name) + '/export">导出班级榜单 CSV</a><button class="btn ghost" onclick="closeModal()">关闭</button></div>';
+    body.innerHTML = h;
+    $('userModal').classList.add('show');
+  }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
+}
+function batchSetClass(){
+  var ids = $('classIds').value.split(/[\\r\\n,]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+  var cls = $('className').value.trim();
+  if (!ids.length) { toast('请先填写 user_id 列表', true); return; }
+  if (!cls) { toast('请填写班级名', true); return; }
+  api('/users/batch/class', { method:'POST', body:{ userIds: ids, class: cls } }).then(function(r){
+    toast('完成：设置 ' + r.done + '，失败 ' + r.failed);
+    renderTeaching();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+function previewImport(){
+  var csv = $('importCsv').value;
+  if (!csv.trim()) { toast('请先填写 CSV', true); return; }
+  $('importResult').innerHTML = '<p class="muted">校验中…</p>';
+  api('/scores/import', { method:'POST', body:{ csv: csv, dry_run: true } }).then(function(d){
+    var h = '<div class="card mt"><b>预览结果</b><div class="dbinfo"><span>共 ' + d.total_rows + ' 行，将导入 ' + d.would_add + '，错误 ' + d.error_count + '</span></div>';
+    if (d.involved_types && d.involved_types.length) h += '<p class="muted">涉及题型：' + esc(d.involved_types.join(', ')) + '</p>';
+    if (d.errors && d.errors.length){ h += '<div class="table-wrap"><table><tr><th>行</th><th>原因</th></tr>'; for (var i=0;i<d.errors.length;i++){ h += '<tr><td>' + d.errors[i].row + '</td><td>' + esc(d.errors[i].message) + '</td></tr>'; } h += '</table></div>'; }
+    else h += '<p style="color:var(--ok)">无错误，可直接确认导入。</p>';
+    h += '</div>';
+    $('importResult').innerHTML = h;
+  }).catch(function(e){ $('importResult').innerHTML = '<div class="empty">校验失败：' + esc(e.message) + '</div>'; });
+}
+function commitImport(){
+  $('importResult').innerHTML = '<p class="muted">导入中…</p>';
+  api('/scores/import', { method:'POST', body:{ csv: $('importCsv').value, dry_run: false } }).then(function(d){
+    toast('已导入 ' + d.added + ' 条，错误 ' + d.error_count);
+    var hh = '<div class="card mt"><b>导入结果</b><div class="dbinfo"><span>成功 ' + d.added + '，失败 ' + d.error_count + '</span></div>';
+    if (d.errors && d.errors.length){ hh += '<div class="table-wrap"><table><tr><th>行</th><th>原因</th></tr>'; for (var i=0;i<d.errors.length;i++){ hh += '<tr><td>' + d.errors[i].row + '</td><td>' + esc(d.errors[i].message) + '</td></tr>'; } hh += '</table></div>'; }
+    hh += '</div>';
+    $('importResult').innerHTML = hh;
+  }).catch(function(e){ $('importResult').innerHTML = '<div class="empty">导入失败：' + esc(e.message) + '</div>'; });
+}
+function publishNotify(){
+  $('pubResult').innerHTML = '<p class="muted">发送中…</p>';
+  api('/notify/publish', { method:'POST', body:{ test_type: $('pubType').value.trim(), subject: $('pubSubject').value.trim(), message: $('pubMsg').value.trim() } }).then(function(d){
+    toast('通知已发送：' + d.recipients + ' 个订阅者');
+    $('pubResult').innerHTML = '<div class="card mt"><b>发送结果</b><div class="dbinfo"><span>收件人 ' + d.recipients + '，成功 ' + d.sent + (d.configured ? '' : '（邮件服务未配置，未实际发出）') + '</span></div></div>';
+  }).catch(function(e){ $('pubResult').innerHTML = '<div class="empty">发送失败：' + esc(e.message) + '</div>'; });
+}
+
+/* ---------- 防刷分 ---------- */
+var cheatTab = 'all';
+function renderAntichat(){
+  var el = $('view-antichat');
+  var url = '/scores/flagged?status=' + encodeURIComponent(cheatTab) + '&limit=500';
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">异常成绩审核</div>';
+    h += '<div class="toolbar"><select onchange="cheatTab=this.value;renderAntichat()">';
+    var ss = [['all','可疑/无效'],['suspicious','仅可疑'],['invalid','仅无效'],['valid','有效']];
+    for (var i=0;i<ss.length;i++){ h += '<option value="' + ss[i][0] + '"' + (cheatTab===ss[i][0]?' selected':'') + '>' + ss[i][1] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderAntichat()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无该状态的成绩</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>状态</th><th>用户</th><th>题型</th><th>分数</th><th>标记原因</th><th>时间</th><th>操作</th></tr>';
+      for (var j=0;j<rows.length;j++){
+        var r = rows[j];
+        var st = r.validity === 'invalid' ? '<span class="badge danger">无效</span>' : (r.validity === 'suspicious' ? '<span class="badge warn">可疑</span>' : '<span class="badge ok">有效</span>');
+        h += '<tr><td>' + st + '</td><td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
+        h += '<td class="mono">' + esc(r.test_type) + '</td><td>' + esc(r.score_value) + '</td>';
+        h += '<td>' + esc(trunc(r.flag_reason || '-',46)) + '</td><td>' + fmtDate(r.created_at) + '</td>';
+        h += '<td class="actions">' + (r.validity === 'invalid' ? '<button class="btn primary" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'valid\\')">恢复</button>' : '<button class="btn danger" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'invalid\\')">判无效</button>') + '</td></tr>';
+      }
+      h += '</table></div>';
+    }
+    el.innerHTML = h;
+    renderAppeals();
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function setValidity(id, v){
+  var reason = prompt(v === 'invalid' ? '判定无效原因（可选）' : '恢复原因（可选）') || '';
+  api('/scores/' + encodeURIComponent(id) + '/validity', { method:'PATCH', body:{ validity: v, reason: reason } }).then(function(){
+    toast(v === 'invalid' ? '已判无效' : '已恢复，可重新上榜');
+    renderAntichat();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+var appealTab = 'open';
+function renderAppeals(){
+  var el = $('view-antichat');
+  var url = '/appeals?status=' + encodeURIComponent(appealTab);
+  api(url).then(function(d){
+    var rows = d.data || [];
+    var h = '<div class="section-title">成绩申诉审核</div>';
+    h += '<div class="toolbar"><select onchange="appealTab=this.value;renderAppeals()">';
+    var ss = [['open','待处理'],['all','全部']];
+    for (var i=0;i<ss.length;i++){ h += '<option value="' + ss[i][0] + '"' + (appealTab===ss[i][0]?' selected':'') + '>' + ss[i][1] + '</option>'; }
+    h += '</select><button class="btn ghost" onclick="renderAppeals()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
+    if (!rows.length){ h += '<div class="empty">暂无申诉</div>'; }
+    else {
+      h += '<div class="table-wrap"><table><tr><th>用户</th><th>题型</th><th>分数</th><th>理由</th><th>状态</th><th>时间</th><th>操作</th></tr>';
+      for (var j=0;j<rows.length;j++){
+        var a = rows[j];
+        var st = a.status === 'open' ? '<span class="badge warn">待处理</span>' : (a.status === 'approved' ? '<span class="badge ok">已通过</span>' : '<span class="badge danger">已驳回</span>');
+        h += '<tr><td class="mono">' + esc(trunc(a.user_id,20)) + '</td><td class="mono">' + esc(a.test_type) + '</td><td>' + esc(a.score_value) + '</td>';
+        h += '<td>' + esc(trunc(a.reason || '-',40)) + '</td><td>' + st + '</td><td>' + fmtDate(a.created_at) + '</td>';
+        h += '<td class="actions">' + (a.status === 'open' ? '<button class="btn primary" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\\'approved\\')">通过</button><button class="btn danger" onclick="reviewAppeal(\\'' + esc(a.id) + '\\',\\'rejected\\')">驳回</button>' : '<span class="muted">' + esc(a.admin_note || '') + '</span>') + '</td></tr>';
+      }
+      h += '</table></div>';
+    }
+    var box = document.getElementById('appealBox');
+    if (!box) { el.insertAdjacentHTML('beforeend', '<div id="appealBox"></div>'); box = document.getElementById('appealBox'); }
+    if (box) box.innerHTML = h;
+  }).catch(function(){});
+}
+function reviewAppeal(id, status){
+  var note = prompt((status === 'approved' ? '通过' : '驳回') + '备注（可选）') || '';
+  api('/appeals/' + encodeURIComponent(id), { method:'PATCH', body:{ status: status, note: note } }).then(function(){
+    toast(status === 'approved' ? '已通过，成绩已恢复上榜' : '已驳回');
+    renderAntichat();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+
+/* ---------- 登录加固 ---------- */
+function renderSecurity(){
+  var el = $('view-security');
+  el.innerHTML = '<p class="muted">加载中…</p>';
+  api('/security').then(function(s){
+    var cfg = s.data || {};
+    var h = '<div class="section-title">安全策略配置</div><div class="grid">';
+    h += '<div class="card"><div class="num">' + (cfg.captcha_always ? '开' : '关') + '</div><div class="label">强制算数验证码</div></div>';
+    h += '<div class="card"><div class="num">' + esc(cfg.captcha_require_after_fail) + '</div><div class="label">失败次数触发验证码</div></div>';
+    h += '<div class="card"><div class="num">' + esc(cfg.ip_blacklist_threshold) + '</div><div class="label">IP 拉黑阈值</div></div>';
+    h += '<div class="card"><div class="num">' + esc(Math.round((cfg.ip_blacklist_duration_sec||0)/3600)) + 'h</div><div class="label">拉黑时长</div></div>';
+    h += '<div class="card"><div class="num">' + (cfg.admin_alert_webhook ? '已配' : '未配') + '</div><div class="label">安全告警 Webhook</div></div>';
+    h += '</div>';
+    h += '<p class="muted">说明：来源 IP 在窗口内登录失败累计达到阈值会被自动拉黑；可疑来源登录被要求先过算式验证码。以上参数由环境变量在部署时配置。</p>';
+    h += '<div class="section-title">IP 黑名单</div>';
+    h += '<div class="toolbar"><button class="btn ghost" onclick="renderSecurity()">刷新</button><button class="btn danger" onclick="addIpBan()">手动拉黑 IP</button></div>';
+    h += '<div id="ipbanList"><p class="muted">加载中…</p></div>';
+    el.innerHTML = h;
+    api('/security/ipbans').then(function(d){
+      var rows = d.data || [];
+      var hh = '';
+      if (!rows.length){ hh = '<div class="empty">暂无拉黑记录</div>'; }
+      else {
+        hh += '<div class="table-wrap"><table><tr><th>IP</th><th>累计失败</th><th>剩余时间</th><th>操作</th></tr>';
+        for (var i=0;i<rows.length;i++){
+          var b = rows[i];
+          hh += '<tr><td class="mono">' + esc(b.ip) + '</td><td>' + esc(b.failures) + '</td><td>' + fmtDur(b.ttl) + '</td>';
+          hh += '<td class="actions"><button class="btn danger" onclick="removeIpBan(\\'' + esc(b.ip) + '\\')">解除</button></td></tr>';
+        }
+        hh += '</table></div>';
+      }
+      $('ipbanList').innerHTML = hh;
+    }).catch(function(e){ $('ipbanList').innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function fmtDur(sec){
+  sec = Number(sec) || 0;
+  if (sec > 0) return (sec >= 86400 ? Math.round(sec/86400) + ' 天' : (sec >= 3600 ? Math.round(sec/3600) + ' 小时' : Math.round(sec/60) + ' 分钟'));
+  return '已过期';
+}
+function addIpBan(){
+  var ip = prompt('要拉黑的 IP：');
+  if (ip === null || !ip.trim()) return;
+  var hours = prompt('拉黑时长（小时，留空用默认）：', '24');
+  var dur = hours === null ? '' : hours.trim();
+  var bodyB = { ip: ip.trim() };
+  if (dur) bodyB.hours = Number(dur);
+  api('/security/ipbans/add', { method:'POST', body: bodyB }).then(function(){
+    toast('已拉黑 ' + ip.trim());
+    renderSecurity();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+function removeIpBan(ip){
+  if (!confirm('确定解除 ' + ip + ' 的拉黑？')) return;
+  api('/security/ipbans/remove', { method:'POST', body:{ ip: ip } }).then(function(){
+    toast('已解除');
+    renderSecurity();
+  }).catch(function(e){ toast('失败：' + e.message, true); });
+}
+
+/* ---------- Audit ---------- */
+function renderAudit(){
+  var el = $('view-audit');
+  api('/audit?limit=200').then(function(d){
+    var rows = d.data || [];
+    if (!rows.length){ el.innerHTML = '<div class="empty">暂无审计记录</div>'; return; }
+    var h = '<div class="table-wrap"><table><tr><th>管理员</th><th>操作</th><th>目标</th><th>详情</th><th>时间</th></tr>';
+    for (var i=0;i<rows.length;i++){
+      var r = rows[i];
+      h += '<tr><td class="mono">' + esc(r.admin) + '</td><td class="mono">' + esc(r.action) + '</td>';
+      h += '<td class="mono">' + esc(trunc(r.target||'-',28)) + '</td><td>' + esc(trunc(r.detail||'-',40)) + '</td><td>' + fmtDate(r.created_at) + '</td></tr>';
+    }
+    h += '</table></div>';
+    el.innerHTML = h;
+  }).catch(function(e){ el.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+
+/* init */
+(function init(){
+  if (sessionStorage.getItem(TOKEN_KEY)){ boot(); } else { $('loginView').style.display = 'flex'; }
+})();
+</script>
+</body>
+</html>`;
+}
