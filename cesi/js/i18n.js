@@ -2511,6 +2511,143 @@
     if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], EXTRAS_TRANSLATIONS[lang]);
   });
 
+  // 认证体系升级文案：字段标签、找回密码、密码强度、服务端错误本地化
+  const AUTH2_TRANSLATIONS = {
+    zh: {
+      labelUsername: '用户名', labelEmail: '邮箱', labelCode: '验证码', labelPassword: '密码', labelConfirm: '确认密码',
+      forgotPassword: '忘记密码？', resetTitle: '找回密码',
+      resetSubtitle: '输入注册邮箱获取验证码，验证后可设置新密码',
+      resetSubmit: '重置密码', newPasswordPlaceholder: '新密码（至少 8 位，含字母和数字）', backToLogin: '返回登录',
+      pwWeak: '弱', pwMedium: '中', pwStrong: '强',
+      captchaLabel: '人机验证', captchaPlaceholder: '计算结果', captchaInvalid: '人机验证未通过，请按新题目重新填写',
+      resetSuccess: '密码已重置，请用新密码登录', resetFailed: '重置失败，请重试',
+      errCode: '验证码无效或已过期，请重新获取', errUsernameTaken: '该用户名已被注册',
+      errEmailTaken: '该邮箱已被注册，请直接登录', errCredentials: '用户名或密码错误',
+      errAccountNotFound: '该邮箱尚未注册', errTooMany: '操作过于频繁，请稍后再试',
+      errSendFailed: '验证码发送失败，请稍后重试', errDailyLimit: '今日验证码次数已达上限，请明天再试'
+    },
+    en: {
+      labelUsername: 'Username', labelEmail: 'Email', labelCode: 'Verification code', labelPassword: 'Password', labelConfirm: 'Confirm password',
+      forgotPassword: 'Forgot password?', resetTitle: 'Reset password',
+      resetSubtitle: 'Enter your registered email to receive a code, then set a new password',
+      resetSubmit: 'Reset password', newPasswordPlaceholder: 'New password (min 8 chars, letters + numbers)', backToLogin: 'Back to login',
+      pwWeak: 'Weak', pwMedium: 'Medium', pwStrong: 'Strong',
+      captchaLabel: 'Verification', captchaPlaceholder: 'Answer', captchaInvalid: 'Verification failed, please try the new question',
+      resetSuccess: 'Password reset. Please log in with your new password.', resetFailed: 'Reset failed, please try again',
+      errCode: 'The code is invalid or expired, please request a new one', errUsernameTaken: 'This username is already taken',
+      errEmailTaken: 'This email is already registered — please log in', errCredentials: 'Incorrect username or password',
+      errAccountNotFound: 'This email is not registered', errTooMany: 'Too many attempts, please try again later',
+      errSendFailed: 'Failed to send the code, please try again later', errDailyLimit: 'Daily verification-code limit reached, try again tomorrow'
+    },
+    ja: {
+      labelUsername: 'ユーザー名', labelEmail: 'メールアドレス', labelCode: '認証コード', labelPassword: 'パスワード', labelConfirm: 'パスワードの確認',
+      forgotPassword: 'パスワードをお忘れですか？', resetTitle: 'パスワードの再設定',
+      resetSubtitle: '登録済みのメールアドレスに認証コードを送信します。認証後に新しいパスワードを設定できます',
+      resetSubmit: 'パスワードを再設定', newPasswordPlaceholder: '新しいパスワード（8 文字以上、英字と数字）', backToLogin: 'ログインに戻る',
+      pwWeak: '弱い', pwMedium: '普通', pwStrong: '強い',
+      captchaLabel: '認証', captchaPlaceholder: '計算結果', captchaInvalid: '認証に失敗しました。新しい問題でもう一度お試しください',
+      resetSuccess: 'パスワードを再設定しました。新しいパスワードでログインしてください', resetFailed: '再設定に失敗しました。もう一度お試しください',
+      errCode: '認証コードが無効か期限切れです。再取得してください', errUsernameTaken: 'このユーザー名は既に登録されています',
+      errEmailTaken: 'このメールは既に登録済みです。ログインしてください', errCredentials: 'ユーザー名またはパスワードが違います',
+      errAccountNotFound: 'このメールアドレスは登録されていません', errTooMany: '操作が多すぎます。しばらくしてからお試しください',
+      errSendFailed: '認証コードの送信に失敗しました。後でもう一度お試しください', errDailyLimit: '本日の認証コード上限に達しました。明日お試しください'
+    },
+    ko: {
+      labelUsername: '사용자명', labelEmail: '이메일', labelCode: '인증 코드', labelPassword: '비밀번호', labelConfirm: '비밀번호 확인',
+      forgotPassword: '비밀번호를 잊으셨나요?', resetTitle: '비밀번호 재설정',
+      resetSubtitle: '가입한 이메일로 인증 코드를 보내드립니다. 인증 후 새 비밀번호를 설정하세요',
+      resetSubmit: '비밀번호 재설정', newPasswordPlaceholder: '새 비밀번호 (8자 이상, 영문+숫자)', backToLogin: '로그인으로 돌아가기',
+      pwWeak: '약함', pwMedium: '보통', pwStrong: '강함',
+      captchaLabel: '인증', captchaPlaceholder: '계산 결과', captchaInvalid: '인증에 실패했습니다. 새 문제로 다시 시도하세요',
+      resetSuccess: '비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요', resetFailed: '재설정에 실패했습니다. 다시 시도하세요',
+      errCode: '인증 코드가 유효하지 않거나 만료되었습니다. 다시 받아주세요', errUsernameTaken: '이미 사용 중인 사용자명입니다',
+      errEmailTaken: '이미 가입된 이메일입니다. 로그인해 주세요', errCredentials: '사용자명 또는 비밀번호가 올바르지 않습니다',
+      errAccountNotFound: '등록되지 않은 이메일입니다', errTooMany: '시도가 너무 많습니다. 잠시 후 다시 시도하세요',
+      errSendFailed: '인증 코드 전송에 실패했습니다. 잠시 후 다시 시도하세요', errDailyLimit: '오늘의 인증 코드 한도를 초과했습니다. 내일 다시 시도하세요'
+    },
+    fr: {
+      labelUsername: "Nom d'utilisateur", labelEmail: 'E-mail', labelCode: 'Code de vérification', labelPassword: 'Mot de passe', labelConfirm: 'Confirmer le mot de passe',
+      forgotPassword: 'Mot de passe oublié ?', resetTitle: 'Réinitialiser le mot de passe',
+      resetSubtitle: 'Saisissez votre e-mail pour recevoir un code, puis définissez un nouveau mot de passe',
+      resetSubmit: 'Réinitialiser', newPasswordPlaceholder: 'Nouveau mot de passe (8 min., lettres + chiffres)', backToLogin: 'Retour à la connexion',
+      pwWeak: 'Faible', pwMedium: 'Moyen', pwStrong: 'Fort',
+      captchaLabel: 'Vérification', captchaPlaceholder: 'Résultat', captchaInvalid: 'Échec de la vérification, réessayez avec la nouvelle question',
+      resetSuccess: 'Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.', resetFailed: 'Échec de la réinitialisation, veuillez réessayer',
+      errCode: 'Le code est invalide ou expiré, veuillez en demander un nouveau', errUsernameTaken: 'Ce nom d\'utilisateur est déjà pris',
+      errEmailTaken: 'Cet e-mail est déjà enregistré — connectez-vous', errCredentials: 'Nom d\'utilisateur ou mot de passe incorrect',
+      errAccountNotFound: 'Cet e-mail n\'est pas enregistré', errTooMany: 'Trop de tentatives, veuillez réessayer plus tard',
+      errSendFailed: 'Échec de l\'envoi du code, réessayez plus tard', errDailyLimit: 'Limite quotidienne de codes atteinte, réessayez demain'
+    },
+    de: {
+      labelUsername: 'Benutzername', labelEmail: 'E-Mail', labelCode: 'Bestätigungscode', labelPassword: 'Passwort', labelConfirm: 'Passwort bestätigen',
+      forgotPassword: 'Passwort vergessen?', resetTitle: 'Passwort zurücksetzen',
+      resetSubtitle: 'Gib deine E-Mail ein, um einen Code zu erhalten, und setze dann ein neues Passwort',
+      resetSubmit: 'Passwort zurücksetzen', newPasswordPlaceholder: 'Neues Passwort (min. 8 Zeichen, Buchstaben + Ziffern)', backToLogin: 'Zurück zur Anmeldung',
+      pwWeak: 'Schwach', pwMedium: 'Mittel', pwStrong: 'Stark',
+      captchaLabel: 'Überprüfung', captchaPlaceholder: 'Ergebnis', captchaInvalid: 'Überprüfung fehlgeschlagen, bitte mit der neuen Aufgabe erneut versuchen',
+      resetSuccess: 'Passwort zurückgesetzt. Bitte mit dem neuen Passwort anmelden.', resetFailed: 'Zurücksetzen fehlgeschlagen, bitte erneut versuchen',
+      errCode: 'Der Code ist ungültig oder abgelaufen, bitte neu anfordern', errUsernameTaken: 'Dieser Benutzername ist bereits vergeben',
+      errEmailTaken: 'Diese E-Mail ist bereits registriert — bitte anmelden', errCredentials: 'Benutzername oder Passwort falsch',
+      errAccountNotFound: 'Diese E-Mail ist nicht registriert', errTooMany: 'Zu viele Versuche, bitte später erneut versuchen',
+      errSendFailed: 'Code konnte nicht gesendet werden, bitte später erneut versuchen', errDailyLimit: 'Tageslimit für Codes erreicht, morgen erneut versuchen'
+    },
+    es: {
+      labelUsername: 'Usuario', labelEmail: 'Correo electrónico', labelCode: 'Código de verificación', labelPassword: 'Contraseña', labelConfirm: 'Confirmar contraseña',
+      forgotPassword: '¿Olvidaste tu contraseña?', resetTitle: 'Restablecer contraseña',
+      resetSubtitle: 'Introduce tu correo para recibir un código y luego define una nueva contraseña',
+      resetSubmit: 'Restablecer contraseña', newPasswordPlaceholder: 'Nueva contraseña (mín. 8, letras + números)', backToLogin: 'Volver al inicio de sesión',
+      pwWeak: 'Débil', pwMedium: 'Media', pwStrong: 'Fuerte',
+      captchaLabel: 'Verificación', captchaPlaceholder: 'Resultado', captchaInvalid: 'Verificación fallida, inténtalo de nuevo con la nueva pregunta',
+      resetSuccess: 'Contraseña restablecida. Inicia sesión con la nueva contraseña.', resetFailed: 'No se pudo restablecer, inténtalo de nuevo',
+      errCode: 'El código no es válido o ha caducado, solicita uno nuevo', errUsernameTaken: 'Este nombre de usuario ya está en uso',
+      errEmailTaken: 'Este correo ya está registrado — inicia sesión', errCredentials: 'Usuario o contraseña incorrectos',
+      errAccountNotFound: 'Este correo no está registrado', errTooMany: 'Demasiados intentos, inténtalo más tarde',
+      errSendFailed: 'No se pudo enviar el código, inténtalo más tarde', errDailyLimit: 'Límite diario de códigos alcanzado, inténtalo mañana'
+    },
+    ru: {
+      labelUsername: 'Имя пользователя', labelEmail: 'Эл. почта', labelCode: 'Код подтверждения', labelPassword: 'Пароль', labelConfirm: 'Подтвердите пароль',
+      forgotPassword: 'Забыли пароль?', resetTitle: 'Сброс пароля',
+      resetSubtitle: 'Введите почту, чтобы получить код, затем задайте новый пароль',
+      resetSubmit: 'Сбросить пароль', newPasswordPlaceholder: 'Новый пароль (мин. 8, буквы + цифры)', backToLogin: 'Вернуться ко входу',
+      pwWeak: 'Слабый', pwMedium: 'Средний', pwStrong: 'Надёжный',
+      captchaLabel: 'Проверка', captchaPlaceholder: 'Ответ', captchaInvalid: 'Проверка не пройдена, попробуйте с новым вопросом',
+      resetSuccess: 'Пароль сброшен. Войдите с новым паролем.', resetFailed: 'Не удалось сбросить, попробуйте ещё раз',
+      errCode: 'Код недействителен или просрочен, запросите новый', errUsernameTaken: 'Это имя пользователя уже занято',
+      errEmailTaken: 'Эта почта уже зарегистрирована — войдите', errCredentials: 'Неверное имя пользователя или пароль',
+      errAccountNotFound: 'Эта почта не зарегистрирована', errTooMany: 'Слишком много попыток, повторите позже',
+      errSendFailed: 'Не удалось отправить код, повторите позже', errDailyLimit: 'Дневной лимит кодов исчерпан, попробуйте завтра'
+    },
+    pt: {
+      labelUsername: 'Usuário', labelEmail: 'E-mail', labelCode: 'Código de verificação', labelPassword: 'Senha', labelConfirm: 'Confirmar senha',
+      forgotPassword: 'Esqueceu a senha?', resetTitle: 'Redefinir senha',
+      resetSubtitle: 'Informe seu e-mail para receber um código e defina uma nova senha',
+      resetSubmit: 'Redefinir senha', newPasswordPlaceholder: 'Nova senha (mín. 8, letras + números)', backToLogin: 'Voltar ao login',
+      pwWeak: 'Fraca', pwMedium: 'Média', pwStrong: 'Forte',
+      captchaLabel: 'Verificação', captchaPlaceholder: 'Resultado', captchaInvalid: 'Falha na verificação, tente novamente com a nova pergunta',
+      resetSuccess: 'Senha redefinida. Entre com a nova senha.', resetFailed: 'Falha ao redefinir, tente novamente',
+      errCode: 'O código é inválido ou expirou, solicite um novo', errUsernameTaken: 'Este nome de usuário já está em uso',
+      errEmailTaken: 'Este e-mail já está cadastrado — entre', errCredentials: 'Usuário ou senha incorretos',
+      errAccountNotFound: 'Este e-mail não está cadastrado', errTooMany: 'Muitas tentativas, tente mais tarde',
+      errSendFailed: 'Falha ao enviar o código, tente mais tarde', errDailyLimit: 'Limite diário de códigos atingido, tente amanhã'
+    },
+    it: {
+      labelUsername: 'Nome utente', labelEmail: 'E-mail', labelCode: 'Codice di verifica', labelPassword: 'Password', labelConfirm: 'Conferma password',
+      forgotPassword: 'Password dimenticata?', resetTitle: 'Reimposta password',
+      resetSubtitle: 'Inserisci la tua e-mail per ricevere un codice, poi imposta una nuova password',
+      resetSubmit: 'Reimposta password', newPasswordPlaceholder: 'Nuova password (min 8, lettere + numeri)', backToLogin: 'Torna al login',
+      pwWeak: 'Debole', pwMedium: 'Media', pwStrong: 'Forte',
+      captchaLabel: 'Verifica', captchaPlaceholder: 'Risultato', captchaInvalid: 'Verifica non riuscita, riprova con la nuova domanda',
+      resetSuccess: 'Password reimpostata. Accedi con la nuova password.', resetFailed: 'Reimpostazione non riuscita, riprova',
+      errCode: 'Il codice non è valido o è scaduto, richiedine uno nuovo', errUsernameTaken: 'Questo nome utente è già in uso',
+      errEmailTaken: 'Questa e-mail è già registrata — accedi', errCredentials: 'Nome utente o password errati',
+      errAccountNotFound: 'Questa e-mail non è registrata', errTooMany: 'Troppi tentativi, riprova più tardi',
+      errSendFailed: 'Invio del codice non riuscito, riprova più tardi', errDailyLimit: 'Limite giornaliero di codici raggiunto, riprova domani'
+    }
+  };
+  Object.keys(AUTH2_TRANSLATIONS).forEach(lang => {
+    if (TRANSLATIONS[lang]) Object.assign(TRANSLATIONS[lang], AUTH2_TRANSLATIONS[lang]);
+  });
+
   global.APEXON = global.APEXON || {};
   global.APEXON.i18n = i18n;
 

@@ -1231,7 +1231,7 @@
       const res = await WorkerAPI.request('/api/auth/register', 'POST', { username: u, password: password, email: e, code: c });
       debugLog('log', '[register] worker result:', res.data);
       if (!res.ok || !res.data || !res.data.token) {
-        return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerFailed') : '注册失败，请重试') };
+        return { success: false, error: this._mapAuthError(res.data && res.data.error) };
       }
 
       const expiresAt = new Date(res.data.expires_at).getTime();
@@ -1252,16 +1252,56 @@
       return { success: true };
     },
 
-    async login(username, password, remember) {
+    // 服务端返回的英文错误统一映射为本地化文案，避免把英文/技术文案直接抛给用户
+    _mapAuthError(err) {
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
+      const e = String(err == null ? '' : err).trim();
+      const map = {
+        'Invalid or expired verification code': 'errCode',
+        'Username already exists': 'errUsernameTaken',
+        'Email already registered, please login': 'errEmailTaken',
+        'Invalid username or password': 'errCredentials',
+        'No account with this email': 'errAccountNotFound',
+        'Too many attempts, please try again later': 'errTooMany',
+        'Too many attempts, account temporarily locked': 'errTooMany',
+        'Too many attempts, IP temporarily blocked': 'errTooMany',
+        'email send failed, please retry': 'errSendFailed',
+        'Daily verification-code limit reached for this email, please try again tomorrow': 'errDailyLimit',
+        'Daily verification-code limit reached, please try again tomorrow': 'errDailyLimit',
+        'Invalid CAPTCHA, please retry': 'captchaInvalid',
+        'email not configured': 'errSendFailed',
+        'Internal error (code issue)': 'errSendFailed',
+        'Password must be at least 8 characters and contain both letters and numbers': 'passwordRule',
+        'Username must be 2-30 characters': 'usernameRule',
+        'Invalid email': 'invalidEmail'
+      };
+      const key = map[e];
+      if (key) return t(key, e);
+      return e || t('operationFailed', '操作失败');
+    },
+
+    async login(username, password, remember, captcha) {
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       const u = String(username).trim();
       if (!u || !password) {
-        return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('enterCredentials') : '请输入用户名和密码') };
+        return { success: false, error: t('enterCredentials', '请输入用户名和密码') };
       }
       debugLog('log', '[login] start', u);
-      const res = await WorkerAPI.request('/api/auth/login', 'POST', { username: u, password: password });
+      const body = { username: u, password: password };
+      if (captcha && captcha.id) { body.captcha_id = captcha.id; body.captcha_answer = captcha.answer; }
+      const res = await WorkerAPI.request('/api/auth/login', 'POST', body);
       debugLog('log', '[login] worker result:', res.data);
+      // 后端判定该来源需要人机验证：返回新题目，由调用方补填后重试
+      if (res.data && res.data.captcha_required) {
+        return {
+          success: false,
+          needCaptcha: true,
+          captcha: { id: res.data.captcha_id, question: res.data.captcha_question },
+          error: this._mapAuthError(res.data.error)
+        };
+      }
       if (!res.ok || !res.data || !res.data.token) {
-        return { success: false, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCredentials') : '用户名或密码错误') };
+        return { success: false, error: this._mapAuthError(res.data && res.data.error) || t('invalidCredentials', '用户名或密码错误') };
       }
 
       const expiresAt = new Date(res.data.expires_at).getTime();
@@ -1277,12 +1317,16 @@
       if (!e || e.length > 120) return false;
       return /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(e);
     },
-    async sendMailCode(email) {
+    async sendMailCode(email, purpose) {
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
       const e = String(email).trim().toLowerCase();
-      if (!this._validateEmail(e)) return { ok: false, error: '邮箱格式不正确' };
-      const res = await WorkerAPI.request('/api/auth/send-code', 'POST', { email: e });
+      if (!this._validateEmail(e)) return { ok: false, error: t('invalidEmail', '邮箱格式不正确') };
+      const body = { email: e };
+      // purpose 仅用于区分邮件文案（register / login / reset），不改变验证码自身的存储与校验逻辑。
+      if (purpose === 'register' || purpose === 'login' || purpose === 'reset') body.purpose = purpose;
+      const res = await WorkerAPI.request('/api/auth/send-code', 'POST', body);
       if (res.ok && res.data && res.data.ok) return { ok: true, error: '' };
-      return { ok: false, error: (res.data && res.data.error) || '发送失败，请重试', status: res.status };
+      return { ok: false, error: this._mapAuthError(res.data && res.data.error) || t('operationFailed', '操作失败'), status: res.status };
     },
     async emailLogin(email, code, remember) {
       const e = String(email).trim().toLowerCase();
@@ -1291,7 +1335,7 @@
       if (!/^\d{8}$/.test(c)) return { success: false, error: (window.APEXON && APEXON.i18n ? APEXON.i18n.t('invalidCode', '验证码为 8 位数字') : '验证码为 8 位数字') };
       const res = await WorkerAPI.request('/api/auth/email-login', 'POST', { email: e, code: c });
       if (!res.ok || !res.data || !res.data.token) {
-        return { success: false, noAccount: res.status === 404, error: (res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed', '登录失败') : '登录失败') };
+        return { success: false, noAccount: res.status === 404, error: this._mapAuthError(res.data && res.data.error) || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginFailed', '登录失败') : '登录失败') };
       }
       const expiresAt = new Date(res.data.expires_at).getTime();
       const realUserId = res.data.user_id || res.data.username || e;
@@ -1299,6 +1343,26 @@
       LocalStats.recordUser(res.data.username || e);
       await this.mergeAnonymousData();
       return { success: true };
+    },
+
+    // 找回密码（国际标准流程）：注册邮箱 + 邮箱验证码 + 新密码。
+    // 成功后服务端会吊销所有既有会话，强制重新登录，前端无需重建会话。
+    async resetPassword(email, code, newPassword) {
+      const t = window.APEXON && APEXON.i18n ? APEXON.i18n.t.bind(APEXON.i18n) : function(k, fb) { return fb; };
+      const e = String(email).trim().toLowerCase();
+      const c = String(code).trim();
+      const p = String(newPassword);
+      if (!this._validateEmail(e)) return { success: false, error: t('invalidEmail', '邮箱格式不正确') };
+      if (!/^\d{8}$/.test(c)) return { success: false, error: t('invalidCode', '验证码为 8 位数字') };
+      const passErr = this._validatePassword(p);
+      if (passErr) return { success: false, error: passErr };
+      const res = await WorkerAPI.request('/api/auth/reset-password', 'POST', { email: e, code: c, new_password: p });
+      if (res.ok && res.data && res.data.ok) return { success: true };
+      return {
+        success: false,
+        noAccount: res.status === 404,
+        error: (res.data && res.data.error ? this._mapAuthError(res.data.error) : '') || t('resetFailed', '重置失败，请重试')
+      };
     },
     async logout() {
       this._clearSession();
@@ -1378,7 +1442,8 @@
     _validatePassword: Auth._validatePassword.bind(Auth),
     _validateEmail: Auth._validateEmail.bind(Auth),
     emailLogin: Auth.emailLogin.bind(Auth),
-    sendMailCode: Auth.sendMailCode.bind(Auth)
+    sendMailCode: Auth.sendMailCode.bind(Auth),
+    resetPassword: Auth.resetPassword.bind(Auth)
   };
 
   // ===== 3. 音频 =====
@@ -2341,22 +2406,22 @@
         .apex-login-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-login-modal.show { opacity: 1; pointer-events: auto; }
         .apex-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
-        .apex-login-card { position: relative; width: 92%; max-width: 360px; border-radius: 20px; padding: 28px 24px 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; transform: translateY(12px); transition: transform .25s ease; }
+        .apex-login-card { position: relative; display: flex; flex-direction: column; width: 92%; max-width: 360px; max-height: 90vh; border-radius: 20px; padding: 28px 24px 24px; background: var(--apex-surface); box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; transform: translateY(12px); transition: transform .25s ease; }
         .apex-login-modal.show .apex-login-card { transform: translateY(0); }
         .apex-login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 40%, #60A5FA 100%); }
         .apex-login-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border: none; border-radius: 50%; background: transparent; color: var(--apex-text-secondary); font-size: 18px; cursor: pointer; }
         .apex-login-close:hover { background: rgba(124, 58, 237, 0.1); color: #7C3AED; }
-        .apex-login-header { text-align: center; margin-bottom: 20px; }
+        .apex-login-header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
         .apex-login-logo { font-size: 22px; font-weight: 800; letter-spacing: 1px; background: linear-gradient(135deg, #7C3AED 0%, #60A5FA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .apex-login-subtitle { font-size: 13px; color: var(--apex-text-secondary); margin-top: 4px; }
-        .apex-login-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(124, 58, 237, 0.08); border-radius: 12px; padding: 4px; }
+        .apex-login-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(124, 58, 237, 0.08); border-radius: 12px; padding: 4px; flex-shrink: 0; }
         .apex-login-tab { flex: 1; border: none; border-radius: 10px; padding: 8px; font-size: 13px; font-weight: 600; color: var(--apex-text-secondary); background: transparent; cursor: pointer; }
         .apex-login-tab.active { background: var(--apex-surface); color: #7C3AED; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .apex-login-methods { display: flex; gap: 6px; }
         .apex-method-btn { flex: 1; border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 10px; padding: 7px 8px; font-size: 12px; font-weight: 600; color: var(--apex-text-secondary); background: transparent; cursor: pointer; transition: all .15s ease; }
         .apex-method-btn:hover { border-color: #8B5CF6; color: #7C3AED; }
         .apex-method-btn.active { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.12); color: #7C3AED; }
-        .apex-login-body { display: flex; flex-direction: column; gap: 12px; }
+        .apex-login-body { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
         .apex-login-body input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(124, 58, 237, 0.2); background: rgba(124, 58, 237, 0.04); color: var(--apex-text); font-size: 14px; outline: none; }
         .apex-login-body input:focus { border-color: #8B5CF6; background: rgba(124, 58, 237, 0.08); }
         .apex-login-error { min-height: 18px; font-size: 12px; color: #ef4444; text-align: center; }
@@ -2397,6 +2462,24 @@
         .apex-terms input { width: 16px; height: 16px; accent-color: #7C3AED; cursor: pointer; margin-top: 2px; flex-shrink: 0; }
         .apex-terms a { color: #8B5CF6; text-decoration: none; }
         .apex-terms a:hover { text-decoration: underline; }
+        .apex-field { display: flex; flex-direction: column; }
+        .apex-field-label { display: block; font-size: 12px; font-weight: 600; color: var(--apex-text-secondary); margin-bottom: 6px; text-align: left; }
+        .apex-pw-strength { display: flex; align-items: center; gap: 8px; margin-top: -4px; }
+        .apex-pw-bar { display: flex; gap: 4px; flex: 1; }
+        .apex-pw-bar span { flex: 1; height: 5px; border-radius: 3px; background: rgba(124, 58, 237, 0.15); transition: background .2s ease; }
+        .apex-pw-bar span.on.lvl1 { background: #ef4444; }
+        .apex-pw-bar span.on.lvl2 { background: #f59e0b; }
+        .apex-pw-bar span.on.lvl3 { background: #10b981; }
+        .apex-pw-text { font-size: 12px; font-weight: 600; min-width: 32px; text-align: right; color: var(--apex-text-tertiary); }
+        .apex-pw-text.lvl1 { color: #ef4444; }
+        .apex-pw-text.lvl2 { color: #f59e0b; }
+        .apex-pw-text.lvl3 { color: #10b981; }
+        .apex-captcha-group { display: flex; flex-direction: column; }
+        .apex-captcha-row { display: flex; align-items: stretch; gap: 10px; }
+        .apex-captcha-question { flex-shrink: 0; min-width: 88px; display: flex; align-items: center; justify-content: center; padding: 0 12px; border-radius: 12px; background: rgba(124, 58, 237, 0.08); border: 1px dashed rgba(124, 58, 237, 0.4); color: #7C3AED; font-size: 16px; font-weight: 700; letter-spacing: 1px; }
+        .apex-captcha-row input { flex: 1; width: auto; }
+        .apex-link { align-self: center; border: none; background: transparent; color: #8B5CF6; font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 4px; }
+        .apex-link:hover { text-decoration: underline; }
         .apex-profile-modal { position: fixed; inset: 0; z-index: 1002; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
         .apex-profile-modal.show { opacity: 1; pointer-events: auto; }
         .apex-profile-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); }
@@ -3365,26 +3448,70 @@
       modal = document.createElement('div');
       modal.id = 'apex-login-modal';
       modal.className = 'apex-login-modal';
-      modal.innerHTML = '<div class="apex-login-backdrop"></div><div class="apex-login-card"><button class="apex-login-close" id="apexLoginClose" aria-label="关闭">×</button><div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div><div class="apex-login-tabs"><button class="apex-login-tab active" data-tab="login">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register">' + t('register', '注册') + '</button></div><div class="apex-login-body"><div class="apex-login-methods" id="apexLoginMethods"><button class="apex-method-btn active" data-method="password">' + t('loginByUsername', '用户名登录') + '</button><button class="apex-method-btn" data-method="email">' + t('loginByEmail', '邮箱验证码登录') + '</button></div><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username"><div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div><div class="apex-mail-group" id="apexMailGroup" style="display:none;"><input type="email" id="apexMailEmail" placeholder="' + t('emailPlaceholder', '邮箱') + '" maxlength="120" autocomplete="email"><div class="apex-hint" id="apexMailEmailHint">' + t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') + '</div><div class="apex-password-wrap apex-code-wrap"><input type="text" id="apexMailCode" placeholder="' + t('mailCodePlaceholder', '8 位验证码') + '" maxlength="8" inputmode="numeric" autocomplete="one-time-code"><button class="apex-mail-send" id="apexMailSend" type="button">' + t('sendCode', '发送验证码') + '</button></div><div class="apex-hint" id="apexMailCodeHint"></div></div><div class="apex-password-wrap" id="apexPasswordWrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div><div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div><div class="apex-password-wrap" id="apexConfirmWrap" style="display:none;"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div><div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div><div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div><label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label><label class="apex-remember"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label><div class="apex-login-error" id="apexLoginError"></div><button class="apex-login-submit" id="apexLoginSubmit">' + t('login', '登录') + '</button></div></div>';
+      modal.innerHTML =
+        '<div class="apex-login-backdrop"></div>' +
+        '<div class="apex-login-card">' +
+          '<button class="apex-login-close" id="apexLoginClose" type="button" aria-label="' + t('close', '关闭') + '">×</button>' +
+          '<div class="apex-login-header"><div class="apex-login-logo">APEXON</div><div class="apex-login-subtitle" id="apexLoginSubtitle">' + t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料') + '</div></div>' +
+          '<div class="apex-login-tabs" id="apexLoginTabs"><button class="apex-login-tab active" data-tab="login" type="button">' + t('login', '登录') + '</button><button class="apex-login-tab" data-tab="register" type="button">' + t('register', '注册') + '</button></div>' +
+          '<div class="apex-login-body">' +
+            '<div class="apex-login-methods" id="apexLoginMethods"><button class="apex-method-btn active" data-method="password" type="button">' + t('loginByUsername', '用户名登录') + '</button><button class="apex-method-btn" data-method="email" type="button">' + t('loginByEmail', '邮箱验证码登录') + '</button></div>' +
+            '<div class="apex-field" id="apexUsernameField"><label class="apex-field-label" for="apexLoginUsername">' + t('labelUsername', '用户名') + '</label><input type="text" id="apexLoginUsername" placeholder="' + t('usernamePlaceholder', '用户名') + '" maxlength="30" autocomplete="username" autocapitalize="off" spellcheck="false"></div>' +
+            '<div class="apex-hint" id="apexUsernameHint">' + t('usernameRule', '2-30 位，支持中英文、数字、下划线') + '</div>' +
+            '<div class="apex-mail-group" id="apexMailGroup" style="display:none;">' +
+              '<label class="apex-field-label" for="apexMailEmail">' + t('labelEmail', '邮箱') + '</label>' +
+              '<input type="email" id="apexMailEmail" placeholder="' + t('emailPlaceholder', '邮箱') + '" maxlength="120" autocomplete="email" inputmode="email" spellcheck="false">' +
+              '<div class="apex-hint" id="apexMailEmailHint">' + t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') + '</div>' +
+              '<label class="apex-field-label" for="apexMailCode">' + t('labelCode', '验证码') + '</label>' +
+              '<div class="apex-password-wrap apex-code-wrap"><input type="text" id="apexMailCode" placeholder="' + t('mailCodePlaceholder', '8 位验证码') + '" maxlength="8" inputmode="numeric" autocomplete="one-time-code"><button class="apex-mail-send" id="apexMailSend" type="button">' + t('sendCode', '发送验证码') + '</button></div>' +
+              '<div class="apex-hint" id="apexMailCodeHint"></div>' +
+            '</div>' +
+            '<div class="apex-field" id="apexPasswordField"><label class="apex-field-label" for="apexLoginPassword" id="apexPasswordLabel">' + t('labelPassword', '密码') + '</label><div class="apex-password-wrap" id="apexPasswordWrap"><input type="password" id="apexLoginPassword" placeholder="' + t('passwordPlaceholder', '密码') + '" maxlength="64" autocomplete="current-password"><button class="apex-password-toggle" id="apexPasswordToggle" type="button" title="' + t('showPasswordTitle', '显示密码') + '">' + t('showPassword', '显示') + '</button></div></div>' +
+            '<div class="apex-pw-strength" id="apexPwStrength" style="display:none;"><div class="apex-pw-bar"><span></span><span></span><span></span></div><div class="apex-pw-text" id="apexPwText"></div></div>' +
+            '<div class="apex-hint" id="apexPasswordHint">' + t('passwordRule', '至少 8 位，同时包含字母和数字') + '</div>' +
+            '<div class="apex-field" id="apexConfirmField" style="display:none;"><label class="apex-field-label" for="apexConfirmPassword">' + t('labelConfirm', '确认密码') + '</label><div class="apex-password-wrap" id="apexConfirmWrap"><input type="password" id="apexConfirmPassword" placeholder="' + t('confirmPasswordPlaceholder', '确认密码') + '" maxlength="64" autocomplete="new-password"></div></div>' +
+            '<div class="apex-hint" id="apexConfirmHint" style="display:none;">' + t('reenterPassword', '请再次输入密码') + '</div>' +
+            '<div class="apex-captcha-group" id="apexCaptchaGroup" style="display:none;"><label class="apex-field-label" for="apexCaptchaAnswer">' + t('captchaLabel', '人机验证') + '</label><div class="apex-captcha-row"><span class="apex-captcha-question" id="apexCaptchaQuestion"></span><input type="text" id="apexCaptchaAnswer" placeholder="' + t('captchaPlaceholder', '计算结果') + '" maxlength="6" inputmode="numeric" autocomplete="off"></div><div class="apex-hint" id="apexCaptchaHint"></div></div>' +
+            '<div class="apex-gender-group" id="apexGenderGroup" style="display:none;"><div class="apex-gender-label">' + t('genderLabel', '性别') + '</div><div class="apex-gender-options"><label class="apex-gender-option"><input type="radio" name="apexGender" value="male"><span>' + t('genderMale', '男') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="female"><span>' + t('genderFemale', '女') + '</span></label><label class="apex-gender-option"><input type="radio" name="apexGender" value="secret" checked><span>' + t('genderSecret', '保密') + '</span></label></div><div class="apex-gender-tip">' + t('genderTip', '建议选择真实性别，以便更准确地为各测试项目评级。') + '</div></div>' +
+            '<label class="apex-terms" id="apexTermsGroup" style="display:none;"><input type="checkbox" id="apexTerms"><span>' + t('termsAgree', '我已阅读并同意') + ' <a href="terms.html" target="_blank">' + t('termsLink', '服务条款') + '</a> ' + t('termsAnd', '和') + ' <a href="privacy.html" target="_blank">' + t('privacyLink', '隐私政策') + '</a></span></label>' +
+            '<label class="apex-remember" id="apexRememberLabel"><input type="checkbox" id="apexRememberMe"><span>' + t('rememberMe', '记住我（30 天）') + '</span></label>' +
+            '<div class="apex-login-error" id="apexLoginError" role="alert" aria-live="polite"></div>' +
+            '<button class="apex-login-submit" id="apexLoginSubmit" type="button">' + t('login', '登录') + '</button>' +
+            '<button class="apex-link" id="apexForgotBtn" type="button">' + t('forgotPassword', '忘记密码？') + '</button>' +
+            '<button class="apex-link" id="apexBackBtn" type="button" style="display:none;">' + t('backToLogin', '返回登录') + '</button>' +
+          '</div>' +
+        '</div>';
       document.body.appendChild(modal);
 
       let a11yCleanup = null;
       const close = () => { modal.classList.remove('show'); if (a11yCleanup) a11yCleanup(); clearInterval(sendTimer); setTimeout(() => { if (modal.parentNode) modal.remove(); }, 300); };
 
+      const tabsWrap = modal.querySelector('#apexLoginTabs');
       const tabs = modal.querySelectorAll('.apex-login-tab');
       const methodsBar = modal.querySelector('#apexLoginMethods');
       const methodBtns = modal.querySelectorAll('.apex-method-btn');
       const submitBtn = modal.querySelector('#apexLoginSubmit');
       const errorEl = modal.querySelector('#apexLoginError');
+      const subtitleEl = modal.querySelector('#apexLoginSubtitle');
+      const usernameField = modal.querySelector('#apexUsernameField');
       const usernameInput = modal.querySelector('#apexLoginUsername');
+      const passwordField = modal.querySelector('#apexPasswordField');
       const passwordInput = modal.querySelector('#apexLoginPassword');
       const usernameHint = modal.querySelector('#apexUsernameHint');
       const passwordHint = modal.querySelector('#apexPasswordHint');
       const rememberMe = modal.querySelector('#apexRememberMe');
+      const rememberLabel = modal.querySelector('#apexRememberLabel');
       const toggleBtn = modal.querySelector('#apexPasswordToggle');
-      const confirmWrap = modal.querySelector('#apexConfirmWrap');
+      const confirmField = modal.querySelector('#apexConfirmField');
       const confirmInput = modal.querySelector('#apexConfirmPassword');
       const confirmHint = modal.querySelector('#apexConfirmHint');
+      const strengthWrap = modal.querySelector('#apexPwStrength');
+      const strengthBars = modal.querySelectorAll('#apexPwStrength .apex-pw-bar span');
+      const strengthText = modal.querySelector('#apexPwText');
+      const captchaGroup = modal.querySelector('#apexCaptchaGroup');
+      const captchaQuestionEl = modal.querySelector('#apexCaptchaQuestion');
+      const captchaAnswerInput = modal.querySelector('#apexCaptchaAnswer');
+      const captchaHint = modal.querySelector('#apexCaptchaHint');
       const genderGroup = modal.querySelector('#apexGenderGroup');
       const termsGroup = modal.querySelector('#apexTermsGroup');
       const termsCheckbox = modal.querySelector('#apexTerms');
@@ -3394,39 +3521,75 @@
       const codeInput = modal.querySelector('#apexMailCode');
       const codeHint = modal.querySelector('#apexMailCodeHint');
       const sendBtn = modal.querySelector('#apexMailSend');
-      const passwordWrap = modal.querySelector('#apexPasswordWrap');
-      let mode = 'login';           // 顶部分页：login | register
+      const forgotBtn = modal.querySelector('#apexForgotBtn');
+      const backBtn = modal.querySelector('#apexBackBtn');
+      let mode = 'login';           // 顶部分页：login | register | reset（找回密码）
       let loginMethod = 'password'; // 登录方式：password（用户名+密码）| email（邮箱验证码）
       let sendTimer = null;
+      let captchaId = null;         // 后端要求人机验证时下发的题目 id（仅用户名登录可能出现）
+      let submitting = false;       // 防重复提交闸门
 
-      // 根据当前分页与登录方式刷新各字段显隐
+      const showField = (el, show) => { if (el) el.style.display = show ? '' : 'none'; };
+
+      // 密码强度实时指示（注册 / 找回密码时显示）
+      const updateStrength = (p) => {
+        if (!strengthWrap) return;
+        let score = 0;
+        if (p.length >= 8) score += 1;
+        if (p.length >= 12) score += 1;
+        if (/[a-z]/.test(p) && /[A-Z]/.test(p)) score += 1;
+        if (/\d/.test(p)) score += 1;
+        if (/[^A-Za-z0-9]/.test(p)) score += 1;
+        let level = 0;
+        if (p) level = score <= 2 ? 1 : (score <= 3 ? 2 : 3);
+        strengthBars.forEach((b, i) => { b.className = (level > 0 && i < level) ? ('on lvl' + level) : ''; });
+        strengthText.textContent = level === 0 ? '' : (level === 1 ? t('pwWeak', '弱') : level === 2 ? t('pwMedium', '中') : t('pwStrong', '强'));
+        strengthText.className = 'apex-pw-text' + (level ? ' lvl' + level : '');
+      };
+
+      // 根据当前模式刷新各字段显隐与文案
       const refresh = () => {
         const isRegister = mode === 'register';
-        const emailLogin = !isRegister && loginMethod === 'email';
-        const showEmail = isRegister || emailLogin; // 注册必绑邮箱；邮箱验证码登录也需邮箱
-        const showCreds = !emailLogin;              // 邮箱验证码登录无需用户名与密码
+        const isReset = mode === 'reset';
+        const emailLogin = mode === 'login' && loginMethod === 'email';
+        const showEmail = isRegister || isReset || emailLogin; // 注册/找回必绑邮箱；邮箱验证码登录亦需邮箱
+        const showUsername = isRegister || (mode === 'login' && loginMethod === 'password');
+        const showPassword = isRegister || isReset || (mode === 'login' && loginMethod === 'password');
+        const showConfirm = isRegister || isReset;
 
+        tabsWrap.style.display = isReset ? 'none' : 'flex';
         methodBtns.forEach(b => b.classList.toggle('active', b.dataset.method === loginMethod));
-        methodsBar.style.display = isRegister ? 'none' : 'flex';
+        methodsBar.style.display = mode === 'login' ? 'flex' : 'none';
 
-        usernameInput.style.display = showCreds ? '' : 'none';
-        usernameHint.style.display = showCreds ? '' : 'none';
-        passwordWrap.style.display = showCreds ? '' : 'none';
-        passwordHint.style.display = showCreds ? '' : 'none';
-        emailGroup.style.display = showEmail ? 'block' : 'none';
+        showField(usernameField, showUsername);
+        showField(usernameHint, showUsername);
+        showField(passwordField, showPassword);
+        showField(passwordHint, showPassword);
+        showField(strengthWrap, isRegister || isReset);
+        showField(emailGroup, showEmail);
+        showField(confirmField, showConfirm);
+        showField(confirmHint, showConfirm);
+        showField(genderGroup, isRegister);
+        showField(termsGroup, isRegister);
+        showField(rememberLabel, !isReset);
+        showField(forgotBtn, mode === 'login');
+        showField(backBtn, isReset);
+        showField(captchaGroup, captchaId !== null && mode === 'login');
 
-        confirmWrap.style.display = isRegister ? 'block' : 'none';
-        confirmHint.style.display = isRegister ? 'block' : 'none';
-        genderGroup.style.display = isRegister ? 'block' : 'none';
-        termsGroup.style.display = isRegister ? 'flex' : 'none';
-
-        submitBtn.textContent = isRegister ? t('register', '注册') : t('login', '登录');
+        subtitleEl.textContent = isReset
+          ? t('resetSubtitle', '输入注册邮箱获取验证码，验证后可设置新密码')
+          : t('loginSubtitle', '游客模式可正常使用，登录后可修改用户名与资料');
+        passwordInput.placeholder = isReset
+          ? t('newPasswordPlaceholder', '新密码（至少 8 位，含字母和数字）')
+          : t('passwordPlaceholder', '密码');
+        submitBtn.textContent = isReset ? t('resetSubmit', '重置密码') : (isRegister ? t('register', '注册') : t('login', '登录'));
       };
 
       const setMode = (m) => {
         mode = m;
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === m));
         errorEl.textContent = '';
+        captchaId = null;
         // 注册固定走「邮箱绑定」表单；切回登录沿用当前的登录方式选择
         if (m === 'register') loginMethod = 'password';
         refresh();
@@ -3436,6 +3599,17 @@
       const pickMethod = (m) => {
         loginMethod = m;
         errorEl.textContent = '';
+        captchaId = null;
+        refresh();
+        validate();
+      };
+
+      // 忘记密码：进入国际标准的「邮箱验证码 + 新密码」重置模式
+      const enterReset = () => {
+        mode = 'reset';
+        loginMethod = 'password';
+        errorEl.textContent = '';
+        captchaId = null;
         refresh();
         validate();
       };
@@ -3447,33 +3621,56 @@
 
       const validate = () => {
         const isRegister = mode === 'register';
-        const emailMode = !isRegister && loginMethod === 'email';
+        const isReset = mode === 'reset';
+        const emailMode = mode === 'login' && loginMethod === 'email';
+        const needsUsername = isRegister || (mode === 'login' && loginMethod === 'password');
+        const needsPassword = isRegister || isReset || (mode === 'login' && loginMethod === 'password');
 
-        // 邮箱字段：注册与「邮箱验证码登录」共用
-        if (isRegister || emailMode) {
+        // 邮箱 + 验证码：注册 / 找回密码 / 邮箱验证码登录共用
+        let emailErr = '';
+        let codeErr = '';
+        if (isRegister || isReset || emailMode) {
           const em = emailInput.value.trim().toLowerCase();
           const cd = codeInput.value.trim();
-          const emailErr = em ? (APEXON.Auth._validateEmail(em) ? '' : t('invalidEmail', '邮箱格式不正确')) : '';
+          emailErr = em ? (APEXON.Auth._validateEmail(em) ? '' : t('invalidEmail', '邮箱格式不正确')) : '';
           emailHint.textContent = emailErr || (em ? t('validFormat', '格式正确') : (isRegister ? t('emailRuleRegister', '注册需绑定邮箱，用于接收验证码与找回账号') : t('emailRule', '请输入用于登录/注册的邮箱')));
           emailHint.className = 'apex-hint' + (emailErr ? ' invalid' : (em ? ' valid' : ''));
-          const codeErr = !cd ? t('enterCode', '请输入 8 位验证码') : (!/^\d{8}$/.test(cd) ? t('invalidCode', '验证码为 8 位数字') : '');
-          codeHint.textContent = codeErr || '';
+          codeErr = !cd ? t('enterCode', '请输入 8 位验证码') : (!/^\d{8}$/.test(cd) ? t('invalidCode', '验证码为 8 位数字') : '');
+          codeHint.textContent = codeErr;
           codeHint.className = 'apex-hint' + (codeErr ? ' invalid' : (cd ? ' valid' : ''));
-          if (emailMode) {
-            submitBtn.disabled = !!(emailErr || codeErr);
-            return;
-          }
         }
 
-        // 用户名 + 密码（注册亦复用）
-        const u = usernameInput.value.trim();
-        const p = passwordInput.value;
-        const nameErr = APEXON.Auth._validateUsername(u);
-        const passErr = APEXON.Auth._validatePassword(p);
-        usernameHint.textContent = nameErr || (u ? t('validFormat', '格式正确') : t('usernameRule', '2-30 位，支持中英文、数字、下划线'));
-        usernameHint.className = 'apex-hint' + (nameErr ? ' invalid' : (u ? ' valid' : ''));
-        passwordHint.textContent = passErr || (p ? t('validFormat', '格式正确') : t('passwordRule', '至少 8 位，同时包含字母和数字'));
-        passwordHint.className = 'apex-hint' + (passErr ? ' invalid' : (p ? ' valid' : ''));
+        // 用户名（注册 / 用户名登录）
+        let nameErr = '';
+        if (needsUsername) {
+          const u = usernameInput.value.trim();
+          nameErr = APEXON.Auth._validateUsername(u) || '';
+          usernameHint.textContent = nameErr || (u ? t('validFormat', '格式正确') : t('usernameRule', '2-30 位，支持中英文、数字、下划线'));
+          usernameHint.className = 'apex-hint' + (nameErr ? ' invalid' : (u ? ' valid' : ''));
+        }
+
+        // 密码（注册 / 找回密码 / 用户名登录）+ 强度指示
+        let passErr = '';
+        if (needsPassword) {
+          const p = passwordInput.value;
+          passErr = APEXON.Auth._validatePassword(p) || '';
+          passwordHint.textContent = passErr || (p ? t('validFormat', '格式正确') : t('passwordRule', '至少 8 位，同时包含字母和数字'));
+          passwordHint.className = 'apex-hint' + (passErr ? ' invalid' : (p ? ' valid' : ''));
+          updateStrength(p);
+        }
+
+        if (emailMode) {
+          submitBtn.disabled = !!(emailErr || codeErr);
+          return;
+        }
+
+        if (isReset) {
+          const confirmErr = !confirmInput.value ? t('reenterPassword', '请再次输入密码') : (confirmInput.value !== passwordInput.value ? t('passwordMismatch', '两次输入的密码不一致') : '');
+          confirmHint.textContent = confirmErr || (confirmInput.value ? t('passwordMatch', '密码一致') : '');
+          confirmHint.className = 'apex-hint' + (confirmErr ? ' invalid' : (confirmInput.value ? ' valid' : ''));
+          submitBtn.disabled = !!(emailErr || codeErr || passErr || confirmErr);
+          return;
+        }
 
         if (!isRegister) {
           submitBtn.disabled = !!(nameErr || passErr);
@@ -3481,12 +3678,10 @@
         }
 
         // 注册额外校验：确认密码 + 服务条款
-        const confirmErr = confirmInput.value !== p ? t('passwordMismatch', '两次输入的密码不一致') : null;
+        const confirmErr = confirmInput.value !== passwordInput.value ? t('passwordMismatch', '两次输入的密码不一致') : null;
         confirmHint.textContent = confirmErr || (confirmInput.value ? t('passwordMatch', '密码一致') : t('reenterPassword', '请再次输入密码'));
         confirmHint.className = 'apex-hint' + (confirmErr ? ' invalid' : (confirmInput.value ? ' valid' : ''));
         const termsErr = termsCheckbox.checked ? null : t('agreeTermsRequired', '请同意服务条款和隐私政策');
-        const emailErr = APEXON.Auth._validateEmail(emailInput.value.trim().toLowerCase()) ? '' : t('invalidEmail', '邮箱格式不正确');
-        const codeErr = /^\d{8}$/.test(codeInput.value.trim()) ? '' : t('invalidCode', '验证码为 8 位数字');
 
         submitBtn.disabled = !!(nameErr || passErr || confirmErr || termsErr || emailErr || codeErr);
       };
@@ -3524,7 +3719,8 @@
         }
         sendBtn.disabled = true;
         sendBtn.textContent = t('sending', '发送中...');
-        const res = await APEXON.Auth.sendMailCode(em);
+        const purpose = mode === 'reset' ? 'reset' : (mode === 'register' ? 'register' : 'login');
+        const res = await APEXON.Auth.sendMailCode(em, purpose);
         if (res.ok) {
           errorEl.textContent = '';
           startCountdown();
@@ -3537,16 +3733,20 @@
         }
       };
 
-      tabs.forEach(t => t.addEventListener('click', () => setMode(t.dataset.tab)));
+      tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.tab)));
       modal.querySelector('#apexLoginClose').addEventListener('click', close);
       modal.querySelector('.apex-login-backdrop').addEventListener('click', close);
       usernameInput.addEventListener('input', validate);
       passwordInput.addEventListener('input', validate);
       toggleBtn.addEventListener('click', togglePassword);
+      forgotBtn.addEventListener('click', enterReset);
+      backBtn.addEventListener('click', () => setMode('login'));
       a11yCleanup = this._setupModalA11y(modal, { closeBtn: modal.querySelector('#apexLoginClose'), onClean: close });
 
       const doSubmit = async () => {
+        if (submitting) return;
         if (submitBtn.disabled) return;
+        submitting = true;
         submitBtn.disabled = true;
         submitBtn.textContent = t('processing', '处理中...');
         errorEl.textContent = '';
@@ -3563,10 +3763,19 @@
             rememberMe.checked,
             getGender()
           );
+        } else if (mode === 'reset') {
+          // 找回密码：邮箱 + 验证码 + 新密码
+          successMode = 'reset';
+          result = await APEXON.Auth.resetPassword(
+            emailInput.value.trim().toLowerCase(),
+            codeInput.value.trim(),
+            passwordInput.value
+          );
         } else if (loginMethod === 'email') {
           successMode = 'login';
           result = await APEXON.Auth.emailLogin(emailInput.value.trim().toLowerCase(), codeInput.value.trim(), rememberMe.checked);
           if (!result.success && result.noAccount) {
+            submitting = false;
             submitBtn.disabled = false;
             submitBtn.textContent = t('login', '登录');
             errorEl.textContent = t('emailNotRegistered', '该邮箱尚未注册，请切换到「注册」完成注册');
@@ -3574,18 +3783,40 @@
           }
         } else {
           successMode = 'login';
-          result = await APEXON.Auth.login(usernameInput.value.trim(), passwordInput.value, rememberMe.checked);
+          // 若后端此前要求人机验证，携带题目 id 与用户作答
+          const captcha = captchaId ? { id: captchaId, answer: captchaAnswerInput.value.trim() } : undefined;
+          result = await APEXON.Auth.login(usernameInput.value.trim(), passwordInput.value, rememberMe.checked, captcha);
         }
-        submitBtn.disabled = false;
+        submitting = false;
         if (result.success) {
+          if (successMode === 'reset') {
+            close();
+            this.toast(t('resetSuccess', '密码已重置，请用新密码登录'), 3000, 'success');
+            return;
+          }
           close();
           this.updateUserDisplay();
           this.toast(successMode === 'register' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('registerSuccess') : '注册成功') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('loginSuccess') : '登录成功'), 2500, 'success');
           document.dispatchEvent(new CustomEvent('apexon:userchange', { detail: { loggedIn: true, user: APEXON.Auth.getUser() } }));
-        } else {
-          submitBtn.textContent = successMode === 'register' ? (window.APEXON && APEXON.i18n ? APEXON.i18n.t('register') : '注册') : (window.APEXON && APEXON.i18n ? APEXON.i18n.t('login') : '登录');
-          errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
+          return;
         }
+        // 登录被要求人机验证：后端下发新题目，展示后由用户补填再提交
+        if (result.needCaptcha && result.captcha && result.captcha.id) {
+          captchaId = result.captcha.id;
+          captchaQuestionEl.textContent = result.captcha.question || '';
+          captchaAnswerInput.value = '';
+          showField(captchaGroup, true);
+          captchaHint.textContent = t('captchaInvalid', '人机验证未通过，请按新题目重新填写');
+          captchaHint.className = 'apex-hint invalid';
+          submitBtn.disabled = false;
+          submitBtn.textContent = t('login', '登录');
+          errorEl.textContent = result.error || t('captchaInvalid', '人机验证未通过，请按新题目重新填写');
+          captchaAnswerInput.focus();
+          return;
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = successMode === 'register' ? t('register', '注册') : (successMode === 'reset' ? t('resetSubmit', '重置密码') : t('login', '登录'));
+        errorEl.textContent = result.error || (window.APEXON && APEXON.i18n ? APEXON.i18n.t('operationFailed') : '操作失败');
       };
 
       submitBtn.addEventListener('click', doSubmit);
@@ -3593,10 +3824,12 @@
       methodBtns.forEach(b => b.addEventListener('click', () => pickMethod(b.dataset.method)));
       emailInput.addEventListener('input', validate);
       codeInput.addEventListener('input', validate);
+      captchaAnswerInput.addEventListener('input', () => { captchaHint.textContent = ''; captchaHint.className = 'apex-hint'; });
       emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') codeInput.focus(); });
       codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
+      captchaAnswerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
       passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') {
-        if (mode === 'register') confirmInput.focus();
+        if (mode === 'register' || mode === 'reset') confirmInput.focus();
         else doSubmit();
       }});
       confirmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSubmit(); });
