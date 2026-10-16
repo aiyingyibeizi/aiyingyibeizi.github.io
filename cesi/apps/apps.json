@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-10-16T11:47:00+08:00",
+  "updated": "2026-10-16T17:45:04+08:00",
   "note": "这是 APEXON 的安装包版本清单。网站 /apps.html 与手机 APP 端都读取本文件。更新版本时只改这里，再上传对应安装包即可。详细步骤见同目录 README.txt。",
   "apps": [
     {
@@ -14,19 +14,33 @@
       "highlights": ["实时天气", "多日预报", "空气质量"],
       "requirements": "Android 7.0 及以上",
       "latest": {
-        "version": "2.3.2",
-        "versionCode": 16,
+        "version": "2.4.0",
+        "versionCode": 17,
         "packageType": "apk",
         "date": "2026-10-16",
         "size": "36.1 MB",
-        "file": "apps/apexon-weather-2.3.2.apk",
-        "sha256": "3ad572b86922ad4e0d1e6f1c6654ac42b7b335e0fa31466c65db356b35e100e8",
+        "file": "apps/apexon-weather-2.4.0.apk",
+        "sha256": "714d417c208e4186e3d6341d007fd7479a55c6caf1c2d3112f2cd146a69c1740",
         "minSdk": 24,
         "changelog": [
-          "版本 2.3.2（构建号 16）发布"
+          "版本 2.4.0（构建号 17）发布"
         ]
       },
-      "history": []
+      "history": [
+        {
+          "version": "2.3.2",
+          "versionCode": 16,
+          "packageType": "apk",
+          "date": "2026-10-16",
+          "size": "36.1 MB",
+          "file": "apps/apexon-weather-2.3.2.apk",
+          "sha256": "3ad572b86922ad4e0d1e6f1c6654ac42b7b335e0fa31466c65db356b35e100e8",
+          "minSdk": 24,
+          "changelog": [
+            "版本 2.3.2（构建号 16）发布"
+          ]
+        }
+      ]
     }
   ]
 }
