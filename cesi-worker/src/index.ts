@@ -137,9 +137,13 @@ async function verifyMailCode(redis: Redis, email: string, code: string): Promis
       await redis.del(mailKey(email)).catch(() => {});
       return false;
     }
-    const expect = await redis.get<string>(mailKey(email));
-    if (!expect) return false;
-    if (expect !== code) return false;
+    const expect = await redis.get(mailKey(email));
+    if (expect === null || expect === undefined || expect === '') return false;
+    // 关键修复（验证码「明明有效却提示无效/已过期」的根因）：
+    // @upstash/redis 的自动反序列化会把纯数字字符串（如 "12345678"）还原成 JS number，
+    // 于是 `expect !== code`（number !== string）恒为 true，永远判定失败。
+    // 这里统一转成字符串再比较，彻底消除类型差异带来的误判。
+    if (String(expect) !== code) return false;
     await redis.del(mailKey(email));
     await redis.del(tryKey).catch(() => {});
     return true;
@@ -644,8 +648,10 @@ app.post('/api/auth/send-code', async (c) => {
   const cfg = emailConfig(env);
   if (!cfg) return c.json({ error: 'email not configured' }, 503);
 
-  const body = await c.req.json<{ email?: unknown }>().catch((): { email?: unknown } => ({}));
+  const body = await c.req.json<{ email?: unknown; purpose?: unknown }>().catch((): { email?: unknown; purpose?: unknown } => ({}));
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  // purpose 仅用于区分邮件文案（login / register / reset），不改变验证码本身的存储与校验逻辑。
+  const purpose = str(body.purpose, 16).trim();
   if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
 
   // 频率限制：按邮箱与 IP 双重限速（60 秒内限 2 次发码）
@@ -668,16 +674,20 @@ app.post('/api/auth/send-code', async (c) => {
   const code = await issueMailCode(redis, email);
   if (!code) return c.json({ error: 'Internal error (code issue)' }, 500);
 
-  const text = ['【APEXON】您的验证码', `验证码：${code}`, '10 分钟内有效，请勿泄露给他人。若非本人操作请忽略本邮件。'].join('\n');
+  const isReset = purpose === 'reset';
+  const subject = isReset ? 'APEXON 重置密码验证码' : 'APEXON 验证码';
+  const heading = isReset ? '重置密码验证码' : '邮箱验证码';
+  const lead = isReset ? '你正在重置 APEXON 账号密码，以下是本次验证码：' : '你正在进行登录 / 注册操作，以下是本次验证码：';
+  const text = [`【APEXON】${heading}`, `验证码：${code}`, '10 分钟内有效，请勿泄露给他人。若非本人操作请忽略本邮件。'].join('\n');
   const html = `<div style="background:#eef0fb;padding:28px 16px;font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,Verdana,sans-serif;">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e4e6f2;box-shadow:0 12px 40px rgba(76,93,255,.10);">
     <div style="background:linear-gradient(135deg,#4f6bff 0%,#8b5cf6 100%);padding:26px 28px;">
       <div style="font-size:15px;font-weight:700;color:#ffffff;letter-spacing:.5px;">⚡ APEXON</div>
-      <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:4px;">邮箱验证码</div>
+      <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:4px;">${heading}</div>
     </div>
     <div style="padding:26px 28px 30px;">
       <p style="margin:0 0 6px;font-size:15px;color:#1a2140;line-height:1.6;">你好，</p>
-      <p style="margin:0 0 18px;font-size:14px;color:#5a6286;line-height:1.7;">你正在进行登录 / 注册操作，以下是本次验证码：</p>
+      <p style="margin:0 0 18px;font-size:14px;color:#5a6286;line-height:1.7;">${lead}</p>
       <div style="background:#f6f7ff;border:1.5px dashed #9aa7ff;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
         <div style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:8px;color:#4f6bff;">${code}</div>
       </div>
@@ -689,7 +699,7 @@ app.post('/api/auth/send-code', async (c) => {
   </div>
 </div>`;
 
-  const sent = await sendMail(cfg, email, 'APEXON 验证码', html, text);
+  const sent = await sendMail(cfg, email, subject, html, text);
   if (!sent.ok) {
     // 发送失败：清除刚生成的验证码，避免残留误用
     await redis.del(mailKey(email)).catch(() => {});
@@ -774,6 +784,86 @@ app.post('/api/auth/email-login', async (c) => {
   }
 
   return c.json({ user_id: account.user_id, username: payload.username || account.user_id, token: sessionToken, expires_at: expiresAt });
+});
+
+// ③ 找回密码：邮箱 + 验证码 + 新密码（国际标准「邮箱验证码重置密码」流程）
+// 必须保持公开（注册在 app.use('/api/*', authOrAdmin) 之前）。
+app.post('/api/auth/reset-password', async (c) => {
+  const env = c.env as Env;
+  const cfg = emailConfig(env);
+  if (!cfg) return c.json({ error: 'email not configured' }, 503);
+
+  const body = await c.req
+    .json<{ email?: unknown; code?: unknown; new_password?: unknown }>()
+    .catch((): { email?: unknown; code?: unknown; new_password?: unknown } => ({}));
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const code = str(body.code, 8).trim();
+  const newPassword = str(body.new_password, 512);
+
+  if (!isValidEmail(email)) return c.json({ error: 'Invalid email' }, 400);
+  if (!/^\d{8}$/.test(code)) return c.json({ error: 'Invalid or expired verification code' }, 400);
+  if (newPassword.length < 8 || !/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    return c.json({ error: 'Password must be at least 8 characters and contain both letters and numbers' }, 400);
+  }
+
+  const redis = getRedis(env);
+  const ip = clientIp(c);
+  // 双重限速，防止脚本对单一邮箱持续爆破验证码
+  if (!(await rateLimit(redis, rlKey('reset-ip', ip), 20, 60)) ||
+      !(await rateLimit(redis, rlKey('reset-mail', email), 10, 60))) {
+    return c.json({ error: 'Too many attempts, please try again later' }, 429);
+  }
+
+  const shard = await buildShardService(env);
+  // 与 email-login 一致：先查账号再校验验证码，邮箱不存在时不消耗一次性验证码
+  const account = await shard.findAccount('email', email);
+  if (!account) return c.json({ error: 'No account with this email' }, 404);
+
+  if (!(await verifyMailCode(redis, email, code))) {
+    return c.json({ error: 'Invalid or expired verification code' }, 400);
+  }
+
+  const payload: any = JSON.parse(account.payload);
+  if (payload.banned === true) return c.json({ error: 'No account with this email' }, 404);
+
+  const previousToken = typeof payload.session_token === 'string' ? payload.session_token : '';
+  payload.password_hash = await hashPassword(newPassword);
+  // 重置密码视为一次安全事件：吊销既有会话，强制所有已登录端重新登录
+  payload.session_token = null;
+  payload.session_expires_at = null;
+  payload.password_reset_at = new Date().toISOString();
+
+  const writeResult = await shard.write({
+    id: uuid(),
+    user_id: account.user_id,
+    type: 'account',
+    subtype: null,
+    score_value: null,
+    payload: JSON.stringify(payload),
+    file_url: null,
+    created_at: account.created_at,
+    updated_at: new Date().toISOString(),
+  }, { waitUntil: c.executionCtx.waitUntil.bind(c.executionCtx) });
+  if (!writeResult.ok) return c.json({ error: writeResult.error }, 503);
+  await shard.deleteById(account.id);
+
+  // 主动吊销旧会话缓存（失败可接受，数据库侧已置空 token）
+  if (previousToken) await revokeSession(redis, previousToken);
+
+  // 密码重置通知：有通知渠道时提醒账号主人（fire-and-forget）
+  const waitUntil = c.executionCtx.waitUntil.bind(c.executionCtx);
+  if (env.ADMIN_ALERT_WEBHOOK) {
+    sendNotify(env.ADMIN_ALERT_WEBHOOK, {
+      title: 'APEXON · 密码已重置',
+      theme: 'orange',
+      lines: [
+        { label: '账号', value: account.user_id },
+        { label: '来源 IP', value: ip },
+      ],
+    }, waitUntil);
+  }
+
+  return c.json({ ok: true, username: payload.username || account.user_id });
 });
 
 app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedis), async (c) => {

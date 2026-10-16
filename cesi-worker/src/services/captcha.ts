@@ -58,9 +58,11 @@ export async function verifyCaptcha(redis: Redis, id: string, answer: string): P
   const expect = answer.trim();
   if (!/^\d+$/.test(expect)) return false;
   try {
-    const stored = await redis.get<string>(`${CAP_PREFIX}${safeKey(id)}`);
-    if (!stored) return false;
-    const ok = stored === expect;
+    const stored = await redis.get(`${CAP_PREFIX}${safeKey(id)}`);
+    if (stored === null || stored === undefined || stored === '') return false;
+    // 与邮箱验证码同源问题：@upstash/redis 会把纯数字字符串反序列化成 number，
+    // 故必须统一转字符串比较，否则算数验证码也会「永远校验失败」。
+    const ok = String(stored) === expect;
     await redis.del(`${CAP_PREFIX}${safeKey(id)}`);
     return ok;
   } catch (err) {
