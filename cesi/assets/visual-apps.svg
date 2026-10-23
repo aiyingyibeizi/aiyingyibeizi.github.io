@@ -1,30 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" width="160" height="110" role="img" aria-label="Apps">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" width="160" height="110" role="img" aria-label="Apps">
   <defs>
-    <linearGradient id="aPanel" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0f2033"/>
-      <stop offset="1" stop-color="#08131f"/>
+    <linearGradient id="aCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d2033"/>
+      <stop offset="1" stop-color="#06111c"/>
     </linearGradient>
-    <linearGradient id="aScreen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2dd4bf"/>
-      <stop offset="1" stop-color="#22d3ee"/>
+    <linearGradient id="aFrame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9ff6ff"/>
+      <stop offset="0.45" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0e7490"/>
     </linearGradient>
+    <linearGradient id="aScreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b2331"/>
+      <stop offset="1" stop-color="#071420"/>
+    </linearGradient>
+    <linearGradient id="aT1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
+    <linearGradient id="aT2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+    <linearGradient id="aT3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f9a8d4"/><stop offset="1" stop-color="#db2777"/></linearGradient>
+    <linearGradient id="aT4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#059669"/></linearGradient>
+    <linearGradient id="aT5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+    <linearGradient id="aT6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fca5a5"/><stop offset="1" stop-color="#dc2626"/></linearGradient>
+    <linearGradient id="aBadge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8df7ff"/>
+      <stop offset="0.5" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+    <radialGradient id="aGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#22d3ee" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="aBlur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="aSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
   </defs>
-  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#aPanel)"/>
-  <rect x="3" y="3" width="154" height="104" rx="18" fill="url(#aScreen)" opacity="0.10"/>
-  <rect x="3" y="3" width="154" height="104" rx="18" fill="none" stroke="#2dd4bf" stroke-opacity="0.30"/>
-  <rect x="58" y="9" width="44" height="92" rx="11" fill="#0d1b2a" stroke="#2dd4bf" stroke-width="2"/>
-  <rect x="63" y="19" width="34" height="72" rx="7" fill="#071a22"/>
-  <rect x="74" y="13" width="12" height="3.5" rx="1.75" fill="#0a1520"/>
+
+  <rect x="4" y="4" width="312" height="212" rx="34" fill="url(#aCard)"/>
+  <rect x="4.75" y="4.75" width="310.5" height="210.5" rx="33.25" fill="none" stroke="url(#aFrame)" stroke-opacity="0.35" stroke-width="1.5"/>
+  <ellipse cx="158" cy="116" rx="112" ry="92" fill="url(#aGlow)"/>
+
+  <!-- 手机 -->
   <g>
-    <rect x="68" y="25" width="10" height="10" rx="3" fill="#8b7efc"/>
-    <rect x="82" y="25" width="10" height="10" rx="3" fill="#22d3ee"/>
-    <rect x="68" y="39" width="10" height="10" rx="3" fill="#f472b6"/>
-    <rect x="82" y="39" width="10" height="10" rx="3" fill="#34d399"/>
-    <rect x="68" y="53" width="10" height="10" rx="3" fill="#fbbf24"/>
-    <rect x="82" y="53" width="10" height="10" rx="3" fill="#f87171"/>
+    <rect x="104" y="26" width="112" height="172" rx="24" fill="#000000" opacity="0.55" filter="url(#aBlur)"/>
+    <rect x="106" y="24" width="108" height="168" rx="23" fill="#0a1720" stroke="url(#aFrame)" stroke-width="3"/>
+    <rect x="113" y="33" width="94" height="150" rx="16" fill="url(#aScreen)"/>
+    <rect x="113" y="33" width="94" height="150" rx="16" fill="url(#aFrame)" opacity="0.08"/>
+    <rect x="146" y="38" width="28" height="5" rx="2.5" fill="#0a1720"/>
+    <!-- 屏幕高光 -->
+    <path d="M119 40 C116 78 117 128 121 174" fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="9" stroke-linecap="round"/>
+
+    <!-- 应用网格 -->
+    <g>
+      <rect x="124" y="54" width="24" height="24" rx="7" fill="url(#aT1)"/>
+      <rect x="156" y="54" width="24" height="24" rx="7" fill="url(#aT2)"/>
+      <rect x="124" y="86" width="24" height="24" rx="7" fill="url(#aT3)"/>
+      <rect x="156" y="86" width="24" height="24" rx="7" fill="url(#aT4)"/>
+      <rect x="124" y="118" width="24" height="24" rx="7" fill="url(#aT5)"/>
+      <rect x="156" y="118" width="24" height="24" rx="7" fill="url(#aT6)"/>
+      <g fill="#ffffff" opacity="0.5">
+        <rect x="129" y="59" width="14" height="3" rx="1.5"/>
+        <rect x="161" y="59" width="14" height="3" rx="1.5"/>
+        <rect x="129" y="91" width="14" height="3" rx="1.5"/>
+        <rect x="161" y="91" width="14" height="3" rx="1.5"/>
+        <rect x="129" y="123" width="14" height="3" rx="1.5"/>
+        <rect x="161" y="123" width="14" height="3" rx="1.5"/>
+      </g>
+      <!-- 底部 dock -->
+      <rect x="128" y="154" width="64" height="18" rx="9" fill="#ffffff" opacity="0.06"/>
+      <circle cx="140" cy="163" r="4" fill="#8df7ff" opacity="0.8"/>
+      <circle cx="156" cy="163" r="4" fill="#a78bfa" opacity="0.8"/>
+      <circle cx="172" cy="163" r="4" fill="#f9a8d4" opacity="0.8"/>
+    </g>
   </g>
-  <g transform="translate(112,80)">
-    <circle r="17" fill="url(#aScreen)" stroke="#04212b" stroke-width="1.5"/>
-    <path d="M0 -9 V3 M-6 -2 L0 4 L6 -2 M-8 7 H8" fill="none" stroke="#04212b" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 下载徽标 -->
+  <g transform="translate(214 152)">
+    <circle r="30" fill="url(#aBadge)" opacity="0.28" filter="url(#aBlur)"/>
+    <circle r="24" fill="url(#aBadge)"/>
+    <circle r="24" fill="none" stroke="#c7fbff" stroke-opacity="0.35" stroke-width="1.5"/>
+    <path d="M0 -11 V6 M-7 0 L0 7 L7 0" fill="none" stroke="#04212b" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M-10 12 H10" stroke="#04212b" stroke-width="3.4" stroke-linecap="round"/>
   </g>
+
+  <!-- 粒子 -->
+  <circle cx="82" cy="62" r="3.2" fill="#8df7ff" opacity="0.9"/>
+  <circle cx="70" cy="92" r="2" fill="#2dd4bf" opacity="0.7"/>
+  <circle cx="252" cy="70" r="2.2" fill="#8df7ff" opacity="0.7"/>
+  <circle cx="240" cy="100" r="1.6" fill="#67e8f9" opacity="0.5"/>
+  <path d="M258 118 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 Z" fill="#8df7ff" opacity="0.55"/>
 </svg>
