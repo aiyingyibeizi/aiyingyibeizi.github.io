@@ -1,4 +1,4 @@
-name: Deploy Cloudflare Worker
+name: Typecheck Cloudflare Worker
 
 on:
   push:
@@ -31,16 +31,10 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Deploy to Cloudflare Workers
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Deploy is handled by Cloudflare Workers Builds
         run: |
-          # 未配置仓库 Secret 时跳过部署并给出警告，避免每次 push 都因缺凭据而失败。
-          # 在仓库 Settings → Secrets and variables → Actions 添加
-          # CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID 后，此步自动生效、恢复 push 即部署。
-          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
-            echo "::warning::未配置 CLOUDFLARE_API_TOKEN，已跳过 Worker 部署（请到仓库 Secrets 添加后自动启用）。"
-            exit 0
-          fi
-          npx wrangler deploy
+          # 部署已迁移到 Cloudflare Workers Builds（Workers → cesi-worker → 设置 → 构建）：
+          # 该服务已连接本仓库 main 分支，根目录 cesi-worker，push 后由 Cloudflare 自动构建并部署。
+          # 前置步骤的类型检查仍在此处执行，作为提交前的快速门禁。
+          # 因此这里不再调用 wrangler deploy，避免与 Workers Builds 双重部署。
+          echo "Type check passed. Deployment is handled by Cloudflare Workers Builds."
