@@ -33,8 +33,8 @@
     <filter id="aSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
   </defs>
 
-  <rect x="4" y="4" width="312" height="212" rx="34" fill="url(#aCard)"/>
-  <rect x="4.75" y="4.75" width="310.5" height="210.5" rx="33.25" fill="none" stroke="url(#aFrame)" stroke-opacity="0.35" stroke-width="1.5"/>
+  <!-- 背景满出血：容器负责圆角裁切，避免四周露出浅色细边 -->
+  <rect x="0" y="0" width="320" height="220" fill="url(#aCard)"/>
   <ellipse cx="158" cy="116" rx="112" ry="92" fill="url(#aGlow)"/>
 
   <!-- 手机 -->

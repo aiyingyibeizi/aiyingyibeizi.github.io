@@ -32,8 +32,8 @@
     </filter>
   </defs>
 
-  <rect x="4" y="4" width="312" height="212" rx="34" fill="url(#mCard)"/>
-  <rect x="4.75" y="4.75" width="310.5" height="210.5" rx="33.25" fill="none" stroke="url(#mSheen)" stroke-opacity="0.32" stroke-width="1.5"/>
+  <!-- 背景满出血：容器负责圆角裁切，避免四周露出浅色细边 -->
+  <rect x="0" y="0" width="320" height="220" fill="url(#mCard)"/>
   <ellipse cx="130" cy="112" rx="96" ry="82" fill="url(#mGlow)"/>
 
   <!-- 黑胶唱片 -->
