@@ -16,9 +16,10 @@
     <meta name="twitter:title" content="APEXON Music - 在线音乐播放器">
     <meta name="twitter:description" content="发现无版权独立音乐，支持搜索、收藏、最近播放。">
     <title>APEXON Music - 在线音乐播放器</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="canonical" href="https://apexon.qzz.io/music.html">
+    <link rel="icon" type="image/png" href="assets/favicon.png?v=1">
     <link rel="stylesheet" href="styles/variables.css?v=9">
-    <link rel="stylesheet" href="styles/main.css?v=29">
+    <link rel="stylesheet" href="styles/main.css?v=30">
     <style>
         :root {
             --music-sidebar-width: 240px;
@@ -2219,6 +2220,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "xlclo5ihkp");
 </script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://apexon.qzz.io/"},{"@type":"ListItem","position":2,"name":"APEXON Music","item":"https://apexon.qzz.io/music.html"}]}</script>
 </head>
 <body>
     <canvas id="particles"></canvas>
@@ -2226,7 +2228,7 @@
         <div class="apexon-header__inner">
             <div class="apexon-header-left">
                 <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
-                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <img src="assets/favicon.png?v=1" alt="Logo" draggable="false">
                     <span>APEXON</span>
                 </a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
@@ -2288,7 +2290,7 @@
     <div class="music-app">
         <aside class="music-sidebar" id="musicSidebar">
             <div class="music-sidebar__brand">
-                <img src="assets/favicon.png" alt="Logo" draggable="false">
+                <img src="assets/favicon.png?v=1" alt="Logo" draggable="false">
                 <span>APEXON Music</span>
             </div>
             <div class="music-sidebar__section">
@@ -2336,11 +2338,11 @@
                 <div class="music-hero">
                     <div class="music-hero__content">
                         <div class="music-hero__cover">
-                            <img id="heroCover" src="assets/favicon.png" alt="Cover">
+                            <img id="heroCover" src="assets/favicon.png?v=1" alt="Cover">
                         </div>
                         <div class="music-hero__text">
                             <div class="music-hero__label">✨ <span data-i18n="musicHeroDaily">每日推荐</span></div>
-                            <div class="music-hero__title" id="heroTitle" data-i18n="musicHeroTitle">发现无版权独立音乐</div>
+                            <h1 class="music-hero__title" id="heroTitle" data-i18n="musicHeroTitle">发现无版权独立音乐</h1>
                             <div class="music-hero__desc" data-i18n="musicHeroDesc">APEXON Music 汇聚来自全球独立音乐人的 Creative Commons 授权作品，所有曲目均可免费在线收听，无需担心版权风险。你可以通过智能搜索快速找到心仪歌曲，也可以按电子、摇滚、流行、爵士、古典、氛围等分类标签探索新音乐；遇到喜欢的作品，一键收藏到"我喜欢"，随时在"最近播放"中找回听过的旋律。播放器配备底部常驻控制栏，支持进度拖拽、音量调节与列表循环、单曲循环、随机播放三种模式，无论是在能力测试后放松身心，还是在工作学习时寻找节奏陪伴，APEXON Music 都能为你带来流畅、沉浸的高品质音乐体验。</div>
                             <div class="music-hero__actions">
                                 <button class="music-hero__btn" id="heroPlayBtn">▶ <span data-i18n="musicPlayNow">立即播放</span></button>
@@ -2435,7 +2437,7 @@
     <div class="music-player-bar">
         <div class="music-player__info">
             <div class="music-player__cover">
-                <img id="playerCover" src="assets/favicon.png" alt="Cover">
+                <img id="playerCover" src="assets/favicon.png?v=1" alt="Cover">
             </div>
             <div class="music-player__meta">
                 <div class="music-player__title" id="playerTitle">未在播放</div>
@@ -2493,5 +2495,17 @@
         if (window.APEXON && APEXON.Particles) APEXON.Particles.init();
         document.body.classList.add('loaded');
     </script>
+
+    <footer class="site-footer site-footer--with-player">
+      <div class="site-footer__inner">
+        <nav class="site-footer__nav" aria-label="站点信息">
+          <a href="about.html" data-i18n="footerAbout">关于本站</a>
+          <a href="privacy.html" data-i18n="footerPrivacy">隐私政策</a>
+          <a href="terms.html" data-i18n="footerTerms">服务条款</a>
+          <a href="apps.html" data-i18n="footerApps">APP 下载</a>
+        </nav>
+        <p class="site-footer__copy" data-i18n="footerCopy">© 2026 APEXON · 免费在线认知能力测试</p>
+      </div>
+    </footer>
 </body>
 </html>

@@ -9377,3 +9377,63 @@ button[data-i18n="testAgain"][disabled] {
   box-shadow: 0 0 10px rgba(108, 140, 255, 0.45);
 }
 
+
+/* ---------- 全站页脚（内链与站点信息） ---------- */
+.site-footer {
+  margin-top: 64px;
+  padding: 28px 16px calc(28px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--apex-border);
+  background: transparent;
+}
+
+/* 音乐页底部有常驻播放条，页脚让出空间避免被遮挡 */
+.site-footer--with-player {
+  padding-bottom: calc(var(--music-player-total, 96px) + 28px);
+}
+
+.site-footer__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.site-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+}
+
+.site-footer__nav a {
+  color: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  opacity: 0.78;
+  transition: opacity 0.18s ease;
+}
+
+.site-footer__nav a:hover,
+.site-footer__nav a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer__copy {
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.55;
+}
+
+/* SEO：主标题由 div 改为 h1 后，清除浏览器默认外边距 */
+h1.hero-title-main {
+  margin: 0 0 8px;
+}
+
+h1.music-hero__title {
+  margin: 0 0 12px;
+}

@@ -7,17 +7,19 @@
     <meta name="description" content="APEXON 站内搜索：搜索能力测试、站内页面与音乐。">
     <meta name="robots" content="noindex">
     <title data-i18n="searchTitle">搜索 - APEXON</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="icon" type="image/png" href="assets/favicon.png?v=1">
     <link rel="stylesheet" href="styles/variables.css?v=9">
-    <link rel="stylesheet" href="styles/main.css?v=29">
+    <link rel="stylesheet" href="styles/main.css?v=30">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://apexon.qzz.io/"},{"@type":"ListItem","position":2,"name":"搜索","item":"https://apexon.qzz.io/search.html"}]}</script>
 </head>
 <body>
+    <h1 class="sr-only">站内搜索</h1>
     <canvas id="particles"></canvas>
     <header class="apexon-header">
         <div class="apexon-header__inner">
             <div class="apexon-header-left">
                 <a href="index.html" class="apexon-header-logo nav-main" draggable="false" ondragstart="return false" onselectstart="return false">
-                    <img src="assets/favicon.png" alt="Logo" draggable="false">
+                    <img src="assets/favicon.png?v=1" alt="Logo" draggable="false">
                     <span>APEXON</span>
                 </a>
                 <label class="apex-bw-toggle" id="bwToggle" data-i18n-title="themeToggle" title="切换深色/明亮主题">
@@ -118,5 +120,17 @@
         document.body.classList.add('loaded');
     })();
     </script>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <nav class="site-footer__nav" aria-label="站点信息">
+          <a href="about.html" data-i18n="footerAbout">关于本站</a>
+          <a href="privacy.html" data-i18n="footerPrivacy">隐私政策</a>
+          <a href="terms.html" data-i18n="footerTerms">服务条款</a>
+          <a href="apps.html" data-i18n="footerApps">APP 下载</a>
+        </nav>
+        <p class="site-footer__copy" data-i18n="footerCopy">© 2026 APEXON · 免费在线认知能力测试</p>
+      </div>
+    </footer>
 </body>
 </html>
