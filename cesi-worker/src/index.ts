@@ -41,6 +41,14 @@ function num(v: unknown): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
+/**
+ * 读取 JSON 请求体：空 body / 非法 JSON 一律回退成空对象。
+ * 裸 `await c.req.json()` 在扫描器或爬虫发空 POST 时会抛异常，被 onError 兜成 500；
+ * 统一走这里后由各路由的字段校验正常返回 400。
+ */
+function jsonBody<T>(c: { req: { json: <U>() => Promise<U> } }): Promise<T> {
+  return c.req.json<T>().catch(() => ({} as T));
+}
 
 // 成绩合理性上下限（按测试类型收口离群值，min/max）
 const SCORE_BOUNDS: Record<string, [number, number]> = {
@@ -334,6 +342,31 @@ type Variables = {
   adminSessionToken?: string;
 };
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+/**
+ * 判断某个 /api 路径是否真的注册了处理器。
+ *
+ * 之前 `app.use('/api/*', authOrAdmin)` 的匹配范围大于实际路由：任何不存在的
+ * /api/xxx 都会先被鉴权中间件拦成 401。扫描器、旧客户端、拼错路径的探测因此
+ * 全部记成"认证失败"，既污染 4xx 指标，又会触发前端的 anon_refresh 重试逻辑，
+ * 让一次探测变成两次请求。这里先做一次路由存在性判断，未注册路径直接 404。
+ */
+let apiRoutePatterns: RegExp[] | null = null;
+function isRegisteredApiRoute(path: string): boolean {
+  if (!apiRoutePatterns) {
+    apiRoutePatterns = app.routes
+      .filter((r) => r.method !== 'ALL' && r.path.startsWith('/api/'))
+      .map((r) => {
+        const segs = r.path.split('/').map((s) => {
+          if (s === '*') return '.*';
+          if (s.startsWith(':')) return '[^/]+';
+          return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        });
+        return new RegExp(`^${segs.join('/')}$`);
+      });
+  }
+  return apiRoutePatterns.some((re) => re.test(path));
+}
 
 app.use('*', async (c, next) => {
   const origin = c.req.header('Origin') || '';
@@ -868,7 +901,7 @@ app.post('/api/auth/reset-password', async (c) => {
 
 app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedis), async (c) => {
   const userId = c.get('userId');
-  const { anon_id } = await c.req.json<{ anon_id?: string }>();
+  const { anon_id } = await jsonBody<{ anon_id?: string }>(c);
   if (!anon_id || !anon_id.startsWith('anon_')) return c.json({ error: 'Invalid anon_id' }, 400);
 
   const shard = await buildShardService(c.env);
@@ -884,7 +917,7 @@ app.post('/api/auth/merge-anon', createAuthMiddleware(buildShardService, getRedi
 
 // feedback 提交（公开接口，不需要认证）
 app.post('/api/feedback', async (c) => {
-  const body = await c.req.json<{ name?: string; email?: string; content?: string }>();
+  const body = await jsonBody<{ name?: string; email?: string; content?: string }>(c);
   const name = (body.name || '').toString().trim().slice(0, 60);
   const email = (body.email || '').toString().trim().slice(0, 120);
   const content = (body.content || '').toString().trim().slice(0, 2000);
@@ -965,7 +998,11 @@ app.get('/api/stats', async (c) => {
 });
 
 // Protected API routes.
-function authOrAdmin(c: Parameters<ReturnType<typeof createAuthMiddleware>>[0], next: () => Promise<void>) {
+async function authOrAdmin(c: Parameters<ReturnType<typeof createAuthMiddleware>>[0], next: () => Promise<void>) {
+  // 未注册的 /api 路径直接 404：避免把扫描器探测误记成 401 鉴权失败
+  if (!isRegisteredApiRoute(c.req.path)) {
+    return c.json({ success: false, error: 'Not found', path: c.req.path }, 404);
+  }
   // /api/admin/* 由 ADMIN_TOKEN 单独把关（见对应路由），不走用户登录态
   if (c.req.path.startsWith('/api/admin')) return next();
   return createAuthMiddleware(buildShardService, getRedis)(c, next);
@@ -1170,7 +1207,7 @@ app.get('/api/scores', async (c) => {
 
 app.post('/api/scores', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{
+  const body = await jsonBody<{
     username?: string;
     test_type?: string;
     score_value?: number;
@@ -1179,7 +1216,7 @@ app.post('/api/scores', async (c) => {
     cpm?: number;
     leaderboard_eligible?: boolean;
     payload?: Record<string, unknown>;
-  }>();
+  }>(c);
 
   const testType = str(body.test_type, 40).trim();
   if (!testType || !/^[\w-]{1,40}$/.test(testType)) {
@@ -1468,7 +1505,7 @@ app.get('/api/comments', async (c) => {
 
 app.post('/api/comments', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ username?: string; content?: string; category?: string }>();
+  const body = await jsonBody<{ username?: string; content?: string; category?: string }>(c);
   const content = str(body.content, 500).trim();
   if (!content) return c.json({ error: 'content is required' }, 400);
   const category = str(body.category, 30).trim() || 'chat';
@@ -1617,7 +1654,7 @@ app.get('/api/profiles/:userId', async (c) => {
 
 app.post('/api/profiles', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<Record<string, unknown>>();
+  const body = await jsonBody<Record<string, unknown>>(c);
   // 限 profile 体积，防止注入超大 payload 拖垮存储
   const serialized = JSON.stringify(body);
   if (serialized.length > 8192) return c.json({ error: 'profile too large' }, 413);
@@ -1700,7 +1737,7 @@ app.post('/api/profiles', async (c) => {
 // 修改用户名（原先走 Supabase RPC change_username，现统一走 Worker）
 app.post('/api/profiles/username', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ old_username?: string; new_username?: string; token?: string }>();
+  const body = await jsonBody<{ old_username?: string; new_username?: string; token?: string }>(c);
   if (!body.new_username || typeof body.new_username !== 'string') {
     return c.json({ success: false, error: '新用户名不能为空' }, 400);
   }
@@ -1889,7 +1926,7 @@ app.post('/api/popularity/report', async (c) => {
 // online_users 心跳（轻量级，失败不影响用户体验）
 app.post('/api/online_users', async (c) => {
   try {
-    const body = await c.req.json<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>();
+    const body = await jsonBody<{ user_id?: string; last_seen?: string; on_conflict?: boolean }>(c);
     // 优先取鉴权后的真实身份，避免客户端伪造 user_id 灌水在线数
     const userId = str(c.get('userId') || body.user_id, 64).trim();
     if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);
@@ -1921,7 +1958,7 @@ app.post('/api/online_users', async (c) => {
 
 // users 表 upsert（syncUser：首次登录/注册时写基础资料）
 app.post('/api/users', async (c) => {
-  const body = await c.req.json<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>();
+  const body = await jsonBody<{ user_id?: string; username?: string; email?: string; on_conflict?: boolean }>(c);
   // 优先取鉴权后的真实身份，避免客户端伪造 user_id 为任意用户建行
   const userId = str(c.get('userId') || body.user_id, 64).trim();
   if (!userId) return c.json({ ok: false, error: 'user_id 不能为空' }, 400);

@@ -201,9 +201,18 @@
       const headers = { 'Content-Type': 'application/json' };
       // 关键修复：所有请求默认带上认证信息，避免公开接口（排行榜、评论、统计）被 auth 中间件 401 拦截。
       // 优先级：显式 token > Auth session token > Auth userId/anonId
-      const effectiveToken = token
+      let effectiveToken = token
         || (typeof Auth !== 'undefined' && Auth.getToken && Auth.getToken())
         || (typeof Auth !== 'undefined' && Auth.getUserId && Auth.getUserId());
+      // 游客身份必须在发请求前就已是服务端签名版本：否则首个请求必定 401，
+      // 再靠 401 重试补签，等于每个接口都白打一次失败请求（4xx 噪声的主要来源之一）。
+      // ensureSignedAnonId 命中已签名身份时零成本，仅在未签名时才真正去领号。
+      if (!token && typeof Auth !== 'undefined' && Auth.ensureSignedAnonId && !Auth.getToken()) {
+        try {
+          const signed = await Auth.ensureSignedAnonId();
+          if (signed) effectiveToken = signed;
+        } catch (e) { /* 离线时沿用本地身份，交给下面的 401 重试兜底 */ }
+      }
       if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
       const options = { method, headers };
       if (body != null) options.body = JSON.stringify(body);
@@ -999,6 +1008,8 @@
   const Auth = {
     currentUser: null,
     anonId: null,
+    // 匿名身份领号请求的并发去重句柄（见 refreshAnonId）
+    _anonRefreshPromise: null,
     SESSION_DAYS: 7,
     // 当前会话是否持久化在 localStorage（false = 仅存 sessionStorage）
     _persisted: false,
@@ -1172,25 +1183,35 @@
 
     // 向服务端领取一个带 HMAC 签名的匿名身份（公开接口，无需登录）。
     // 说明：直接使用 fetch 而非 WorkerAPI.request，避免与其 401 重试逻辑相互递归。
+    // 并发去重：首屏会有多个请求同时发现「本地身份未签名」，若各自去领号就会打出
+    // 一串重复的 /api/auth/anon；这里复用同一个 in-flight Promise，只领一次。
     async refreshAnonId() {
-      try {
-        const res = await fetch(`${WORKER_API_URL}/api/auth/anon`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}'
-        });
-        if (res.ok) {
-          const data = await res.json().catch(() => null);
-          if (data && typeof data.anon_id === 'string' && data.anon_id.indexOf('anon_') === 0) {
-            this.anonId = data.anon_id;
-            try { localStorage.setItem('apexon-anon-id', this.anonId); } catch (e) { /* ignore */ }
-            return this.anonId;
+      if (this._anonRefreshPromise) return this._anonRefreshPromise;
+      this._anonRefreshPromise = (async () => {
+        try {
+          const res = await fetch(`${WORKER_API_URL}/api/auth/anon`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+          });
+          if (res.ok) {
+            const data = await res.json().catch(() => null);
+            if (data && typeof data.anon_id === 'string' && data.anon_id.indexOf('anon_') === 0) {
+              this.anonId = data.anon_id;
+              try { localStorage.setItem('apexon-anon-id', this.anonId); } catch (e) { /* ignore */ }
+              return this.anonId;
+            }
           }
+        } catch (e) {
+          // 网络异常：保留本地临时身份，后续请求再次触发刷新
         }
-      } catch (e) {
-        // 网络异常：保留本地临时身份，后续请求再次触发刷新
+        return this.anonId;
+      })();
+      try {
+        return await this._anonRefreshPromise;
+      } finally {
+        this._anonRefreshPromise = null;
       }
-      return this.anonId;
     },
 
     // 确保当前匿名身份已签名；未签名则立即向服务端换取。
