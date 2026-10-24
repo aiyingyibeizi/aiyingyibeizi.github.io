@@ -423,6 +423,12 @@ app.use('*', async (c, next) => {
 
 app.get('/', (c) => c.text('APEXON Worker is running'));
 
+// 爬虫/浏览器固定探测路径：给明确应答，避免它们变成 4xx 噪声计入错误率
+app.get('/robots.txt', (c) =>
+  c.text('User-agent: *\nDisallow: /\n', 200, { 'Cache-Control': 'public, max-age=86400' })
+);
+app.get('/favicon.ico', (c) => c.body(null, 204));
+
 // Public auth endpoints (not protected by auth middleware).
 // 注册必须绑定邮箱：用户名 + 密码 + 邮箱 + 邮箱验证码，四者缺一不可（原「邮箱注册」已合并到此）。
 app.post('/api/auth/register', async (c) => {
