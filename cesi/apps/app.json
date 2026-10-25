@@ -1,0 +1,126 @@
+{
+  "id": "com.apexon.weather",
+  "name": "APEXON Weather",
+  "nameZh": "APEXON 天气",
+  "version": "2.7.6",
+  "versionCode": 27,
+  "releaseDate": "2026-10-25",
+  "buildTime": "2026-10-25T16:34:43+08:00",
+  "size": 38115325,
+  "sizeText": "36.35 MB",
+  "sha256": "01E237F1F708A8C41A4C3603D93D4E235AF256FD928ACCBB2BF480D332E29F6F",
+  "platform": "android",
+  "packageType": "apk",
+  "architectures": "universal",
+  "minAndroidSdk": 24,
+  "targetAndroidSdk": 36,
+  "minOsVersion": "Android 7.0",
+  "signature": "APEXON release keystore",
+  "publisher": "APEXON",
+  "license": "Proprietary",
+  "homepage": "https://apexon.qzz.io/",
+  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.7.6.apk",
+  "icon": "icon-512x512.png",
+  "iconUrl": "",
+  "summary": "一个安静、克制、为每天而生的天气应用。",
+  "summaryEn": "A quiet, restrained weather app built for every day.",
+  "description": "APEXON 天气，把「看一眼天气」这件事做到极致。\n\n实时天气、24 小时逐时预报、7 天趋势、空气质量与健康建议、灾害预警，全部在一屏之内读完。动态背景会随天气自行切换：晴、雨、雪、雷、雾、星空，各自有各自的颜色。\n\n它很省：多层缓存与请求去重把每日接口调用压到最低；断网也能看上一份数据。它也不吵：没有弹窗、没有广告、没有冗余动画，只有你需要的那几个数字。\n\n支持全国城市搜索与多城市管理、自动 / 浅色 / 深色主题、10 种语言、iOS 与 Android 安全区自适应，并且可以离线安装到桌面。\n\n天气我管不了，但把天气讲清楚这件事，我尽力。",
+  "descriptionEn": "APEXON Weather takes \"just checking the weather\" to its limit.\n\nReal-time conditions, 24-hour hourly forecast, 7-day trend, air quality with health advice and weather alerts — all readable on a single screen. The background shifts with the sky: clear, rain, snow, thunder, fog, starfield, each with its own palette.\n\nIt is thrifty: layered caching and request de-duplication keep daily API calls to a minimum, and a saved snapshot is still there when the network is not. It is also quiet: no pop-ups, no ads, no ornamental animation — only the numbers you actually need.\n\nCity search and multi-city management, auto / light / dark themes, 10 languages, safe-area aware on both iOS and Android, and installable to the home screen for offline use.\n\nI cannot control the weather, but I try my best to explain it clearly.",
+  "changelogI18n": {
+    "zh-CN": [
+      "新增「天气相册」：拍下或从系统相册选一张，连当时的城市、天气、温度一起存进本机，只在你这台手机上，不上传、不联网，可随时导出到相册。",
+      "发现页重排为「今日主推 + 关系 / 记忆 / 气候 / 工具」四个分区：按当前天气和时段挑一个最相关的工具放在最上面，其余收进横向卡组。",
+      "新增「一起看」：挑两座城市并排看同一时刻的天空，一键生成并排图存到手机。",
+      "手感补齐：下拉刷新分级震动、卡片首次入场错落、湿度与气压数字滚动、页面切换新页淡入旧页上移、弹窗可下拉关闭、空态插画随天气轻动、断网时灰显上一次的数据并标注时间。",
+      "城市拖拽抄起时放大并加深阴影；按住温度区间条左右滑动可逐日看明细；24 小时滑过「现在」时标题旁亮起「明天」；牵挂区可整体折叠。"
+    ],
+    "zh-TW": [
+      "新增「天氣相冊」：拍下或從系統相簿挑一張，連同當下的城市、天氣、溫度一起存進本機，只在這一台手機上，不上傳、不聯網，可隨時匯出到相簿。",
+      "發現頁重排為「今日主推 + 關係 / 記憶 / 氣候 / 工具」四個分區：依當下天氣與時段挑一個最相關的工具放在最上面，其餘收進橫向卡組。",
+      "新增「一起看」：挑兩座城市並排看同一時刻的天空，一鍵產生並排圖存到手機。",
+      "手感補齊：下拉重新整理分級震動、卡片首次入場錯落、濕度與氣壓數字滾動、頁面切換新頁淡入舊頁上移、彈窗可下拉關閉、空態插畫隨天氣輕動、斷網時灰顯上一次的資料並標註時間。",
+      "城市拖曳抄起時放大並加深陰影；按住溫度區間條左右滑動可逐日看明細；24 小時滑過「現在」時標題旁亮起「明天」；牽掛區可整體折疊。"
+    ],
+    "en": [
+      "New Weather album: keep a shot on this phone together with its city, weather and temperature — no upload, no network, exportable to photos.",
+      "Discover is rearranged into a daily hero card plus four sections (relationships / memory / climate / tools).",
+      "New Watch together: two cities side by side at the same moment, saved as one image.",
+      "Feel polish: graded pull-to-refresh haptics, staggered first-entry cards, rolling humidity and pressure digits, asymmetric page transitions, drag-to-dismiss sheets, weather-aware empty states, and a dimmed last-known snapshot when offline.",
+      "City cards lift while dragging; scrub the temperature bar for each day; a Tomorrow chip appears in the 24-hour strip; the care section folds away."
+    ],
+    "ja": [
+      "「天気アルバム」を追加。撮影またはライブラリの一枚を、そのときの街・天気・気温と一緒にこの端末だけに保存します。",
+      "発見ページを「今日のおすすめ＋関係／記憶／気候／ツール」の4区分に再構成しました。",
+      "「いっしょに見る」を追加。2つの街の同じ瞬間の空を並べて画像にします。",
+      "手触りの仕上げ：段階的な振動、カードの時間差表示、数字ロール、非対称のページ遷移、下スワイプで閉じるシート、天気に応じた空状態、通信できないときの淡い前回データ。",
+      "街のカードはドラッグで浮き上がり、気温バーをなぞると日ごとの詳細、24時間が「現在」を越えると「明日」が点灯、気にかける区画は折りたためます。"
+    ],
+    "ko": [
+      "‘날씨 앨범’을 추가했습니다. 사진을 이 기기에만, 그때의 도시·날씨·기온과 함께 저장합니다.",
+      "발견 페이지를 ‘오늘의 추천 + 관계 / 기억 / 기후 / 도구’ 네 구역으로 다시 짰습니다.",
+      "‘함께 보기’를 추가했습니다. 두 도시의 같은 순간 하늘을 나란히 이미지로 저장합니다.",
+      "손맛 보강: 단계별 진동, 카드 시차 등장, 숫자 롤링, 비대칭 페이지 전환, 아래로 당겨 닫는 시트, 날씨에 따른 빈 상태, 오프라인일 때 흐린 지난 데이터.",
+      "도시 카드는 끌어 올리면 떠오르고, 기온 막대를 밀면 날짜별 상세, 24시간이 ‘지금’을 넘으면 ‘내일’ 표시, 마음에 두는 구역은 접을 수 있습니다."
+    ],
+    "fr": [
+      "Nouvel album météo : la photo reste sur ce téléphone avec la ville, le temps et la température — aucun envoi, aucun réseau.",
+      "Découvrir est réorganisé en une carte du jour et quatre sections (relations / mémoire / climat / outils).",
+      "Nouveau Regarder ensemble : deux villes au même instant, enregistrées en une image.",
+      "Finitions du toucher : retour haptique gradué, cartes décalées, chiffres qui roulent, transition de page asymétrique, feuilles à fermer en tirant, états vides animés, dernier relevé grisé hors ligne.",
+      "Les cartes se soulèvent au glisser ; glissez la barre de température pour chaque jour ; une pastille Demain s’allume ; la section proches se replie."
+    ],
+    "de": [
+      "Neu: Wetteralbum. Das Foto bleibt mit Stadt, Wetter und Temperatur nur auf diesem Gerät — kein Upload, kein Netz.",
+      "Entdecken ist neu geordnet: eine Tageskarte plus vier Bereiche (Beziehungen / Erinnerung / Klima / Werkzeuge).",
+      "Neu: Zusammen schauen. Zwei Städte im selben Moment, als ein Bild gespeichert.",
+      "Feinschliff: abgestufte Haptik, gestaffelte Karten, rollende Ziffern, asymmetrischer Seitenwechsel, per Ziehen schließbare Sheets, wetterabhängige Leerzustände, offline gedimmter letzter Stand.",
+      "Stadtkarten heben sich beim Ziehen; Temperaturbalken streichen zeigt jeden Tag; ein Morgen-Chip leuchtet; der Bereich für Nahestehende lässt sich falten."
+    ],
+    "es": [
+      "Nuevo álbum del tiempo: la foto se queda en este teléfono con su ciudad, tiempo y temperatura, sin subir nada ni usar la red.",
+      "Descubrir se reorganiza en una tarjeta del día y cuatro secciones (relaciones / memoria / clima / herramientas).",
+      "Nuevo Mirar juntos: dos ciudades en el mismo instante, guardadas como una imagen.",
+      "Pulido táctil: háptica graduada, tarjetas escalonadas, dígitos que ruedan, transición asimétrica, hojas que se cierran tirando, estados vacíos animados, último dato atenuado sin conexión.",
+      "Las tarjetas se elevan al arrastrar; desliza la barra de temperatura por día; se enciende Mañana; la sección de seres queridos se pliega."
+    ],
+    "pt": [
+      "Novo álbum do tempo: a foto fica neste telefone com a cidade, o tempo e a temperatura — sem enviar, sem rede.",
+      "Descobrir passa a ter um cartão do dia e quatro secções (relações / memória / clima / ferramentas).",
+      "Novo Ver juntos: duas cidades no mesmo instante, guardadas numa imagem.",
+      "Polimento tátil: vibração graduada, cartões em cascata, dígitos a rolar, transição assimétrica, folhas que fecham ao puxar, estados vazios animados, último registo esbatido sem rede.",
+      "Os cartões levantam ao arrastar; deslize a barra de temperatura por dia; surge Amanhã; a secção de entes queridos recolhe."
+    ],
+    "ru": [
+      "Новый «Погодный альбом»: фото остаётся на этом телефоне вместе с городом, погодой и температурой — без загрузки и сети.",
+      "«Обзор» перестроен: карточка дня и четыре секции (близкие / память / климат / инструменты).",
+      "Новое «Смотреть вместе»: два города в один момент одним изображением.",
+      "Отделка: ступенчатая вибрация, каскад карточек, прокрутка цифр, асимметричный переход, шторки со свайпом, живые пустые состояния, приглушённый снимок без сети.",
+      "Карточки приподнимаются при перетаскивании; полоса температуры показывает день; загорается «Завтра»; блок близких сворачивается."
+    ]
+  },
+  "tags": [
+    "weather",
+    "forecast",
+    "air-quality",
+    "pwa",
+    "offline",
+    "i18n"
+  ],
+  "requirements": "Android 7.0（API 24）及以上；无需 Google 服务；首次启动需授予定位权限以获取本地天气。",
+  "requirementsEn": "Android 7.0 (API 24) or later; no Google services required; location permission is requested on first launch for local weather.",
+  "fileName": "apexon-weather-2.7.6.apk",
+  "changelog": [
+    "新增「天气相册」：拍下或从系统相册选一张，连当时的城市、天气、温度一起存进本机，只在你这台手机上，不上传、不联网，可随时导出到相册。",
+    "发现页重排为「今日主推 + 关系 / 记忆 / 气候 / 工具」四个分区：按当前天气和时段挑一个最相关的工具放在最上面，其余收进横向卡组。",
+    "新增「一起看」：挑两座城市并排看同一时刻的天空，一键生成并排图存到手机。",
+    "手感补齐：下拉刷新分级震动、卡片首次入场错落、湿度与气压数字滚动、页面切换新页淡入旧页上移、弹窗可下拉关闭、空态插画随天气轻动、断网时灰显上一次的数据并标注时间。",
+    "城市拖拽抄起时放大并加深阴影；按住温度区间条左右滑动可逐日看明细；24 小时滑过「现在」时标题旁亮起「明天」；牵挂区可整体折叠。"
+  ],
+  "changelogEn": [
+    "New Weather album: keep a shot on this phone together with its city, weather and temperature — no upload, no network, exportable to photos.",
+    "Discover is rearranged into a daily hero card plus four sections (relationships / memory / climate / tools).",
+    "New Watch together: two cities side by side at the same moment, saved as one image.",
+    "Feel polish: graded pull-to-refresh haptics, staggered first-entry cards, rolling humidity and pressure digits, asymmetric page transitions, drag-to-dismiss sheets, weather-aware empty states, and a dimmed last-known snapshot when offline.",
+    "City cards lift while dragging; scrub the temperature bar for each day; a Tomorrow chip appears in the 24-hour strip; the care section folds away."
+  ]
+}
