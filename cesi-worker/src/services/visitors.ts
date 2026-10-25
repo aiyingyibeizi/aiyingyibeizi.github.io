@@ -1,4 +1,5 @@
 import type { Redis } from '@upstash/redis/cloudflare';
+import type { ShardService } from './shard';
 
 /**
  * 访客 IP 台账。
@@ -105,17 +106,19 @@ export async function recordVisit(redis: Redis, v: VisitInput): Promise<void> {
 export async function listVisitors(redis: Redis, limit = 500): Promise<VisitorRow[]> {
   const n = Math.min(Math.max(Math.trunc(limit) || 500, 1), MAX_IPS);
   try {
-    const raw = await redis.zrange(IDX, 0, n - 1, { rev: true });
-    const ips = (raw || []).map((x: unknown) => String(x)).filter(Boolean);
+    // 正序取回再反转：不同版本的 Upstash 客户端对 zrange 的 rev 参数支持不一致，
+    // 这里用最基础的签名，避免整个台账因一个可选参数静默变成空数组。
+    const raw = await redis.zrange(IDX, 0, n - 1);
+    const ips = (raw || []).map((x: unknown) => String(x)).filter(Boolean).reverse();
     if (!ips.length) return [];
 
-    const pipe = redis.pipeline();
-    for (const ip of ips) pipe.hgetall(keyOf(ip));
-    const res = (await pipe.exec()) as unknown[];
+    const hs = await Promise.all(
+      ips.map((ip) => redis.hgetall(keyOf(ip)).catch(() => null as Record<string, unknown> | null))
+    );
 
     const rows: VisitorRow[] = [];
     for (let i = 0; i < ips.length; i++) {
-      const h = (res?.[i] || {}) as Record<string, unknown>;
+      const h = (hs[i] || {}) as Record<string, unknown>;
       if (!h || typeof h !== 'object') continue;
       rows.push({
         ip: str(h.ip) || ips[i],
@@ -138,4 +141,96 @@ export async function listVisitors(redis: Redis, limit = 500): Promise<VisitorRo
 export async function visitorIpSet(redis: Redis, limit = MAX_IPS): Promise<Set<string>> {
   const rows = await listVisitors(redis, limit);
   return new Set(rows.map((r) => r.ip));
+}
+
+/**
+ * 访客落库（Turso，type=visit）。
+ *
+ * 为什么还要写库：Redis 台账依赖 Upstash 绑定，一旦该绑定异常，
+ * 后台就只剩注册账号的 IP，匿名路人会整片消失。落库后两者互为兜底。
+ * 写入放在 waitUntil 里，不占响应时间；同一 IP 的重复写入由上游 30 秒节流拦住。
+ */
+export async function recordVisitDb(
+  shard: ShardService,
+  v: VisitInput,
+  waitUntil?: (p: Promise<unknown>) => void
+): Promise<void> {
+  const ip = (v.ip || '').trim();
+  if (!ip || ip === 'unknown') return;
+  const now = new Date().toISOString();
+  const r = await shard.write(
+    {
+      id: crypto.randomUUID(),
+      user_id: `ip#${ip}`,
+      type: 'visit',
+      subtype: ip,
+      score_value: null,
+      payload: JSON.stringify({
+        ip,
+        path: (v.path || '').slice(0, 160),
+        ua: (v.ua || '').slice(0, 200),
+        country: v.country || '',
+        city: v.city || '',
+        at: now,
+      }),
+      file_url: null,
+      created_at: now,
+      updated_at: now,
+    },
+    waitUntil ? { waitUntil } : undefined
+  );
+  if (!r.ok) throw new Error(r.error);
+}
+
+/** 从 Turso 的 visit 记录按 IP 聚合出访客台账（每个 IP 一行） */
+export async function listVisitsFromDb(shard: ShardService, limit = 1000): Promise<VisitorRow[]> {
+  const rows = await shard.readByType('visit', { limit });
+  const map = new Map<string, { row: VisitorRow; lastMs: number; firstMs: number }>();
+
+  for (const r of rows) {
+    let p: any = {};
+    try {
+      p = JSON.parse(r.payload);
+    } catch {
+      p = {};
+    }
+    const ip = String(p.ip || r.subtype || '').trim();
+    if (!ip) continue;
+    const at = Date.parse(String(p.at || '')) || Date.parse(r.created_at) || 0;
+    const prev = map.get(ip);
+    if (!prev) {
+      map.set(ip, {
+        row: {
+          ip,
+          first_seen: iso(at),
+          last_seen: iso(at),
+          hits: 1,
+          country: str(p.country),
+          city: str(p.city),
+          ua: str(p.ua),
+          last_path: str(p.path),
+        },
+        lastMs: at,
+        firstMs: at,
+      });
+      continue;
+    }
+    prev.row.hits += 1;
+    if (at > prev.lastMs) {
+      prev.lastMs = at;
+      prev.row.last_seen = iso(at);
+      prev.row.last_path = str(p.path);
+      prev.row.ua = str(p.ua);
+      prev.row.country = str(p.country);
+      prev.row.city = str(p.city);
+    }
+    if (at && at < prev.firstMs) {
+      prev.firstMs = at;
+      prev.row.first_seen = iso(at);
+    }
+  }
+
+  return [...map.values()]
+    .sort((a, b) => b.lastMs - a.lastMs)
+    .map((x) => x.row);
 }

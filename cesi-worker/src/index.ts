@@ -14,7 +14,7 @@ import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './u
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
 import { writeAudit, listAccountsWithStats, listTestAccounts, getUserDetail, flattenAccount, listContent, isTestAccount } from './services/admin';
-import { recordVisit, listVisitors } from './services/visitors';
+import { recordVisit, listVisitors, recordVisitDb, listVisitsFromDb } from './services/visitors';
 import { verifyAdminPassword, verifyAdminTotp, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import { sendNotify } from './services/notify';
 import { toCsv, csvDownload, csvFilename } from './services/export';
@@ -412,14 +412,24 @@ app.use('*', async (c, next) => {
   if (!visitPath.startsWith('/api/admin')) {
     try {
       const cf = (c.req.raw as { cf?: { country?: string; city?: string } }).cf;
+      const hit = {
+        ip: clientIp(c),
+        path: visitPath,
+        ua: c.req.header('User-Agent') || '',
+        country: cf?.country || '',
+        city: cf?.city || '',
+      };
       c.executionCtx.waitUntil(
-        recordVisit(getRedis(c.env), {
-          ip: clientIp(c),
-          path: visitPath,
-          ua: c.req.header('User-Agent') || '',
-          country: cf?.country || '',
-          city: cf?.city || '',
-        }).catch(() => {})
+        (async () => {
+          // 双写：Redis 负责实时台账，Turso 负责持久兜底（任一失效都不会让路人 IP 消失）
+          await recordVisit(getRedis(c.env), hit).catch(() => {});
+          try {
+            const shard = await buildShardService(c.env);
+            await recordVisitDb(shard, hit);
+          } catch {
+            /* 落库失败不影响请求 */
+          }
+        })()
       );
     } catch {
       // 非 Workers 运行环境没有 executionCtx，忽略
@@ -2371,11 +2381,32 @@ app.get('/api/admin/visitors', async (c) => {
 app.get('/api/admin/user-groups', async (c) => {
   const shard = await buildShardService(c.env);
   const redis = getRedis(c.env);
-  const [members, tests, visitors] = await Promise.all([
+  const [members, tests, visitors, visitsDb] = await Promise.all([
     listAccountsWithStats(shard, '', 1000),
     listTestAccounts(shard),
     listVisitors(redis, 5000),
+    // Turso 兜底台账：Redis 绑定异常时这里仍有路人 IP
+    listVisitsFromDb(shard, 1000),
   ]);
+
+  // 两路台账按 IP 合并：先放库里的，再用 Redis 的补最新时间与次数
+  const byIp = new Map<string, (typeof visitsDb)[number]>();
+  for (const v of visitsDb) byIp.set(v.ip, v);
+  for (const v of visitors) {
+    const old = byIp.get(v.ip);
+    if (!old) {
+      byIp.set(v.ip, v);
+      continue;
+    }
+    const newer = (v.last_seen || '') > (old.last_seen || '') ? v : old;
+    const firsts = [old.first_seen, v.first_seen].filter(Boolean).sort();
+    byIp.set(v.ip, {
+      ...newer,
+      first_seen: firsts[0] || newer.first_seen,
+      hits: Math.max(old.hits || 0, v.hits || 0),
+    });
+  }
+  const allVisitors = [...byIp.values()].sort((a, b) => (b.last_seen || '').localeCompare(a.last_seen || ''));
 
   const accountByIp = new Map<string, string>();
   const collect = (rows: Array<{ user_id: string; login_ips: Array<{ ip: string }>; last_login_ip: string | null }>) => {
@@ -2389,7 +2420,7 @@ app.get('/api/admin/user-groups', async (c) => {
 
   // 匿名访问 IP 回填到它所属的账号行，保证账号侧也能看到「这台设备来过的所有 IP」
   const extraIps = new Map<string, string[]>();
-  for (const v of visitors) {
+  for (const v of allVisitors) {
     const uid = accountByIp.get(v.ip);
     if (!uid) continue;
     const arr = extraIps.get(uid);
@@ -2424,7 +2455,7 @@ app.get('/api/admin/user-groups', async (c) => {
     return { ...u, ips, ip_count: ips.length, group: isTestAccount(u.username) ? 'test' : 'member' };
   };
 
-  const guests = visitors
+  const guests = allVisitors
     .filter((v) => !accountByIp.has(v.ip))
     .map((v) => ({ ...v, group: 'guest' as const }));
 
