@@ -1288,6 +1288,8 @@ app.post('/api/scores', async (c) => {
     score_value: scoreValue,
     payload: JSON.stringify({
       username: str(body.username, 60),
+      // 提交来源 IP：后台「防刷分」直接展示，便于人工判断是否为同一设备批量刷分
+      ip: clientIp(c),
       test_type: testType,
       score_value: scoreValue,
       accuracy: num(body.accuracy),
@@ -2907,15 +2909,43 @@ app.post('/api/admin/security/ipbans/remove', async (c) => {
 app.get('/api/admin/scores/flagged', async (c) => {
   const status = str(c.req.query('status'), 20).trim(); // all | suspicious | invalid
   const shard = await buildShardService(c.env);
-  const rows = await shard.readByType('score', { limit: 1000 });
+  const [rows, accounts] = await Promise.all([
+    shard.readByType('score', { limit: 1000 }),
+    // 账号表用于补「历史成绩」的 IP（早期成绩 payload 未写入 ip）
+    shard.readByType('account', { limit: 1000 }),
+  ]);
+
+  const accInfo = new Map<string, { name: string; ips: string[] }>();
+  for (const a of accounts) {
+    const ap: any = safeJsonParse(a.payload) || {};
+    const list: any[] = Array.isArray(ap.login_ips) ? ap.login_ips : [];
+    const ips: string[] = [];
+    for (const e of list) if (e && typeof e.ip === 'string' && e.ip) ips.push(e.ip);
+    if (typeof ap.last_login_ip === 'string' && ap.last_login_ip) ips.push(ap.last_login_ip);
+    accInfo.set(a.user_id, {
+      name: typeof ap.username === 'string' ? ap.username : '',
+      ips: [...new Set(ips)],
+    });
+  }
+
   const data = rows
     .map((r) => {
       const p: any = safeJsonParse(r.payload) || {};
       const v = p.validity === 'invalid' ? 'invalid' : (p.flagged || p.validity === 'suspicious' ? 'suspicious' : 'valid');
+      const acc = accInfo.get(r.user_id);
+      // 新成绩带提交 IP；老成绩回退到账号的登录 IP，两处合并去重
+      const ips = [...new Set([
+        ...(typeof p.ip === 'string' && p.ip ? [p.ip] : []),
+        ...(acc?.ips || []),
+      ])];
+      const realName = String(p.username || acc?.name || '').trim();
       return {
         id: r.id,
         user_id: r.user_id,
-        username: p.username || r.user_id,
+        // 没有昵称的匿名提交给出可读的临时用户名，避免后台只看到一串 anon_ 前缀
+        username: realName || `游客-${String(r.user_id).replace(/^anon_/, '').slice(-6)}`,
+        is_temp: !realName,
+        ips,
         test_type: r.subtype || p.test_type || '',
         score_value: r.score_value,
         validity: v,

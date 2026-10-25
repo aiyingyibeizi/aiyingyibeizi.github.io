@@ -943,11 +943,15 @@ function renderAntichat(){
     h += '</select><button class="btn ghost" onclick="renderAntichat()">刷新</button><span class="muted">' + rows.length + ' 条</span></div>';
     if (!rows.length){ h += '<div class="empty">暂无该状态的成绩</div>'; }
     else {
-      h += '<div class="table-wrap"><table><tr><th>状态</th><th>用户</th><th>题型</th><th>分数</th><th>标记原因</th><th>时间</th><th>操作</th></tr>';
+      h += '<div class="table-wrap"><table><tr><th>状态</th><th>用户</th><th>IP</th><th>题型</th><th>分数</th><th>标记原因</th><th>时间</th><th>操作</th></tr>';
       for (var j=0;j<rows.length;j++){
         var r = rows[j];
         var st = r.validity === 'invalid' ? '<span class="badge danger">无效</span>' : (r.validity === 'suspicious' ? '<span class="badge warn">可疑</span>' : '<span class="badge ok">有效</span>');
-        h += '<tr><td>' + st + '</td><td class="mono">' + esc(trunc(r.username || r.user_id,20)) + '</td>';
+        var ipHtml = (r.ips && r.ips.length)
+          ? '<div class="ip-list">' + r.ips.map(function(x){ return '<span class="ip-chip"><span>' + esc(x) + '</span></span>'; }).join('') + '</div>'
+          : '<span class="muted">—</span>';
+        h += '<tr><td>' + st + '</td><td class="mono">' + esc(trunc(r.username || r.user_id,20)) + (r.is_temp ? ' <span class="badge off">临时</span>' : '') + '</td>';
+        h += '<td>' + ipHtml + '</td>';
         h += '<td class="mono">' + esc(r.test_type) + '</td><td>' + esc(r.score_value) + '</td>';
         h += '<td>' + esc(trunc(r.flag_reason || '-',46)) + '</td><td>' + fmtDate(r.created_at) + '</td>';
         h += '<td class="actions">' + (r.validity === 'invalid' ? '<button class="btn primary" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'valid\\')">恢复</button>' : '<button class="btn danger" onclick="setValidity(\\'' + esc(r.id) + '\\',\\'invalid\\')">判无效</button>') + '</td></tr>';
