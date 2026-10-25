@@ -156,6 +156,11 @@ table tr:hover td{background:rgba(124,140,255,.06)}
 .test-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--muted);margin-bottom:13px}
 .test-meta b{color:var(--text)}
 .ip-list{display:flex;flex-wrap:wrap;gap:7px;min-height:26px;align-items:center}
+.seg{display:inline-flex;gap:4px;padding:4px;margin-bottom:13px;background:rgba(16,24,44,.72);border:1px solid var(--line);border-radius:12px}
+.seg-btn{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:9px;cursor:pointer;transition:color .16s,background .16s}
+.seg-btn:hover{color:var(--text)}
+.seg-btn.active{background:rgba(124,140,255,.18);color:#cdd4ff;box-shadow:inset 0 0 0 1px rgba(124,140,255,.35)}
+.ua{font-size:11px;color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .toolbar{display:flex;gap:9px;margin-bottom:13px;flex-wrap:wrap;align-items:center}
 .user-search{flex:1;min-width:220px;max-width:460px}
 input,select,textarea{background:rgba(8,13,26,.7);border:1px solid var(--line2);color:var(--text);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;outline:none;transition:border-color .16s,box-shadow .16s}
@@ -228,7 +233,6 @@ pre{background:rgba(8,13,26,.75);border:1px solid var(--line);border-radius:12px
     <nav class="nav">
       <button class="nav-item active" data-nav="overview" onclick="show('overview')">${iconSvg('grid')}<span>仪表盘</span></button>
       <button class="nav-item" data-nav="users" onclick="show('users')">${iconSvg('users')}<span>用户管理</span></button>
-      <button class="nav-item" data-nav="testaccounts" onclick="show('testaccounts')">${iconSvg('device')}<span>测试账号</span></button>
       <button class="nav-item" data-nav="content" onclick="show('content')">${iconSvg('doc')}<span>内容审核</span></button>
       <button class="nav-item" data-nav="teaching" onclick="show('teaching')">${iconSvg('cap')}<span>教学管理</span></button>
       <button class="nav-item" data-nav="antichat" onclick="show('antichat')">${iconSvg('flag')}<span>防刷分</span></button>
@@ -250,7 +254,6 @@ pre{background:rgba(8,13,26,.75);border:1px solid var(--line);border-radius:12px
     <div class="content">
       <div id="view-overview"></div>
       <div id="view-users" style="display:none"></div>
-      <div id="view-testaccounts" style="display:none"></div>
       <div id="view-content" style="display:none"></div>
       <div id="view-teaching" style="display:none"></div>
       <div id="view-antichat" style="display:none"></div>
@@ -275,7 +278,7 @@ pre{background:rgba(8,13,26,.75);border:1px solid var(--line);border-radius:12px
 var API_PREFIX = '${API_PREFIX}';
 var TOKEN_KEY = 'apexon_admin_token';
 var state = { user: null, totpEnabled: true, admin: '' };
-var TITLES = { overview:'仪表盘', users:'用户管理', testaccounts:'测试账号', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
+var TITLES = { overview:'仪表盘', users:'用户管理', content:'内容审核', teaching:'教学管理', antichat:'防刷分', alerts:'安全告警', security:'登录加固', audit:'审计日志' };
 
 function $(id){ return document.getElementById(id); }
 // 会话失效（令牌缺失/过期/被拒绝）时回到登录页，避免后台卡在“全加载失败（forbidden）”
@@ -424,12 +427,11 @@ function show(view){
   for (var i=0;i<items.length;i++){
     items[i].classList.toggle('active', items[i].getAttribute('data-nav') === view);
   }
-  var views = ['overview','users','testaccounts','content','teaching','antichat','alerts','security','audit'];
+  var views = ['overview','users','content','teaching','antichat','alerts','security','audit'];
   for (var j=0;j<views.length;j++){ $('view-' + views[j]).style.display = views[j] === view ? 'block' : 'none'; }
   $('pageTitle').textContent = TITLES[view] || view;
   if (view === 'overview') renderOverview();
   if (view === 'users') renderUsers();
-  if (view === 'testaccounts') renderTestAccounts();
   if (view === 'content') renderContent();
   if (view === 'teaching') renderTeaching();
   if (view === 'antichat') renderAntichat();
@@ -554,109 +556,132 @@ function openSnapshot(id){
   }).catch(function(e){ body.innerHTML = '<h3><button class="modal-close" onclick="closeModal()">×</button>加载失败</h3><div class="empty">' + esc(e.message) + '</div>'; });
 }
 
-/* ---------- Users ---------- */
+/* ---------- Users（三类合并：进入过网站 / 注册并操作 / 测试账号） ---------- */
 var userFilter = '';
+var userGroup = 'guests';
+var userGroups = { guests: [], members: [], tests: [] };
 function renderUsers(){
   var el = $('view-users');
-  el.innerHTML = '<div class="toolbar">' +
-    '<input id="userSearchInput" class="user-search" placeholder="搜索用户名 / user_id / 邮箱 / IP…" value="' + esc(userFilter) + '">' +
-    '<button class="btn" onclick="applyUserSearch()">搜索</button>' +
-    '<button class="btn ghost" onclick="clearUserSearch()">显示全部</button>' +
-    '</div><div id="userList"><p class="muted">加载中…</p></div>';
+  el.innerHTML = '<div class="seg" role="tablist">' +
+      '<button class="seg-btn" data-group="guests" onclick="switchGroup(\\'guests\\')">进入过网站</button>' +
+      '<button class="seg-btn" data-group="members" onclick="switchGroup(\\'members\\')">注册并操作</button>' +
+      '<button class="seg-btn" data-group="tests" onclick="switchGroup(\\'tests\\')">测试账号</button>' +
+    '</div>' +
+    '<div class="toolbar">' +
+      '<input id="userSearchInput" class="user-search" placeholder="搜索用户名 / user_id / 邮箱 / IP…" value="' + esc(userFilter) + '">' +
+      '<button class="btn" onclick="applyUserSearch()">搜索</button>' +
+      '<button class="btn ghost" onclick="clearUserSearch()">显示全部</button>' +
+      '<button class="btn ghost" onclick="loadUserGroups()">刷新</button>' +
+    '</div>' +
+    '<div class="toolbar"><span class="muted" id="userGroupSummary">加载中…</span></div>' +
+    '<div id="userList"><p class="muted">加载中…</p></div>';
   var inp = $('userSearchInput');
   if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyUserSearch(); });
-  loadUsers();
+  loadUserGroups();
 }
-function applyUserSearch(){ var i = $('userSearchInput'); userFilter = i ? i.value.trim() : ''; loadUsers(); }
-function clearUserSearch(){ userFilter = ''; var i = $('userSearchInput'); if (i) i.value = ''; loadUsers(); }
-function loadUsers(){
+function switchGroup(g){ userGroup = g; renderGroup(); }
+function applyUserSearch(){ var i = $('userSearchInput'); userFilter = i ? i.value.trim() : ''; renderGroup(); }
+function clearUserSearch(){ userFilter = ''; var i = $('userSearchInput'); if (i) i.value = ''; renderGroup(); }
+function loadUserGroups(){
   var box = $('userList');
   if (!box) return;
   box.innerHTML = '<p class="muted">加载中…</p>';
-  var url = '/users?limit=1000' + (userFilter ? ('&q=' + encodeURIComponent(userFilter)) : '');
-  api(url).then(function(d){
-    var rows = d.data || [];
-    if (!rows.length){ box.innerHTML = '<div class="empty">没有匹配的用户</div>'; return; }
-    var h = '<div class="toolbar"><span class="muted">共 ' + rows.length + ' 个账号' + (userFilter ? '（关键词：' + esc(userFilter) + '）' : '') + '</span></div>';
-    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>邮箱</th><th>IP</th><th>评分</th><th>评论</th><th>反馈</th><th>状态</th><th>注册时间</th><th>最近在线</th><th>操作</th></tr>';
-    for (var i=0;i<rows.length;i++){
-      var u = rows[i];
+  api('/user-groups').then(function(d){
+    userGroups = d.data || { guests: [], members: [], tests: [] };
+    renderGroup(d.counts || {});
+  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+}
+function ipCells(ips){
+  if (!ips || !ips.length) return '<span class="muted">—</span>';
+  var h = '<div class="ip-list">';
+  for (var i=0;i<ips.length;i++){
+    var e = ips[i];
+    h += '<span class="ip-chip"><span>' + esc(e.ip) + '</span>' + (e.at ? '<em>' + fmtDate(e.at) + '</em>' : '') + '</span>';
+  }
+  return h + '</div>';
+}
+function matchRow(row, needle){
+  if (!needle) return true;
+  var hay = [row.username, row.user_id, row.email, row.ip, row.last_path, row.ua, row.country, row.city].filter(Boolean).join(' ').toLowerCase();
+  if (hay.indexOf(needle) >= 0) return true;
+  var ips = row.ips || row.login_ips || [];
+  for (var i=0;i<ips.length;i++){ if (String(ips[i].ip || '').toLowerCase().indexOf(needle) >= 0) return true; }
+  return false;
+}
+function renderGroup(counts){
+  var box = $('userList'); if (!box) return;
+  var segs = document.querySelectorAll('.seg-btn');
+  for (var s=0;s<segs.length;s++) segs[s].classList.toggle('active', segs[s].getAttribute('data-group') === userGroup);
+  var needle = userFilter.toLowerCase();
+  var all = userGroups[userGroup] || [];
+  var rows = all.filter(function(r){ return matchRow(r, needle); });
+  var sum = $('userGroupSummary');
+  if (sum){
+    sum.textContent = '共 ' + all.length + ' 条' + (needle ? '（匹配 ' + rows.length + ' 条）' : '') +
+      (counts && counts.guests !== undefined ? ' · 游客 ' + counts.guests + ' / 注册 ' + counts.members + ' / 测试 ' + counts.tests : '') +
+      (rows.length > 400 ? ' · 仅渲染前 400 条' : '');
+  }
+  if (!rows.length){ box.innerHTML = '<div class="empty">' + (needle ? '没有匹配的记录' : '暂无记录') + '</div>'; return; }
+  var shown = rows.slice(0, 400);
+  var h = '';
+  if (userGroup === 'guests'){
+    h += '<div class="table-wrap"><table><tr><th>IP</th><th>地区</th><th>首次访问</th><th>最近访问</th><th>次数</th><th>最后路径</th><th>设备 / UA</th></tr>';
+    for (var i=0;i<shown.length;i++){
+      var g = shown[i];
+      h += '<tr>';
+      h += '<td class="mono">' + esc(g.ip) + '</td>';
+      h += '<td>' + ((g.country || g.city) ? esc([g.country, g.city].filter(Boolean).join(' · ')) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (g.first_seen ? fmtDate(g.first_seen) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (g.last_seen ? fmtDate(g.last_seen) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (g.hits || 1) + '</td>';
+      h += '<td class="mono">' + (g.last_path ? esc(trunc(g.last_path, 42)) : '<span class="muted">—</span>') + '</td>';
+      h += '<td class="ua">' + (g.ua ? esc(trunc(g.ua, 64)) : '<span class="muted">—</span>') + '</td>';
+      h += '</tr>';
+    }
+    h += '</table></div>';
+  } else if (userGroup === 'members'){
+    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>邮箱</th><th>全部 IP（登录 + 访问）</th><th>评分</th><th>评论</th><th>反馈</th><th>状态</th><th>最近在线</th><th>操作</th></tr>';
+    for (var m=0;m<shown.length;m++){
+      var u = shown[m];
       h += '<tr>';
       h += '<td>' + esc(u.username) + '</td>';
       h += '<td class="mono">' + esc(trunc(u.user_id,28)) + '</td>';
-      h += '<td>' + (u.email ? esc(u.email) + ' ' + (u.email_verified ? '<span class="badge ok">已验证</span>' : '<span class="badge off">未验证</span>') : '<span class="muted">—</span>') + '</td>';
-      h += '<td class="mono">' + (u.last_login_ip ? esc(u.last_login_ip) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + (u.email ? esc(u.email) : '<span class="muted">—</span>') + '</td>';
+      h += '<td>' + ipCells(u.ips) + '</td>';
       h += '<td>' + (u.score_count||0) + '</td>';
       h += '<td>' + (u.comment_count||0) + '</td>';
       h += '<td>' + (u.feedback_count||0) + '</td>';
       h += '<td>' + (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>') + '</td>';
-      h += '<td>' + fmtDate(u.created_at) + '</td>';
       h += '<td>' + (u.last_seen ? fmtDate(u.last_seen) : '<span class="muted">—</span>') + '</td>';
       h += '<td class="actions"><button class="btn" onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
       h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></td>';
       h += '</tr>';
     }
     h += '</table></div>';
-    box.innerHTML = h;
-  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
+  } else {
+    h += '<div class="table-wrap"><table><tr><th>用户名</th><th>user_id</th><th>全部 IP（登录 + 访问）</th><th>注册时间</th><th>状态</th><th>操作</th></tr>';
+    for (var t=0;t<shown.length;t++){
+      var x = shown[t];
+      h += '<tr>';
+      h += '<td>' + esc(x.username) + '</td>';
+      h += '<td class="mono">' + esc(trunc(x.user_id,28)) + '</td>';
+      h += '<td>' + ipCells(x.ips) + '</td>';
+      h += '<td>' + fmtDate(x.created_at) + '</td>';
+      h += '<td>' + (x.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>') + '</td>';
+      h += '<td class="actions"><button class="btn" onclick="openUser(\\'' + esc(x.user_id) + '\\')">详情</button>';
+      h += '<button class="btn danger" onclick="delUser(\\'' + esc(x.user_id) + '\\',\\'' + esc(x.username) + '\\')">删除</button></td>';
+      h += '</tr>';
+    }
+    h += '</table></div>';
+  }
+  box.innerHTML = h;
 }
-// 删除用户后，刷新当前可见的用户类视图（用户管理 / 测试账号）
+// 删除用户后，刷新用户管理（三类合并视图）
 function refreshUserViews(){
-  if ($('view-testaccounts') && $('view-testaccounts').style.display !== 'none') renderTestAccounts();
-  if ($('view-users') && $('view-users').style.display !== 'none') renderUsers();
+  if ($('view-users') && $('view-users').style.display !== 'none') loadUserGroups();
 }
 
-/* ---------- Test Accounts（测试 / 压测账号及其设备 IP） ---------- */
-function renderTestAccounts(){
-  var el = $('view-testaccounts');
-  el.innerHTML = '<div class="toolbar"><span class="muted" id="testAccountSummary">加载中…</span><button class="btn ghost" onclick="renderTestAccounts()">刷新</button></div><div id="testAccountList"></div>';
-  loadTestAccounts();
-}
-function loadTestAccounts(){
-  var box = $('testAccountList');
-  if (!box) return;
-  box.innerHTML = '<p class="muted">加载中…</p>';
-  api('/test-accounts').then(function(d){
-    var rows = d.data || [];
-    var sum = $('testAccountSummary');
-    if (!rows.length){
-      if (sum) sum.textContent = '共 0 个测试账号';
-      box.innerHTML = '<div class="empty">暂无测试 / 压测账号</div>';
-      return;
-    }
-    var totalIps = 0;
-    for (var n=0;n<rows.length;n++) totalIps += ((rows[n].login_ips || []).length);
-    if (sum) sum.textContent = '共 ' + rows.length + ' 个测试账号 · ' + totalIps + ' 条登录 IP 记录';
-    var h = '<div class="test-grid">';
-    for (var i=0;i<rows.length;i++){
-      var u = rows[i];
-      h += '<div class="card test-card">';
-      h += '<div class="test-head"><div><span class="test-name">' + esc(u.username) + '</span>';
-      h += (u.banned ? '<span class="badge danger">已封禁</span>' : '<span class="badge ok">正常</span>');
-      h += '</div><span class="muted mono">' + esc(trunc(u.user_id, 30)) + '</span></div>';
-      h += '<div class="test-meta">';
-      h += '<span>邮箱：' + (u.email ? esc(u.email) : '<span class="muted">—</span>') + '</span>';
-      h += '<span>设备 IP 数：<b>' + (u.ip_count || 0) + '</b></span>';
-      h += '<span>注册：' + fmtDate(u.created_at) + '</span>';
-      h += '</div>';
-      h += '<div class="ip-list">';
-      var ips = u.login_ips || [];
-      if (!ips.length) h += '<span class="muted">暂无登录 IP 记录</span>';
-      else {
-        for (var j=0;j<ips.length;j++){
-          var e = ips[j];
-          h += '<span class="ip-chip"><span>' + esc(e.ip) + '</span>' + (e.at ? '<em>' + fmtDate(e.at) + '</em>' : '') + '</span>';
-        }
-      }
-      h += '</div>';
-      h += '<div class="actions mt"><button class="btn" onclick="openUser(\\'' + esc(u.user_id) + '\\')">详情</button>';
-      h += '<button class="btn danger" onclick="delUser(\\'' + esc(u.user_id) + '\\',\\'' + esc(u.username) + '\\')">删除</button></div>';
-      h += '</div>';
-    }
-    h += '</div>';
-    box.innerHTML = h;
-  }).catch(function(e){ box.innerHTML = '<div class="empty">加载失败：' + esc(e.message) + '</div>'; });
-}
+/* ---------- 用户详情 ---------- */
 function openUser(userId){
   var body = $('userModalBody');
   body.innerHTML = '<p class="muted">加载中…</p>';

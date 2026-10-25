@@ -13,7 +13,8 @@ import { uploadFile } from './services/storage';
 import { hashPassword, verifyPassword, isLegacyPassword, needsRehash } from './utils/password';
 import { rateLimit, clientIp, rlKey } from './services/ratelimit';
 import { isBlocked, recordLoginFailure, recordRegisterSpike, countOpenAlerts, userFailCount, accountRisk, recordAlert } from './services/security';
-import { writeAudit, listAccountsWithStats, listTestAccounts, getUserDetail, flattenAccount, listContent } from './services/admin';
+import { writeAudit, listAccountsWithStats, listTestAccounts, getUserDetail, flattenAccount, listContent, isTestAccount } from './services/admin';
+import { recordVisit, listVisitors } from './services/visitors';
 import { verifyAdminPassword, verifyAdminTotp, adminSessionTtl, recordAdminLoginFailure, isAdminLocked, lockAdminSource, clearAdminFailures, createAdminSession, resolveAdminSession, revokeAdminSession, ADMIN_FAIL_LOCK_THRESHOLD } from './services/admin';
 import { sendNotify } from './services/notify';
 import { toCsv, csvDownload, csvFilename } from './services/export';
@@ -404,6 +405,27 @@ app.use('*', async (c, next) => {
   c.header('Expires', '0');
 
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
+
+  // 访客台账：无论是否注册、是否登录，只要打到 API 就留一条 IP 记录。
+  // 后台管理请求不记，避免管理员自己的 IP 混进访客列表。
+  const visitPath = c.req.path;
+  if (!visitPath.startsWith('/api/admin')) {
+    try {
+      const cf = (c.req.raw as { cf?: { country?: string; city?: string } }).cf;
+      c.executionCtx.waitUntil(
+        recordVisit(getRedis(c.env), {
+          ip: clientIp(c),
+          path: visitPath,
+          ua: c.req.header('User-Agent') || '',
+          country: cf?.country || '',
+          city: cf?.city || '',
+        }).catch(() => {})
+      );
+    } catch {
+      // 非 Workers 运行环境没有 executionCtx，忽略
+    }
+  }
+
   const __start = Date.now();
   await next();
   // 采样访问日志（需 OBSERVABILITY_SAMPLE > 0，默认关闭）
@@ -2330,6 +2352,89 @@ app.get('/api/admin/test-accounts', async (c) => {
   const shard = await buildShardService(c.env);
   const rows = await listTestAccounts(shard);
   return c.json({ data: rows, total: rows.length });
+});
+
+// 全站访问 IP 台账：包含从未注册、只点过一次的匿名访客。
+app.get('/api/admin/visitors', async (c) => {
+  const limit = Math.min(Math.max(Number(c.req.query('limit') || 1000) || 1000, 1), 5000);
+  const rows = await listVisitors(getRedis(c.env), limit);
+  return c.json({ data: rows, total: rows.length });
+});
+
+// 用户管理三类合并视图：
+//   guests  = 进过站、但没有账号的 IP（含只测试过一次就走的）
+//   members = 有账号且产生过操作（评分/评论/反馈/在线）的用户
+//   tests   = 测试 / 压测账号
+// 每行都带 ips 全量列表（登录 IP + 匿名访问 IP），满足「显示所有 IP」。
+app.get('/api/admin/user-groups', async (c) => {
+  const shard = await buildShardService(c.env);
+  const redis = getRedis(c.env);
+  const [members, tests, visitors] = await Promise.all([
+    listAccountsWithStats(shard, '', 1000),
+    listTestAccounts(shard),
+    listVisitors(redis, 5000),
+  ]);
+
+  const accountByIp = new Map<string, string>();
+  const collect = (rows: Array<{ user_id: string; login_ips: Array<{ ip: string }>; last_login_ip: string | null }>) => {
+    for (const u of rows) {
+      for (const x of u.login_ips) if (x.ip) accountByIp.set(x.ip, u.user_id);
+      if (u.last_login_ip) accountByIp.set(u.last_login_ip, u.user_id);
+    }
+  };
+  collect(members);
+  collect(tests);
+
+  // 匿名访问 IP 回填到它所属的账号行，保证账号侧也能看到「这台设备来过的所有 IP」
+  const extraIps = new Map<string, string[]>();
+  for (const v of visitors) {
+    const uid = accountByIp.get(v.ip);
+    if (!uid) continue;
+    const arr = extraIps.get(uid);
+    if (arr) arr.push(v.ip);
+    else extraIps.set(uid, [v.ip]);
+  }
+
+  type AccountLike = {
+    user_id: string;
+    username: string;
+    login_ips: Array<{ ip: string; at: string }>;
+    last_login_ip: string | null;
+    updated_at: string;
+  };
+  const attach = (u: AccountLike) => {
+    const seen = new Set<string>();
+    const ips: Array<{ ip: string; at: string; kind: string }> = [];
+    for (const x of u.login_ips) {
+      if (!x.ip || seen.has(x.ip)) continue;
+      seen.add(x.ip);
+      ips.push({ ip: x.ip, at: x.at || '', kind: 'login' });
+    }
+    if (u.last_login_ip && !seen.has(u.last_login_ip)) {
+      seen.add(u.last_login_ip);
+      ips.push({ ip: u.last_login_ip, at: u.updated_at || '', kind: 'login' });
+    }
+    for (const ip of extraIps.get(u.user_id) || []) {
+      if (seen.has(ip)) continue;
+      seen.add(ip);
+      ips.push({ ip, at: '', kind: 'visit' });
+    }
+    return { ...u, ips, ip_count: ips.length, group: isTestAccount(u.username) ? 'test' : 'member' };
+  };
+
+  const guests = visitors
+    .filter((v) => !accountByIp.has(v.ip))
+    .map((v) => ({ ...v, group: 'guest' as const }));
+
+  return c.json({
+    success: true,
+    data: {
+      guests,
+      members: members.map(attach),
+      tests: tests.map(attach),
+    },
+    counts: { guests: guests.length, members: members.length, tests: tests.length },
+  });
 });
 
 app.get('/api/admin/users/:userId', async (c) => {
