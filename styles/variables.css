@@ -21,6 +21,9 @@
   /* Light theme (default) — 冷中性灰底，非蓝调"发闷"白 */
   --bg-body: #eef0f4;
   --bg-card: rgba(255, 255, 255, 0.88);
+  /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
+     静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
+  --card-sheen: rgba(255, 255, 255, 0.55);
   --bg-card-solid: #ffffff;
   --bg-elevated: rgba(255, 255, 255, 0.96);
   --bg-header: rgba(238, 240, 244, 0.94);
@@ -209,6 +212,7 @@
   :root {
     --bg-body: #08090c;
     --bg-card: rgba(22, 25, 32, 0.9);
+  --card-sheen: rgba(255, 255, 255, 0.05);
     --bg-card-solid: #14161b;
     --bg-elevated: rgba(20, 23, 29, 0.96);
     --bg-header: rgba(8, 9, 12, 0.94);
@@ -265,6 +269,9 @@
   color-scheme: light;
   --bg-body: #eef0f4;
   --bg-card: rgba(255, 255, 255, 0.88);
+  /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
+     静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
+  --card-sheen: rgba(255, 255, 255, 0.55);
   --bg-card-solid: #ffffff;
   --bg-elevated: rgba(255, 255, 255, 0.96);
   --bg-header: rgba(238, 240, 244, 0.94);
@@ -325,6 +332,7 @@
   color-scheme: dark;
   --bg-body: #08090c;
   --bg-card: rgba(22, 25, 32, 0.9);
+  --card-sheen: rgba(255, 255, 255, 0.05);
   --bg-card-solid: #14161b;
   --bg-elevated: rgba(20, 23, 29, 0.96);
   --bg-header: rgba(8, 9, 12, 0.94);
@@ -402,6 +410,9 @@
     --backdrop-blur: none;
     --tile-blur: none;
     --bg-card: rgba(255, 255, 255, 0.88);
+  /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
+     静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
+  --card-sheen: rgba(255, 255, 255, 0.55);
     --bg-header: rgba(238, 240, 244, 0.94);
     --bg-elevated: rgba(255, 255, 255, 0.96);
   }
@@ -410,6 +421,7 @@
     --backdrop-blur: none;
     --tile-blur: none;
     --bg-card: rgba(22, 25, 32, 0.9);
+  --card-sheen: rgba(255, 255, 255, 0.05);
     --bg-header: rgba(8, 9, 12, 0.94);
     --bg-elevated: rgba(20, 23, 29, 0.96);
   }

@@ -159,25 +159,36 @@ html.theme-transition .update-toast {
   will-change: opacity;
 }
 
-/* 夜空专属：原图是一张高饱和的亮蓝星空 + 一颗卡通月亮，直接铺满会亮得刺眼，
-   和深色界面、下方纯黑的页面底色也接不上。这里压掉饱和度和亮度，
-   再叠一层顶部深、边缘收的暗角，把它收成「深蓝夜空」而不是「蓝色海报」。
-   静态图像只光栅一次，不影响帧率。 */
+/* 夜空不再用那张「高饱和亮蓝 + 卡通月亮」的图：
+   照片在宽屏上会被裁成一截亮带，和下方深色内容接不上，放大后月亮还糊成一团。
+   改成纯 CSS 的深蓝夜空：一层月光晕 + 十几颗星点 + 竖向渐变。
+   这些都是静态绘制，不参与每帧合成，比图片解码还省。 */
 html[data-scene="night"] .weather-scene__img {
-  filter: saturate(0.55) brightness(0.62) contrast(1.05);
+  display: none;
 }
 
-html[data-scene="night"] .weather-scene__gradient {
-  background:
-    radial-gradient(120% 90% at 50% 8%, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.34) 55%, rgba(2, 6, 23, 0.72) 100%),
-    linear-gradient(
-      to bottom,
-      rgba(2, 6, 23, 0.42) 0%,
-      rgba(2, 6, 23, 0.16) 22%,
-      rgba(2, 6, 23, 0.2) 52%,
-      rgba(2, 6, 23, 0.46) 78%,
-      rgba(2, 6, 23, 0.62) 100%
-    );
+/* 必须带 !important：weather-background.js 会用
+   `sceneEl.style.background = var(--weather-night)` 写内联样式，
+   内联优先级高于任何选择器，不加就整块夜空完全不生效。 */
+html[data-scene="night"] .weather-scene {
+  background-color: #05070f !important;
+  background-image:
+    radial-gradient(circle at 68% 30%, rgba(206, 220, 255, 0.16) 0, rgba(206, 220, 255, 0.05) 24%, rgba(206, 220, 255, 0) 52%),
+    radial-gradient(circle 1.6px at 12% 24%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.2px at 22% 62%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.4px at 31% 34%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1px at 41% 18%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.6px at 48% 70%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.2px at 57% 26%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1px at 66% 78%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.8px at 76% 48%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.2px at 84% 20%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.4px at 91% 66%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1px at 6% 80%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.2px at 27% 10%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1px at 62% 54%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle 1.3px at 96% 38%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, #050810 0%, #0a1122 44%, #080c17 72%, #06090f 100%) !important;
 }
 
 /* 场景内压暗遮罩：保证白色 hero 文案在任意天气/主题下都可读 */
@@ -458,6 +469,9 @@ html[data-scene="night"] .weather-scene__gradient {
   padding: var(--space-5);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
+  /* 顶部一层极淡的高光 + 内侧 1px 亮边：
+     用来替代毛玻璃带来的「玻璃厚度」，本身是静态绘制，滚动时不额外开销 */
+  background-image: linear-gradient(180deg, var(--card-sheen), rgba(255, 255, 255, 0) 38%);
   box-shadow: var(--shadow-card);
   transition: background-color var(--duration-normal) var(--ease-out-expo),
               border-color var(--duration-normal) var(--ease-out-expo),
