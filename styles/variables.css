@@ -19,37 +19,37 @@
   --brand-gradient-soft: linear-gradient(135deg, rgba(79, 70, 229, 0.13) 0%, rgba(134, 116, 238, 0.09) 100%);
 
   /* Light theme (default) — 冷中性灰底，非蓝调"发闷"白 */
-  --bg-body: #eef0f4;
-  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-body: #eff0fa;
+  --bg-card: rgba(255, 255, 255, 0.92);
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
-  --card-sheen: rgba(255, 255, 255, 0.55);
+  --card-sheen: rgba(255, 255, 255, 0.72);
   --bg-card-solid: #ffffff;
-  --bg-elevated: rgba(255, 255, 255, 0.96);
-  --bg-header: rgba(238, 240, 244, 0.94);
-  --text-primary: #0b1220;
-  --text-secondary: #3f4b5f;
+  --bg-elevated: rgba(253, 253, 255, 0.97);
+  --bg-header: rgba(239, 240, 250, 0.93);
+  --text-primary: #16182f;
+  --text-secondary: #454a68;
   /* 三级文字用于小号标签，需在浅底上 ≥4.5:1；#5a6579 实测 ≈5.1:1 */
-  --text-tertiary: #5a6579;
-  --text-inverse: #f8fafc;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.16);
-  --border-glow: rgba(79, 70, 229, 0.35);
-  --hairline: rgba(15, 23, 42, 0.07);
+  --text-tertiary: #5f6484;
+  --text-inverse: #f7f8ff;
+  --border-color: rgba(64, 66, 138, 0.12);
+  --border-strong: rgba(64, 66, 138, 0.24);
+  --border-glow: rgba(84, 78, 224, 0.40);
+  --hairline: rgba(64, 66, 138, 0.10);
   /* 玻璃上边缘受光：一条 1px 内高光替代廉价外发光 */
-  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --shadow-card: var(--card-edge), 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --shadow-float: var(--card-edge), 0 2px 8px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.14);
+  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.05), 0 10px 28px rgba(44, 42, 120, 0.08);
+  --shadow-float: var(--card-edge), 0 2px 8px rgba(38, 38, 92, 0.07), 0 24px 60px rgba(44, 42, 120, 0.18);
   --backdrop-blur: none;
 
   /* Layered surfaces (卡内元素，靠明度分层，不用边框) */
-  --surface-1: rgba(15, 23, 42, 0.03);
-  --surface-2: rgba(15, 23, 42, 0.06);
+  --surface-1: rgba(84, 80, 200, 0.05);
+  --surface-2: rgba(84, 80, 200, 0.10);
 
   /* 卡内数字瓦片：低填充 + 内顶高光，天气影像可透出 */
-  --tile-bg: rgba(15, 23, 42, 0.028);
-  --tile-bg-hover: rgba(15, 23, 42, 0.058);
-  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --tile-bg: rgba(84, 80, 200, 0.045);
+  --tile-bg-hover: rgba(84, 80, 200, 0.09);
+  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.70);
   /* 卡内瓦片不再单独做背景模糊。
      原因：父级 .card 已经是一层 blur(16px) 的毛玻璃，瓦片本身只有 2.8%~5% 的
      填充度，再叠一层 blur 在视觉上几乎看不出差别，却会把 24 小时 / 7 天 / 生活指数
@@ -59,9 +59,9 @@
 
   /* 分段控件滑块 */
   --seg-thumb-bg: #ffffff;
-  --seg-thumb-shadow: 0 1px 2px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --seg-track-bg: rgba(15, 23, 42, 0.05);
-  --seg-track-inset: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+  --seg-thumb-shadow: 0 1px 2px rgba(40, 40, 100, 0.18), 0 2px 6px rgba(40, 40, 100, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --seg-track-bg: rgba(84, 80, 200, 0.07);
+  --seg-track-inset: inset 0 1px 2px rgba(40, 40, 100, 0.07);
 
   /* Glass over media (hero 上的毛玻璃胶囊) */
   --glass-bg: rgba(255, 255, 255, 0.12);
@@ -80,7 +80,7 @@
 
   /* 品牌色文字：品牌主色在深色底上对比度不足，
      文字场景统一用 --brand-text，图形/描边仍用 --brand-primary */
-  --brand-text: #4f46e5;
+  --brand-text: #4a41cf;
   --text-on-brand: #ffffff;
 
   /* Semantic — 预警/危险 */
@@ -210,39 +210,39 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-body: #08090c;
-    --bg-card: rgba(22, 25, 32, 0.9);
-  --card-sheen: rgba(255, 255, 255, 0.05);
-    --bg-card-solid: #14161b;
-    --bg-elevated: rgba(20, 23, 29, 0.96);
-    --bg-header: rgba(8, 9, 12, 0.94);
-    --text-primary: #f4f6fa;
-    --text-secondary: #a3adbd;
-    --text-tertiary: #8b95a5;
+    --bg-body: #0a0b14;
+    --bg-card: rgba(27, 29, 51, 0.90);
+    --card-sheen: rgba(255, 255, 255, 0.07);
+    --bg-card-solid: #1a1c30;
+    --bg-elevated: rgba(25, 27, 46, 0.97);
+    --bg-header: rgba(10, 11, 20, 0.93);
+    --text-primary: #f2f3fb;
+    --text-secondary: #b3b7d2;
+    --text-tertiary: #9398b8;
     --text-inverse: #0b1220;
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-strong: rgba(255, 255, 255, 0.14);
-    --border-glow: rgba(129, 140, 248, 0.45);
-    --hairline: rgba(255, 255, 255, 0.07);
-    --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.34);
-    --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.42), 0 28px 72px rgba(0, 0, 0, 0.52);
+    --border-color: rgba(150, 158, 255, 0.14);
+    --border-strong: rgba(150, 158, 255, 0.26);
+    --border-glow: rgba(150, 150, 255, 0.50);
+    --hairline: rgba(150, 158, 255, 0.10);
+    --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(4, 5, 16, 0.50);
+    --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.50), 0 28px 72px rgba(4, 5, 16, 0.60);
 
-    --surface-1: rgba(255, 255, 255, 0.045);
-    --surface-2: rgba(255, 255, 255, 0.08);
+    --surface-1: rgba(150, 158, 255, 0.075);
+    --surface-2: rgba(150, 158, 255, 0.125);
 
-    --tile-bg: rgba(255, 255, 255, 0.05);
-    --tile-bg-hover: rgba(255, 255, 255, 0.085);
-    --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --tile-bg: rgba(150, 158, 255, 0.07);
+    --tile-bg-hover: rgba(150, 158, 255, 0.12);
+    --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.09);
     --tile-blur: none;
 
-    --seg-thumb-bg: rgba(255, 255, 255, 0.14);
+    --seg-thumb-bg: rgba(150, 158, 255, 0.20);
     --seg-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
     --seg-track-bg: rgba(255, 255, 255, 0.05);
     --seg-track-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 
     /* 深色底上提高品牌/预警/AQI 色明度，保证可读性 */
-    --brand-text: #a3b0f7;
+    --brand-text: #b8beff;
     --danger: #f87171;
     --danger-soft: rgba(248, 113, 113, 0.1);
     --danger-hover: rgba(248, 113, 113, 0.16);
@@ -267,42 +267,42 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg-body: #eef0f4;
-  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-body: #eff0fa;
+  --bg-card: rgba(255, 255, 255, 0.92);
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
-  --card-sheen: rgba(255, 255, 255, 0.55);
+  --card-sheen: rgba(255, 255, 255, 0.72);
   --bg-card-solid: #ffffff;
-  --bg-elevated: rgba(255, 255, 255, 0.96);
-  --bg-header: rgba(238, 240, 244, 0.94);
-  --text-primary: #0b1220;
-  --text-secondary: #3f4b5f;
-  --text-tertiary: #5a6579;
-  --text-inverse: #f8fafc;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.16);
-  --border-glow: rgba(79, 70, 229, 0.35);
-  --hairline: rgba(15, 23, 42, 0.07);
-  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --shadow-card: var(--card-edge), 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --shadow-float: var(--card-edge), 0 2px 8px rgba(15, 23, 42, 0.06), 0 24px 60px rgba(15, 23, 42, 0.14);
+  --bg-elevated: rgba(253, 253, 255, 0.97);
+  --bg-header: rgba(239, 240, 250, 0.93);
+  --text-primary: #16182f;
+  --text-secondary: #454a68;
+  --text-tertiary: #5f6484;
+  --text-inverse: #f7f8ff;
+  --border-color: rgba(64, 66, 138, 0.12);
+  --border-strong: rgba(64, 66, 138, 0.24);
+  --border-glow: rgba(84, 78, 224, 0.40);
+  --hairline: rgba(64, 66, 138, 0.10);
+  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.05), 0 10px 28px rgba(44, 42, 120, 0.08);
+  --shadow-float: var(--card-edge), 0 2px 8px rgba(38, 38, 92, 0.07), 0 24px 60px rgba(44, 42, 120, 0.18);
   --backdrop-blur: none;
 
-  --surface-1: rgba(15, 23, 42, 0.03);
-  --surface-2: rgba(15, 23, 42, 0.06);
+  --surface-1: rgba(84, 80, 200, 0.05);
+  --surface-2: rgba(84, 80, 200, 0.10);
 
-  --tile-bg: rgba(15, 23, 42, 0.028);
-  --tile-bg-hover: rgba(15, 23, 42, 0.058);
-  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --tile-bg: rgba(84, 80, 200, 0.045);
+  --tile-bg-hover: rgba(84, 80, 200, 0.09);
+  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.70);
   --tile-blur: none;
 
   /* 分段控件滑块 */
   --seg-thumb-bg: #ffffff;
-  --seg-thumb-shadow: 0 1px 2px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --seg-track-bg: rgba(15, 23, 42, 0.05);
-  --seg-track-inset: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+  --seg-thumb-shadow: 0 1px 2px rgba(40, 40, 100, 0.18), 0 2px 6px rgba(40, 40, 100, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --seg-track-bg: rgba(84, 80, 200, 0.07);
+  --seg-track-inset: inset 0 1px 2px rgba(40, 40, 100, 0.07);
 
-  --brand-text: #4f46e5;
+  --brand-text: #4a41cf;
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.07);
   --danger-hover: rgba(239, 68, 68, 0.12);
@@ -330,39 +330,39 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg-body: #08090c;
-  --bg-card: rgba(22, 25, 32, 0.9);
-  --card-sheen: rgba(255, 255, 255, 0.05);
-  --bg-card-solid: #14161b;
-  --bg-elevated: rgba(20, 23, 29, 0.96);
-  --bg-header: rgba(8, 9, 12, 0.94);
-  --text-primary: #f4f6fa;
-  --text-secondary: #a3adbd;
-  --text-tertiary: #8b95a5;
+  --bg-body: #0a0b14;
+  --bg-card: rgba(27, 29, 51, 0.90);
+    --card-sheen: rgba(255, 255, 255, 0.07);
+  --bg-card-solid: #1a1c30;
+  --bg-elevated: rgba(25, 27, 46, 0.97);
+  --bg-header: rgba(10, 11, 20, 0.93);
+  --text-primary: #f2f3fb;
+  --text-secondary: #b3b7d2;
+  --text-tertiary: #9398b8;
   --text-inverse: #0b1220;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --border-glow: rgba(129, 140, 248, 0.45);
-  --hairline: rgba(255, 255, 255, 0.07);
-  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.34);
-  --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.42), 0 28px 72px rgba(0, 0, 0, 0.52);
+  --border-color: rgba(150, 158, 255, 0.14);
+  --border-strong: rgba(150, 158, 255, 0.26);
+  --border-glow: rgba(150, 150, 255, 0.50);
+  --hairline: rgba(150, 158, 255, 0.10);
+  --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(4, 5, 16, 0.50);
+  --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.50), 0 28px 72px rgba(4, 5, 16, 0.60);
 
-  --surface-1: rgba(255, 255, 255, 0.045);
-  --surface-2: rgba(255, 255, 255, 0.08);
+  --surface-1: rgba(150, 158, 255, 0.075);
+  --surface-2: rgba(150, 158, 255, 0.125);
 
-  --tile-bg: rgba(255, 255, 255, 0.05);
-  --tile-bg-hover: rgba(255, 255, 255, 0.085);
-  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --tile-bg: rgba(150, 158, 255, 0.07);
+  --tile-bg-hover: rgba(150, 158, 255, 0.12);
+  --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.09);
   --tile-blur: none;
 
   /* 分段控件滑块 */
-  --seg-thumb-bg: rgba(255, 255, 255, 0.14);
+  --seg-thumb-bg: rgba(150, 158, 255, 0.20);
   --seg-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --seg-track-bg: rgba(255, 255, 255, 0.05);
   --seg-track-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 
-  --brand-text: #a3b0f7;
+  --brand-text: #b8beff;
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.1);
   --danger-hover: rgba(248, 113, 113, 0.16);
@@ -409,20 +409,20 @@
   [data-theme='light'] {
     --backdrop-blur: none;
     --tile-blur: none;
-    --bg-card: rgba(255, 255, 255, 0.88);
+    --bg-card: rgba(255, 255, 255, 0.92);
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
-  --card-sheen: rgba(255, 255, 255, 0.55);
-    --bg-header: rgba(238, 240, 244, 0.94);
-    --bg-elevated: rgba(255, 255, 255, 0.96);
+  --card-sheen: rgba(255, 255, 255, 0.72);
+    --bg-header: rgba(239, 240, 250, 0.93);
+    --bg-elevated: rgba(253, 253, 255, 0.97);
   }
 
   [data-theme='dark'] {
     --backdrop-blur: none;
     --tile-blur: none;
-    --bg-card: rgba(22, 25, 32, 0.9);
-  --card-sheen: rgba(255, 255, 255, 0.05);
-    --bg-header: rgba(8, 9, 12, 0.94);
-    --bg-elevated: rgba(20, 23, 29, 0.96);
+    --bg-card: rgba(27, 29, 51, 0.90);
+    --card-sheen: rgba(255, 255, 255, 0.07);
+    --bg-header: rgba(10, 11, 20, 0.93);
+    --bg-elevated: rgba(25, 27, 46, 0.97);
   }
 }

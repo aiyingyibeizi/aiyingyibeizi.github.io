@@ -3775,6 +3775,7 @@ function setupSyncGroup() {
  * 不再需要手写 HTML，也不会因为条目增加而撑高设置页。
  */
 const CHANGELOG_RELEASES = [
+  { version: '2.8.5', date: '2026-11-18', key: 'changelog.v285', kind: 'improve' },
   { version: '2.8.0', date: '2026-11-17', key: 'changelog.v280', kind: 'feature' },
   { version: '2.7.7', date: '2026-11-14', key: 'changelog.v277', kind: 'fix' },
   { version: '2.7.6', date: '2026-10-25', key: 'changelog.v276', kind: 'feature' },

@@ -5383,6 +5383,82 @@ const V280_CHANGELOG = {
   ],
 };
 
+/**
+ * v2.8.5 更新说明 —— 只保留本版内容，不再累加上一版的条目。
+ */
+const V285_CHANGELOG = {
+  'zh-CN': [
+    '明暗两套配色整体重做：卡片、描边、图标收敛到同一套靛蓝色阶，浅色不再是灰白发闷，深色也不再是纯黑糊成一片。',
+    '夜间场景重做：深空靛蓝底色、地平线一层紫罗兰微光与更自然的星点，夜里看不再发脏。',
+    '修掉更新说明重复：每个版本只显示本版内容，历史更新里不会再把上一版的条目当成本版的。',
+    '滚动更顺：手指滚动时暂停天气背景视频，滚停后自动恢复；首屏以下的长列表改为按需渲染，120Hz 屏少了一次全屏解码。',
+    '重新校准文字与图标层级：辅助文字的对比度全部提到 4.5:1 以上，弱化信息不再靠「发灰」实现。',
+  ],
+  'zh-TW': [
+    '明暗兩套配色整體重做：卡片、描邊、圖示收斂到同一套靛藍色階，淺色不再是灰白發悶，深色也不再是純黑糊成一片。',
+    '夜間場景重做：深空靛藍底色、地平線一層紫羅蘭微光與更自然的星點，夜裡看不再發髒。',
+    '修掉更新說明重複：每個版本只顯示本版內容，歷史更新裡不會再把上一版的條目當成本版的。',
+    '捲動更順：手指捲動時暫停天氣背景影片，捲停後自動恢復；首屏以下的長列表改為按需繪製，120Hz 螢幕少了一次全螢幕解碼。',
+    '重新校準文字與圖示層級：輔助文字的對比度全部提到 4.5:1 以上，弱化資訊不再靠「發灰」實現。',
+  ],
+  en: [
+    'Light and dark palettes rebuilt from scratch: cards, borders and icons now share one indigo scale — light is no longer washed-out grey, and dark is no longer flat black.',
+    'Night scene redone: a deep indigo sky, a violet glow along the horizon and more natural stars, so night no longer looks muddy.',
+    'Fixed duplicate release notes: each version now shows only its own changes, and older entries no longer include the previous release\'s items.',
+    'Smoother scrolling: the weather background video pauses while you scroll and resumes when you stop, and long sections below the fold are rendered on demand — one less full-screen decode at 120Hz.',
+    'Text and icon hierarchy recalibrated: secondary text now clears 4.5:1 contrast, and de-emphasis no longer means "make it grey".',
+  ],
+  ja: [
+    'ライト／ダークの配色を全面的に作り直しました。カード・枠線・アイコンを同じインディゴの階調に揃え、ライトは灰色っぽく沈まず、ダークも真っ黒に潰れません。',
+    '夜のシーンを作り直しました。深いインディゴの空、地平線の紫の光、自然な星々で、夜でも濁って見えません。',
+    '更新内容の重複を修正しました。各バージョンはその版の内容だけを表示し、履歴に前バージョンの項目が混ざりません。',
+    'スクロールが滑らかに：スクロール中は天気背景の動画を一時停止し、止めると再開します。画面外の長いリストは必要時に描画し、120Hz でも全画面デコードが減ります。',
+    '文字とアイコンの階層を再調整しました。補助テキストのコントラストはすべて 4.5:1 以上になり、弱い情報を「灰色にする」ことで表現しません。',
+  ],
+  ko: [
+    '라이트/다크 색을 전면 새로 만들었습니다. 카드·테두리·아이콘을 하나의 인디고 단계로 통일해 라이트는 회색으로 죽지 않고, 다크도 새까맣게 뭉개지지 않습니다.',
+    '밤 장면을 다시 만들었습니다. 깊은 인디고 하늘, 지평선의 보랏빛 잔광과 자연스러운 별들로 밤에도 탁해 보이지 않습니다.',
+    '업데이트 내용 중복을 고쳤습니다. 각 버전은 해당 버전의 내용만 보여 주며, 기록에 이전 버전 항목이 섞이지 않습니다.',
+    '스크롤이 더 부드러워졌습니다. 스크롤하는 동안 날씨 배경 영상을 멈추고 멈추면 다시 재생하며, 화면 밖의 긴 목록은 필요할 때 그려 120Hz에서 전체 화면 디코딩이 줄어듭니다.',
+    '글자와 아이콘 계층을 다시 맞췄습니다. 보조 텍스트 대비를 모두 4.5:1 이상으로 올리고, 약한 정보를 \'회색\'으로 표현하지 않습니다.',
+  ],
+  fr: [
+    'Palettes claire et sombre entièrement refaites : cartes, bordures et icônes partagent une même gamme indigo — le clair n\'est plus gris terne, le sombre n\'est plus un noir uniforme.',
+    'Scène nocturne refaite : ciel indigo profond, lueur violette à l\'horizon et étoiles plus naturelles ; la nuit ne paraît plus sale.',
+    'Notes de version dédoublonnées : chaque version n\'affiche que ses propres changements, et l\'historique ne reprend plus les éléments de la version précédente.',
+    'Défilement plus fluide : la vidéo de fond se met en pause pendant le défilement et reprend ensuite ; les longues sections hors écran sont rendues à la demande, une décodification plein écran en moins à 120 Hz.',
+    'Hiérarchie texte/icônes recalibrée : le texte secondaire dépasse désormais 4,5:1 de contraste, et atténuer une information ne veut plus dire « la griser ».',
+  ],
+  de: [
+    'Helle und dunkle Palette komplett neu: Karten, Konturen und Icons folgen einer Indigo-Skala – hell wirkt nicht mehr grau-matt, dunkel ist kein Einheitsbrei aus Schwarz.',
+    'Nachtszene neu: tief indigofarbener Himmel, violetter Horizontschimmer und natürlichere Sterne – nachts nichts mehr schmutzig.',
+    'Doppelte Versionshinweise behoben: Jede Version zeigt nur ihre eigenen Änderungen, ältere Einträge übernehmen nicht mehr die Punkte der Vorgängerversion.',
+    'Flüssigeres Scrollen: Das Wettervideo pausiert beim Scrollen und läuft danach weiter; lange Abschnitte außerhalb des Sichtfelds werden bei Bedarf gerendert – eine Vollbild-Dekodierung weniger bei 120 Hz.',
+    'Text- und Icon-Hierarchie neu kalibriert: Sekundärtext erreicht überall 4,5:1 Kontrast, Zurückhaltung heißt nicht mehr „grau machen“.',
+  ],
+  es: [
+    'Paletas clara y oscura rehechas por completo: tarjetas, bordes e iconos comparten una misma escala índigo; lo claro ya no es gris apagado y lo oscuro no es un negro plano.',
+    'Escena nocturna rehecha: cielo índigo profundo, un resplandor violeta en el horizonte y estrellas más naturales; la noche ya no se ve sucia.',
+    'Corregidas las notas duplicadas: cada versión muestra solo sus cambios y el historial ya no repite los de la versión anterior.',
+    'Desplazamiento más fluido: el vídeo de fondo se pausa al desplazarte y se reanuda al parar; las secciones largas fuera de pantalla se dibujan cuando hacen falta, una decodificación menos a 120 Hz.',
+    'Jerarquía de texto e iconos recalibrada: el texto secundario supera 4,5:1 de contraste y atenuar ya no significa «ponerlo gris».',
+  ],
+  pt: [
+    'Paletas clara e escura totalmente refeitas: cartões, contornos e ícones seguem a mesma escala índigo; o claro deixou de ser cinzento apagado e o escuro não é um preto chapado.',
+    'Cena noturna refeita: céu índigo profundo, um brilho violeta no horizonte e estrelas mais naturais; a noite já não parece suja.',
+    'Notas de versão duplicadas corrigidas: cada versão mostra apenas as suas alterações e o histórico não repete as da versão anterior.',
+    'Deslocamento mais fluido: o vídeo de fundo pausa enquanto deslizas e retoma depois; as secções longas fora do ecrã são desenhadas quando necessário — uma descodificação em ecrã inteiro menos a 120 Hz.',
+    'Hierarquia de texto e ícones recalibrada: o texto secundário passa a 4,5:1 de contraste e atenuar já não significa «pôr cinzento».',
+  ],
+  ru: [
+    'Светлая и тёмная палитры пересобраны заново: карточки, обводки и иконки живут в одной индиго-шкале — светлая тема больше не серая и вялая, тёмная — не сплошной чёрный.',
+    'Ночная сцена переделана: глубокое индиго неба, фиолетовое свечение у горизонта и более естественные звёзды — ночью больше не грязно.',
+    'Дубли в описании обновлений исправлены: каждая версия показывает только свои изменения, а история не повторяет пункты предыдущей.',
+    'Прокрутка плавнее: видео погодного фона встаёт на паузу во время прокрутки и возвращается после остановки; длинные блоки вне экрана рисуются по мере необходимости — на 120 Гц меньше одного полноэкранного декодирования.',
+    'Иерархия текста и иконок пересчитана: контраст вторичного текста везде выше 4.5:1, а приглушение больше не делается «серым цветом».',
+  ],
+};
+
 /** 更新记录时间线的界面标签（类型徽标等） */
 const CHANGELOG_UI_STRINGS = {
   'zh-CN': { 'settings.changelogFix': '问题修复', 'settings.changelogFeature': '新增功能', 'settings.changelogImprove': '体验优化' },
@@ -5400,6 +5476,7 @@ const CHANGELOG_UI_STRINGS = {
 ['zh-CN', 'zh-TW', 'en', 'ja', 'ko', 'fr', 'de', 'es', 'pt', 'ru'].forEach((lang) => {
   TRANSLATIONS[lang]['changelog.v277'] = V277_CHANGELOG[lang] || V277_CHANGELOG.en;
   TRANSLATIONS[lang]['changelog.v280'] = V280_CHANGELOG[lang] || V280_CHANGELOG.en;
+  TRANSLATIONS[lang]['changelog.v285'] = V285_CHANGELOG[lang] || V285_CHANGELOG.en;
   Object.assign(TRANSLATIONS[lang], CHANGELOG_UI_STRINGS[lang] || CHANGELOG_UI_STRINGS.en);
 });
 

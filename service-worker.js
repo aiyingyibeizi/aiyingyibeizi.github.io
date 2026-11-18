@@ -10,7 +10,7 @@
  *   in the UI (which posts SKIP_WAITING). Then clients.claim() reloads the page.
  */
 
-const APP_VERSION = '2.8.4';
+const APP_VERSION = '2.8.5';
 const CACHE_NAME = `apexon-weather-${APP_VERSION}`;
 /**
  * 安装期只预缓存"应用外壳"（HTML/CSS/JS/字体/图标，约 1MB）。

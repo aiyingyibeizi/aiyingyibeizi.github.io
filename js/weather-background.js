@@ -296,6 +296,13 @@ function syncVideoPlayback() {
   // 滚动时它和列表合成抢的是同一个 GPU 队列。
   const tier = document.documentElement.dataset.perf;
   const cheap = tier === 'mid' || tier === 'low';
+  // 手指/滚轮正在滚动：先暂停解码。
+  // 场景层是 fixed 的，暂停后会保留最后一帧，视觉上只是这一小段不再动；
+  // 但滚动期间 GPU 不必同时做「全屏视频解码 + 页面合成」，这是 120Hz 上最实在的一笔。
+  if (scrollActive) {
+    if (!video.paused) video.pause();
+    return;
+  }
   if (!document.hidden && !reduced && !light && !cheap && sceneOffscreen) {
     // 只是滚出了视口：暂停但保留最后一帧，滚回来时无需再等 0.8s 淡入
     if (!video.paused) video.pause();
@@ -323,6 +330,10 @@ document.addEventListener('visibilitychange', syncVideoPlayback);
  * 只有捕获阶段能拿到，这样无需关心 .main 何时被创建。
  */
 let scrollRaf = 0;
+// 滚动活跃状态：滚动期间暂停视频，停止 160ms 后由 syncVideoPlayback 恢复。
+// 160ms 覆盖惯性滚动的间歇，避免手指一顿一顿地滑动时反复重启解码。
+let scrollActive = false;
+let scrollIdleTimer = 0;
 // 场景高度缓存：offsetHeight 会强制同步一次排版，滚动中每帧读等于每帧排一次版。
 // 高度只随视口尺寸变化，缓存到 resize / 旋转屏幕再失效即可。
 let sceneHeightCache = 0;
@@ -345,6 +356,15 @@ function measureSceneOffscreen() {
 function onMainScroll(event) {
   // 捕获阶段会收到页面上所有滚动容器的事件，这里只关心首屏纵向滚动
   if (!event.target || event.target.id !== 'main-content') return;
+  if (!scrollActive) {
+    scrollActive = true;
+    syncVideoPlayback();
+  }
+  clearTimeout(scrollIdleTimer);
+  scrollIdleTimer = setTimeout(() => {
+    scrollActive = false;
+    syncVideoPlayback();
+  }, 160);
   if (scrollRaf) return;
   scrollRaf = requestAnimationFrame(() => {
     scrollRaf = 0;
