@@ -1,0 +1,6385 @@
+@import url('./variables.css');
+@import url('./qweather-icons.css');
+
+/* ============================
+   Reset & Base
+   ============================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-body);
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* 统一可见焦点环（仅键盘操作时出现，不干扰触屏）。
+   用 --brand-text 而非 --brand-primary：后者在暗色底上对比度不足 */
+:focus-visible {
+  outline: 2px solid var(--brand-text);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 选区配色跟随品牌色，避免系统默认蓝与整体色调冲突 */
+::selection {
+  background: var(--border-glow);
+  color: inherit;
+}
+
+/* 主题切换过渡
+   只在用户手动切换主题的 300ms 内挂上 .theme-transition，
+   让大面积色块平滑变化，而不是硬跳。
+   刻意用临时类而非常驻 transition：
+   常驻会让首屏"默认值 → 用户主题"的初始化也变成动画，出现一次闪色 */
+html.theme-transition,
+html.theme-transition body,
+html.theme-transition .card,
+html.theme-transition .header,
+html.theme-transition .nav,
+html.theme-transition .sheet,
+html.theme-transition .search__bar,
+html.theme-transition .city-item,
+html.theme-transition .hourly__item,
+html.theme-transition .detail,
+html.theme-transition .indices__item,
+html.theme-transition .aqi__pollutant,
+html.theme-transition .sheet__select,
+html.theme-transition .sheet__btn,
+html.theme-transition .toast,
+html.theme-transition .update-toast {
+  transition: background-color var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo),
+              color var(--duration-normal) var(--ease-out-expo) !important;
+}
+
+/* ============================
+   App Shell
+   ============================ */
+.app {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+/* ============================
+   Weather Scene (上半屏天气视频/图片)
+   ============================ */
+.weather-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--scene-h);
+  z-index: var(--z-background);
+  overflow: hidden;
+  background: var(--weather-sunny);
+  pointer-events: none;
+}
+
+/* 视频层在上、图片层在下：视频就绪后压过图片；
+   视频不可用时 JS 会把视频透明化，露出图片兜底。
+   默认 opacity 必须为 0：自动播放被拦截（Android WebView / 省电模式）时，
+   浏览器会在 video 元素上叠加一个原生「播放按钮」浮层，若元素可见就会
+   在天气数据到达前露出那个巨大图标。置 0 后浮层随之不可见，
+   只有 JS 确认 play() 成功后才由 weather-background.js 把 opacity 置 1。 */
+.weather-scene__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out-expo);
+  will-change: opacity;
+}
+
+.weather-scene__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out-expo);
+  will-change: opacity;
+}
+
+/* 夜空专属：原图是一张高饱和的亮蓝星空 + 一颗卡通月亮，直接铺满会亮得刺眼，
+   和深色界面、下方纯黑的页面底色也接不上。这里压掉饱和度和亮度，
+   再叠一层顶部深、边缘收的暗角，把它收成「深蓝夜空」而不是「蓝色海报」。
+   静态图像只光栅一次，不影响帧率。 */
+html[data-scene="night"] .weather-scene__img {
+  filter: saturate(0.55) brightness(0.62) contrast(1.05);
+}
+
+html[data-scene="night"] .weather-scene__gradient {
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.34) 55%, rgba(2, 6, 23, 0.72) 100%),
+    linear-gradient(
+      to bottom,
+      rgba(2, 6, 23, 0.42) 0%,
+      rgba(2, 6, 23, 0.16) 22%,
+      rgba(2, 6, 23, 0.2) 52%,
+      rgba(2, 6, 23, 0.46) 78%,
+      rgba(2, 6, 23, 0.62) 100%
+    );
+}
+
+/* 场景内压暗遮罩：保证白色 hero 文案在任意天气/主题下都可读 */
+.weather-scene__gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 23, 0.24) 0%,
+    rgba(2, 6, 23, 0.06) 16%,
+    rgba(2, 6, 23, 0.03) 36%,
+    rgba(2, 6, 23, 0.12) 56%,
+    rgba(2, 6, 23, 0.3) 72%,
+    rgba(2, 6, 23, 0.46) 86%,
+    rgba(2, 6, 23, 0.54) 100%
+  );
+  pointer-events: none;
+}
+
+/* 场景底部渐隐到页面背景，让视频与内容无缝衔接 */
+.weather-scene::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--scene-fade);
+  z-index: 3;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 0) 0%, var(--bg-body) 100%);
+  pointer-events: none;
+}
+
+/* ============================
+   Header (固定悬浮，滚动时叠加毛玻璃)
+   高度刻意保持不变：一旦滚动时压缩内边距，--header-h 就只能对上其中一种状态，
+   sticky 的搜索框会随之出现几像素错位。这里只用背景/描边表达"已滚动"。
+   ============================ */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  /* 顶部留白收窄（space-3 → space-2）：刘海/状态栏之外不再多压一圈空白，
+     顶栏高度与 --header-h 依然严格一致，避免 sticky 元素错位。 */
+  padding: calc(var(--space-2) + var(--sa-top-inset)) max(var(--space-4), var(--safe-right)) var(--space-2) max(var(--space-4), var(--safe-left));
+  background: transparent;
+}
+
+/* 滚动时的毛玻璃底衬放在伪元素上，并用遮罩把"状态栏 / 刘海"一段渐隐到透明。
+   旧实现把 background 直接铺满整个 header（含安全区），在挖孔/灵动岛机型上
+   会压出一整条灰蒙蒙的色带；改为伪元素 + 顶部遮罩后，刘海区保持通透、
+   只在顶栏内容区形成柔和毛玻璃。 */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--bg-header);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: inset 0 -1px 0 var(--hairline);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--sa-top-inset) * 0.5), #000 calc(var(--sa-top-inset) + 8px));
+  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--sa-top-inset) * 0.5), #000 calc(var(--sa-top-inset) + 8px));
+}
+
+.header--scrolled::before {
+  opacity: 1;
+}
+
+.header__inner {
+  position: relative;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-1);
+}
+
+.header__city {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--hero-text);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xl);
+  letter-spacing: -0.015em;
+  text-shadow: var(--hero-shadow);
+  transition: opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.header--scrolled .header__city {
+  color: var(--text-primary);
+  text-shadow: none;
+}
+
+.header__city:active {
+  opacity: 0.6;
+}
+
+.header__city-icon,
+.header__city-arrow {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.header__city-arrow {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.75;
+}
+
+.header__city-name {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.icon-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+  transition: opacity var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header--scrolled .icon-btn {
+  color: var(--text-primary);
+}
+
+.icon-btn:active {
+  opacity: 0.5;
+}
+
+.icon-btn svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--surface-1);
+  }
+}
+
+/* ============================
+   Main Content
+   ============================ */
+.main {
+  position: relative;
+  z-index: var(--z-base);
+  /* 先给旧引擎一个 vh 兜底，再用 dvh 覆盖（iOS <15.4 / 部分安卓 WebView 不认 dvh） */
+  height: 100vh;
+  height: 100dvh;
+  /* 左右用 max() 兜住横屏刘海机型的 safe-area，避免内容压到挖孔下 */
+  padding: calc(var(--header-h) + var(--space-2)) max(var(--space-4), var(--safe-right)) calc(var(--space-24) + var(--safe-bottom)) max(var(--space-4), var(--safe-left));
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  /* 刻意不开 scroll-behavior: smooth：
+     scrollTo({behavior:'auto'}) 会读取这里的计算值，
+     一旦设为 smooth，切页归顶就会拖出一段多余的滚动动画 */
+}
+
+/* 滚动容器上刻意不用 mask-image，也不做 translateZ(0) 图层提升。
+   两者叠在一起，等于每帧把整页内容重新遮罩合成一次、再塞进一张超大图层：
+   1080p 手机上约 40fps，2K/4K 桌面上直接掉到 20 出头。
+   而这段渐隐区域本来就被 94% 不透明度的顶栏盖住，去掉肉眼几乎无差别。 */
+
+@media (min-width: 768px) {
+  .main {
+    padding-left: max(var(--space-6), var(--safe-left));
+    padding-right: max(var(--space-6), var(--safe-right));
+  }
+}
+
+.main__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .main__inner {
+    gap: var(--space-6);
+  }
+}
+
+.page {
+  display: none;
+  opacity: 0;
+}
+
+.page--active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  opacity: 1;
+  animation: pageEnter var(--duration-page) var(--ease-out-expo) both;
+}
+
+/* X8：旧页向上淡出 10px。绝对定位是为了不占位——
+   若让它继续在流内，新页会被顶下去 180ms，形成明显的布局跳动。 */
+.main__inner {
+  position: relative;
+}
+
+.page--leaving {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  position: absolute;
+  inset: 0 0 auto 0;
+  pointer-events: none;
+  opacity: 1;
+  animation: pageLeave var(--duration-page) var(--ease-out-expo) forwards;
+}
+
+@keyframes pageLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@media (min-width: 768px) {
+  .page--active {
+    gap: var(--space-6);
+  }
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================
+   Cards (L1 层)
+   ============================ */
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  transition: background-color var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.card__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card__title svg {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ============================
+   Current Weather — Hero
+   用负边距抵消 .main 的顶部内边距，使 hero 顶部与视口顶部对齐，
+   从而 min-height: var(--scene-h) 与天气场景高度像素级吻合；
+   内容底部锚定在场景渐隐区之上，白色文字由场景遮罩保证对比度。
+   信息层级：图标 → 大温度 → 天气描述 → 区间胶囊 → 数据胶囊 → 更新时间注脚。
+   ============================ */
+.current {
+  position: relative;
+  z-index: var(--z-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  gap: var(--space-2);
+  margin-top: calc((var(--header-h) + var(--space-2)) * -1);
+  min-height: var(--scene-h);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  /* 顶部预留顶栏高度：内容变多时（如综述/区间/数据胶囊出现）flex-end 会把
+     图标顶到菜单栏，这里给出不可越过的上边界，保证与顶栏始终留有间距 */
+  padding: calc(var(--header-h) + var(--space-4)) var(--space-4) calc(var(--scene-fade) + var(--space-3));
+}
+
+/* 更新时间：整块信息的收尾注脚，刻意压低对比度 */
+.current__update {
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--hero-text-faint);
+  text-shadow: var(--hero-shadow);
+}
+
+.current__icon {
+  /* 与 clamp 到 5.5rem 的大温度保持视觉配重，图标过小会让 hero 头重脚轻 */
+  font-size: clamp(3rem, 11vw, 4.5rem);
+  line-height: 1;
+  color: var(--hero-text);
+  /* 用 text-shadow 而不是 drop-shadow：filter 会让这个元素单独生成一个滤镜图层，
+     而它又挂着无限循环的浮动动画，等于每帧都重新做一次滤镜光栅化。
+     在 120Hz 上这是白烧的 8ms 预算，改成文字阴影后完全由合成线程完成。 */
+  text-shadow: 0 6px 20px rgba(2, 6, 23, 0.4);
+  animation: heroFloat 8s var(--ease-in-out-sine) infinite;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 首屏滚出视口后 hero 已不可见，暂停呼吸动画：
+   无限循环的动画会让合成器一直保持唤醒，是纯粹的待机耗电 */
+html[data-scrolled="1"] .current__icon {
+  animation-play-state: paused;
+}
+
+.current__temp {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.current__temp sup {
+  font-size: 0.3em;
+  font-weight: var(--font-medium);
+  vertical-align: super;
+  margin-left: 0.1em;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+/* 温度数字滚动（odometer）
+   每个数字位是一列 0-9，行高固定 1em，靠 translateY(-N em) 滚到目标位。
+   行高必须与 translateY 的 em 基数一致，否则滚动会逐位累积偏移 */
+.temp-roll {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.temp-roll__cell {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+
+.temp-roll__strip {
+  display: flex;
+  flex-direction: column;
+  transition: transform 720ms var(--ease-out-expo);
+  will-change: transform;
+}
+
+.temp-roll__d {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+
+.current__desc {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+  /* 天气描述多语言可能较长：最多两行，超出省略（完整文案放在 title） */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.current__range {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.3125rem var(--space-4);
+  margin-top: var(--space-1);
+  /* 数字背景彻底透明：不铺底、不描边、不做背景模糊，
+     否则在身体影像上会透出一圈"淡方块"轮廓 */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  font-size: var(--text-sm);
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+}
+
+.current__range-high {
+  font-weight: var(--font-semibold);
+}
+
+.current__range-low {
+  color: var(--hero-text-dim);
+}
+
+.current__range-divider {
+  width: 1px;
+  height: 0.875rem;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+/* 数据胶囊：只保留文字与间距，背景完全透明，避免在天气影像上出现淡方块 */
+.current__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 26rem;
+  margin-top: var(--space-2);
+}
+
+.current__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1875rem;
+  min-width: 0;
+  padding: var(--space-2) var(--space-1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.current__stat-label {
+  font-size: var(--text-xs);
+  color: var(--hero-text-dim);
+  text-shadow: var(--hero-shadow);
+}
+
+.current__stat-value {
+  max-width: 100%;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 未来 3 小时降水趋势
+   默认隐藏：窄屏没有横向余量，逐小时降水已经由 24h 卡片承载。
+   仅在超宽屏（≥1200px）与 hero 组成双列时出现 */
+.current__precip {
+  display: none;
+  width: 100%;
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--hero-text);
+}
+
+.precip__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+}
+
+.precip__title svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.precip__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.precip__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* 分钟级降水：12 格 × 10 分钟撑满 2 小时。
+   格宽只有二十来像素，字号必须收到极限，标签只每 30 分钟露一次，
+   否则时间文字会互相咬在一起，比不显示还乱。 */
+.precip__grid--minute {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: var(--space-3);
+}
+
+.precip__grid--minute .precip__bar {
+  height: 3.25rem;
+}
+
+.precip__grid--minute .precip__time {
+  font-size: 0.5rem;
+  line-height: 1.1;
+  min-height: 0.7rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.precip__grid--minute .precip__amount {
+  font-size: 0.5rem;
+  line-height: 1.1;
+  min-height: 0.7rem;
+}
+
+.precip__summary {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--hero-text-dim);
+  text-shadow: var(--hero-shadow);
+}
+
+.precip__time {
+  font-size: var(--text-xs);
+  color: var(--hero-text-dim);
+  text-shadow: var(--hero-shadow);
+}
+
+.precip__bar {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 4.5rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.precip__fill {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  transition: height var(--duration-slow) var(--ease-out-expo);
+}
+
+.precip__fill--low { background: linear-gradient(180deg, #93c5fd, #60a5fa); }
+.precip__fill--mid { background: linear-gradient(180deg, #60a5fa, #3b82f6); }
+.precip__fill--high { background: linear-gradient(180deg, #3b82f6, #6366f1); }
+
+.precip__pop {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+}
+
+.precip__amount {
+  font-size: var(--text-xs);
+  color: var(--hero-text-faint);
+  text-shadow: var(--hero-shadow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ============================
+   Hourly Forecast
+   ============================ */
+/* 极值图例：常驻在滚动区之外，滑动时不跟着跑，信息永远可见 */
+.hourly__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+}
+
+.hourly__legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.hourly__legend-chip b {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.hourly__legend-chip i {
+  font-style: normal;
+  opacity: 0.72;
+}
+
+.hourly__legend-chip svg {
+  width: 0.6875rem;
+  height: 0.6875rem;
+  flex: none;
+}
+
+.hourly__legend-chip--pop,
+.hourly__legend-chip--pop b {
+  color: var(--brand-accent);
+}
+
+.hourly__scroll {
+  /* 单一列宽变量：曲线、降水柱、卡片全部按它推导，改一处三处同步 */
+  --hourly-col: 4.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 左右内边距与负外边距等值：首张「现在」卡与容器可视边严格对齐 */
+  margin: 0 calc(var(--space-2) * -1);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--space-2);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  /* 滚动容器单独成层，横向滑动只重绘这一层，不再牵动整页 */
+  transform: translateZ(0);
+}
+
+.hourly__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* 曲线与小时列同宽同滚：宽度由 .hourly__cards 撑开，
+   .hourly__chart 用 100% 跟随，因此两者永远逐列对齐 */
+.hourly__track {
+  position: relative;
+  width: max-content;
+}
+
+.hourly__chart {
+  width: 100%;
+  height: 4.25rem;
+  margin-bottom: var(--space-1);
+  /* 曲线颜色从这里继承（SVG 渐变用 currentColor），换主题自动跟随 */
+  color: var(--brand-primary);
+}
+
+.hourly__chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hourly__chart .trend__area {
+  fill: url(#hourlyAreaGrad);
+}
+
+/* 横向被 preserveAspectRatio=none 拉伸，靠 non-scaling-stroke 保持 2px 粗细 */
+.hourly__chart .trend__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.hourly__chart .trend__pop-bar {
+  fill: var(--brand-accent);
+  opacity: 0.55;
+}
+
+.hourly__chart .trend__daybreak {
+  stroke: var(--text-tertiary);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.hourly__cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--hourly-col);
+  gap: var(--space-2);
+}
+
+/* L2玻璃瓦片：低填充 + 内顶高光。不再叠加 backdrop-filter：
+   父卡已是一层模糊，瓦片自身填充度不足 6%，再模糊肉眼无差别，
+   却会让 24 个元素各自成为合成层，是这页掉帧的主因。
+   四行等距栅格（时间/图标/温度/降水）保证所有卡片高度完全一致。 */
+.hourly__item {
+  display: grid;
+  grid-template-rows: auto 1.75rem auto 0.8125rem;
+  align-items: center;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) 0 var(--space-2);
+  background: var(--tile-bg);
+  box-shadow: var(--tile-edge);
+  border-radius: var(--radius-lg);
+  scroll-snap-align: start;
+  contain: layout;
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .hourly__item:hover {
+    background: var(--tile-bg-hover);
+  }
+}
+
+.hourly__time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hourly__icon {
+  font-size: 1.625rem;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.hourly__temp {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hourly__pop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  font-size: 0.625rem;
+  line-height: 0.8125rem;
+  color: var(--brand-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 无降水时保留行高但不可见：不写死高度也能让 24 张卡齐平 */
+.hourly__pop[data-empty="1"] {
+  visibility: hidden;
+}
+
+.hourly__pop svg {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: none;
+}
+
+.hourly__item--now {
+  background: var(--brand-gradient-soft);
+  /* 1px 内描边点出"现在"，替代外发光 */
+  box-shadow: inset 0 0 0 1px var(--border-glow);
+}
+
+.hourly__item--now .hourly__time {
+  color: var(--brand-text);
+  font-weight: var(--font-semibold);
+}
+
+/* ============================
+   Daily Forecast
+   ============================ */
+.daily__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.daily__item {
+  display: grid;
+  /* 描述文字列给足 4 个字（晴间多云）不截断，温度条吃掉剩余空间 */
+  grid-template-columns: 3.25rem 1.5rem 4.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .daily__item:hover {
+    background: var(--surface-1);
+  }
+}
+
+.daily__item + .daily__item {
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+
+.daily__day {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* 今天：整行提到最高对比度，其余日期退到次要层 */
+.daily__item--today {
+  background: var(--tile-bg);
+  box-shadow: var(--tile-edge);
+  backdrop-filter: var(--tile-blur);
+  -webkit-backdrop-filter: var(--tile-blur);
+}
+
+.daily__item--today .daily__day {
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
+}
+
+.daily__item--today .daily__temp-high {
+  color: var(--brand-text);
+}
+
+.daily__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-primary);
+  justify-self: center;
+}
+
+.daily__text {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.daily__temp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily__temp-high {
+  color: var(--text-primary);
+}
+
+.daily__temp-low {
+  color: var(--text-tertiary);
+}
+
+.daily__temp-bar {
+  width: 100%;
+  height: 0.3125rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  position: relative;
+  overflow: hidden;
+}
+
+.daily__temp-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--temp-bar-gradient);
+}
+
+/* ============================
+   Air Quality
+   ============================ */
+/* AQI 等级配色由类名提供 --aqi-color，
+   JS 只切换 .aqi--l0…l5，不再往 DOM 写内联颜色（利于主题切换与 CSP） */
+.aqi--l0 { --aqi-color: var(--aqi-0); }
+.aqi--l1 { --aqi-color: var(--aqi-1); }
+.aqi--l2 { --aqi-color: var(--aqi-2); }
+.aqi--l3 { --aqi-color: var(--aqi-3); }
+.aqi--l4 { --aqi-color: var(--aqi-4); }
+.aqi--l5 { --aqi-color: var(--aqi-5); }
+
+.aqi {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.aqi__ring {
+  position: relative;
+  width: 6rem;
+  height: 6rem;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+}
+
+.aqi__ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.aqi__ring-bg {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 6;
+}
+
+.aqi__ring-fill {
+  fill: none;
+  stroke: var(--aqi-color, var(--brand-primary));
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  /* 目标值由 JS 以 --aqi-off 注入；缺省为满圈（不可见），避免闪出错误弧长 */
+  stroke-dashoffset: var(--aqi-off, 283);
+  transition: stroke-dashoffset var(--duration-slow) var(--ease-out-expo),
+              stroke var(--duration-slow) var(--ease-out-expo);
+}
+
+/* 圆环挂载时从"满圈"收拢到目标弧长，形成生长动画 */
+.aqi__ring-fill {
+  animation: aqiRing 1000ms var(--ease-out-expo) both;
+}
+
+@keyframes aqiRing {
+  from { stroke-dashoffset: 283; }
+}
+
+.aqi__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--aqi-color, var(--text-primary));
+}
+
+.aqi__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.aqi__level {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--aqi-color, var(--text-primary));
+}
+
+.aqi__advice {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  /* 健康建议多为长句：最多三行，超出省略（完整文案放在 title） */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.aqi__pollutants {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+
+.aqi__pollutant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: var(--space-2);
+  background: var(--tile-bg);
+  box-shadow: var(--tile-edge);
+  backdrop-filter: var(--tile-blur);
+  -webkit-backdrop-filter: var(--tile-blur);
+  border-radius: var(--radius-md);
+}
+
+.aqi__pollutant-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--font-medium);
+}
+
+.aqi__pollutant-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* ============================
+   Details Grid
+   ============================ */
+.details__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--tile-bg);
+  box-shadow: var(--tile-edge);
+  backdrop-filter: var(--tile-blur);
+  -webkit-backdrop-filter: var(--tile-blur);
+  border-radius: var(--radius-lg);
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .detail:hover {
+    background: var(--tile-bg-hover);
+  }
+}
+
+.detail__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient-soft);
+  display: grid;
+  place-items: center;
+  color: var(--brand-text);
+  flex-shrink: 0;
+}
+
+.detail__icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.detail > div:last-child {
+  min-width: 0;
+}
+
+.detail__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail__value {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================
+   Life Indices (生活指数)
+   ============================ */
+.indices__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .indices__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.indices__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--tile-bg);
+  box-shadow: var(--tile-edge);
+  backdrop-filter: var(--tile-blur);
+  -webkit-backdrop-filter: var(--tile-blur);
+  border-radius: var(--radius-lg);
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .indices__item:hover {
+    background: var(--tile-bg-hover);
+  }
+}
+
+.indices__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.indices__icon {
+  font-size: 1.125rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.indices__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.indices__value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.indices__advice {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================
+   Warning Card (天气预警)
+   ============================ */
+.warning-card {
+  border-color: var(--danger-stroke);
+}
+
+.warning-card__title {
+  color: var(--danger);
+}
+
+.warning-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.warning-card__item {
+  padding: var(--space-3) var(--space-4);
+  background: var(--danger-soft);
+  border-radius: var(--radius-md);
+  box-shadow: inset 2px 0 0 var(--danger-rail);
+}
+
+.warning-card__title-text {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  min-width: 0;
+  /* 预警标题多语言较长：最多两行，超出省略（完整文案放在 title） */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.warning-card__time {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+}
+
+/* ============================
+   Sun Position Arc (日出日落)
+   ============================ */
+.sun-arc {
+  position: relative;
+  padding: var(--space-2) 0 var(--space-1);
+}
+
+.sun-arc__svg {
+  width: 100%;
+  height: auto;
+  max-height: 8rem;
+  overflow: visible;
+}
+
+.sun-arc__track {
+  stroke: var(--border-strong);
+}
+
+.sun-arc__progress {
+  transition: stroke-dashoffset 1s var(--ease-out-expo);
+}
+
+.sun-arc__dot {
+  transition: cx 1s var(--ease-out-expo), cy 1s var(--ease-out-expo);
+}
+
+.sun-arc__horizon {
+  stroke: var(--hairline);
+}
+
+.sun-arc__labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-1);
+}
+
+.sun-arc__sunrise,
+.sun-arc__sunset {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.sun-arc__icon {
+  color: var(--brand-text);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+}
+
+.sun-arc__label {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.sun-arc__time {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+}
+
+/* ============================
+   Search Page
+   ============================ */
+.search__bar {
+  position: sticky;
+  /* 关键：sticky 的 top 是相对「滚动容器内边距之后的内容边缘」计算的，
+     .main 已经用 padding-top 让出了顶栏高度（header-h + space-2），
+     这里若再写一次 header-h，实际吸顶位置会变成 header-h + padding-top，
+     搜索框就会下移 56px 压住第一条结果。
+     所以这里取 -space-2：吸顶位置 = header-h，正好贴住顶栏下沿，
+     结果列表不会从顶栏与搜索框之间的缝里透出来。 */
+  top: calc(-1 * var(--space-2));
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  /* 不透明底：吸顶后结果列表从下面滚过，半透明会让文字透出来，看起来像「重合」 */
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-4);
+  transition: border-color var(--duration-fast) var(--ease-out-expo),
+              box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+/* 聚焦时整条搜索框亮起，而不是给裸 input 画描边 */
+.search__bar:focus-within {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-card), var(--ring-focus);
+}
+
+.search__input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1) 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.search__input:focus-visible {
+  outline: none;
+}
+
+.search__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search__clear {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  color: var(--text-tertiary);
+  background: var(--surface-1);
+  flex-shrink: 0;
+  transition: opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.search__clear:active {
+  opacity: 0.5;
+}
+
+.search__section-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin: var(--space-5) 0 var(--space-3);
+  padding-left: var(--space-1);
+}
+
+.search__section-title:first-of-type {
+  margin-top: 0;
+}
+
+.city-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.city-item {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  /* 纵向留给页面滚动，横向留给左滑删除 */
+  touch-action: pan-y;
+  transition: border-color var(--duration-fast) var(--ease-out-expo),
+              transform var(--duration-fast) var(--ease-out-expo);
+}
+
+/* 卡片正文层：左滑时整体位移，露出右侧删除按钮 */
+.city-item__front {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+  will-change: transform;
+  /* 长按拖拽时不选中文字、不触发系统长按菜单 */
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.city-item:not(.city-item--dragging):active .city-item__front {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) {
+  .city-item:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.city-item--active {
+  border-color: var(--border-glow);
+}
+
+.city-item--active .city-item__name {
+  color: var(--brand-text);
+}
+
+/* 拖拽排序中的活跃卡：抬升层级并放开 overflow 以显示浮起阴影 */
+.city-item--dragging {
+  z-index: 5;
+  overflow: visible;
+  box-shadow: var(--shadow-float), 0 26px 48px -12px rgba(2, 6, 23, 0.38);
+  transition: none;
+}
+
+/* 长按拖拽期间锁定页面纵向滚动 */
+body.city-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.city-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.city-item__name {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.city-item__path {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.city-item__weather {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.city-item__weather-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.city-item__weather-temp {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.city-item__weather-text {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* 删除按钮默认藏在卡片右侧，左滑露出后才可点 */
+.city-item__remove {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 4.5rem;
+  display: grid;
+  place-items: center;
+  color: var(--danger);
+  background: var(--danger-soft);
+  box-shadow: inset 1px 0 0 var(--danger-stroke);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo);
+}
+
+.city-item--swiping .city-item__remove,
+.city-item--swiped .city-item__remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .city-item__remove:hover {
+    background: var(--danger-hover);
+  }
+}
+
+.city-item__remove svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.city-item .icon-btn {
+  color: var(--text-tertiary);
+  width: 2rem;
+  height: 2rem;
+}
+
+.city-item .icon-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ============================
+   Bottom Navigation
+   ============================ */
+.nav {
+  position: fixed;
+  bottom: calc(var(--space-3) + var(--sa-bottom-inset));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-sticky);
+  width: calc(100% - var(--space-8));
+  max-width: 24rem;
+  padding: var(--space-1);
+  background: var(--bg-elevated);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  transition: background-color var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  /* 至少 44px 的可点面积（含图标与文字），小屏也不会点偏 */
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-1);
+  color: var(--text-tertiary);
+  border-radius: var(--radius-lg);
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo);
+}
+
+.nav__item svg {
+  width: 1.375rem;
+  height: 1.375rem;
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.nav__item--active {
+  color: var(--brand-text);
+  background: var(--brand-gradient-soft);
+}
+
+/* 按压反馈：不用 transform，避免与 --active 的图标位移互相覆盖 */
+.nav__item:active {
+  opacity: 0.6;
+}
+
+.nav__item--active svg {
+  transform: translateY(-1px);
+}
+
+.nav__label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  /* 多语言标签长度差异极大（Français / 天气预报 / 모델），
+     统一单行省略，避免某一语言把药丸撑高或挤成两行 */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================
+   Skeleton
+   ============================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--border-color) 0%,
+    var(--border-strong) 50%,
+    var(--border-color) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: skeletonShimmer 1.8s infinite linear;
+  max-width: 100%;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================
+   Toast
+   ============================ */
+.toast {
+  position: fixed;
+  top: calc(var(--header-h) + var(--space-4));
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  z-index: var(--z-toast);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo);
+  max-width: min(90vw, 28rem);
+  text-align: center;
+}
+
+.toast--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================
+   In-App Update Toast
+   ============================ */
+.update-toast {
+  position: fixed;
+  top: calc(var(--header-h) + var(--space-3));
+  left: 50%;
+  transform: translateX(-50%) translateY(-12px);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo);
+  max-width: min(92vw, 28rem);
+}
+
+.update-toast[hidden] {
+  display: none;
+}
+
+.update-toast--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.update-toast__text {
+  white-space: nowrap;
+}
+
+.update-toast__btn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--brand-gradient);
+  color: var(--text-on-brand);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.update-toast__btn:active {
+  transform: scale(0.96);
+}
+
+.update-toast__btn:disabled {
+  opacity: 0.6;
+}
+
+/* ============================
+   Native Update Dialog（Android 应用内更新）
+   ============================ */
+.update-dialog {
+  position: fixed;
+  inset: 0;
+  /* 高于设置面板等普通弹层，保证作为模态框始终在最上层 */
+  z-index: calc(var(--z-overlay) + 10);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-4);
+  /* 底部弹层位：给手势条 / 虚拟导航留出安全区 */
+  padding-bottom: calc(var(--space-4) + var(--safe-bottom));
+  background: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.update-dialog[hidden] {
+  display: none;
+}
+
+.update-dialog__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(30rem, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  animation: updateDialogIn var(--duration-normal) var(--ease-out-expo) both;
+}
+
+@keyframes updateDialogIn {
+  from { opacity: 0; transform: translateY(1.25rem) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.update-dialog__badge {
+  align-self: flex-start;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-gradient-soft);
+  color: var(--brand-text);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.02em;
+}
+
+.update-dialog__version {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.update-dialog__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.update-dialog__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+.update-dialog__notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.update-dialog__notes:empty {
+  display: none;
+}
+
+.update-dialog__notes li {
+  position: relative;
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.update-dialog__notes li::before {
+  content: '';
+  position: absolute;
+  left: var(--space-1);
+  top: 0.55em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--brand-text);
+}
+
+.update-dialog__progress {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.update-dialog__progress[hidden] {
+  display: none;
+}
+
+.update-dialog__bar {
+  width: 0%;
+  height: 100%;
+  background: var(--brand-gradient);
+  border-radius: var(--radius-full);
+  transition: width 200ms linear;
+}
+
+.update-dialog__status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.update-dialog__status[hidden] {
+  display: none;
+}
+
+.update-dialog__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+/* 强制更新：把说明段落切换为必须更新的强调提示 */
+.update-dialog__hint--force {
+  color: var(--danger);
+  font-weight: var(--font-semibold);
+}
+
+.update-dialog__btn[hidden] {
+  display: none;
+}
+
+.update-dialog__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+}
+
+.update-dialog__btn {
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient);
+  color: var(--text-on-brand);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.update-dialog__btn:active {
+  transform: scale(0.97);
+}
+
+.update-dialog__btn:disabled {
+  opacity: 0.6;
+}
+
+.update-dialog__btn--ghost {
+  flex: 0 0 auto;
+  padding-inline: var(--space-5);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+}
+
+@media (min-width: 640px) {
+  .update-dialog {
+    align-items: center;
+    /* 居中布局不需要底部安全区补偿 */
+    padding: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-dialog__panel {
+    animation: none;
+  }
+  .update-dialog__bar {
+    transition: none;
+  }
+}
+
+/* ============================
+   Empty State
+   ============================ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty svg {
+  width: 3.5rem;
+  height: 3.5rem;
+  opacity: 0.4;
+}
+
+.empty__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+.empty__desc {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  max-width: 20rem;
+  text-wrap: balance;
+}
+
+/* Hero 上的空状态需要浅色文字（位于视频区） */
+.current .empty {
+  padding: 0;
+}
+
+.current .empty svg {
+  color: var(--hero-text);
+  opacity: 0.7;
+}
+
+.current .empty__title {
+  color: var(--hero-text);
+  text-shadow: var(--hero-shadow);
+}
+
+.current .empty__desc {
+  color: var(--hero-text-dim);
+  text-shadow: var(--hero-shadow);
+}
+
+/* ============================
+   Bottom Sheet (设置弹窗)
+   ============================ */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: rgba(2, 6, 23, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+}
+
+.sheet-overlay--visible {
+  opacity: 1;
+}
+
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 78vh;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-top: 1px solid var(--hairline);
+  box-shadow: 0 -8px 40px rgba(2, 6, 23, 0.26);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  transform: translateY(100%);
+  transition: transform var(--duration-normal) var(--ease-out-expo),
+              background-color var(--duration-normal) var(--ease-out-expo);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .sheet {
+    left: 50%;
+    right: auto;
+    width: min(32rem, 100% - var(--space-8));
+    transform: translateX(-50%) translateY(100%);
+    border-radius: var(--radius-xl);
+    bottom: var(--space-6);
+    max-height: 80vh;
+  }
+
+  .sheet-overlay--visible .sheet {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.sheet-overlay--visible .sheet {
+  transform: translateY(0);
+}
+
+.sheet__handle {
+  width: 2.5rem;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  margin: var(--space-3) auto var(--space-1);
+  flex-shrink: 0;
+}
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-5) var(--space-3);
+  box-shadow: inset 0 -1px 0 var(--hairline);
+  flex-shrink: 0;
+}
+
+.sheet__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.sheet__header .icon-btn {
+  color: var(--text-secondary);
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.sheet__body {
+  padding: var(--space-4) var(--space-5) calc(var(--space-6) + var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet__group {
+  margin-bottom: var(--space-5);
+}
+
+.sheet__group-title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-2);
+}
+
+.sheet__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.sheet__row + .sheet__row {
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+
+/* 标签在上、控件撑满整行的行样式（分段控件/下拉需要横向空间） */
+.sheet__row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-4);
+}
+
+.sheet__row--stack > span {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+}
+
+/* 分段控件（主题、温度单位） */
+.segmented {
+  position: relative;
+  display: flex;
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--seg-track-bg);
+  box-shadow: var(--seg-track-inset);
+  border: 1px solid var(--hairline);
+}
+
+.segmented__thumb {
+  position: absolute;
+  top: 0.25rem;
+  left: 0;
+  height: calc(100% - 0.5rem);
+  border-radius: var(--radius-full);
+  background: var(--seg-thumb-bg);
+  box-shadow: var(--seg-thumb-shadow);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform var(--duration-normal) var(--ease-out-expo),
+              width var(--duration-normal) var(--ease-out-expo),
+              background-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.segmented__opt {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.5rem var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.segmented__opt.is-active {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+@media (hover: hover) {
+  .segmented__opt:not(.is-active):hover {
+    color: var(--text-primary);
+  }
+}
+
+/* 自定义下拉（语言，选项较多） */
+.dropdown {
+  position: relative;
+}
+
+.dropdown__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0.5625rem var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--seg-track-bg);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--tile-edge);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo),
+              transform var(--duration-press) var(--ease-out-expo);
+}
+
+.dropdown__trigger:active {
+  transform: scale(var(--press-scale));
+}
+
+.dropdown--open .dropdown__trigger {
+  border-color: var(--border-glow);
+}
+
+.dropdown__chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.dropdown--open .dropdown__chevron {
+  transform: rotate(180deg);
+}
+
+.dropdown__menu {
+  /* 位置由 JS 计算（相对 .sheet），以脱离 .sheet__body 的滚动裁剪 */
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.4375rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  animation: dropdownIn 180ms var(--ease-out-expo);
+}
+
+.dropdown__menu[hidden] {
+  display: none;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5625rem var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--duration-fast) var(--ease-out-expo),
+              color var(--duration-fast) var(--ease-out-expo);
+}
+
+.dropdown__opt::after {
+  content: '✓';
+  font-size: 0.8125rem;
+  font-weight: var(--font-bold);
+  color: var(--brand-text);
+  opacity: 0;
+}
+
+.dropdown__opt[aria-selected='true'] {
+  color: var(--brand-text);
+  font-weight: var(--font-semibold);
+  background: var(--brand-gradient-soft);
+}
+
+.dropdown__opt[aria-selected='true']::after {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .dropdown__opt:hover {
+    background: var(--surface-1);
+  }
+}
+
+.sheet__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+.sheet__btn:active {
+  background: var(--surface-2);
+}
+
+.sheet__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet__changelog {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  box-shadow: inset 0 1px 0 var(--hairline);
+  max-height: 280px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet__changelog-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.sheet__changelog-version {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--brand-text);
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.sheet__changelog-version:first-of-type {
+  margin-top: 0;
+}
+
+.sheet__changelog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sheet__changelog-list li {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.6;
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  position: relative;
+}
+
+.sheet__changelog-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 3px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--text-tertiary);
+}
+
+/* ============================
+   Error Retry (错误重试)
+   ============================ */
+.error-retry {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background: rgba(2, 6, 23, 0.62);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  padding: var(--space-6);
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+}
+
+.error-retry[hidden] {
+  display: none;
+}
+
+.error-retry__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--hero-text);
+  opacity: 0.75;
+}
+
+.error-retry__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.error-retry__text {
+  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  max-width: 20rem;
+}
+
+.error-retry__btn {
+  padding: var(--space-3) var(--space-8);
+  background: var(--brand-gradient);
+  color: var(--text-on-brand);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+.error-retry__btn:active {
+  transform: scale(0.96);
+}
+
+/* ============================
+   Search Loading / No Results
+   ============================ */
+.search__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.search__loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-color);
+  border-top-color: var(--brand-primary);
+  animation: spin 0.7s linear infinite;
+}
+
+.search__no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================
+   Scrollbar
+   ============================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+/* ============================
+   Responsive Desktop
+   注意：网格必须挂在首页 .page--active 上——卡片是它的直接子元素。
+   此前误写在 .main__inner 上，导致桌面端所有 grid-area 全部失效、
+   退化为一张铺满 1440px 的单列长卡。
+   只对 #page-home 生效：城市页（搜索框 + 列表）必须保持单列。
+   ============================ */
+@media (min-width: 1024px) {
+  .main {
+    padding-left: max(var(--space-8), var(--safe-left));
+    padding-right: max(var(--space-8), var(--safe-right));
+  }
+
+  #page-home.page--active {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "current current"
+      "hourly  daily"
+      "outing  outing"
+      "sun     aqi"
+      "details indices"
+      "warning warning";
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .current { grid-area: current; }
+  .hourly { grid-area: hourly; }
+  .daily { grid-area: daily; }
+  .outing-card { grid-area: outing; }
+  .sun-card { grid-area: sun; }
+  .aqi-card { grid-area: aqi; }
+  .details-card { grid-area: details; }
+  .indices-card { grid-area: indices; }
+  #warning-section { grid-area: warning; }
+
+  /* hero 在桌面横跨整宽，成为全幅横幅；内容仍居中锚底 */
+  .current__stats {
+    max-width: 30rem;
+  }
+
+  /* 桌面端保持同一条横向小时条：曲线与列共用一次滑动，
+     若像旧版那样改成纵向列表，上方的横向曲线就会和纵向卡片对不上。
+     桌面只是把列宽放大一点，一屏能看到更多小时。 */
+  .hourly__scroll {
+    --hourly-col: 5rem;
+  }
+
+  .daily__item {
+    grid-template-columns: 4rem 1.75rem 4.75rem minmax(0, 1fr) auto;
+  }
+
+  .daily__temp-bar {
+    width: 100%;
+    max-width: 7rem;
+  }
+
+  .indices__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 城市页在桌面把城市铺成两列卡片，避免单列被拉到 1440px 宽 */
+  #saved-cities,
+  #search-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  #page-cities .search__section-title {
+    margin-top: var(--space-6);
+  }
+}
+
+@media (min-width: 1440px) {
+  .main {
+    padding-left: max(var(--space-10), var(--safe-left));
+    padding-right: max(var(--space-10), var(--safe-right));
+  }
+
+  #page-home.page--active {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "current current current"
+      "hourly  daily   sun"
+      "outing  outing  outing"
+      "details aqi     indices"
+      "warning warning warning";
+    gap: var(--space-6);
+  }
+
+  .indices__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---- 桌面端「蓝图」区块的归位 ----
+   .bp-morning / .bp-care / .bp-promise 等是首页网格的直接子元素，但没有 grid-area：
+   桌面网格一旦启用，它们会被自动排布塞进残余格子里，出现「牵挂的人贴着左上角、
+   判断卡片悬在中间、喝一杯飘到右侧」的散架布局。
+   这里统一让它们横跨整行、按 DOM 顺序纵向排下去，同时留出底部导航的高度。 */
+@media (min-width: 1024px) {
+  #page-home.page--active > .bp-morning,
+  #page-home.page--active > .bp-care,
+  #page-home.page--active > .bp-promise,
+  #page-home.page--active > .bp-block,
+  #page-home.page--active > .bp-thread,
+  #page-home.page--active > .bp-bond {
+    grid-column: 1 / -1;
+    align-self: start;
+  }
+
+  /* 底部导航是 fixed 的，桌面卡片容易被它压住：给滚动容器留出导航高度 */
+  .main {
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + var(--space-8));
+  }
+}
+
+/* ============================
+   超宽屏 hero 双列
+   ============================ */
+/* 全幅 hero 在 1200px 以上会把内容摊在中间、两侧留出大片空白。
+   这里把左侧天气本体与右侧"未来 3 小时降水"并排，用信息把横幅填满。
+   显式指定 grid-row：区间胶囊在无高低温时会 hidden，那一行自动塌成 0 高度，
+   其余元素仍各就各位（若用自动排布，隐藏后整列会整体上移错位）。 */
+@media (min-width: 1200px) {
+  .current {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(17rem, 24vw, 24rem);
+    grid-template-rows: repeat(6, auto);
+    align-content: end;
+    align-items: end;
+    justify-items: center;
+    column-gap: var(--space-10);
+    row-gap: var(--space-2);
+  }
+
+  .current__icon { grid-column: 1; grid-row: 1; }
+  .current__temp { grid-column: 1; grid-row: 2; }
+  .current__desc { grid-column: 1; grid-row: 3; }
+  .current__range { grid-column: 1; grid-row: 4; }
+  .current__stats { grid-column: 1; grid-row: 5; }
+  .current__update { grid-column: 1; grid-row: 6; }
+
+  .current__precip {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    justify-self: stretch;
+  }
+
+  .current__precip[hidden] {
+    display: none;
+  }
+}
+
+/* ============================
+   Scroll-driven animations
+   ============================ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .card:not(.current) {
+      animation: cardReveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 12%;
+    }
+
+    @keyframes cardReveal {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+/* ============================
+   Refresh Bar (顶部静默刷新进度条)
+   ============================ */
+#refresh-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: var(--z-toast);
+  background: var(--brand-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out-expo);
+}
+
+#refresh-bar.refresh-bar--active {
+  opacity: 1;
+  animation: refreshBar 1.2s var(--ease-in-out-sine) infinite;
+}
+
+@keyframes refreshBar {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  51% { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+/* ============================
+   Pull-to-Refresh Indicator
+   ============================ */
+.ptr-indicator {
+  /* 挂在 body 上、固定于顶栏下方：不随 .main 的下拉位移联动，
+     避免"指示器跟着页面一起飘"的错位感 */
+  position: fixed;
+  top: calc(var(--header-h) + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px) scale(0.92);
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-float);
+  opacity: 0;
+  transition: transform 260ms var(--ease-out-expo),
+              opacity 200ms var(--ease-out-expo);
+  pointer-events: none;
+}
+
+.ptr-indicator--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.ptr-indicator__spinner {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--glass-stroke);
+  border-top-color: var(--brand-primary);
+  animation: spin 0.7s linear infinite;
+}
+
+.ptr-indicator__text {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* ============================
+   Data Refresh Motion（数据刷新动效）
+   ============================ */
+/* 数值真正发生变化时：淡入 + 轻微上浮，给"数据刚更新"的即时反馈。
+   只在"上次已有值且本次不同"时由 JS 添加，首次渲染与同值刷新不会触发。 */
+.is-updated {
+  animation: valueFlash 620ms var(--ease-out-expo) both;
+}
+
+@keyframes valueFlash {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.42em);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0.06em);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 静默刷新完成：一道极淡的品牌色高光掠过卡片，提示内容已更新 */
+.card.is-refreshed::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(105deg, transparent 38%, var(--brand-accent) 50%, transparent 62%);
+  background-size: 240% 100%;
+  background-repeat: no-repeat;
+  background-position: 140% 0;
+  opacity: 0;
+  animation: cardSweep 900ms var(--ease-out-expo) both;
+}
+
+@keyframes cardSweep {
+  0% {
+    background-position: 140% 0;
+    opacity: 0.34;
+  }
+  70% {
+    opacity: 0.22;
+  }
+  100% {
+    background-position: -40% 0;
+    opacity: 0;
+  }
+}
+
+/* 列表项"落位"淡入：这些节点每次渲染都会重建，因此刷新时天然会重播，
+   形成"数据鲜活"的观感。改用 nth-child 做轻微错峰，避免整屏同时闪动。 */
+@media (prefers-reduced-motion: no-preference) {
+  .hourly__item,
+  .daily__item,
+  .detail,
+  .indices__item,
+  .aqi__pollutant {
+    animation: contentIn 420ms var(--ease-out-expo) both;
+  }
+
+  .hourly__item:nth-child(2n),
+  .daily__item:nth-child(2n),
+  .detail:nth-child(2n),
+  .indices__item:nth-child(2n),
+  .aqi__pollutant:nth-child(2n) {
+    animation-delay: 40ms;
+  }
+
+  .hourly__item:nth-child(3n),
+  .daily__item:nth-child(3n),
+  .detail:nth-child(3n),
+  .indices__item:nth-child(3n),
+  .aqi__pollutant:nth-child(3n) {
+    animation-delay: 80ms;
+  }
+
+  @keyframes contentIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-updated,
+  .card.is-refreshed::after,
+  .aqi__ring-fill {
+    animation: none;
+  }
+}
+
+/* ============================
+   Changelog History（历史更新折叠）
+   ============================ */
+.sheet__changelog-history {
+  margin-top: var(--space-3);
+  padding-top: var(--space-1);
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+
+.sheet__changelog-history > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  user-select: none;
+  -webkit-user-select: none;
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.sheet__changelog-history > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sheet__changelog-history > summary::before {
+  content: '';
+  flex-shrink: 0;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.sheet__changelog-history[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+@media (hover: hover) {
+  .sheet__changelog-history > summary:hover {
+    color: var(--text-primary);
+  }
+}
+
+/* ============================
+   Changelog Timeline（紧凑更新时间线）
+   最新一版是一张展开的卡片，旧版本收进 details 行，
+   无论条目多少，设置页只多出一屏以内的滚动高度。
+   ============================ */
+.sheet__changelog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.sheet__changelog-head .sheet__changelog-title {
+  margin-bottom: 0;
+}
+
+.sheet__changelog-current {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.02em;
+  color: var(--brand-text);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-gradient-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet__changelog-count {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog__item {
+  border-radius: 0.625rem;
+}
+
+.changelog__item + .changelog__item {
+  margin-top: 2px;
+}
+
+.changelog__item > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.4375rem 0.5rem;
+  border-radius: 0.5rem;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+.changelog__item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.changelog__ver {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog__spacer {
+  flex: 1;
+}
+
+.changelog__date {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog__tag {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: var(--font-medium);
+  line-height: 1.5;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-full);
+}
+
+.changelog__tag--fix {
+  color: #8ee6c8;
+  background: rgba(64, 199, 155, 0.16);
+}
+
+.changelog__tag--feature {
+  color: #a9c7ff;
+  background: rgba(96, 149, 255, 0.16);
+}
+
+.changelog__tag--improve {
+  color: #f2cf8f;
+  background: rgba(226, 173, 84, 0.16);
+}
+
+.changelog__chevron {
+  flex-shrink: 0;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.125rem;
+  border-right: 1.5px solid var(--text-tertiary);
+  border-bottom: 1.5px solid var(--text-tertiary);
+  transform: rotate(-45deg);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.changelog__item[open] > summary .changelog__chevron {
+  transform: rotate(45deg);
+}
+
+.changelog__item > .sheet__changelog-list {
+  padding: 0 0.5rem 0.5rem;
+}
+
+/* 本版卡片：轻底色 + 品牌色描边，和折叠行拉开层级 */
+.changelog__item--latest {
+  padding: 0.125rem;
+  margin-bottom: var(--space-2);
+  background: var(--brand-gradient-soft);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.changelog__item--latest .changelog__ver {
+  color: var(--text-primary);
+}
+
+.changelog__item--latest .sheet__changelog-list li {
+  color: var(--text-secondary);
+}
+
+@media (hover: hover) {
+  .changelog__item > summary:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* ============================
+   Device Adaptations（机型适配）
+   ============================ */
+/* 标准属性：部分 Android WebView 只用无前缀版本 */
+html {
+  text-size-adjust: 100%;
+}
+
+/* iOS 在 focus 时会把 <16px 的输入框整页放大，搜索框强制不低于 16px */
+.search__input {
+  font-size: max(16px, var(--text-base));
+}
+
+/* 小屏（iPhone SE 等 320~380px）：收紧卡片内边距，避免数据块被挤出 */
+@media (max-width: 380px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .current {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+
+  .current__stats {
+    gap: 0.375rem;
+  }
+
+  .current__stat {
+    padding: 0.375rem 0.25rem;
+  }
+
+  .details__grid,
+  .indices__grid {
+    gap: 0.375rem;
+  }
+}
+
+/* 横屏 / 矮屏：hero 高度按视口收口，保证首屏仍能露出 24h 预报 */
+@media (max-height: 620px) {
+  :root {
+    --scene-h: clamp(13rem, 40vh, 20rem);
+  }
+
+  .current {
+    gap: var(--space-1);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  :root {
+    /* 横屏矮视口下 hero 不再固定高度，改为贴合内容，避免整屏被背景吃掉 */
+    --scene-h: auto;
+  }
+
+  .current {
+    padding-top: var(--space-6);
+  }
+
+  .current__icon {
+    font-size: 2.5rem;
+  }
+
+  .current__temp {
+    font-size: clamp(3rem, 9vh, 4rem);
+  }
+
+  /* 刘海机型横屏时，底部导航左右各让出安全区，避免压在挖孔下 */
+  .nav {
+    width: min(24rem, calc(100% - var(--space-8) - var(--safe-left) - var(--safe-right)));
+  }
+}
+
+/* ============================
+   Feature Pack v2.1（新增功能）
+   ============================ */
+
+/* 视觉隐藏：仅供屏幕阅读器朗读，不占布局 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- 功能1：今日一句话综述 ---------- */
+.current__summary {
+  max-width: 34rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--hero-text-dim);
+  text-shadow: var(--hero-shadow);
+  /* 一句话综述：最多两行，超出省略（完整文案放在 title） */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  animation: summaryIn 560ms var(--ease-out-expo) both;
+}
+
+/* display:-webkit-box 会盖过 UA 的 [hidden]，必须显式兜底 */
+.current__summary[hidden] {
+  display: none;
+}
+
+@keyframes summaryIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 功能13：空气质量趋势对比 ---------- */
+.aqi__trend {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  box-shadow: inset 0 1px 0 var(--hairline);
+  animation: contentIn 420ms var(--ease-out-expo) both;
+}
+
+.aqi__trend-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.aqi__trend-title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.aqi__trend-delta {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aqi__trend-delta--better {
+  color: var(--aqi-0);
+}
+
+.aqi__trend-delta--worse {
+  color: var(--aqi-3);
+}
+
+.aqi__trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  height: 4.5rem;
+}
+
+.aqi__trend-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.aqi__trend-value {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aqi__trend-track {
+  width: 100%;
+  max-width: 2.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: flex-end;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.aqi__trend-fill {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  transform-origin: bottom center;
+  animation: aqiBarGrow 640ms var(--ease-out-expo) both;
+}
+
+@keyframes aqiBarGrow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.aqi__trend-label {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ---------- 功能6：天气预警横幅 ---------- */
+.warning-card {
+  border-left: 3px solid var(--warn-color, var(--danger));
+  animation: warningIn 520ms var(--ease-out-expo) both;
+}
+
+.warning-card--blue {
+  --warn-color: #3b82f6;
+}
+
+.warning-card--yellow {
+  --warn-color: #eab308;
+}
+
+.warning-card--orange {
+  --warn-color: #f97316;
+}
+
+.warning-card--red {
+  --warn-color: var(--danger);
+}
+
+@keyframes warningIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.warning-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.warning-card__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--warn-color, var(--danger));
+  animation: warnPulse 1.9s var(--ease-in-out-sine) infinite;
+}
+
+@keyframes warnPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+}
+
+.warning-card__count {
+  margin-left: auto;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--warn-color, var(--danger));
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-stroke);
+  white-space: nowrap;
+}
+
+.warning-card__item {
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  box-shadow: inset 2px 0 0 var(--warn-color, var(--danger-rail));
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+
+.warning-card__item:active {
+  background: var(--surface-1);
+}
+
+.warning-card__headline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.warning-card__chevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.warning-card__item--open .warning-card__chevron {
+  transform: rotate(180deg);
+}
+
+.warning-card__text {
+  display: none;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.warning-card__item--open .warning-card__text {
+  display: block;
+  animation: contentIn 280ms var(--ease-out-expo) both;
+}
+
+.warning-card__more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--warn-color, var(--danger));
+}
+
+.warning-card__list--collapsed .warning-card__item:nth-child(n + 3) {
+  display: none;
+}
+
+/* ---------- 功能9：下拉刷新越阈值反馈 ---------- */
+.ptr-indicator--armed .ptr-indicator__spinner {
+  border-top-color: var(--brand-primary);
+  transform: scale(0.86) rotate(0deg);
+}
+
+.ptr-indicator--ready .ptr-indicator__spinner {
+  border-top-color: var(--brand-primary);
+  animation-duration: 0.5s;
+  transform: scale(1.05);
+}
+
+.ptr-indicator--ready .ptr-indicator__text {
+  color: var(--brand-text);
+  font-weight: var(--font-semibold);
+}
+
+/* ---------- 功能10：紧凑空态 ---------- */
+.empty--compact {
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+}
+
+.empty--compact svg {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.empty--compact .empty__title {
+  font-size: var(--text-base);
+}
+
+.empty--compact .empty__desc {
+  font-size: var(--text-xs);
+}
+
+/* ---------- 功能8：城市卡天气描述 ---------- */
+.city-item__weather {
+  text-align: right;
+}
+
+.city-item__weather-desc {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 功能12：7 天预报详情弹窗 ---------- */
+.sheet--detail {
+  max-height: 84vh;
+}
+
+.daily__item {
+  cursor: pointer;
+}
+
+.daily__item:active {
+  transform: scale(0.99);
+}
+
+.detail-day__hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  box-shadow: inset 0 -1px 0 var(--hairline);
+}
+
+.detail-day__icon {
+  font-size: 2.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.detail-day__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.detail-day__date {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.detail-day__desc {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.detail-day__temp {
+  margin-left: auto;
+  text-align: right;
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-day__temp-high {
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+
+.detail-day__temp-low {
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
+  margin-left: var(--space-1);
+}
+
+.detail-day__daynight {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.detail-day__phase {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+}
+
+.detail-day__phase-icon {
+  font-size: 1.375rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.detail-day__phase-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.detail-day__phase-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.detail-day__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.detail-day__cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  min-width: 0;
+}
+
+.detail-day__cell-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.detail-day__cell-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.detail-day__cell-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current__summary,
+  .aqi__trend,
+  .aqi__trend-fill,
+  .warning-card,
+  .warning-card__dot,
+  .warning-card__item--open .warning-card__text {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Feature Pack v2.2.0
+   发现页 / 工具子页 / 极端天气条 / 保鲜度角标 / 退出遮罩 /
+   首启引导 / 机型族微调 / 桌面三栏补全
+   说明：全部复用 --bg-card / --border-color / --radius-* 等既有令牌，
+   深色与浅色主题自动适配，不额外写死颜色。
+   ============================================================ */
+
+/* ---- 场景强调色：随当前天气场景联动，赋能焦点环与点缀 ---- */
+:root {
+  --scene-accent: #f0b429;
+  --scene-accent-soft: rgba(240, 180, 41, 0.14);
+}
+
+html[data-scene="sunny"]   { --scene-accent: #f0b429; --scene-accent-soft: rgba(240, 180, 41, 0.14); }
+html[data-scene="cloudy"]  { --scene-accent: #8fa3b8; --scene-accent-soft: rgba(143, 163, 184, 0.16); }
+html[data-scene="rainy"]   { --scene-accent: #6366f1; --scene-accent-soft: rgba(99, 102, 241, 0.15); }
+html[data-scene="snowy"]   { --scene-accent: #7dd3fc; --scene-accent-soft: rgba(125, 211, 252, 0.15); }
+html[data-scene="thunder"] { --scene-accent: #a78bfa; --scene-accent-soft: rgba(167, 139, 250, 0.16); }
+html[data-scene="foggy"]   { --scene-accent: #94a3b8; --scene-accent-soft: rgba(148, 163, 184, 0.16); }
+html[data-scene="night"]   { --scene-accent: #818cf8; --scene-accent-soft: rgba(129, 140, 248, 0.16); }
+
+/* ---- 数据"保鲜度"角标 ---- */
+.fresh {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+
+.fresh::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.fresh--live {
+  color: var(--aqi-0);
+}
+
+.fresh--live::before {
+  opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--aqi-0) 22%, transparent);
+}
+
+/* ---- 极端天气提醒条（吸顶常驻，无预警时 display:none 不占位） ---- */
+.alert-bar {
+  position: sticky;
+  /* 与搜索框同理：.main 的 padding-top 已经把顶栏让出来了，
+     再叠一次 header-h 会让提醒条被「吸」下移 56px，直接压住首屏 hero。
+     取 -space-2 = 吸顶位置正好在顶栏下沿，静止时也不会被下推。 */
+  top: calc(-1 * var(--space-2));
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--danger-stroke);
+  /* 不透明底衬 + 语义色调：滚动中始终可读，明暗两套主题各取变量 */
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg-card-solid));
+  color: var(--text-primary);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  animation: pageEnter var(--duration-normal) var(--ease-out-expo) both;
+}
+
+/* 作者样式的 display:flex 会盖过 UA 的 [hidden]，必须显式兜底 */
+.alert-bar[hidden] {
+  display: none;
+}
+
+/* hero 的负外边距本意是与 .main 的顶栏内边距抵消、让场景垫到顶栏之下；
+   一旦上方多出提醒条，这个负偏移会让 hero 盖住提醒条，
+   因此提醒条在场时取消该偏移，让 hero 整体落到提醒条下方。
+   三种写法并存是为了「无论 DOM 结构怎么变都不会重合」：
+   1) JS 打上的 page--alert 类（最可靠）；
+   2) :has() 结构匹配（JS 未执行时兜底，Chrome 105+）；
+   3) 相邻兄弟匹配（历史上一直有效，保留）。 */
+.page--alert > .current,
+.page:has(> .alert-bar:not([hidden])) > .current,
+.alert-bar:not([hidden]) + .current {
+  margin-top: 0;
+}
+
+.alert-bar--warn {
+  border-color: var(--warn-stroke);
+  background: color-mix(in srgb, var(--warn) 14%, var(--bg-card-solid));
+}
+
+.alert-bar--danger {
+  border-color: var(--danger-stroke);
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg-card-solid));
+}
+
+.alert-bar__icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
+.alert-bar--warn .alert-bar__icon {
+  color: var(--warn);
+}
+
+.alert-bar__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.alert-bar__text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  line-height: 1.35;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 展开后的完整说明：多行截断 + 展开时换行完整显示 */
+.alert-bar__detail {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+.alert-bar__detail[hidden] {
+  display: none;
+}
+
+.alert-bar__chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.alert-bar--expanded .alert-bar__chevron {
+  transform: rotate(180deg);
+}
+
+.alert-bar:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-card), var(--ring-focus);
+}
+
+/* ---- 发现页 ---- */
+.discover__head {
+  padding: var(--space-1) var(--space-1) 0;
+}
+
+.discover__title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.discover__subtitle {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.discover__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.tool-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  color: var(--text-primary);
+  text-align: left;
+  transition: transform var(--duration-press) var(--ease-out-expo),
+              background-color var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.tool-card:active {
+  transform: scale(var(--press-scale));
+}
+
+.tool-card__icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--scene-accent-soft);
+  color: var(--scene-accent);
+}
+
+.tool-card__icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.tool-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.tool-card__title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+}
+
+.tool-card__desc {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.tool-card__arrow {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+
+/* ---- 工具子页 ---- */
+#page-tool.page--active {
+  gap: var(--space-4);
+}
+
+.tool__bar {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr 2.25rem;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tool__back {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  transition: transform var(--duration-press) var(--ease-out-expo),
+              background-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.tool__back:active {
+  transform: scale(var(--press-scale-sm));
+  background: var(--surface-2);
+}
+
+.tool__back svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.tool__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  text-align: center;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---- 30 天日历 ---- */
+.cal {
+  padding: var(--space-4);
+}
+
+.cal__weekdays,
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+}
+
+.cal__weekdays {
+  margin-bottom: var(--space-2);
+}
+
+.cal__weekday {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: var(--space-1) 0;
+}
+
+.cal__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: var(--space-2) 0.1rem;
+  min-height: 4.25rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  transition: transform var(--duration-press) var(--ease-out-expo),
+              background-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.cal__cell--empty {
+  background: transparent;
+  pointer-events: none;
+}
+
+.cal__cell:not(.cal__cell--empty):active {
+  transform: scale(var(--press-scale-sm));
+  background: var(--surface-2);
+}
+
+.cal__cell--today {
+  box-shadow: inset 0 0 0 1.5px var(--scene-accent);
+}
+
+.cal__day {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.cal__cell--today .cal__day {
+  color: var(--scene-accent);
+}
+
+.cal__icon {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.cal__temps {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.cal__tmax {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+.cal__tmin {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.cal__hint {
+  margin-top: var(--space-3);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ---- 日月轨迹 ---- */
+.sunmoon__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+}
+
+.sunmoon__arc {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.sunmoon__moon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  overflow: hidden;
+}
+
+.sunmoon__moon-disc {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, #f8fafc 0%, #cbd5e1 62%, #94a3b8 100%);
+  box-shadow: 0 0 22px rgba(203, 213, 225, 0.35);
+  position: relative;
+}
+
+.sunmoon__moon-disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--bg-card-solid);
+  /* --shift 由 JS 按相位注入：0 表示满月，1 表示全暗 */
+  transform: translateX(calc(-1 * var(--shift, 0) * 100%));
+}
+
+.sunmoon__phase-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.sunmoon__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.sunmoon__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+}
+
+.sunmoon__metric-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.sunmoon__metric-value {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+/* ---- 空气质量榜 ---- */
+.aqirank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.aqirank__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+}
+
+.aqirank__item--worst {
+  border-color: var(--danger-stroke);
+}
+
+.aqirank__name {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.aqirank__tag {
+  font-size: 0.625rem;
+  font-weight: var(--font-semibold);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+
+.aqirank__desc {
+  margin-top: 0.25rem;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.aqirank__bar {
+  margin-top: var(--space-2);
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-1);
+  overflow: hidden;
+}
+
+.aqirank__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width var(--duration-slow) var(--ease-out-expo);
+}
+
+.aqirank__value {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 天气对比 ---- */
+.compare__group {
+  padding: var(--space-4);
+}
+
+.compare__group-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.compare__row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.compare__row:first-of-type {
+  border-top: 0;
+}
+
+.compare__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.compare__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.compare__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.compare__col-label {
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+}
+
+.compare__col-value {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.compare__delta--up {
+  color: var(--aqi-3);
+  background: color-mix(in srgb, var(--aqi-3) 12%, transparent);
+}
+
+.compare__delta--down {
+  color: var(--aqi-0);
+  background: color-mix(in srgb, var(--aqi-0) 12%, transparent);
+}
+
+.compare__delta--flat {
+  color: var(--text-tertiary);
+  background: var(--surface-1);
+}
+
+/* ---- 生活建议 ---- */
+.life {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.life__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+}
+
+.life__icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--scene-accent-soft);
+  color: var(--scene-accent);
+  font-size: 1.125rem;
+}
+
+.life__body {
+  min-width: 0;
+}
+
+.life__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.life__advice {
+  margin-top: 0.15rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+/* ---- 小组件预览 ---- */
+.widget-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.widget-preview__desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.widget-preview__stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--weather-sunny);
+  justify-content: center;
+}
+
+[data-theme="dark"] .widget-preview__stage {
+  background: var(--weather-night);
+}
+
+.wg {
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #fff;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-shadow: var(--hero-shadow);
+}
+
+.wg--small {
+  width: 8.5rem;
+  height: 8.5rem;
+  justify-content: space-between;
+}
+
+.wg--medium {
+  width: 18.5rem;
+  height: 8.5rem;
+  justify-content: space-between;
+}
+
+.wg--compact {
+  width: 16rem;
+  height: 8.5rem;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.wg__compact-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.wg__compact-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.15rem;
+  padding-left: var(--space-3);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 小组件背景：与原生 widget_bg_*.xml 的渐变一一对应（同一套配色） */
+.wg--bg-clear-day {
+  background: linear-gradient(160deg, #24417f 0%, #3f7fb8 58%, #4f97c9 100%);
+}
+
+.wg--bg-clear-night {
+  background: linear-gradient(160deg, #0b1220 0%, #17203a 55%, #243154 100%);
+}
+
+.wg--bg-cloud {
+  background: linear-gradient(160deg, #1f2937 0%, #2f3a4b 60%, #3f4c5f 100%);
+}
+
+.wg--bg-rain {
+  background: linear-gradient(160deg, #0f172a 0%, #16283f 55%, #1e3a5f 100%);
+}
+
+.wg--bg-thunder {
+  background: linear-gradient(160deg, #0b0b1a 0%, #1c1035 55%, #2e1065 100%);
+}
+
+.wg--bg-snow {
+  background: linear-gradient(160deg, #1e293b 0%, #2a374a 55%, #334155 100%);
+}
+
+.wg--bg-sleet {
+  background: linear-gradient(160deg, #1e293b 0%, #22364c 55%, #1e3a5f 100%);
+}
+
+.wg--bg-fog {
+  background: linear-gradient(160deg, #1f2937 0%, #333f4f 55%, #475569 100%);
+}
+
+.wg__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  opacity: 0.92;
+}
+
+.wg__temp {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  line-height: 1;
+}
+
+.wg--medium .wg__temp {
+  font-size: var(--text-3xl);
+}
+
+.wg__desc {
+  font-size: var(--text-xs);
+  opacity: 0.86;
+}
+
+.wg__bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.wg__range {
+  font-size: var(--text-xs);
+  opacity: 0.86;
+}
+
+.widget-preview__hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.45;
+}
+
+/* ---- 小组件预览：与原生 RemoteViews 版式一一对应 ---- */
+.widget-preview__item {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+}
+
+.widget-preview__caption {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.widget-preview__brands {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.widget-preview__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.05rem;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.widget-preview__list li::marker {
+  color: var(--brand-primary);
+}
+
+/* 气象图标：与原生 vector drawable 同源字形，不再使用 Emoji */
+.wg__icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wg--small .wg__icon {
+  margin: var(--space-1) 0;
+}
+
+.wg--medium .wg__icon,
+.wg--compact .wg__icon {
+  font-size: 2.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.wg__refresh {
+  font-size: 0.8rem;
+  opacity: 0.72;
+}
+
+.wg__day-icon {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  margin: 0.1rem 0;
+}
+
+.widget-preview__note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.wg__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.wg__side {
+  display: grid;
+  gap: 0.125rem;
+  margin-left: auto;
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.wg__days {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.wg__days span {
+  flex: 1;
+  text-align: center;
+}
+
+/* ---- 极简线性空态插画 ---- */
+.state-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+}
+
+.state-art__svg {
+  width: 6rem;
+  height: 6rem;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+.state-art__svg svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* X10：空态插画随天气轻微动作。幅度都很小，只为了让页面"还在呼吸"，
+   不抢文案的注意力，也不会在列表滚动时明显掉帧。 */
+@media (prefers-reduced-motion: no-preference) {
+  .state-art[data-wx="sun"] .state-art__svg {
+    animation: artSun 5.5s ease-in-out infinite;
+  }
+
+  .state-art[data-wx="cloud"] .state-art__svg,
+  .state-art[data-wx="fog"] .state-art__svg {
+    animation: artDrift 7s ease-in-out infinite;
+  }
+
+  .state-art[data-wx="rain"] .state-art__svg {
+    animation: artRain 3.4s ease-in-out infinite;
+  }
+
+  .state-art[data-wx="snow"] .state-art__svg {
+    animation: artSnow 6s ease-in-out infinite;
+  }
+}
+
+@keyframes artSun {
+  0%, 100% { transform: rotate(-4deg) scale(1); opacity: 0.7; }
+  50% { transform: rotate(4deg) scale(1.04); opacity: 0.85; }
+}
+
+@keyframes artDrift {
+  0%, 100% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+}
+
+@keyframes artRain {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  45% { transform: translateY(2.5px); opacity: 0.85; }
+}
+
+@keyframes artSnow {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(3px) rotate(2deg); }
+}
+
+.state-art__title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.state-art__desc {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  max-width: 20rem;
+  line-height: 1.5;
+}
+
+/* ---- 双击返回退出遮罩 ---- */
+.exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) + 10);
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fadeIn var(--duration-fast) var(--ease-out-expo) both;
+}
+
+.exit-overlay[hidden] {
+  display: none;
+}
+
+.exit-overlay__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  animation: exitPop var(--duration-normal) var(--ease-out-expo) both;
+}
+
+.exit-overlay__logo {
+  width: 5rem;
+  height: 5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.exit-overlay__brand {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: #fff;
+}
+
+.exit-overlay__hint {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@keyframes exitPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ---- 首启引导 ---- */
+.onboard {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) + 20);
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: var(--bg-body);
+  animation: fadeIn var(--duration-normal) var(--ease-out-expo) both;
+}
+
+.onboard[hidden] {
+  display: none;
+}
+
+.onboard__panel {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-float);
+}
+
+.onboard__progress {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.onboard__dot {
+  width: 1.75rem;
+  height: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  transition: background-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.onboard__dot--active {
+  background: var(--brand-primary);
+}
+
+.onboard__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 9rem;
+}
+
+.onboard__step[hidden] {
+  display: none;
+}
+
+.onboard__title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.onboard__desc {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.onboard__langs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  max-height: 12rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.onboard__lang {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-align: center;
+  transition: background-color var(--duration-fast) var(--ease-out-expo),
+              border-color var(--duration-fast) var(--ease-out-expo),
+              color var(--duration-fast) var(--ease-out-expo);
+}
+
+.onboard__lang[aria-checked="true"] {
+  border-color: var(--scene-accent);
+  background: var(--scene-accent-soft);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.onboard__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.onboard__skip {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.onboard__next {
+  flex: 1;
+  max-width: 60%;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  background: var(--brand-gradient);
+  color: var(--text-on-brand);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  box-shadow: 0 8px 22px rgba(79, 70, 229, 0.28);
+  transition: transform var(--duration-press) var(--ease-out-expo);
+}
+
+.onboard__next:active {
+  transform: scale(var(--press-scale));
+}
+
+.segmented--lg {
+  align-self: flex-start;
+}
+
+.segmented--lg .segmented__opt {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-base);
+}
+
+/* ---- 桌面端：把提醒条纳入网格，补全三栏 ---- */
+@media (min-width: 1024px) {
+  #page-home.page--active {
+    grid-template-areas:
+      "alert   alert"
+      "current current"
+      "hourly  daily"
+      "outing  outing"
+      "sun     aqi"
+      "details indices"
+      "warning warning";
+  }
+
+  #alert-bar {
+    grid-area: alert;
+  }
+}
+
+@media (min-width: 1440px) {
+  #page-home.page--active {
+    grid-template-areas:
+      "alert   alert   alert"
+      "current current current"
+      "hourly  daily   sun"
+      "outing  outing  outing"
+      "details aqi     indices"
+      "warning warning warning";
+  }
+
+  .discover__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .life {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 工具子页在超宽屏居中收口，避免单列被拉到 1440px */
+  .tool__body,
+  .discover__head {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+}
+
+/* ---- 机型族微调 ----
+   安全区（状态栏/灵动岛/手势条）统一交给 variables.css 的 env(safe-area-inset-*)
+   处理，本身就随机型自适应；device-profiler 打上的 data-device-* / data-cutout /
+   data-nav 属性保留给"需要时才动"的微调使用，避免与 --header-h、--safe-* 等
+   既有不变量冲突（改 padding 会让 sticky 搜索框错位、改 nav 内边距会把药丸拉高）。
+   这里只保留对小屏机型确实有益的一组压缩。 */
+@media (max-width: 380px) {
+  .tool-card {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .tool-card__icon {
+    width: 2.375rem;
+    height: 2.375rem;
+  }
+
+  .wg--medium {
+    width: 100%;
+    max-width: 18.5rem;
+  }
+}
+
+/* ============================================================
+   支持 APEXON · 自愿打赏（v2.3.0）
+   设计原则：不抢戏。入口是页面底部一行极淡的文字链，
+   页面本身也只用低饱和度卡片 + 细边框，不做夸张的爱心轰炸。
+   ============================================================ */
+.support-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  margin: var(--space-5) 0 var(--space-2);
+  padding: var(--space-3) 0;
+  border: 0;
+  background: none;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.24s ease, color 0.24s ease;
+}
+
+.support-link::before {
+  content: '\2665';
+  font-size: 0.6875rem;
+  color: var(--brand-accent);
+  opacity: 0.85;
+}
+
+.support-link:hover,
+.support-link:focus-visible {
+  opacity: 1;
+  color: var(--text-secondary);
+}
+
+/* ---- 打赏页 ---- */
+.donate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-bottom: var(--space-8);
+}
+
+.donate__lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.donate__tiers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.donate__tier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.24s ease, transform 0.24s ease;
+}
+
+.donate__tier:hover,
+.donate__tier:focus-visible {
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+}
+
+.donate__tier:active {
+  transform: translateY(0);
+}
+
+.donate__tier:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  border-color: var(--border-color);
+}
+
+.donate__tier--featured {
+  border-color: var(--brand-primary);
+  background: var(--surface-2);
+}
+
+.donate__tier-amount {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.donate__tier-cny {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+
+.donate__tier-name {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.donate__tier-note {
+  font-size: 0.6875rem;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+  text-wrap: pretty;
+}
+
+.donate__unavailable {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.donate__thanks {
+  padding: var(--space-5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+
+.donate__thanks-title {
+  margin-bottom: var(--space-3);
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.donate__thanks-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.95;
+  white-space: pre-line;
+  text-wrap: pretty;
+}
+
+.donate__minor {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+}
+
+.donate__minor-icon {
+  flex-shrink: 0;
+  color: #d99a2b;
+}
+
+.donate__minor-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.donate__minor-title {
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.donate__minor-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: var(--text-tertiary);
+  text-wrap: pretty;
+}
+
+.donate__rigor {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.8;
+  color: var(--text-tertiary);
+  text-wrap: pretty;
+}
+
+.donate__powered {
+  margin: 0;
+  text-align: center;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+@media (min-width: 40rem) {
+  .donate__tiers {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- 设置页：账号区块 ---- */
+.sheet__hint {
+  margin: var(--space-2) 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.7;
+  color: var(--text-tertiary);
+  text-wrap: pretty;
+}
+
+.sheet__btn--ghost {
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  border-color: var(--border-color);
+  background: none;
+}
+
+/* 同步码：等宽 + 字距，方便一眼读、手动抄到另一台设备 */
+.sheet__code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.8125rem;
+  letter-spacing: 0.18em;
+  color: var(--text-primary);
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+/* 「应用」区块的退出按钮：危险色 + 极细描边，与上方常规按钮拉开层次；
+   两个危险按钮之间显式留白，避免视觉粘连。 */
+.sheet__btn--danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  box-shadow: inset 0 0 0 1px var(--danger-stroke);
+}
+
+.sheet__btn--danger:active {
+  background: var(--danger-hover);
+}
+
+.sheet__btn--danger + .sheet__btn--danger {
+  margin-top: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-bar,
+  .exit-overlay,
+  .exit-overlay__inner,
+  .onboard {
+    animation: none;
+  }
+
+  .donate__tier {
+    transition: none;
+  }
+
+  .to-top {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   阅读进度发丝线 + 一键归顶
+   顶栏是永久固定的（内容在它下方滚动），因此：
+   - 发丝线贴在顶栏下沿，用极细渐变提示「还剩多少没看完」；
+   - 归顶按钮只在真正滚下去之后才出现，避免干扰首屏。
+   两者都不做发光/脉冲，保持 Linear 式的克制。
+   ============================================================ */
+.scroll-progress {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  z-index: var(--z-fab);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: var(--brand-gradient);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+}
+
+.scroll-progress--visible {
+  opacity: 0.7;
+}
+
+.to-top {
+  position: fixed;
+  right: max(var(--space-4), var(--safe-right));
+  /* 底部导航之上，留出安全区与手势条空间 */
+  bottom: calc(var(--space-3) + var(--safe-bottom) + var(--nav-h));
+  z-index: var(--z-fab);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-float);
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(0.5rem) scale(0.94);
+  transition: opacity var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.to-top svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.to-top--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.to-top:active {
+  transform: scale(var(--press-scale-sm));
+}
+
+/* 环形阅读进度：外圈 conic-gradient 由滚动比例 --to-top-p 驱动，
+   内圈用底色遮罩挖空，不做任何 JS 重排 */
+.to-top::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    var(--brand-primary) calc(var(--to-top-p, 0) * 1%),
+    transparent 0
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity var(--duration-normal) var(--ease-out-expo);
+}
+
+.to-top[hidden] {
+  display: none;
+}
+
+/* ============================================================
+   v2.6.0 新增
+   ============================================================ */
+
+/* ---- 首页：与昨天同一时刻的均温对比 ---- */
+.current__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: calc(var(--space-1) * -1);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-card-solid) 55%, transparent);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--hero-text-dim);
+  text-shadow: none;
+  animation: summaryIn 560ms var(--ease-out-expo) both;
+}
+
+.current__delta--warmer {
+  color: var(--warn);
+  border-color: var(--warn-stroke);
+}
+
+.current__delta--colder {
+  color: var(--brand-text);
+  border-color: var(--border-strong);
+}
+
+/* ---- 逐小时曲线：极值点 + 虚线引导 + 当前点呼吸 ----
+   （已移除：旧的 circle 会被横向拉伸成椭圆，是 24 小时预报"难看"的直接原因。
+     现在曲线只画线与面，极值改用卡片外的图例 chip 表达。） */
+
+/* ---- 预警条复制按钮 ---- */
+.alert-bar__copy {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--duration-fast) var(--ease-out-expo),
+              border-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.alert-bar__copy[hidden] {
+  display: none;
+}
+
+.alert-bar__copy:hover {
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+}
+
+.alert-bar__copy:active {
+  transform: scale(var(--press-scale-sm));
+}
+
+/* ---- 城市页：双城通勤对照 ---- */
+.commute {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-card);
+  animation: pageEnter var(--duration-normal) var(--ease-out-expo) both;
+}
+
+.commute[hidden] {
+  display: none;
+}
+
+.commute__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.commute__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.commute__hint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: right;
+}
+
+.commute__row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.commute__city {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.commute__name {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commute__temp {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.commute__text {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commute__delta {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--brand-text);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-gradient-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.commute__note {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ---- 天气分享图 ---- */
+.sharecard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* 模板切换：两套分享图的视觉语言差异较大，控件宽度用内容自适应即可 */
+.sharecard__tabs {
+  align-self: flex-start;
+  min-width: 12rem;
+}
+
+.sharecard__desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.sharecard__stage {
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  border: 1px solid var(--border-color);
+}
+
+.sharecard__canvas {
+  display: block;
+  width: min(100%, 21.25rem);
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+}
+
+.sharecard__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              background-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.btn--primary {
+  background: var(--brand-gradient);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-card);
+}
+
+.btn--ghost {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn:active {
+  transform: scale(var(--press-scale-sm));
+}
+
+/* ---- 小组件预览：自主刷新说明 ---- */
+.widget-preview__auto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--surface-1);
+}
+
+.widget-preview__auto-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.widget-preview__auto-desc {
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.widget-preview__auto-tap {
+  font-size: var(--text-xs);
+  color: var(--brand-text);
+}
+
+/* ---- 快捷键帮助浮层 ---- */
+.shortcut-help {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: rgba(3, 6, 15, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out-expo);
+}
+
+.shortcut-help[hidden] {
+  display: none;
+}
+
+.shortcut-help.is-open {
+  opacity: 1;
+}
+
+.shortcut-help__panel {
+  width: min(100%, 26rem);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-float);
+  outline: none;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 180ms var(--ease-out-expo);
+}
+
+.shortcut-help.is-open .shortcut-help__panel {
+  transform: translateY(0) scale(1);
+}
+
+.shortcut-help__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.shortcut-help__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.shortcut-help__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shortcut-help__list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.shortcut-help__list kbd {
+  min-width: 1.9rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-1);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+/* ---- 离线数据角标 ---- */
+.fresh--offline {
+  color: var(--text-tertiary);
+}
+
+.fresh--offline::before {
+  background: var(--text-tertiary);
+}
+
+/* ---- 减少动效 ---- */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="reduced"] .weather-scene__video {
+  display: none;
+}
+
+html[data-motion="reduced"] .weather-scene__img {
+  opacity: 1;
+}
+
+/* ---- 今天最佳出门时段 ---- */
+.outing__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.outing__hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.outing__window {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.outing__time {
+  font-size: clamp(1.375rem, 4.4vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.outing__verdict {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.outing__verdict--great {
+  color: var(--brand-text);
+  background: var(--surface-2);
+  border-color: var(--border-color);
+}
+
+.outing__verdict--ok {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: var(--warn-stroke);
+}
+
+.outing__verdict--poor {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: var(--danger-stroke);
+}
+
+.outing__chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.outing__chip {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  font-variant-numeric: tabular-nums;
+}
+
+.outing__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+/* ---- 城市对比 ---- */
+.cmp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.cmp__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  min-width: 0;
+}
+
+.cmp__city {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmp__temp {
+  font-size: clamp(1.75rem, 6vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp__text {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.cmp__range,
+.cmp__day-temp {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp__aqi {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--hairline);
+}
+
+.cmp__aqi-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.cmp__aqi-value {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp__aqi-cat {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.cmp__days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--hairline);
+}
+
+.cmp__day {
+  display: grid;
+  grid-template-columns: 2.25rem 1.1rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.cmp__day-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.cmp__split {
+  align-self: center;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  padding: 0 var(--space-1);
+  white-space: nowrap;
+}
+
+.cmp__note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ---- 天气日记 ---- */
+.diary__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.diary__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+}
+
+.diary__stat span {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.diary__stat strong {
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.diary__polar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.diary__hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.diary__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.diary__row {
+  display: grid;
+  grid-template-columns: 2.75rem 1.1rem 4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--text-xs);
+}
+
+.diary__row:last-child {
+  border-bottom: 0;
+}
+
+.diary__date,
+.diary__temp {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.diary__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+
+.diary__city,
+.diary__text {
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diary__text {
+  color: var(--text-secondary);
+}
+
+@media (min-width: 640px) {
+  .diary__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- 桌面端：卡片微抬 + 极细亮边 ---- */
+@media (min-width: 768px) and (hover: hover) {
+  .card:hover,
+  .tool-card:hover,
+  .commute:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-float);
+  }
+
+  .tool-card:hover {
+    background: var(--bg-elevated);
+  }
+}
+
+
+
+/* ================================================
+   2.7.6 · 体感 / 错落入场 / 灰显 / 明细条
+   ================================================ */
+
+/* ---- A1：进入首屏时的一层色温过渡（只动 opacity，不动 filter） ---- */
+.immerse-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--scene-accent-soft, rgba(147, 178, 255, 0.18)), transparent 62%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.24), transparent 55%);
+  transition: opacity 420ms var(--ease-out-expo);
+  will-change: opacity;
+}
+
+.immerse-layer--in { opacity: 1; }
+
+.immerse-layer--out { opacity: 0; transition-duration: 900ms; }
+
+/* ---- X6：首屏卡片 40ms 级联入场 ---- */
+.card-in {
+  animation: cardIn 460ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--stagger-i, 0) * 40ms);
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- X11：断网时的灰显与「数据截至」 ---- */
+html[data-stale='1'] #page-home .card {
+  opacity: 0.62;
+  transition: opacity 240ms var(--ease-out-expo);
+}
+
+.stale-note {
+  margin: 0 0 var(--space-2);
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full, 999px);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+  background: var(--bg-card);
+}
+
+/* ---- X13：温度区间条滑动时的逐日明细 ---- */
+.daily__temp-bar {
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+.daily__item--scrub {
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+}
+
+.daily__scrub-tip {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 70%;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full, 999px);
+  background: var(--bg-elevated, var(--bg-card));
+  box-shadow: var(--shadow-card);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 作者样式的 display:flex 会盖掉 UA 的 [hidden]：
+   不补这条，未滑动时卡片右上角会一直挂着一个空的小胶囊（看起来像重叠的多余元素） */
+.daily__scrub-tip[hidden] {
+  display: none;
+}
+
+.daily__scrub-tip b {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.daily__scrub-tip i {
+  font-style: normal;
+  color: var(--text-tertiary);
+}
+
+.daily__scrub-tip em {
+  font-style: normal;
+  color: var(--scene-accent);
+}
+
+/* ---- X14：滑入明日时段时标题旁的「明天」角标 ---- */
+.hourly__day-chip {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full, 999px);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  background: var(--surface-1);
+  animation: chipIn 180ms var(--ease-out-expo) both;
+}
+
+@keyframes chipIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* UV 详情项可点提示 */
+.detail--tap {
+  cursor: pointer;
+}
+
+/* ============================
+   帧率分级（js/perf-guard.js 实测写入 <html data-perf>）
+
+   低端机 / 系统调度保守时，全屏视频解码 + 大量无限循环动效会把合成线程压到 20 多帧。
+   这里按实测结果做两档降级，只关「看不出来但很贵」的东西，
+   不影响信息层级与配色：
+   mid：停掉视频（静态图 + 渐变仍在）、关掉装饰性光晕动画
+   low：再关掉大部分过渡与阴影层，滚动优先
+   ============================ */
+html[data-perf='mid'] #weather-bg-video,
+html[data-perf='low'] #weather-bg-video {
+  display: none;
+}
+
+html[data-perf='mid'] .scene-glow,
+html[data-perf='mid'] .hero-glow,
+html[data-perf='low'] .scene-glow,
+html[data-perf='low'] .hero-glow {
+  display: none;
+}
+
+/* 只在低档位关动画：中档位保留淡入淡出与数字滚动，观感差别不大 */
+html[data-perf='low'] *,
+html[data-perf='low'] *::before,
+html[data-perf='low'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.12s !important;
+}
+
+html[data-perf='low'] .card,
+html[data-perf='low'] .current__stat {
+  box-shadow: none !important;
+}
+
+html[data-perf='low'] .sheet-overlay,
+html[data-perf='low'] .modal-overlay,
+html[data-perf='low'] #settings-sheet {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(2, 6, 23, 0.82) !important;
+}
+
+/* 遮挡类面板一律不用毛玻璃（所有设备）。
+   弹层出现时它要隔着全屏天气影像重新采样整块背景，合成开销和卡片是同一量级，
+   而这一层几乎全屏、模糊半径最大，是大屏上最贵的一次 blur。 */
+.update-dialog,
+.sheet-overlay,
+.modal-overlay,
+.exit-overlay,
+.shortcut-help,
+.wg,
+#settings-sheet {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ============================
+   Desktop Shell（≥1024px）
+   电脑端不另做一套版式，而是把同一套单列布局装进一条居中的「应用列」：
+   - 手机端的排版在桌面继续成立，不需要两套维护逻辑；
+   - 桌面网格（1024/1440 的 grid-template-areas）全部关掉，
+     避免蓝图区块（牵挂的人 / 判断 / 喝一杯）被自动排布塞进残格而散架；
+   - 场景视频仍然全屏铺底，列宽 600px 保证一行文字不过长。
+   这条规则必须放在文件末尾：它是对上面所有桌面媒体查询的最终覆盖。
+   ============================ */
+@media (min-width: 1024px) {
+  :root {
+    --desktop-col: 38rem; /* 608px */
+  }
+
+  .main {
+    padding-left: max(var(--space-6), var(--safe-left));
+    padding-right: max(var(--space-6), var(--safe-right));
+  }
+
+  .main__inner {
+    max-width: var(--desktop-col);
+    margin: 0 auto;
+  }
+
+  /* 关掉桌面网格：首页回到手机端的单列流式布局 */
+  #page-home.page--active {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* 关键：不拉伸时 hero 与卡片会缩成内容宽度 */
+    gap: var(--space-5);
+  }
+
+  /* hero 在桌面也不做双列（双列会和 600px 列宽打架） */
+  .current {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  /* 桌面导航：从底部悬浮药丸改为左侧竖排工具栏。
+     底部药丸会盖住最后一张卡片，而且鼠标在桌面上几乎不会去屏幕底部找导航；
+     放到应用列左侧的空白区，既不压内容，也不改变手机端结构。 */
+  .nav {
+    top: 50%;
+    bottom: auto;
+    left: max(var(--space-6), calc(50% - (var(--desktop-col) / 2) - 6.5rem));
+    transform: translateY(-50%);
+    width: 5rem;
+    max-width: 5rem;
+    padding: var(--space-2);
+  }
+
+  .nav__inner {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .nav__item {
+    flex: none;
+    width: 100%;
+  }
+
+  .nav__label {
+    font-size: 0.625rem;
+  }
+
+  /* 导航不再压住内容，底部只留正常呼吸空间 */
+  .main {
+    padding-bottom: calc(var(--safe-bottom) + var(--space-10));
+  }
+
+  .current__precip {
+    display: none;
+  }
+
+  /* 蓝图区块在手机端是按内容宽度排的，桌面网格里又被设成 align-self:start；
+     单列桌面壳里必须显式拉满，否则「牵挂的人 / 今天的几个判断」会缩成半截卡片。 */
+  #page-home.page--active > .bp-morning,
+  #page-home.page--active > .bp-care,
+  #page-home.page--active > .bp-promise,
+  #page-home.page--active > .bp-block,
+  #page-home.page--active > .bp-thread,
+  #page-home.page--active > .bp-bond {
+    align-self: stretch;
+  }
+
+  /* 城市页保持单列，搜索框与结果一一对齐 */
+  #saved-cities,
+  #search-results {
+    display: block;
+  }
+
+  #saved-cities > *,
+  #search-results > * {
+    margin-bottom: var(--space-3);
+  }
+
+  /* 栏目标题、卡片都跟随应用列宽 */
+  .page > * {
+    max-width: 100%;
+  }
+}
