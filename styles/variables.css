@@ -10,32 +10,37 @@
  */
 
 :root {
-  /* Brand — 收敛的靛蓝→紫罗兰，去掉廉价青色（原 #06b6d4） */
+  /* Brand — v2.9「深海」配色：
+     主色从原来的靛紫换成海洋蓝，副色转向青绿，强调色取暖砂。
+     蓝绿相邻色相在湿度/降水/AQI 这类数据语境里更"可信"，
+     暖砂只用在极少数强调位（预警、峰值），不做大色块。 */
   --brand-name: "APEXON";
-  --brand-primary: #5a55e0;
-  --brand-secondary: #7b6ce6;
-  --brand-accent: #8b8ff2;
-  --brand-gradient: linear-gradient(135deg, #4f46e5 0%, #6d5ce7 55%, #8674ee 100%);
-  --brand-gradient-soft: linear-gradient(135deg, rgba(79, 70, 229, 0.13) 0%, rgba(134, 116, 238, 0.09) 100%);
+  --brand-primary: #1f6feb;
+  --brand-secondary: #2aa7a0;
+  --brand-accent: #e8a33d;
+  --brand-gradient: linear-gradient(135deg, #1c60cf 0%, #2b8ed2 52%, #2aa7a0 100%);
+  --brand-gradient-soft: linear-gradient(135deg, rgba(31, 111, 235, 0.12) 0%, rgba(42, 167, 160, 0.08) 100%);
 
-  /* Light theme (default) — 冷中性灰底，非蓝调"发闷"白 */
-  --bg-body: #eff0fa;
+  /* Light theme (default) — 中性冷灰底。
+     旧底色 #f2f5f9 带明显紫调，卡片一多整页会"发闷发粉"；
+     换成低饱和中性灰后，白色卡片才真正立起来。 */
+  --bg-body: #f2f5f9;
   --bg-card: #ffffff;
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
   --card-sheen: rgba(255, 255, 255, 0.72);
   --bg-card-solid: #ffffff;
-  --bg-elevated: rgba(253, 253, 255, 0.97);
-  --bg-header: rgba(239, 240, 250, 0.93);
-  --text-primary: #16182f;
-  --text-secondary: #454a68;
-  /* 三级文字用于小号标签，需在浅底上 ≥4.5:1；#5a6579 实测 ≈5.1:1 */
-  --text-tertiary: #5f6484;
-  --text-inverse: #f7f8ff;
-  --border-color: rgba(64, 66, 138, 0.12);
-  --border-strong: rgba(64, 66, 138, 0.24);
-  --border-glow: rgba(84, 78, 224, 0.40);
-  --hairline: rgba(64, 66, 138, 0.10);
+  --bg-elevated: rgba(253, 254, 255, 0.97);
+  --bg-header: rgba(242, 245, 249, 0.93);
+  --text-primary: #121a26;
+  --text-secondary: #48546a;
+  /* 三级文字用于小号标签，需在浅底上 ≥4.5:1 */
+  --text-tertiary: #64708a;
+  --text-inverse: #f7f9ff;
+  --border-color: rgba(22, 38, 62, 0.12);
+  --border-strong: rgba(22, 38, 62, 0.24);
+  --border-glow: rgba(31, 111, 235, 0.40);
+  --hairline: rgba(22, 38, 62, 0.10);
   /* 玻璃上边缘受光：一条 1px 内高光替代廉价外发光 */
   --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.07);
@@ -43,12 +48,12 @@
   --backdrop-blur: none;
 
   /* Layered surfaces (卡内元素，靠明度分层，不用边框) */
-  --surface-1: rgba(84, 80, 200, 0.05);
-  --surface-2: rgba(84, 80, 200, 0.10);
+  --surface-1: rgba(22, 62, 120, 0.05);
+  --surface-2: rgba(22, 62, 120, 0.10);
 
   /* 卡内数字瓦片：低填充 + 内顶高光，天气影像可透出 */
-  --tile-bg: rgba(84, 80, 200, 0.045);
-  --tile-bg-hover: rgba(84, 80, 200, 0.09);
+  --tile-bg: rgba(22, 62, 120, 0.045);
+  --tile-bg-hover: rgba(22, 62, 120, 0.09);
   --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.70);
   /* 卡内瓦片不再单独做背景模糊。
      原因：父级 .card 已经是一层 blur(16px) 的毛玻璃，瓦片本身只有 2.8%~5% 的
@@ -60,7 +65,7 @@
   /* 分段控件滑块 */
   --seg-thumb-bg: #ffffff;
   --seg-thumb-shadow: 0 1px 2px rgba(40, 40, 100, 0.18), 0 2px 6px rgba(40, 40, 100, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --seg-track-bg: rgba(84, 80, 200, 0.07);
+  --seg-track-bg: rgba(22, 62, 120, 0.07);
   --seg-track-inset: inset 0 1px 2px rgba(40, 40, 100, 0.07);
 
   /* Glass over media (hero 上的毛玻璃胶囊) */
@@ -80,7 +85,7 @@
 
   /* 品牌色文字：品牌主色在深色底上对比度不足，
      文字场景统一用 --brand-text，图形/描边仍用 --brand-primary */
-  --brand-text: #4a41cf;
+  --brand-text: #1257c4;
   --text-on-brand: #ffffff;
 
   /* Semantic — 预警/危险 */
@@ -106,13 +111,13 @@
   --temp-bar-gradient: linear-gradient(90deg, #3b82f6 0%, #f0b429 52%, #ef4444 100%);
 
   /* Weather backgrounds - light (电影感多层竖直渐变) */
-  --weather-sunny: linear-gradient(180deg, #0b2545 0%, #17407f 20%, #2f6db0 44%, #6f9ecb 66%, #d9b877 86%, #eccf98 100%);
+  --weather-sunny: linear-gradient(180deg, #08203f 0%, #16508f 20%, #2f83bd 44%, #74abcd 66%, #dcb878 86%, #eed5a2 100%);
   --weather-cloudy: linear-gradient(180deg, #566171 0%, #6f7c8c 26%, #8b97a6 52%, #adb6c1 76%, #cdd4db 100%);
   --weather-rainy: linear-gradient(180deg, #171f2b 0%, #25313f 26%, #35465a 56%, #455b72 80%, #546b83 100%);
   --weather-snowy: linear-gradient(180deg, #b4c4d6 0%, #c8d5e2 30%, #dde7f0 60%, #eef4f9 84%, #f6fafc 100%);
-  --weather-thunder: linear-gradient(180deg, #0a0d15 0%, #161a32 26%, #241b45 52%, #342359 76%, #43295f 100%);
+  --weather-thunder: linear-gradient(180deg, #0a0d15 0%, #161a32 26%, #1b2440 52%, #233150 76%, #2a3d5c 100%);
   --weather-foggy: linear-gradient(180deg, #8a95a1 0%, #a4aeb8 30%, #bfc7cf 60%, #d6dce1 85%, #e4e8eb 100%);
-  --weather-night: linear-gradient(180deg, #05070f 0%, #0e1424 26%, #1a1e42 56%, #2a2b60 84%, #37357a 100%);
+  --weather-night: linear-gradient(180deg, #04070f 0%, #0a1526 26%, #122340 56%, #1a3352 84%, #21405f 100%);
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -210,29 +215,29 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-body: #0a0b14;
-    --bg-card: #1a1c30;
+    --bg-body: #070a10;
+    --bg-card: #151b26;
     --card-sheen: rgba(255, 255, 255, 0.07);
-    --bg-card-solid: #1a1c30;
-    --bg-elevated: rgba(25, 27, 46, 0.97);
-    --bg-header: rgba(10, 11, 20, 0.93);
-    --text-primary: #f2f3fb;
-    --text-secondary: #b3b7d2;
-    --text-tertiary: #9398b8;
+    --bg-card-solid: #151b26;
+    --bg-elevated: rgba(21, 27, 38, 0.97);
+    --bg-header: rgba(7, 10, 16, 0.93);
+    --text-primary: #eef2f8;
+    --text-secondary: #a9b4c6;
+    --text-tertiary: #8592a6;
     --text-inverse: #0b1220;
-    --border-color: rgba(150, 158, 255, 0.14);
-    --border-strong: rgba(150, 158, 255, 0.26);
+    --border-color: rgba(140, 180, 255, 0.14);
+    --border-strong: rgba(140, 180, 255, 0.26);
     --border-glow: rgba(150, 150, 255, 0.50);
-    --hairline: rgba(150, 158, 255, 0.10);
+    --hairline: rgba(140, 180, 255, 0.10);
     --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.50), 0 28px 72px rgba(4, 5, 16, 0.60);
 
-    --surface-1: rgba(150, 158, 255, 0.075);
-    --surface-2: rgba(150, 158, 255, 0.125);
+    --surface-1: rgba(120, 170, 255, 0.075);
+    --surface-2: rgba(120, 170, 255, 0.125);
 
-    --tile-bg: rgba(150, 158, 255, 0.07);
-    --tile-bg-hover: rgba(150, 158, 255, 0.12);
+    --tile-bg: rgba(120, 170, 255, 0.07);
+    --tile-bg-hover: rgba(120, 170, 255, 0.12);
     --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.09);
     --tile-blur: none;
 
@@ -242,7 +247,7 @@
     --seg-track-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 
     /* 深色底上提高品牌/预警/AQI 色明度，保证可读性 */
-    --brand-text: #b8beff;
+    --brand-text: #8fb8ff;
     --danger: #f87171;
     --danger-soft: rgba(248, 113, 113, 0.1);
     --danger-hover: rgba(248, 113, 113, 0.16);
@@ -255,19 +260,19 @@
     --aqi-4: #c084fc;
     --aqi-5: #dc2626;
 
-    --weather-sunny: linear-gradient(180deg, #081c3a 0%, #103a72 20%, #2a63a8 44%, #5588c0 66%, #c69a58 86%, #d8b06a 100%);
+    --weather-sunny: linear-gradient(180deg, #081c3a 0%, #103a72 20%, #21649e 44%, #4b84b8 66%, #c69a58 86%, #d8b06a 100%);
     --weather-cloudy: linear-gradient(180deg, #2c3742 0%, #3a4753 26%, #4a5866 52%, #5c6b7a 76%, #71808f 100%);
     --weather-rainy: linear-gradient(180deg, #0a111a 0%, #14202c 26%, #1f3040 56%, #2b4053 80%, #364c60 100%);
     --weather-snowy: linear-gradient(180deg, #36444f 0%, #45535f 30%, #556571 60%, #6b7b88 85%, #8291a0 100%);
-    --weather-thunder: linear-gradient(180deg, #05070d 0%, #0d1020 26%, #191535 52%, #251a45 76%, #31204f 100%);
+    --weather-thunder: linear-gradient(180deg, #05070d 0%, #0d1020 26%, #121c30 52%, #172841 76%, #1c3250 100%);
     --weather-foggy: linear-gradient(180deg, #333d47 0%, #434e59 30%, #55616d 60%, #68747f 85%, #7d8894 100%);
-    --weather-night: linear-gradient(180deg, #04060d 0%, #0b1120 26%, #161a3a 56%, #232456 84%, #2f2d6e 100%);
+    --weather-night: linear-gradient(180deg, #04060d 0%, #0b1120 26%, #162033 56%, #1f2f4a 84%, #283c58 100%);
   }
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg-body: #eff0fa;
+  --bg-body: #f2f5f9;
   --bg-card: #ffffff;
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
@@ -275,34 +280,34 @@
   --bg-card-solid: #ffffff;
   --bg-elevated: rgba(253, 253, 255, 0.97);
   --bg-header: rgba(239, 240, 250, 0.93);
-  --text-primary: #16182f;
-  --text-secondary: #454a68;
-  --text-tertiary: #5f6484;
+  --text-primary: #121a26;
+  --text-secondary: #48546a;
+  --text-tertiary: #64708a;
   --text-inverse: #f7f8ff;
-  --border-color: rgba(64, 66, 138, 0.12);
-  --border-strong: rgba(64, 66, 138, 0.24);
-  --border-glow: rgba(84, 78, 224, 0.40);
-  --hairline: rgba(64, 66, 138, 0.10);
+  --border-color: rgba(22, 38, 62, 0.12);
+  --border-strong: rgba(22, 38, 62, 0.24);
+  --border-glow: rgba(31, 111, 235, 0.40);
+  --hairline: rgba(22, 38, 62, 0.10);
   --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.07);
   --shadow-float: var(--card-edge), 0 2px 8px rgba(38, 38, 92, 0.07), 0 24px 60px rgba(44, 42, 120, 0.18);
   --backdrop-blur: none;
 
-  --surface-1: rgba(84, 80, 200, 0.05);
-  --surface-2: rgba(84, 80, 200, 0.10);
+  --surface-1: rgba(22, 62, 120, 0.05);
+  --surface-2: rgba(22, 62, 120, 0.10);
 
-  --tile-bg: rgba(84, 80, 200, 0.045);
-  --tile-bg-hover: rgba(84, 80, 200, 0.09);
+  --tile-bg: rgba(22, 62, 120, 0.045);
+  --tile-bg-hover: rgba(22, 62, 120, 0.09);
   --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.70);
   --tile-blur: none;
 
   /* 分段控件滑块 */
   --seg-thumb-bg: #ffffff;
   --seg-thumb-shadow: 0 1px 2px rgba(40, 40, 100, 0.18), 0 2px 6px rgba(40, 40, 100, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --seg-track-bg: rgba(84, 80, 200, 0.07);
+  --seg-track-bg: rgba(22, 62, 120, 0.07);
   --seg-track-inset: inset 0 1px 2px rgba(40, 40, 100, 0.07);
 
-  --brand-text: #4a41cf;
+  --brand-text: #1257c4;
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.07);
   --danger-hover: rgba(239, 68, 68, 0.12);
@@ -319,40 +324,40 @@
   --aqi-4: #a855f7;
   --aqi-5: #7f1d1d;
 
-  --weather-sunny: linear-gradient(180deg, #0b2545 0%, #17407f 20%, #2f6db0 44%, #6f9ecb 66%, #d9b877 86%, #eccf98 100%);
+  --weather-sunny: linear-gradient(180deg, #08203f 0%, #16508f 20%, #2f83bd 44%, #74abcd 66%, #dcb878 86%, #eed5a2 100%);
   --weather-cloudy: linear-gradient(180deg, #566171 0%, #6f7c8c 26%, #8b97a6 52%, #adb6c1 76%, #cdd4db 100%);
   --weather-rainy: linear-gradient(180deg, #171f2b 0%, #25313f 26%, #35465a 56%, #455b72 80%, #546b83 100%);
   --weather-snowy: linear-gradient(180deg, #b4c4d6 0%, #c8d5e2 30%, #dde7f0 60%, #eef4f9 84%, #f6fafc 100%);
-  --weather-thunder: linear-gradient(180deg, #0a0d15 0%, #161a32 26%, #241b45 52%, #342359 76%, #43295f 100%);
+  --weather-thunder: linear-gradient(180deg, #0a0d15 0%, #161a32 26%, #1b2440 52%, #233150 76%, #2a3d5c 100%);
   --weather-foggy: linear-gradient(180deg, #8a95a1 0%, #a4aeb8 30%, #bfc7cf 60%, #d6dce1 85%, #e4e8eb 100%);
-  --weather-night: linear-gradient(180deg, #05070f 0%, #0e1424 26%, #1a1e42 56%, #2a2b60 84%, #37357a 100%);
+  --weather-night: linear-gradient(180deg, #04070f 0%, #0a1526 26%, #122340 56%, #1a3352 84%, #21405f 100%);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg-body: #0a0b14;
+  --bg-body: #070a10;
   --bg-card: rgba(27, 29, 51, 0.90);
     --card-sheen: rgba(255, 255, 255, 0.07);
-  --bg-card-solid: #1a1c30;
-  --bg-elevated: rgba(25, 27, 46, 0.97);
-  --bg-header: rgba(10, 11, 20, 0.93);
-  --text-primary: #f2f3fb;
-  --text-secondary: #b3b7d2;
-  --text-tertiary: #9398b8;
+  --bg-card-solid: #151b26;
+  --bg-elevated: rgba(21, 27, 38, 0.97);
+  --bg-header: rgba(7, 10, 16, 0.93);
+  --text-primary: #eef2f8;
+  --text-secondary: #a9b4c6;
+  --text-tertiary: #8592a6;
   --text-inverse: #0b1220;
-  --border-color: rgba(150, 158, 255, 0.14);
-  --border-strong: rgba(150, 158, 255, 0.26);
+  --border-color: rgba(140, 180, 255, 0.14);
+  --border-strong: rgba(140, 180, 255, 0.26);
   --border-glow: rgba(150, 150, 255, 0.50);
-  --hairline: rgba(150, 158, 255, 0.10);
+  --hairline: rgba(140, 180, 255, 0.10);
   --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(4, 5, 16, 0.50);
   --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.50), 0 28px 72px rgba(4, 5, 16, 0.60);
 
-  --surface-1: rgba(150, 158, 255, 0.075);
-  --surface-2: rgba(150, 158, 255, 0.125);
+  --surface-1: rgba(120, 170, 255, 0.075);
+  --surface-2: rgba(120, 170, 255, 0.125);
 
-  --tile-bg: rgba(150, 158, 255, 0.07);
-  --tile-bg-hover: rgba(150, 158, 255, 0.12);
+  --tile-bg: rgba(120, 170, 255, 0.07);
+  --tile-bg-hover: rgba(120, 170, 255, 0.12);
   --tile-edge: inset 0 1px 0 rgba(255, 255, 255, 0.09);
   --tile-blur: none;
 
@@ -362,7 +367,7 @@
   --seg-track-bg: rgba(255, 255, 255, 0.05);
   --seg-track-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 
-  --brand-text: #b8beff;
+  --brand-text: #8fb8ff;
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.1);
   --danger-hover: rgba(248, 113, 113, 0.16);
@@ -378,13 +383,13 @@
   --aqi-4: #c084fc;
   --aqi-5: #dc2626;
 
-  --weather-sunny: linear-gradient(180deg, #081c3a 0%, #103a72 20%, #2a63a8 44%, #5588c0 66%, #c69a58 86%, #d8b06a 100%);
+  --weather-sunny: linear-gradient(180deg, #081c3a 0%, #103a72 20%, #21649e 44%, #4b84b8 66%, #c69a58 86%, #d8b06a 100%);
   --weather-cloudy: linear-gradient(180deg, #2c3742 0%, #3a4753 26%, #4a5866 52%, #5c6b7a 76%, #71808f 100%);
   --weather-rainy: linear-gradient(180deg, #0a111a 0%, #14202c 26%, #1f3040 56%, #2b4053 80%, #364c60 100%);
   --weather-snowy: linear-gradient(180deg, #36444f 0%, #45535f 30%, #556571 60%, #6b7b88 85%, #8291a0 100%);
-  --weather-thunder: linear-gradient(180deg, #05070d 0%, #0d1020 26%, #191535 52%, #251a45 76%, #31204f 100%);
+  --weather-thunder: linear-gradient(180deg, #05070d 0%, #0d1020 26%, #121c30 52%, #172841 76%, #1c3250 100%);
   --weather-foggy: linear-gradient(180deg, #333d47 0%, #434e59 30%, #55616d 60%, #68747f 85%, #7d8894 100%);
-  --weather-night: linear-gradient(180deg, #04060d 0%, #0b1120 26%, #161a3a 56%, #232456 84%, #2f2d6e 100%);
+  --weather-night: linear-gradient(180deg, #04060d 0%, #0b1120 26%, #162033 56%, #1f2f4a 84%, #283c58 100%);
 }
 
 /* Reduced motion */
@@ -420,9 +425,9 @@
   [data-theme='dark'] {
     --backdrop-blur: none;
     --tile-blur: none;
-    --bg-card: #1a1c30;
+    --bg-card: #151b26;
     --card-sheen: rgba(255, 255, 255, 0.07);
-    --bg-header: rgba(10, 11, 20, 0.93);
-    --bg-elevated: rgba(25, 27, 46, 0.97);
+    --bg-header: rgba(7, 10, 16, 0.93);
+    --bg-elevated: rgba(21, 27, 38, 0.97);
   }
 }

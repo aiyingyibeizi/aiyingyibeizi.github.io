@@ -5535,6 +5535,80 @@ const V286_CHANGELOG = {
   ],
 };
 
+/** v2.9.0 —— 夜间动态、解码优化、桌面弹窗、配色重做 */
+const V290_CHANGELOG = {
+  'zh-CN': [
+    '夜间不再是静态一张图：新增星点呼吸、月晕起伏与偶发流星，白天和夜里都有动。',
+    '深色主题下场景底部渐隐加长，顶部影像会「沉」进内容区，不再是上亮下黑一条硬边。',
+    '视频解码优化：滚动、切到后台、低画质或省流量时自动停播并释放解码器；浅色主题也恢复动态背景。',
+    '电脑端设置等面板改为居中对话框，鼠标悬停有明确反馈，不再从屏幕底部抽出一整条。',
+    '配色整体重做：海洋蓝主色 + 青绿副色 + 暖砂强调，浅色底去掉发闷的紫调。',
+  ],
+  'zh-TW': [
+    '夜晚不再是一張靜態圖：新增星點呼吸、月暈起伏與偶發流星，白天和夜裡都有動。',
+    '深色主題下場景底部漸隱加長，頂部影像會「沉」進內容區，不再是上亮下黑一條硬邊。',
+    '影片解碼最佳化：捲動、切到背景、低畫質或省流量時自動停播並釋放解碼器；淺色主題也恢復動態背景。',
+    '電腦端設定等面板改為置中對話框，滑鼠懸停有明確回饋，不再從螢幕底部抽出一整條。',
+    '配色整體重做：海洋藍主色 + 青綠副色 + 暖砂強調，淺色底去掉發悶的紫調。',
+  ],
+  en: [
+    'Night is no longer a still image: twinkling stars, a breathing moon halo and occasional meteors keep both day and night alive.',
+    'On dark themes the scene now fades further into the content area, removing the hard bright-top / dark-bottom edge.',
+    'Smarter video decoding: playback stops and the decoder is released while scrolling, in the background, on low quality or on metered connections. Light themes get motion back too.',
+    'On desktop, settings and other panels open as a centred dialog with clear hover feedback instead of a full-width sheet from the bottom.',
+    'Full palette rework: ocean blue primary, teal secondary and warm sand accent; the muddy purple tint is gone from light backgrounds.',
+  ],
+  ja: [
+    '夜が静止画ではなくなりました。星の瞬き、月の暈の呼吸、ときどき流れ星で、昼も夜も動き続けます。',
+    'ダークテーマではシーンの下端をより長くフェードさせ、上部の映像が内容へ自然に沈み込みます。',
+    '動画デコードを最適化：スクロール中、バックグラウンド、低画質、通信節約時は再生を止めてデコーダを解放。ライトテーマでも動きが戻ります。',
+    'デスクトップでは設定パネルが中央のダイアログで開き、ホバーにも反応します。画面下から全幅で迫ることはありません。',
+    '配色を全面刷新：オーシャンブルー、ティール、ウォームサンド。明るい背景の濁った紫味を排除しました。',
+  ],
+  ko: [
+    '밤이 더 이상 정지 화면이 아닙니다. 별의 깜빡임, 달무리 호흡, 간간이 흐르는 별똥별로 낮과 밤 모두 움직입니다.',
+    '다크 테마에서는 장면 하단 페이드를 길게 늘려 상단 영상이 콘텐츠로 자연스럽게 이어집니다.',
+    '동영상 디코딩 최적화: 스크롤, 백그라운드, 저화질, 데이터 절약 시 재생을 멈추고 디코더를 해제합니다. 라이트 테마에서도 움직임이 돌아왔습니다.',
+    '데스크톱에서는 설정 패널이 화면 중앙 대화상자로 열리고 마우스 오버에도 반응합니다.',
+    '팔레트 전면 개편: 오션 블루, 틸, 웜 샌드. 밝은 배경의 탁한 보라 기운을 제거했습니다.',
+  ],
+  fr: [
+    'La nuit n\'est plus une image fixe : étoiles scintillantes, halo lunaire qui respire et météores occasionnels animent le jour comme la nuit.',
+    'En thème sombre, le bas de la scène s\'efface plus loin dans le contenu, supprimant la rupture entre haut clair et bas sombre.',
+    'Décodage vidéo optimisé : lecture suspendue et décodeur libéré pendant le défilement, en arrière-plan, en basse qualité ou en mode économie. Les thèmes clairs retrouvent du mouvement.',
+    'Sur ordinateur, les réglages s\'ouvrent dans une fenêtre centrée avec un retour au survol, au lieu d\'une feuille plein écran.',
+    'Palette entièrement revue : bleu océan, turquoise et sable chaud ; la teinte violette terne du fond clair a disparu.',
+  ],
+  de: [
+    'Die Nacht ist keine Standbild mehr: funkelnde Sterne, ein atmender Mondhof und gelegentliche Meteore bewegen Tag und Nacht.',
+    'Im dunklen Theme blendet die Szene weiter in den Inhalt aus – die harte Kante zwischen hellem oben und dunklem unten ist weg.',
+    'Video-Dekodierung optimiert: beim Scrollen, im Hintergrund, bei niedriger Qualität oder Datensparmodus wird pausiert und der Decoder freigegeben. Auch helle Themes sind wieder animiert.',
+    'Auf dem Desktop öffnen Einstellungen als zentrierter Dialog mit Hover-Feedback statt als breite Leiste von unten.',
+    'Palette komplett überarbeitet: Ozeanblau, Türkis und warmer Sand; der trübe Lilastich im hellen Hintergrund ist weg.',
+  ],
+  es: [
+    'La noche ya no es una imagen fija: estrellas parpadeantes, halo lunar que respira y meteoros ocasionales animan de día y de noche.',
+    'En temas oscuros la escena se desvanece más hacia el contenido, eliminando el corte entre arriba claro y abajo oscuro.',
+    'Decodificación de vídeo optimizada: se pausa y libera el decodificador al desplazar, en segundo plano, con baja calidad o ahorro de datos. Los temas claros recuperan el movimiento.',
+    'En escritorio, los ajustes se abren como un diálogo centrado con respuesta al pasar el ratón, no como una hoja a pantalla completa.',
+    'Paleta renovada: azul océano, turquesa y arena cálida; el tono violeta apagado del fondo claro desaparece.',
+  ],
+  pt: [
+    'A noite deixou de ser uma imagem estática: estrelas a cintilar, halo lunar a respirar e meteoros ocasionais animam o dia e a noite.',
+    'Nos temas escuros a cena desvanece mais para dentro do conteúdo, eliminando a transição dura entre topo claro e fundo escuro.',
+    'Descodificação de vídeo otimizada: pausa e liberta o descodificador ao deslocar, em segundo plano, com baixa qualidade ou poupança de dados. Os temas claros voltam a ter movimento.',
+    'No computador, as definições abrem num diálogo centrado com resposta ao passar o rato, em vez de uma folha de baixo.',
+    'Paleta renovada: azul oceano, turquesa e areia quente; o tom violeta baço do fundo claro desapareceu.',
+  ],
+  ru: [
+    'Ночь больше не статичная картинка: мерцающие звёзды, дышащий лунный ореол и редкие метеоры оживляют и день, и ночь.',
+    'В тёмной теме сцена плавнее уходит в контент — резкой границы между светлым верхом и тёмным низом больше нет.',
+    'Оптимизировано декодирование видео: при прокрутке, в фоне, в низком качестве и при экономии трафика воспроизведение останавливается и декодер освобождается. В светлых темах движение вернулось.',
+    'На компьютере настройки открываются в центрированном диалоге с откликом на наведение, а не широкой панелью снизу.',
+    'Полностью обновлена палитра: океанический синий, бирюза и тёплый песок; тусклый фиолетовый оттенок светлого фона убран.',
+  ],
+};
+
 /** 更新记录时间线的界面标签（类型徽标等） */
 const CHANGELOG_UI_STRINGS = {
   'zh-CN': { 'settings.changelogFix': '问题修复', 'settings.changelogFeature': '新增功能', 'settings.changelogImprove': '体验优化' },
@@ -5554,6 +5628,7 @@ const CHANGELOG_UI_STRINGS = {
   TRANSLATIONS[lang]['changelog.v280'] = V280_CHANGELOG[lang] || V280_CHANGELOG.en;
   TRANSLATIONS[lang]['changelog.v285'] = V285_CHANGELOG[lang] || V285_CHANGELOG.en;
   TRANSLATIONS[lang]['changelog.v286'] = V286_CHANGELOG[lang] || V286_CHANGELOG.en;
+  TRANSLATIONS[lang]['changelog.v290'] = V290_CHANGELOG[lang] || V290_CHANGELOG.en;
   Object.assign(TRANSLATIONS[lang], CHANGELOG_UI_STRINGS[lang] || CHANGELOG_UI_STRINGS.en);
 });
 

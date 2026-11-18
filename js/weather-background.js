@@ -289,13 +289,14 @@ function syncVideoPlayback() {
   const video = document.getElementById('weather-bg-video');
   if (!video) return;
   const reduced = document.documentElement.dataset.motion === 'reduced';
-  // 浅色主题改走静态图：白底界面下视频解码几乎看不出差别，
-  // 停掉能省一大块 GPU/电量，也避免亮部过曝把卡片压得发灰。
-  const light = document.documentElement.dataset.theme === 'light';
-  // 帧率守卫判定为中/低画质时同样停播：全屏视频是最稳定的一笔解码开销，
+  // 帧率守卫判定为中/低画质时停播：全屏视频是最稳定的一笔解码开销，
   // 滚动时它和列表合成抢的是同一个 GPU 队列。
   const tier = document.documentElement.dataset.perf;
   const cheap = tier === 'mid' || tier === 'low';
+  // 省流量 / 弱网（2G）下不拉视频：一场景动辄 2~6MB，
+  // 这种网络下拉回来也放不动，只会卡住整个页面的请求队列。
+  const conn = navigator.connection;
+  const slowNet = !!(conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || '')));
   // 手指/滚轮正在滚动：先暂停解码。
   // 场景层是 fixed 的，暂停后会保留最后一帧，视觉上只是这一小段不再动；
   // 但滚动期间 GPU 不必同时做「全屏视频解码 + 页面合成」，这是 120Hz 上最实在的一笔。
@@ -303,18 +304,24 @@ function syncVideoPlayback() {
     if (!video.paused) video.pause();
     return;
   }
-  if (!document.hidden && !reduced && !light && !cheap && sceneOffscreen) {
+  if (!document.hidden && !reduced && !cheap && !slowNet && sceneOffscreen) {
     // 只是滚出了视口：暂停但保留最后一帧，滚回来时无需再等 0.8s 淡入
     if (!video.paused) video.pause();
     return;
   }
-  const shouldPlay = !document.hidden && !reduced && !light && !cheap;
+  const shouldPlay = !document.hidden && !reduced && !cheap && !slowNet;
   if (!shouldPlay) {
     // 隐藏视频层退回图片兜底：暂停但保留最后一帧会定格成一个「假视频」
     if (video.style.opacity !== '0') video.style.opacity = '0';
     if (!video.paused) video.pause();
+    // 长期不播就释放解码器与已缓冲的数据。只 pause 不释放的话，
+    // 硬件解码器和几 MB 的缓冲会一直挂在进程里，后台/低电量时很浪费。
+    if (document.hidden || reduced) video.preload = 'none';
     return;
   }
+  // 真要用的时候才允许预载：首屏 HTML 里是 metadata，
+  // 避免和接口、字体抢带宽，也让「不用视频」的档位完全不下载视频。
+  if (video.preload !== 'auto' && video.readyState < 3) video.preload = 'auto';
   if (video.paused && video.readyState >= 2) {
     video.play().then(() => {
       video.style.opacity = '1';
@@ -420,7 +427,14 @@ export function setWeatherBackground(iconCode, isDay = true, text = '') {
   }
 
   if (!videoSrc) {
+    // 该场景没有视频（如晴夜）：停掉并卸载当前视频。
+    // 只把 opacity 置 0 会让上一场景的解码器继续挂在后台，
+    // 夜里的星空动画还要和它抢合成器，完全没必要。
+    videoEl.pause();
     videoEl.style.opacity = '0';
+    videoEl.preload = 'none';
+    const cur = videoEl.querySelector('source');
+    if (cur) cur.src = '';
     return;
   }
 
