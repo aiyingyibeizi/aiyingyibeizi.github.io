@@ -4,14 +4,14 @@
     {
       "id": "apexon-weather",
       "latest": {
-        "version": "2.8.2",
-        "versionCode": 31,
+        "version": "2.8.3",
+        "versionCode": 32,
         "packageType": "apk",
         "date": "2026-11-18",
         "size": "36.45 MB",
-        "file": "apps/apexon-weather-2.8.2.apk",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.2.apk?v=31",
-        "sha256": "b430f54a5eddee4e9def1f5f4f7ac24ac38a700abec0ef406df741891da64278",
+        "file": "apps/apexon-weather-2.8.3.apk",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.3.apk?v=32",
+        "sha256": "bfdf5c7bbe4cd8f7db30223555d6fcb79bb04b3d21fca5fb7017431cdd5468ba",
         "minSdk": 24,
         "changelog": [
           "重做整机流畅度：手机端去掉全屏毛玻璃、滚动容器上的遮罩与大图层，滚动交还给合成线程；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
