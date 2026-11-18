@@ -380,6 +380,13 @@ function onMainScroll(event) {
 }
 document.addEventListener('scroll', onMainScroll, { passive: true, capture: true });
 
+// 切到后台 / 回到前台时同步播放状态：
+// 后台继续解码全屏视频只是白白耗电，回到前台则要立刻恢复，不能等下一次滚动。
+document.addEventListener('visibilitychange', syncVideoPlayback);
+// 省电模式、插拔电源等会造成 reduce motion 变化，系统级媒体查询也要跟着同步
+const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+if (motionQuery.addEventListener) motionQuery.addEventListener('change', syncVideoPlayback);
+
 new MutationObserver(syncVideoPlayback).observe(document.documentElement, {
   attributes: true,
   attributeFilter: ['data-motion', 'data-theme', 'data-perf'],
