@@ -11,7 +11,7 @@
         "size": "36.47 MB",
         "file": "apps/apexon-weather-2.9.0.apk",
         "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.0.apk?v=36",
-        "sha256": "c61b9a58c5465f9f5efed347dbebd564d153d4e5db091ef860c83a743cffec13",
+        "sha256": "0e2289072c3073653e98e8bf074ccaebf52fe99b5d4ee1b418aef24fc17bc880",
         "minSdk": 24,
         "changelog": [
           "夜间不再是静态一张图：新增星点呼吸、月晕起伏与偶发流星，白天和夜里都有动。",
