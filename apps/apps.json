@@ -4,16 +4,17 @@
     {
       "id": "apexon-weather",
       "latest": {
-        "version": "2.8.3",
-        "versionCode": 32,
+        "version": "2.8.4",
+        "versionCode": 33,
         "packageType": "apk",
         "date": "2026-11-18",
         "size": "36.45 MB",
-        "file": "apps/apexon-weather-2.8.3.apk",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.3.apk?v=32",
-        "sha256": "bfdf5c7bbe4cd8f7db30223555d6fcb79bb04b3d21fca5fb7017431cdd5468ba",
+        "file": "apps/apexon-weather-2.8.4.apk",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.4.apk?v=33",
+        "sha256": "340a05ad778e5a528cd52e0a210bb01ec2f35e8a59bae78a6ba12e6987eb4142",
         "minSdk": 24,
         "changelog": [
+          "恢复观感：去掉毛玻璃后，卡片改用静态顶部高光 + 内侧 1px 亮边找回材质；夜空换成纯 CSS 的深蓝星空（月光晕 + 星点），不再用那张糊成一团的大月亮照片。",
           "重做整机流畅度：手机端去掉全屏毛玻璃、滚动容器上的遮罩与大图层，滚动交还给合成线程；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
           "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
           "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
