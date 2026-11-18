@@ -30,7 +30,6 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -125,6 +124,11 @@ html.theme-transition .update-toast {
   height: var(--scene-h);
   z-index: var(--z-background);
   overflow: hidden;
+  /* 场景层是固定定位的大面积绘制（视频/图 + 三层渐变 + 星点），
+     不做隔离时它会和滚动内容挤在同一张绘制块里，
+     每次滚动都要把这块背景重新光栅化一遍。
+     contain: paint 让它成为独立的绘制边界，滚动时只平移已画好的位图。 */
+  contain: paint;
   background: var(--weather-sunny);
   pointer-events: none;
 }
@@ -467,15 +471,13 @@ html[data-scene="night"] .weather-scene {
    ============================ */
 .card {
   position: relative;
-  background: var(--bg-card);
+  /* 不透明底色：半透明卡片意味着滚动时每一块新露出的瓦片都要和背后的
+     固定场景层做混合，再叠一层 28px 的投影模糊，是底部掉帧的另一半原因。
+     底色改为实色后，瓦片可以直接按不透明内容绘制。 */
+  background: var(--bg-card-solid);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   padding: var(--space-5);
-  backdrop-filter: var(--backdrop-blur);
-  -webkit-backdrop-filter: var(--backdrop-blur);
-  /* 顶部一层极淡的高光 + 内侧 1px 亮边：
-     用来替代毛玻璃带来的「玻璃厚度」，本身是静态绘制，滚动时不额外开销 */
-  background-image: linear-gradient(180deg, var(--card-sheen), rgba(255, 255, 255, 0) 38%);
   box-shadow: var(--shadow-card);
   transition: background-color var(--duration-normal) var(--ease-out-expo),
               border-color var(--duration-normal) var(--ease-out-expo),
@@ -504,23 +506,6 @@ html[data-scene="night"] .weather-scene {
   height: 1rem;
   opacity: 0.7;
   flex-shrink: 0;
-}
-
-/* 首屏以下的卡片按需渲染：滚动时浏览器只绘制视口附近的区块，
-   其余区块保留占位高度，不再整页一起重绘。
-   contain-intrinsic-size 用 auto <length>：测量过一次后记住真实高度，
-   避免区块进入视口时滚动条跳动。 */
-#daily-section,
-#details-section,
-#indices-section,
-#aqi-section,
-#outing-section {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 12rem;
-}
-
-#daily-section {
-  contain-intrinsic-size: auto 24rem;
 }
 
 /* ============================
@@ -619,7 +604,6 @@ html[data-scrolled="1"] .current__icon {
   display: flex;
   flex-direction: column;
   transition: transform 720ms var(--ease-out-expo);
-  will-change: transform;
 }
 
 .temp-roll__d {
@@ -2287,6 +2271,15 @@ body.city-dragging {
   transform: translateY(0);
 }
 
+/* 手机 / WebView：40px 大半径阴影要在弹层首帧整块模糊一次，
+   恰好卡在滑入动画的第一帧上，看起来就像「直接弹到眼前、没有过渡」。
+   收窄成小投影后首帧光栅化成本降一个数量级，300ms 的滑入才真正跑得起来。 */
+@media (hover: none) and (pointer: coarse) {
+  .sheet {
+    box-shadow: 0 -2px 12px rgba(2, 6, 23, 0.22);
+  }
+}
+
 .sheet__handle {
   width: 2.5rem;
   height: 4px;
@@ -2880,26 +2873,12 @@ body.city-dragging {
 /* ============================
    Scroll-driven animations
    ============================ */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    .card:not(.current) {
-      animation: cardReveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 12%;
-    }
-
-    @keyframes cardReveal {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  }
-}
+/* 刻意不启用滚动驱动动画（animation-timeline: view()）。
+   每个 .card 绑一条 view() 时间线后，滚动时浏览器要按卡片在视口里的位置
+   逐帧重算样式并重绘整张卡片；首屏卡片少还能撑住，滑到页面底部
+   同时有五六张大卡片处在动画区间内，主线程和合成线程一起被拖垮，
+   实测就是从 50fps 掉到 20fps 的直接原因。入场动效改由 JS 一次性播放，
+   滚动过程中不再有任何与滚动位置绑定的动画。 */
 
 /* ============================
    Refresh Bar (顶部静默刷新进度条)
@@ -6278,13 +6257,14 @@ html[data-perf='low'] .hero-glow {
   display: none;
 }
 
-/* 只在低档位关动画：中档位保留淡入淡出与数字滚动，观感差别不大 */
+/* 只在低档位关「装饰性」动画：无限循环、微动效全部停掉。
+   不再统一改 transition-duration：过渡是一次性的，压到 0.12s 会让
+   设置面板、开关、折叠这些操作「啪」地直接到位，看起来像没做动画。 */
 html[data-perf='low'] *,
 html[data-perf='low'] *::before,
 html[data-perf='low'] *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.12s !important;
 }
 
 html[data-perf='low'] .card,

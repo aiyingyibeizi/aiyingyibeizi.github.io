@@ -20,7 +20,7 @@
 
   /* Light theme (default) — 冷中性灰底，非蓝调"发闷"白 */
   --bg-body: #eff0fa;
-  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card: #ffffff;
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
   --card-sheen: rgba(255, 255, 255, 0.72);
@@ -38,7 +38,7 @@
   --hairline: rgba(64, 66, 138, 0.10);
   /* 玻璃上边缘受光：一条 1px 内高光替代廉价外发光 */
   --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.05), 0 10px 28px rgba(44, 42, 120, 0.08);
+  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.07);
   --shadow-float: var(--card-edge), 0 2px 8px rgba(38, 38, 92, 0.07), 0 24px 60px rgba(44, 42, 120, 0.18);
   --backdrop-blur: none;
 
@@ -211,7 +211,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg-body: #0a0b14;
-    --bg-card: rgba(27, 29, 51, 0.90);
+    --bg-card: #1a1c30;
     --card-sheen: rgba(255, 255, 255, 0.07);
     --bg-card-solid: #1a1c30;
     --bg-elevated: rgba(25, 27, 46, 0.97);
@@ -225,7 +225,7 @@
     --border-glow: rgba(150, 150, 255, 0.50);
     --hairline: rgba(150, 158, 255, 0.10);
     --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(4, 5, 16, 0.50);
+    --shadow-card: var(--card-edge), 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-float: var(--card-edge), 0 2px 10px rgba(0, 0, 0, 0.50), 0 28px 72px rgba(4, 5, 16, 0.60);
 
     --surface-1: rgba(150, 158, 255, 0.075);
@@ -268,7 +268,7 @@
 [data-theme="light"] {
   color-scheme: light;
   --bg-body: #eff0fa;
-  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card: #ffffff;
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
   --card-sheen: rgba(255, 255, 255, 0.72);
@@ -284,7 +284,7 @@
   --border-glow: rgba(84, 78, 224, 0.40);
   --hairline: rgba(64, 66, 138, 0.10);
   --card-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.05), 0 10px 28px rgba(44, 42, 120, 0.08);
+  --shadow-card: var(--card-edge), 0 1px 2px rgba(38, 38, 92, 0.07);
   --shadow-float: var(--card-edge), 0 2px 8px rgba(38, 38, 92, 0.07), 0 24px 60px rgba(44, 42, 120, 0.18);
   --backdrop-blur: none;
 
@@ -409,7 +409,7 @@
   [data-theme='light'] {
     --backdrop-blur: none;
     --tile-blur: none;
-    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card: #ffffff;
   /* 去掉毛玻璃后，卡片靠一层极淡的顶部高光找回「材质感」：
      静态渐变，不参与每帧合成，比 backdrop-filter 便宜几个数量级 */
   --card-sheen: rgba(255, 255, 255, 0.72);
@@ -420,7 +420,7 @@
   [data-theme='dark'] {
     --backdrop-blur: none;
     --tile-blur: none;
-    --bg-card: rgba(27, 29, 51, 0.90);
+    --bg-card: #1a1c30;
     --card-sheen: rgba(255, 255, 255, 0.07);
     --bg-header: rgba(10, 11, 20, 0.93);
     --bg-elevated: rgba(25, 27, 46, 0.97);

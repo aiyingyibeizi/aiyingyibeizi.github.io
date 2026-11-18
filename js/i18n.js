@@ -5459,6 +5459,82 @@ const V285_CHANGELOG = {
   ],
 };
 
+/**
+ * v2.8.6 更新说明 —— 只保留本版内容。
+ */
+const V286_CHANGELOG = {
+  'zh-CN': [
+    '修掉滑到底部掉到 20 帧的根因：删除了绑在每张卡片上的滚动驱动动画，滚动时不再逐帧重算卡片样式。',
+    '卡片改为不透明实色，投影从 28px 收到 2px，滚动时不再重复做半透明混合与大半径模糊。',
+    '滚动处理不再每帧读取 scrollHeight，避免每一帧都强制整页重排。',
+    '设置面板恢复完整滑入动画：先绘制一帧再对位滑块，不会再「啪」地直接贴到脸上。',
+    '帧率守卫可自愈：上一版被误判为低画质的设备，启动后会重新实测并升回高画质。',
+  ],
+  'zh-TW': [
+    '修掉滑到底部掉到 20 幀的根因：刪除了綁在每張卡片上的捲動驅動動畫，捲動時不再逐幀重算卡片樣式。',
+    '卡片改為不透明實色，陰影從 28px 收到 2px，捲動時不再重複做半透明混合與大半徑模糊。',
+    '捲動處理不再每幀讀取 scrollHeight，避免每一幀都強制整頁重排。',
+    '設定面板恢復完整滑入動畫：先繪製一幀再對位滑桿，不會再「啪」地直接貼到臉上。',
+    '幀率守衛可自癒：上一版被誤判為低畫質的裝置，啟動後會重新實測並升回高畫質。',
+  ],
+  en: [
+    'Fixed the root cause of the drop to 20 fps at the bottom: removed the scroll-driven animation attached to every card, so scrolling no longer recomputes card styles every frame.',
+    'Cards now use opaque colors and the shadow is cut from 28px to 2px, so scrolling no longer re-blends and re-blurs large areas.',
+    'The scroll handler no longer reads scrollHeight every frame, eliminating a forced full-page layout on each frame.',
+    'The settings sheet slides in properly again: it paints one frame before aligning the segmented control, instead of snapping into place.',
+    'The frame-rate guard can now recover: devices wrongly marked as low quality by the previous build re-measure on launch and return to high quality.',
+  ],
+  ja: [
+    '一番下までスクロールすると 20fps まで落ちる原因を修正：各カードに付いていたスクロール連動アニメーションを削除し、スクロール中にカードのスタイルを毎フレーム再計算しないようにしました。',
+    'カードを不透明の単色にし、影を 28px から 2px に縮小。スクロール時の半透明合成と大きなぼかしをなくしました。',
+    'スクロール処理で毎フレーム scrollHeight を読まないようにし、強制的な全ページ再レイアウトを解消しました。',
+    '設定パネルのスライドインが復活：1 フレーム描画してからスライダーを合わせるため、画面に飛び出すように出なくなりました。',
+    'フレームレートガードが自己修復：前バージョンで低画質と誤判定された端末も、起動時に再計測して高画質に戻ります。',
+  ],
+  ko: [
+    '맨 아래로 스크롤할 때 20fps까지 떨어지던 원인을 수정: 카드마다 붙어 있던 스크롤 연동 애니메이션을 제거해 스크롤 중 카드 스타일을 매 프레임 다시 계산하지 않습니다.',
+    '카드를 불투명 단색으로 바꾸고 그림자를 28px에서 2px로 줄여, 스크롤할 때 반투명 합성과 큰 번짐을 반복하지 않습니다.',
+    '스크롤 처리에서 매 프레임 scrollHeight를 읽지 않아 강제 전체 레이아웃을 없앴습니다.',
+    '설정 패널의 슬라이드 애니메이션이 복구되었습니다. 한 프레임 그린 뒤 슬라이더를 맞춰 더 이상 화면에 튀어나오지 않습니다.',
+    '프레임 가드가 스스로 복구됩니다. 이전 버전에서 저화질로 잘못 판정된 기기도 실행 시 다시 측정해 고화질로 돌아옵니다.',
+  ],
+  fr: [
+    'Cause racine des 20 fps en bas de page corrigée : les animations liées au défilement de chaque carte ont été supprimées, les styles ne sont plus recalculés à chaque image.',
+    'Cartes opaques et ombre réduite de 28px à 2px : plus de mélange translucide ni de grand flou pendant le défilement.',
+    'Le gestionnaire de défilement ne lit plus scrollHeight à chaque image, ce qui supprimait un recalcul complet de la mise en page.',
+    'La feuille de réglages glisse à nouveau : elle est peinte une image avant d\'aligner le curseur, au lieu d\'apparaître d\'un coup.',
+    'Le garde-fou de fréquence peut se rétablir : les appareils classés basse qualité à tort se remesurent au lancement.',
+  ],
+  de: [
+    'Ursache für 20 fps am Seitenende behoben: Scroll-gebundene Animationen aller Karten entfernt, Stile werden nicht mehr pro Frame neu berechnet.',
+    'Karten undurchsichtig, Schatten von 28px auf 2px reduziert – kein wiederholtes Blenden und großes Weichzeichnen beim Scrollen.',
+    'Der Scroll-Handler liest scrollHeight nicht mehr pro Frame und erzwingt kein vollständiges Layout mehr.',
+    'Die Einstellungen gleiten wieder ein: erst ein Frame zeichnen, dann den Regler ausrichten.',
+    'Der Frame-Guard heilt sich selbst: fälschlich als niedrig eingestufte Geräte messen beim Start neu.',
+  ],
+  es: [
+    'Corregida la causa de los 20 fps al final de la página: se eliminaron las animaciones ligadas al desplazamiento de cada tarjeta.',
+    'Tarjetas opacas y sombra reducida de 28px a 2px: sin mezcla translúcida ni desenfoque grande al desplazar.',
+    'El gestor de desplazamiento ya no lee scrollHeight en cada fotograma, lo que eliminaba un cálculo completo de maquetación.',
+    'La hoja de ajustes vuelve a deslizarse: se pinta un fotograma antes de alinear el control, en vez de aparecer de golpe.',
+    'El guardián de fluidez puede recuperarse: los equipos mal clasificados se vuelven a medir al iniciar.',
+  ],
+  pt: [
+    'Corrigida a causa dos 20 fps no fim da página: removidas as animações ligadas ao deslocamento de cada cartão.',
+    'Cartões opacos e sombra reduzida de 28px para 2px: sem mistura translúcida nem desfoque grande ao deslocar.',
+    'O gestor de deslocamento já não lê scrollHeight em cada frame, eliminando um cálculo completo de layout por frame.',
+    'A folha de definições volta a deslizar: pinta um frame antes de alinhar o controlo, em vez de aparecer de repente.',
+    'O guarda de fluidez recupera: equipamentos mal classificados voltam a medir ao iniciar.',
+  ],
+  ru: [
+    'Устранена причина падения до 20 fps внизу страницы: удалены привязанные к прокрутке анимации карточек, стили больше не пересчитываются каждый кадр.',
+    'Карточки стали непрозрачными, тень уменьшена с 28px до 2px — нет повторного смешивания и сильного размытия при прокрутке.',
+    'Обработчик прокрутки больше не читает scrollHeight каждый кадр, принудительная полная переверстка устранена.',
+    'Панель настроек снова выезжает: сначала отрисовывается кадр, затем выравнивается ползунок.',
+    'Защита частоты кадров самовосстанавливается: ошибочно пониженные устройства пересчитываются при запуске.',
+  ],
+};
+
 /** 更新记录时间线的界面标签（类型徽标等） */
 const CHANGELOG_UI_STRINGS = {
   'zh-CN': { 'settings.changelogFix': '问题修复', 'settings.changelogFeature': '新增功能', 'settings.changelogImprove': '体验优化' },
@@ -5477,6 +5553,7 @@ const CHANGELOG_UI_STRINGS = {
   TRANSLATIONS[lang]['changelog.v277'] = V277_CHANGELOG[lang] || V277_CHANGELOG.en;
   TRANSLATIONS[lang]['changelog.v280'] = V280_CHANGELOG[lang] || V280_CHANGELOG.en;
   TRANSLATIONS[lang]['changelog.v285'] = V285_CHANGELOG[lang] || V285_CHANGELOG.en;
+  TRANSLATIONS[lang]['changelog.v286'] = V286_CHANGELOG[lang] || V286_CHANGELOG.en;
   Object.assign(TRANSLATIONS[lang], CHANGELOG_UI_STRINGS[lang] || CHANGELOG_UI_STRINGS.en);
 });
 

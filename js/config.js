@@ -72,12 +72,12 @@ export const CONFIG = {
   },
 
   // 版本号，用于缓存清理
-  appVersion: '2.8.5',
+  appVersion: '2.8.6',
 
   // 当前安装包的 versionCode，必须与 dist/android/app/build.gradle 保持一致。
   // 原生更新检测会用它和远端清单（/apps/apps.json）的 versionCode 比对。
   // tools/make-app-json.py 会在构建时校验两者一致，不一致直接报错。
-  versionCode: 34,
+  versionCode: 35,
 
   // 应用内原生更新的远端清单地址。
   // 域名上由 /apps/apps.json 统一维护：网站发布页 /apps.html 与 App 端读同一份清单，

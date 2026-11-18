@@ -690,6 +690,23 @@ function setupHeaderActions() {
     // 上一次写入的进度（千分位取整）：值没变就不碰 DOM，
     // 120Hz 屏上滚动事件每秒可触发上百次，无谓的样式写入会直接吃掉帧预算。
     let lastProgressStep = -1;
+    // scrollHeight / clientHeight 会强制同步布局。滚动中每帧读一次，
+    // 等于每帧都让主线程停下来排一次整页版——页面越长越慢，正是滑到底部掉帧的另一半原因。
+    // 改成只在尺寸或内容高度变化时更新。
+    let scrollableCache = 0;
+    let viewportHCache = 0;
+    const measureScrollable = () => {
+      viewportHCache = main.clientHeight;
+      scrollableCache = Math.max(0, main.scrollHeight - viewportHCache);
+    };
+    measureScrollable();
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(measureScrollable);
+      ro.observe(main);
+      if (main.firstElementChild) ro.observe(main.firstElementChild);
+    } else {
+      window.addEventListener('resize', measureScrollable, { passive: true });
+    }
     main.addEventListener('scroll', () => {
       if (!ticking) {
         requestAnimationFrame(() => {
@@ -697,7 +714,7 @@ function setupHeaderActions() {
           header.classList.toggle('header--scrolled', top > 100);
 
           // 阅读进度：只在内容确实可滚动时才显示，短页面不出现发丝线
-          const scrollable = main.scrollHeight - main.clientHeight;
+          const scrollable = scrollableCache;
           const ratio = scrollable > 40 ? clamp(top / scrollable, 0, 1) : 0;
           const step = Math.round(ratio * 200);
           if (progress && step !== lastProgressStep) {
@@ -709,7 +726,7 @@ function setupHeaderActions() {
           }
           // 归顶按钮：滚过一屏高度再出现，避免首屏就顶着「回到顶部」
           if (toTop) {
-            const show = top > main.clientHeight * 0.9;
+            const show = top > viewportHCache * 0.9;
             // 环形进度只在按钮真正可见时更新，并且把变量写在按钮自身上：
             // 写在 documentElement 上会让整棵树的样式失效，滚动时每帧重算，是掉帧主因。
             if (show) {
@@ -3436,11 +3453,18 @@ function openSettingsSheet() {
   // 触发 reflow 确保过渡动画生效
   void elements.settingsSheet.offsetWidth;
   elements.settingsSheet.classList.add('sheet-overlay--visible');
-  // 弹窗隐藏时元素尺寸为 0，分段控件滑块需要在可见后重新对位
-  themeControl?.__sync?.();
-  unitControl?.__sync?.();
-  // 额度会随使用变化，每次打开设置都重新取一次（登录用户读数据库、游客读代理快照）
-  void refreshAccountUI();
+  // 弹窗隐藏时元素尺寸为 0，分段控件滑块需要在可见后重新对位。
+  // 但这一步会强制同步布局，如果和「加类名」在同一帧里做，
+  // 浏览器要先算完布局才画第一帧，300ms 的滑入动画直接跳过去，看起来像没有动画。
+  // 先让遮罩按当前状态绘制一帧，再在下一帧对位。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      themeControl?.__sync?.();
+      unitControl?.__sync?.();
+      // 额度会随使用变化，每次打开设置都重新取一次（登录用户读数据库、游客读代理快照）
+      void refreshAccountUI();
+    });
+  });
 }
 
 function closeSettingsSheet() {
@@ -3775,6 +3799,7 @@ function setupSyncGroup() {
  * 不再需要手写 HTML，也不会因为条目增加而撑高设置页。
  */
 const CHANGELOG_RELEASES = [
+  { version: '2.8.6', date: '2026-11-18', key: 'changelog.v286', kind: 'improve' },
   { version: '2.8.5', date: '2026-11-18', key: 'changelog.v285', kind: 'improve' },
   { version: '2.8.0', date: '2026-11-17', key: 'changelog.v280', kind: 'feature' },
   { version: '2.7.7', date: '2026-11-14', key: 'changelog.v277', kind: 'fix' },
