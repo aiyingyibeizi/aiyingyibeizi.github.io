@@ -2,13 +2,13 @@
   "id": "com.apexon.weather",
   "name": "APEXON Weather",
   "nameZh": "APEXON 天气",
-  "version": "2.8.0",
-  "versionCode": 29,
+  "version": "2.8.1",
+  "versionCode": 30,
   "releaseDate": "2026-11-18",
-  "buildTime": "2026-11-18T11:15:41+08:00",
-  "size": 38220935,
+  "buildTime": "2026-11-18T12:52:59+08:00",
+  "size": 38222395,
   "sizeText": "36.45 MB",
-  "sha256": "E02F987CC80B1EC53C086ED05C05E4C5EA9D4B2CB7FABDC9A5A65D05C98D6B45",
+  "sha256": "308F556DEC9EC1A363B27E0E80B61378B6ED84C5084382A2D0A1844A910BC301",
   "platform": "android",
   "packageType": "apk",
   "architectures": "universal",
@@ -19,7 +19,7 @@
   "publisher": "APEXON",
   "license": "Proprietary",
   "homepage": "https://apexon.qzz.io/",
-  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.0.apk?v=29",
+  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.1.apk?v=30",
   "icon": "icon-512x512.png",
   "iconUrl": "",
   "summary": "一个安静、克制、为每天而生的天气应用。",
@@ -28,6 +28,7 @@
   "descriptionEn": "APEXON Weather takes \"just checking the weather\" to its limit.\n\nReal-time conditions, 24-hour hourly forecast, 7-day trend, air quality with health advice and weather alerts — all readable on a single screen. The background shifts with the sky: clear, rain, snow, thunder, fog, starfield, each with its own palette.\n\nIt is thrifty: layered caching and request de-duplication keep daily API calls to a minimum, and a saved snapshot is still there when the network is not. It is also quiet: no pop-ups, no ads, no ornamental animation — only the numbers you actually need.\n\nCity search and multi-city management, auto / light / dark themes, 10 languages, safe-area aware on both iOS and Android, and installable to the home screen for offline use.\n\nI cannot control the weather, but I try my best to explain it clearly.",
   "changelogI18n": {
     "zh-CN": [
+      "重做整机流畅度：手机端去掉全屏毛玻璃，滚动时不再逐帧重算背景；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
       "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
       "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
       "新增「牵挂的人」消息提醒：配对成功后可以给对方发一句关心，对方手机会收到系统通知（首次使用时会申请通知权限）。",
@@ -35,6 +36,7 @@
       "网页版与桌面版上线：weather.apexon.qzz.io 打开即用，定位失败时自动按 IP 估算城市；滚动与动画按屏幕刷新率调度，120Hz 下更跟手。"
     ],
     "zh-TW": [
+      "重做整機流暢度：手機端移除全螢幕毛玻璃，捲動時不再逐幀重算背景；幀率守衛改為在真實捲動中實測，掉幀就自動降一檔畫質。",
       "修好桌面小工具：2×2 / 4×2 / 4×4 三種尺寸都能正常加入，不再出現「載入小工具時發生錯誤」的黑框。",
       "首頁、搜尋與警示的層疊關係全部重排：搜尋框不再壓住第一筆結果，警示列不再和首頁第一欄重疊，異形螢幕與瀏海、手勢列等安全區都會自動讓位。",
       "新增「牽掛的人」訊息提醒：配對成功後可以傳一句關心給對方，對方手機會收到系統通知（首次使用時會申請通知權限）。",
@@ -42,6 +44,7 @@
       "網頁版與桌面版上線：weather.apexon.qzz.io 開啟即用，定位失敗時自動依 IP 估算城市；捲動與動畫依螢幕更新率調度，120Hz 下更順手。"
     ],
     "en": [
+      "Smoothness rebuilt: the mobile build drops full-screen glass blur so the backdrop is no longer re-sampled every frame while scrolling, and the frame-rate guard now measures real scrolling to pick a quality tier.",
       "Home-screen widgets fixed: 2×2, 4×2 and 4×4 can all be added again, with no more black \"couldn't load widget\" panels.",
       "Home, search and alerts have been re-layered: the search bar no longer covers the first result, the alert bar no longer overlaps the first home section, and notches, gesture bars and other safe areas are respected automatically.",
       "New \"Someone you care about\" alerts: after pairing, send a note of care and the other phone gets a system notification (notification permission is requested on first use).",
@@ -49,6 +52,7 @@
       "Web and desktop editions: weather.apexon.qzz.io works instantly, and when location is unavailable the city is inferred from IP; scrolling and animation are paced to the display, so 120Hz feels smooth."
     ],
     "ja": [
+      "モバイル版の滑らかさを作り直しました。全画面のガラスぼかしを廃止してスクロール中の毎フレームの再サンプリングをなくし、実際のスクロール中のフレームレートを測って画質を自動調整します。",
       "ホーム画面ウィジェットを修正：2×2 / 4×2 / 4×4 のすべてを追加でき、「ウィジェットを読み込めません」の黒いパネルは出なくなりました。",
       "ホーム・検索・警報の重なりを全面的に整理：検索バーが最初の結果を隠さず、警報バーがホームの最初のセクションと重ならず、ノッチやジェスチャーバーなどのセーフエリアにも自動で収まります。",
       "「気にかけている人」への通知を追加：ペアリング後に気遣いのメッセージを送ると、相手の端末にシステム通知が届きます（初回利用時に通知権限を求めます）。",
@@ -56,6 +60,7 @@
       "Web 版とデスクトップ版を公開：weather.apexon.qzz.io はすぐ使え、位置情報が取れないときは IP から都市を推定します。スクロールとアニメーションは画面のリフレッシュレートに合わせ、120Hz でも滑らかに動きます。"
     ],
     "ko": [
+      "모바일 버전의 부드러움을 다시 만들었습니다. 전체 화면 유리 흐림을 없애 스크롤 중 매 프레임 배경을 다시 계산하지 않으며, 실제 스크롤 프레임레이트를 측정해 화질 단계를 자동 조정합니다.",
       "홈 화면 위젯을 고쳤습니다: 2×2 / 4×2 / 4×4 모두 정상적으로 추가되며, '위젯을 불러올 수 없습니다' 검은 패널이 더 이상 나타나지 않습니다.",
       "홈·검색·경보의 겹침을 전면 재정리했습니다: 검색창이 첫 결과를 가리지 않고, 경보 바가 홈 첫 섹션과 겹치지 않으며, 노치와 제스처 바 등 안전 영역에도 자동으로 맞춰집니다.",
       "'마음 쓰는 사람' 알림 추가: 페어링 후 안부 메시지를 보내면 상대 휴대폰에 시스템 알림이 도착합니다(처음 사용할 때 알림 권한을 요청합니다).",
@@ -63,6 +68,7 @@
       "웹과 데스크톱 버전 공개: weather.apexon.qzz.io 는 바로 사용할 수 있고, 위치를 못 잡으면 IP로 도시를 추정합니다. 스크롤과 애니메이션은 화면 주사율에 맞춰 120Hz에서도 부드럽습니다."
     ],
     "fr": [
+      "Fluidité refaite : la version mobile supprime le flou plein écran, cesse de rééchantillonner l'arrière-plan à chaque image pendant le défilement, et mesure le défilement réel pour choisir le niveau de qualité.",
       "Widgets d’écran d’accueil réparés : les formats 2×2, 4×2 et 4×4 s’ajoutent à nouveau, sans panneau noir « impossible de charger le widget ».",
       "Accueil, recherche et alertes retravaillés en profondeur : la barre de recherche ne recouvre plus le premier résultat, la barre d’alerte ne chevauche plus la première section, et les encoches, barres gestuelles et autres zones sûres sont respectées automatiquement.",
       "Nouvelles alertes « une personne qui compte » : après l’appairage, envoyez un mot attentionné et le téléphone de l’autre reçoit une notification système (autorisation demandée au premier usage).",
@@ -70,6 +76,7 @@
       "Éditions web et bureau : weather.apexon.qzz.io fonctionne immédiatement et, sans géolocalisation, la ville est déduite de l’IP ; défilement et animations suivent la fréquence de l’écran, jusqu’à 120 Hz."
     ],
     "de": [
+      "Flüssigkeit überarbeitet: Die Mobilversion entfernt die vollflächige Unschärfe, tastet den Hintergrund beim Scrollen nicht mehr pro Frame neu ab und misst die echte Scroll-Bildrate für die Qualitätsstufe.",
       "Startbildschirm-Widgets repariert: 2×2, 4×2 und 4×4 lassen sich wieder hinzufügen, ohne schwarzes „Widget konnte nicht geladen werden“.",
       "Startseite, Suche und Warnungen neu geschichtet: die Suchleiste verdeckt nicht mehr das erste Ergebnis, die Warnleiste überlappt nicht mehr den ersten Startseiten-Block, und Notch, Gestenleiste und andere Safe Areas werden automatisch berücksichtigt.",
       "Neue Hinweise für „Menschen, die dir wichtig sind“: Nach dem Koppeln sendest du ein paar warme Worte, und das andere Telefon erhält eine Systembenachrichtigung (Berechtigung wird beim ersten Mal angefragt).",
@@ -77,6 +84,7 @@
       "Web- und Desktop-Version: weather.apexon.qzz.io ist sofort nutzbar; ohne Standort wird die Stadt aus der IP abgeleitet. Scrollen und Animationen folgen der Bildwiederholrate, bis 120 Hz."
     ],
     "es": [
+      "Fluidez renovada: la versión móvil elimina el desenfoque de pantalla completa, deja de remuestrear el fondo en cada fotograma al desplazarse y mide la tasa real de fotogramas para elegir la calidad.",
       "Widgets de inicio corregidos: los formatos 2×2, 4×2 y 4×4 vuelven a añadirse, sin el panel negro de «no se pudo cargar el widget».",
       "Inicio, búsqueda y avisos reorganizados: el buscador ya no tapa el primer resultado, la barra de avisos no se solapa con la primera sección y el notch, la barra de gestos y demás zonas seguras se respetan automáticamente.",
       "Nuevos avisos de «alguien que te importa»: tras emparejar, envía un mensaje de cariño y el otro teléfono recibe una notificación del sistema (el permiso se pide la primera vez).",
@@ -84,6 +92,7 @@
       "Ediciones web y de escritorio: weather.apexon.qzz.io funciona al instante y, si no hay ubicación, la ciudad se deduce por IP; el desplazamiento y las animaciones siguen la frecuencia de la pantalla, hasta 120 Hz."
     ],
     "pt": [
+      "Fluidez refeita: a versão móvel remove o desfoque de tela cheia, para de reamostrar o fundo a cada quadro ao rolar e mede a taxa real de quadros para escolher a qualidade.",
       "Widgets do ecrã inicial corrigidos: 2×2, 4×2 e 4×4 voltam a poder ser adicionados, sem o painel negro de «não foi possível carregar o widget».",
       "Início, pesquisa e avisos reorganizados: a barra de pesquisa já não cobre o primeiro resultado, a barra de avisos não se sobrepõe à primeira secção e o notch, a barra de gestos e outras áreas seguras são respeitados automaticamente.",
       "Novos avisos de «alguém de quem gostas»: depois de emparelhar, envia uma palavra de carinho e o outro telemóvel recebe uma notificação do sistema (a permissão é pedida no primeiro uso).",
@@ -91,6 +100,7 @@
       "Edições web e de ambiente de trabalho: weather.apexon.qzz.io funciona de imediato e, sem localização, a cidade é inferida pelo IP; o deslocamento e as animações seguem a taxa do ecrã, até 120 Hz."
     ],
     "ru": [
+      "Плавность переработана: в мобильной версии убрано полноэкранное размытие, фон больше не пересчитывается каждый кадр при прокрутке, а уровень качества выбирается по реальному FPS прокрутки.",
       "Виджеты главного экрана исправлены: снова добавляются 2×2, 4×2 и 4×4 — без чёрной панели «не удалось загрузить виджет».",
       "Главная, поиск и предупреждения перестроены: строка поиска больше не закрывает первую строку результатов, панель предупреждений не перекрывает первый блок главной, а вырез, полоса жестов и другие безопасные зоны учитываются автоматически.",
       "Новые напоминания «человек, о котором вы заботитесь»: после сопряжения отправьте тёплые слова, и телефон другого получит системное уведомление (разрешение запрашивается при первом использовании).",
@@ -108,8 +118,9 @@
   ],
   "requirements": "Android 7.0（API 24）及以上；无需 Google 服务；首次启动需授予定位权限以获取本地天气。",
   "requirementsEn": "Android 7.0 (API 24) or later; no Google services required; location permission is requested on first launch for local weather.",
-  "fileName": "apexon-weather-2.8.0.apk",
+  "fileName": "apexon-weather-2.8.1.apk",
   "changelog": [
+    "重做整机流畅度：手机端去掉全屏毛玻璃，滚动时不再逐帧重算背景；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
     "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
     "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
     "新增「牵挂的人」消息提醒：配对成功后可以给对方发一句关心，对方手机会收到系统通知（首次使用时会申请通知权限）。",
@@ -117,6 +128,7 @@
     "网页版与桌面版上线：weather.apexon.qzz.io 打开即用，定位失败时自动按 IP 估算城市；滚动与动画按屏幕刷新率调度，120Hz 下更跟手。"
   ],
   "changelogEn": [
+    "Smoothness rebuilt: the mobile build drops full-screen glass blur so the backdrop is no longer re-sampled every frame while scrolling, and the frame-rate guard now measures real scrolling to pick a quality tier.",
     "Home-screen widgets fixed: 2×2, 4×2 and 4×4 can all be added again, with no more black \"couldn't load widget\" panels.",
     "Home, search and alerts have been re-layered: the search bar no longer covers the first result, the alert bar no longer overlaps the first home section, and notches, gesture bars and other safe areas are respected automatically.",
     "New \"Someone you care about\" alerts: after pairing, send a note of care and the other phone gets a system notification (notification permission is requested on first use).",
