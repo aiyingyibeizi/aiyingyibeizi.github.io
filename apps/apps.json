@@ -4,21 +4,21 @@
     {
       "id": "apexon-weather",
       "latest": {
-        "version": "2.8.6",
-        "versionCode": 35,
+        "version": "2.9.0",
+        "versionCode": 36,
         "packageType": "apk",
         "date": "2026-11-18",
-        "size": "36.46 MB",
-        "file": "apps/apexon-weather-2.8.6.apk",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.6.apk?v=35",
-        "sha256": "628f8b6acae1a5ea2e14c92eb1b780c26c6f91ca7ced2356d7f3c9db27660a29",
+        "size": "36.47 MB",
+        "file": "apps/apexon-weather-2.9.0.apk",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.0.apk?v=36",
+        "sha256": "c61b9a58c5465f9f5efed347dbebd564d153d4e5db091ef860c83a743cffec13",
         "minSdk": 24,
         "changelog": [
-          "修掉滑到底部掉到 20 帧的根因：删除了绑在每张卡片上的滚动驱动动画，滚动时不再逐帧重算卡片样式。",
-          "卡片改为不透明实色，投影从 28px 收到 2px，滚动时不再重复做半透明混合与大半径模糊。",
-          "滚动处理不再每帧读取 scrollHeight，避免每一帧都强制整页重排。",
-          "设置面板恢复完整滑入动画：先绘制一帧再对位滑块，不会再「啪」地直接贴到脸上。",
-          "帧率守卫可自愈：上一版被误判为低画质的设备，启动后会重新实测并升回高画质。"
+          "夜间不再是静态一张图：新增星点呼吸、月晕起伏与偶发流星，白天和夜里都有动。",
+          "深色主题下场景底部渐隐加长，顶部影像会「沉」进内容区，不再是上亮下黑一条硬边。",
+          "视频解码优化：滚动、切到后台、低画质或省流量时自动停播并释放解码器；浅色主题也恢复动态背景。",
+          "电脑端设置等面板改为居中对话框，鼠标悬停有明确反馈，不再从屏幕底部抽出一整条。",
+          "配色整体重做：海洋蓝主色 + 青绿副色 + 暖砂强调，浅色底去掉发闷的紫调。"
         ]
       }
     }
