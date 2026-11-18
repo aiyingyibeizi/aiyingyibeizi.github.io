@@ -1,88 +1,26 @@
 {
   "schema": 1,
-  "updated": "2026-11-15T12:00:00+08:00",
-  "note": "这是 APEXON 的安装包版本清单。网站 /apps.html 与手机 APP 端都读取本文件。更新版本时只改这里，再上传对应安装包即可。详细步骤见同目录 README.txt。",
   "apps": [
     {
       "id": "apexon-weather",
-      "name": "APEXON 天气",
-      "ename": "APEXON Weather",
-      "platform": "android",
-      "icon": "apps/apexon-weather-icon.png",
-      "tagline": "轻量 · 干净 · 打开即用",
-      "description": "APEXON 天气：轻量干净的天气应用，提供实时天气、多日预报与空气质量查询。",
-      "highlights": [
-        "实时天气",
-        "多日预报",
-        "空气质量"
-      ],
-      "requirements": "Android 7.0 及以上",
       "latest": {
-        "version": "2.7.7",
-        "versionCode": 28,
+        "version": "2.8.0",
+        "versionCode": 29,
         "packageType": "apk",
-        "date": "2026-11-15",
-        "size": "36.36 MB",
-        "file": "apps/apexon-weather-2.7.7.apk",
-        "sha256": "a8502b58761c39aeb80e25f0b8e1952471c6749e63cbf89060baa4737a3f4426",
+        "date": "2026-11-18",
+        "size": "36.45 MB",
+        "file": "apps/apexon-weather-2.8.0.apk",
+        "sha256": "e02f987cc80b1ec53c086ed05c05e4c5ea9d4b2cb7fabdc9a5a65d05c98d6b45",
         "minSdk": 24,
         "changelog": [
-          "修复已知问题，提升启动与页面切换的稳定性。",
-          "优化中低端机型上的动效与滚动流畅度。"
-        ],
-        "changelogI18n": {
-          "zh-CN": [
-            "修复已知问题，提升启动与页面切换的稳定性。",
-            "优化中低端机型上的动效与滚动流畅度。"
-          ],
-          "zh-TW": [
-            "修正已知問題，提升啟動與頁面切換的穩定性。",
-            "優化中低階機型上的動效與捲動流暢度。"
-          ],
-          "en": [
-            "Fixed known issues and improved stability when launching and switching pages.",
-            "Smoother animations and scrolling on lower-end devices."
-          ],
-          "ja": [
-            "既知の問題を修正し、起動とページ切り替えの安定性を改善しました。",
-            "ローエンド端末でのアニメーションとスクロールを滑らかにしました。"
-          ],
-          "ko": [
-            "알려진 문제를 수정하고 실행 및 페이지 전환 안정성을 개선했습니다.",
-            "보급형 기기에서 애니메이션과 스크롤을 더 부드럽게 했습니다."
-          ],
-          "fr": [
-            "Correction de problèmes connus et meilleure stabilité au lancement et lors des changements de page.",
-            "Animations et défilement plus fluides sur les appareils d’entrée de gamme."
-          ],
-          "de": [
-            "Bekannte Probleme behoben und die Stabilität beim Start und Seitenwechsel verbessert.",
-            "Flüssigere Animationen und Scrollen auf schwächeren Geräten."
-          ],
-          "es": [
-            "Se corrigieron problemas conocidos y mejoró la estabilidad al iniciar y cambiar de página.",
-            "Animaciones y desplazamiento más fluidos en dispositivos de gama baja."
-          ],
-          "pt": [
-            "Corrigidos problemas conhecidos e melhorada a estabilidade ao iniciar e mudar de página.",
-            "Animações e deslocamento mais fluídos em equipamentos de entrada."
-          ],
-          "ru": [
-            "Исправлены известные проблемы, повышена стабильность запуска и переключения страниц.",
-            "Плавнее анимации и прокрутка на слабых устройствах."
-          ]
-        }
-      },
-      "history": [
-        {
-          "version": "2.7.6",
-          "versionCode": 27,
-          "date": "2026-10-25",
-          "size": "36.35 MB",
-          "file": "apps/apexon-weather-2.7.6.apk",
-          "sha256": "01e237f1f708a8c41a4c3603d93d4e235af256fd928accbb2bf480d332e29f6f"
-        }
-      ]
+          "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
+          "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
+          "新增「牵挂的人」消息提醒：配对成功后可以给对方发一句关心，对方手机会收到系统通知（首次使用时会申请通知权限）。",
+          "新增云端同步与本地备份：一组同步码就能在手机、电脑与网页之间同步城市和设置，也可以导出成文件自己保管。",
+          "网页版与桌面版上线：weather.apexon.qzz.io 打开即用，定位失败时自动按 IP 估算城市；滚动与动画按屏幕刷新率调度，120Hz 下更跟手。"
+        ]
+      }
     }
-  ]
+  ],
+  "history": []
 }
