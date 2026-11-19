@@ -86,6 +86,10 @@
             box-shadow: 0 8px 22px rgba(34, 211, 238, .46), inset 0 1px 0 rgba(255, 255, 255, .4); }
         .app-dl.is-soon { color: var(--apex-text-secondary); background: var(--apex-surface);
             border-color: var(--apex-border); box-shadow: none; cursor: not-allowed; }
+        .app-dl-extra { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+        .app-dl--alt { color: var(--apex-text); background: var(--apex-surface);
+            border: 1px solid var(--apex-border); box-shadow: none; font-weight: 600; }
+        .app-dl--alt:hover { filter: brightness(1.05); box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
 
         .app-log { grid-area: log; z-index: 1; margin-top: 12px; border-top: 1px solid var(--apex-border-subtle); padding-top: 10px; }
         .app-log__title { font-size: .78rem; font-weight: 700; color: var(--apex-text-secondary); cursor: pointer; list-style: none; }
@@ -279,6 +283,19 @@
             var dlHTML = (file && available)
                 ? '<a class="app-dl" href="' + esc(file) + '" download rel="noopener">' + esc(t('appsDownload', '📥 下载安装包')) + '</a>'
                 : '<span class="app-dl is-soon" title="' + esc(t('appsPending', '⏳ 安装包待上传')) + '">' + esc(t('appsPending', '⏳ 安装包待上传')) + '</span>';
+
+            // 其它下载渠道：Windows 安装包、网页版。都由主站统一分发，
+            // 网页端与各端入口都指回这里，避免版本分散在多处。
+            var extraLinks = [];
+            if (latest.windowsFile) {
+                extraLinks.push('<a class="app-dl app-dl--alt" href="' + esc(latest.windowsFile) + '" download rel="noopener">🪟 Windows 安装包</a>');
+            }
+            if (latest.webUrl) {
+                extraLinks.push('<a class="app-dl app-dl--alt" href="' + esc(latest.webUrl) + '" target="_blank" rel="noopener">🌐 网页版</a>');
+            }
+            if (extraLinks.length) {
+                dlHTML += '<div class="app-dl-extra">' + extraLinks.join('') + '</div>';
+            }
 
             var meta = [];
             if (latest.version) meta.push('<span>' + esc(t('appsLabelVersion', '版本')) + '<b>' + esc(latest.version) + '</b></span>');
