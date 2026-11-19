@@ -1953,6 +1953,25 @@
   APEXON.Utils = Utils;
 
   // ===== 7. UI 工具 =====
+  /**
+   * MutationObserver 的廉价过滤：只有新增了真实元素才需要重绑交互。
+   * 点击特效（.apex-card-fx* / .apex-music-fx*）每次点击都会增删装饰节点，
+   * 文本更新（时钟、进度条）也会触发 childList —— 这些都不该触发全文档重扫。
+   */
+  function needsRebind(records) {
+    for (let i = 0; i < records.length; i++) {
+      const added = records[i].addedNodes;
+      for (let j = 0; j < added.length; j++) {
+        const n = added[j];
+        if (n.nodeType !== 1) continue;
+        const cls = typeof n.className === 'string' ? n.className : '';
+        if (cls.indexOf('apex-card-fx') === 0 || cls.indexOf('apex-music-fx') === 0) continue;
+        return true;
+      }
+    }
+    return false;
+  }
+
   const UI = {
     // Toast 队列：支持类型变体（success/error/warning/info）、aria-live 播报、
     // 多条堆叠（最多 3 条），快速连续调用不再互相覆盖。
@@ -2771,7 +2790,13 @@
       // 初始绑定 + DOM 变化后重新绑定（动态渲染的按钮也能享受涟漪）
       bind();
       if (window.MutationObserver) {
-        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        // 只在「新增了真实元素」时重扫：页面里的文本更新（时钟、进度条）和
+        // 我们自己插入的特效节点同样会触发 childList，每次都全文档重扫纯属浪费，
+        // 也是 DevTools 里那条长任务告警的来源。
+        const rebind = Utils.debounce(() => bind(), 400);
+        const mo = new MutationObserver((records) => {
+          if (needsRebind(records)) rebind();
+        });
         mo.observe(document.body, { childList: true, subtree: true });
       }
     },
@@ -2867,7 +2892,10 @@
 
       bind();
       if (window.MutationObserver) {
-        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        const rebind = Utils.debounce(() => bind(), 400);
+        const mo = new MutationObserver((records) => {
+          if (needsRebind(records)) rebind();
+        });
         mo.observe(document.body, { childList: true, subtree: true });
       }
     },
@@ -2988,7 +3016,10 @@
 
       bind();
       if (window.MutationObserver) {
-        const mo = new MutationObserver(Utils.debounce(() => bind(), 400));
+        const rebind = Utils.debounce(() => bind(), 400);
+        const mo = new MutationObserver((records) => {
+          if (needsRebind(records)) rebind();
+        });
         mo.observe(document.body, { childList: true, subtree: true });
       }
     },
