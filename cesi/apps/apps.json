@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=41",
+      "icon": "apps/apexon-weather-icon.png?v=42",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.5",
-        "versionCode": 41,
+        "version": "2.9.6",
+        "versionCode": 42,
         "packageType": "apk",
         "date": "2026-11-19",
-        "size": "36.48 MB",
-        "file": "apps/apexon-weather-2.9.5.apk?v=41",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.5.apk?v=41",
-        "sha256": "b9e18da0eca2514ca519ccd9868cf36c3f61e42fc66730e28e0e2d9188454ce5",
+        "size": "36.49 MB",
+        "file": "apps/apexon-weather-2.9.6.apk?v=42",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.6.apk?v=42",
+        "sha256": "697062411f8ee2011d27ef3fe941514cce633ea3822103897e6bd571bdb5b14c",
         "minSdk": 24,
         "changelog": [
-          "新增 ?fps=1 帧率角标，web、APK、exe 三个壳都能直接看实时帧率，不用连电脑。",
-          "Android 改用 preferredDisplayModeId 直接点名最高刷新率的显示模式，并在日志里打印系统实际给出的模式。",
-          "桌面端关闭窗口遮挡检测，窗口被压在其他窗口下面时不再停止绘制。"
+          "网页版可以直接安装到桌面：安卓与桌面 Chrome 走系统安装框，iPhone / iPad 用「分享 → 添加到主屏幕」，装完和 APK 一样全屏运行。",
+          "设置里新增「安装到桌面」入口，检测到已经在独立窗口运行（含 APK）时自动隐藏，浏览器没有开放安装时给出换用 Chrome / Edge 的说明。",
+          "补全 manifest 的 id、display_override 与启动方式，满足浏览器的可安装判定。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.5.exe?v=41",
+        "windowsFile": "apps/apexon-weather-setup-2.9.6.exe?v=42",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
