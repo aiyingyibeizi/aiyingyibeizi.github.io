@@ -4384,7 +4384,7 @@
       };
 
       // 绘制流铁噪声背景（柔和渐变 + 伪噪声）
-      const drawNoiseBackground = () => {
+      const drawNoiseBackground = (target = ctx) => {
         if (!config.enableNoise) return;
         const intensity = ParticleSystem.settings.intensity;
         const subtle = ParticleSystem.settings.subtle;
@@ -4393,7 +4393,7 @@
 
         // 大尺度柔和渐变（类似流动的霓虹光）
         const t = time * 0.0003 * ParticleSystem.settings.speed;
-        const grad = ctx.createRadialGradient(
+        const grad = target.createRadialGradient(
           ww * (0.3 + 0.15 * Math.sin(t)), wh * (0.4 + 0.1 * Math.cos(t * 1.3)), 0,
           ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.8
         );
@@ -4403,20 +4403,20 @@
         grad.addColorStop(0, hexToRgba(col1, 0.06 * intensity * (subtle ? 0.4 : 1)));
         grad.addColorStop(0.5, hexToRgba(col2, 0.04 * intensity * (subtle ? 0.4 : 1)));
         grad.addColorStop(1, hexToRgba(col3, 0.02 * intensity * (subtle ? 0.4 : 1)));
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, ww, wh);
+        target.fillStyle = grad;
+        target.fillRect(0, 0, ww, wh);
 
         // 第二个渐变层（流动的铁质感）
         const t2 = time * 0.0002 * ParticleSystem.settings.speed;
-        const grad2 = ctx.createRadialGradient(
+        const grad2 = target.createRadialGradient(
           ww * (0.7 + 0.2 * Math.cos(t2 * 0.8)), wh * (0.6 + 0.15 * Math.sin(t2)), 0,
           ww * 0.5, wh * 0.5, Math.max(ww, wh) * 0.7
         );
         grad2.addColorStop(0, hexToRgba(col2, 0.05 * intensity * (subtle ? 0.4 : 1)));
         grad2.addColorStop(0.6, hexToRgba(col3, 0.03 * intensity * (subtle ? 0.4 : 1)));
         grad2.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad2;
-        ctx.fillRect(0, 0, ww, wh);
+        target.fillStyle = grad2;
+        target.fillRect(0, 0, ww, wh);
       };
 
       // 辅助：hex 转 rgba
@@ -4436,43 +4436,43 @@
       };
 
       // 绘制云朵
-      const drawClouds = () => {
+      const drawClouds = (target = ctx) => {
         if (!config.enableClouds) return;
         const intensity = ParticleSystem.settings.intensity;
         const subtle = ParticleSystem.settings.subtle;
-        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        target.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const c of clouds) {
           const pulseR = c.radius + Math.sin(c.phase) * 12;
           const col = palette[c.colorIdx % palette.length] || palette[0];
-          const grad = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, pulseR);
+          const grad = target.createRadialGradient(c.x, c.y, 0, c.x, c.y, pulseR);
           grad.addColorStop(0, hexToRgba(col, c.alpha * intensity * (subtle ? 0.4 : 1)));
           grad.addColorStop(0.6, hexToRgba(col, c.alpha * 0.5 * intensity * (subtle ? 0.4 : 1)));
           grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, pulseR, 0, Math.PI * 2);
-          ctx.fill();
+          target.fillStyle = grad;
+          target.beginPath();
+          target.arc(c.x, c.y, pulseR, 0, Math.PI * 2);
+          target.fill();
         }
-        ctx.globalCompositeOperation = 'source-over';
+        target.globalCompositeOperation = 'source-over';
       };
 
       // 绘制霓虹扫描线
-      const drawNeonLines = () => {
+      const drawNeonLines = (target = ctx) => {
         if (!config.enableScanlines) return;
         const intensity = ParticleSystem.settings.intensity;
         const subtle = ParticleSystem.settings.subtle;
-        ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
+        target.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
         for (const n of neonLines) {
           const flicker = 0.7 + Math.sin(n.phase) * 0.3;
           const col = palette[n.colorIdx % palette.length] || palette[0];
-          const grad = ctx.createLinearGradient(n.x - n.width / 2, 0, n.x + n.width / 2, 0);
+          const grad = target.createLinearGradient(n.x - n.width / 2, 0, n.x + n.width / 2, 0);
           grad.addColorStop(0, 'transparent');
           grad.addColorStop(0.5, hexToRgba(col, n.alpha * flicker * intensity * (subtle ? 0.4 : 1)));
           grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.fillRect(n.x - n.width / 2, 0, n.width, window.innerHeight);
+          target.fillStyle = grad;
+          target.fillRect(n.x - n.width / 2, 0, n.width, window.innerHeight);
         }
-        ctx.globalCompositeOperation = 'source-over';
+        target.globalCompositeOperation = 'source-over';
       };
 
       const updateBursts = () => {
@@ -4833,6 +4833,31 @@
         ctx.globalCompositeOperation = 'source-over';
       };
 
+      // 环境层（噪声渐变 + 云 + 霓虹线）全部是平滑渐变：按一半分辨率绘制到离屏画布，
+      // 再整块放大贴回主画布。观感没有可分辨的差别，但这一层的全屏填充面积降到 1/4。
+      // 之前这些填充每帧都在 DPR 倍的全屏尺寸上重画，是 144Hz 下最先顶不住的一段。
+      const AMBIENT_SCALE = 0.5;
+      const ambientCanvas = document.createElement('canvas');
+      const ambientCtx = ambientCanvas.getContext('2d');
+      let ambientW = 0;
+      let ambientH = 0;
+
+      const drawAmbient = () => {
+        const cw = Math.max(1, Math.round(window.innerWidth * AMBIENT_SCALE));
+        const ch = Math.max(1, Math.round(window.innerHeight * AMBIENT_SCALE));
+        if (ambientW !== cw || ambientH !== ch) {
+          ambientCanvas.width = ambientW = cw;
+          ambientCanvas.height = ambientH = ch;
+        }
+        // 重置变换后按缩放系数映射，绘制函数内部仍使用 CSS 像素坐标
+        ambientCtx.setTransform(AMBIENT_SCALE, 0, 0, AMBIENT_SCALE, 0, 0);
+        ambientCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        if (quality.noise) drawNoiseBackground(ambientCtx);
+        drawClouds(ambientCtx);
+        drawNeonLines(ambientCtx);
+        ctx.drawImage(ambientCanvas, 0, 0, window.innerWidth, window.innerHeight);
+      };
+
       const draw = () => {
         if (!isActive) return;
         frameCount++;
@@ -4854,9 +4879,7 @@
 
         // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
         if (ParticleSystem.settings.animated) {
-          if (quality.noise) drawNoiseBackground();
-          drawClouds();
-          drawNeonLines();
+          drawAmbient();
         }
         drawConnections();
         drawParticles();
