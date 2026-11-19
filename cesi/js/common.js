@@ -4110,9 +4110,12 @@
       if (!canvas) return;
 
       // 自适应性能档位：尊重系统“减弱动态效果”，并在低端设备上自动降低画质以保住帧率
+      const apexQuery = new URLSearchParams(location.search);
       const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // 诊断开关：?fx=off 直接关掉动态背景，用来确认卡顿是否来自这层 canvas
+      const forceStatic = apexQuery.get('fx') === 'off';
       const lowEnd = (navigator.hardwareConcurrency || 8) <= 4;
-      const quality = preferReduced
+      const quality = (preferReduced || forceStatic)
         ? { dpr: 1, particleScale: 0, cloudScale: 0, lineScale: 0, noise: false, static: true }
         : lowEnd
           ? { dpr: 1.25, particleScale: 0.6, cloudScale: 0.5, lineScale: 0.5, noise: false, static: false }
@@ -4123,7 +4126,7 @@
           particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false
         };
       // 减弱动态效果时强制静态背景（用户可随时在设置中手动开启），可访问性与续航兼顾
-      if (preferReduced) ParticleSystem.settings.animated = false;
+      if (preferReduced || forceStatic) ParticleSystem.settings.animated = false;
 
       const ctx = canvas.getContext('2d');
       const offscreen = document.createElement('canvas');
@@ -5563,5 +5566,27 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+
+  // 帧率角标：?fps=1（与天气站同一套诊断手段，用来把「卡」量化成数字）
+  if (new URLSearchParams(location.search).get('fps') === '1') {
+    const badge = document.createElement('div');
+    badge.style.cssText = 'position:fixed;right:8px;bottom:12px;z-index:99999;'
+      + 'font:600 12px/1 ui-monospace,monospace;padding:6px 8px;border-radius:8px;'
+      + 'background:rgba(0,0,0,.72);color:#7CFC9B;pointer-events:none';
+    badge.textContent = '-- fps';
+    document.body.appendChild(badge);
+    let frames = 0;
+    let last = performance.now();
+    const tick = (now) => {
+      frames += 1;
+      if (now - last >= 500) {
+        badge.textContent = Math.round((frames * 1000) / (now - last)) + ' fps';
+        frames = 0;
+        last = now;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
 
 })(window);
