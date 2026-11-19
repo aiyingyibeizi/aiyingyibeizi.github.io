@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=39",
+      "icon": "apps/apexon-weather-icon.png?v=40",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.3",
-        "versionCode": 39,
+        "version": "2.9.4",
+        "versionCode": 40,
         "packageType": "apk",
         "date": "2026-11-19",
         "size": "36.48 MB",
-        "file": "apps/apexon-weather-2.9.3.apk?v=39",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.3.apk?v=39",
-        "sha256": "9f624d30c747512c4c01d4026f7835bf564292acf8e7d12a6d40114b4698ce83",
+        "file": "apps/apexon-weather-2.9.4.apk?v=40",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.4.apk?v=40",
+        "sha256": "837ce4c4b87b88887cab92ce37f89f5da87c0181333b45457b002c54205125dd",
         "minSdk": 24,
         "changelog": [
-          "背景动效改为「静态图 + 缓慢推拉」：不再解码全屏视频，动画全部交给合成器，核显设备帧率提升最明显。",
-          "设置新增「视频背景」开关（默认关闭），想要原来的动态视频观感可以手动打开。",
-          "首屏滚出视口后背景动效自动暂停，减少待机耗电。"
+          "骨架屏扫光从「跟随刷新率重绘」改为分步推进（每秒 30 次），首屏加载期的渐变重绘次数下降约 80%。",
+          "数据刷新时把 N 次强制重排合并成 1 次，刷新瞬间不再卡一下。",
+          "Android 去掉 WebView 外层多余的硬件图层；桌面端窗口自动开到刷新率最高的那块屏。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.3.exe?v=39",
+        "windowsFile": "apps/apexon-weather-setup-2.9.4.exe?v=40",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }

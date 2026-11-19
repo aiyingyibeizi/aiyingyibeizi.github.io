@@ -2,13 +2,13 @@
   "id": "com.apexon.weather",
   "name": "APEXON Weather",
   "nameZh": "APEXON 天气",
-  "version": "2.9.3",
-  "versionCode": 39,
+  "version": "2.9.4",
+  "versionCode": 40,
   "releaseDate": "2026-11-19",
-  "buildTime": "2026-11-19T16:11:00+08:00",
-  "size": 38251547,
+  "buildTime": "2026-11-19T17:22:13+08:00",
+  "size": 38254259,
   "sizeText": "36.48 MB",
-  "sha256": "9F624D30C747512C4C01D4026F7835BF564292ACF8E7D12A6D40114B4698CE83",
+  "sha256": "837CE4C4B87B88887CAB92CE37F89F5DA87C0181333B45457B002C54205125DD",
   "platform": "android",
   "packageType": "apk",
   "architectures": "universal",
@@ -19,7 +19,7 @@
   "publisher": "APEXON",
   "license": "Proprietary",
   "homepage": "https://apexon.qzz.io/",
-  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.3.apk?v=39",
+  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.4.apk?v=40",
   "icon": "icon-512x512.png",
   "iconUrl": "",
   "summary": "一个安静、克制、为每天而生的天气应用。",
@@ -28,54 +28,54 @@
   "descriptionEn": "APEXON Weather takes \"just checking the weather\" to its limit.\n\nReal-time conditions, 24-hour hourly forecast, 7-day trend, air quality with health advice and weather alerts — all readable on a single screen. The background shifts with the sky: clear, rain, snow, thunder, fog, starfield, each with its own palette.\n\nIt is thrifty: layered caching and request de-duplication keep daily API calls to a minimum, and a saved snapshot is still there when the network is not. It is also quiet: no pop-ups, no ads, no ornamental animation — only the numbers you actually need.\n\nCity search and multi-city management, auto / light / dark themes, 10 languages, safe-area aware on both iOS and Android, and installable to the home screen for offline use.\n\nI cannot control the weather, but I try my best to explain it clearly.",
   "changelogI18n": {
     "zh-CN": [
-      "背景动效改为「静态图 + 缓慢推拉」：不再解码全屏视频，动画全部交给合成器，核显设备帧率提升最明显。",
-      "设置新增「视频背景」开关（默认关闭），想要原来的动态视频观感可以手动打开。",
-      "首屏滚出视口后背景动效自动暂停，减少待机耗电。"
+      "骨架屏扫光从「跟随刷新率重绘」改为分步推进（每秒 30 次），首屏加载期的渐变重绘次数下降约 80%。",
+      "数据刷新时把 N 次强制重排合并成 1 次，刷新瞬间不再卡一下。",
+      "Android 去掉 WebView 外层多余的硬件图层；桌面端窗口自动开到刷新率最高的那块屏。"
     ],
     "zh-TW": [
-      "背景動效改為「靜態圖 + 緩慢推拉」：不再解碼全螢幕影片，動畫全部交給合成器，核顯裝置幀率提升最明顯。",
-      "設定新增「影片背景」開關（預設關閉），想要原本的動態影片觀感可以手動開啟。",
-      "首屏滾出視口後背景動效自動暫停，減少待機耗電。"
+      "骨架屏掃光從「跟隨刷新率重繪」改為分步推進（每秒 30 次），首屏載入期的漸層重繪次數下降約 80%。",
+      "資料刷新時把 N 次強制重排合併成 1 次，刷新瞬間不再卡一下。",
+      "Android 移除 WebView 外層多餘的硬體圖層；桌面端視窗自動開到刷新率最高的那塊螢幕。"
     ],
     "en": [
-      "Background motion now comes from a still image with a slow Ken Burns push, so the full-screen video is no longer decoded — the whole animation runs on the compositor, the biggest frame-rate win on integrated graphics.",
-      "New \"Video background\" switch (off by default) if you want the original moving-video look back.",
-      "Background motion pauses automatically once the hero scrolls out of view, saving idle power."
+      "The skeleton shimmer no longer repaints with every display frame — it advances in 30 discrete steps per second, cutting gradient repaints during load by roughly 80%.",
+      "Refreshing now batches N forced reflows into one, so the update no longer stutters.",
+      "Removed a redundant hardware layer around the Android WebView, and the desktop shell now opens on the highest-refresh-rate monitor."
     ],
     "ja": [
-      "背景の動きを「静止画＋ゆっくりしたズーム」に変更しました。全画面動画のデコードがなくなり、アニメーションはすべてコンポジタで処理されるため、内蔵GPUでの改善が最も大きくなります。",
-      "設定に「動画背景」スイッチを追加しました（既定はオフ）。従来の動画の見た目に戻したい場合は手動でオンにできます。",
-      "ファーストビューが画面外にスクロールされると背景の動きを自動で停止し、待機時の消費電力を抑えます。"
+      "スケルトンのシマーを「リフレッシュレートごとの再描画」から 1 秒 30 回の段階送りに変更し、読み込み中のグラデーション再描画を約 80% 削減しました。",
+      "データ更新時の強制レイアウトを N 回から 1 回にまとめ、更新の瞬間の引っかかりを解消しました。",
+      "Android で WebView の外側にあった余分なハードウェアレイヤーを削除し、デスクトップ版は最もリフレッシュレートの高いモニターにウィンドウを開くようにしました。"
     ],
     "ko": [
-      "배경 움직임을 「정적 이미지 + 느린 줌」으로 바꿨습니다. 전체 화면 동영상 디코딩이 사라지고 애니메이션이 모두 컴포지터에서 처리되어 내장 그래픽에서 효과가 가장 큽니다.",
-      "설정에 「동영상 배경」 스위치를 추가했습니다(기본 꺼짐). 기존의 움직이는 동영상 느낌을 원하면 직접 켤 수 있습니다.",
-      "첫 화면이 화면 밖으로 스크롤되면 배경 움직임이 자동으로 멈춰 대기 전력을 줄입니다."
+      "스켈레톤 반짝임을 「주사율마다 다시 그리기」에서 초당 30단계로 바꿔, 로딩 중 그라데이션 다시 그리기를 약 80% 줄였습니다.",
+      "데이터 갱신 시 N번의 강제 레이아웃을 1번으로 합쳐, 갱신 순간의 끊김을 없앴습니다.",
+      "Android에서 WebView 바깥의 불필요한 하드웨어 레이어를 제거하고, 데스크톱 앱은 주사율이 가장 높은 모니터에 창을 엽니다."
     ],
     "fr": [
-      "Le fond animé repose désormais sur une image fixe avec un lent zoom (Ken Burns) : la vidéo plein écran n’est plus décodée et toute l’animation est confiée au compositeur — c’est le gain de fluidité le plus net sur GPU intégré.",
-      "Nouveau réglage « Vidéo en fond » (désactivé par défaut) pour retrouver l’ancien rendu vidéo.",
-      "Le fond s’arrête automatiquement dès que le haut de page sort de l’écran, ce qui réduit la consommation au repos."
+      "Le scintillement des squelettes n’est plus redessiné à chaque image : il avance par paliers de 30 par seconde, ce qui réduit d’environ 80 % les repeints de dégradé au chargement.",
+      "Le rafraîchissement regroupe désormais N reflows forcés en un seul : plus d’à-coup au moment de la mise à jour.",
+      "Suppression d’une couche matérielle redondante autour du WebView Android ; la version bureau ouvre sa fenêtre sur l’écran au taux de rafraîchissement le plus élevé."
     ],
     "de": [
-      "Die Hintergrundbewegung kommt jetzt von einem Standbild mit langsamem Ken-Burns-Zoom: Das Vollbildvideo wird nicht mehr dekodiert, die Animation läuft komplett im Compositor – der größte Bildratengewinn auf integrierten GPUs.",
-      "Neuer Schalter „Video-Hintergrund“ (standardmäßig aus), falls du den bewegten Video-Look zurück willst.",
-      "Die Hintergrundbewegung pausiert automatisch, sobald der Hero aus dem Sichtfeld scrollt – das spart Leerlaufenergie."
+      "Der Skeleton-Schimmer wird nicht mehr pro Anzeigeframe neu gezeichnet, sondern in 30 Schritten pro Sekunde — das reduziert die Gradient-Neuzeichnung beim Laden um rund 80 %.",
+      "Beim Aktualisieren werden N erzwungene Reflows zu einem zusammengefasst – kein Ruckler mehr im Update-Moment.",
+      "Überflüssige Hardware-Ebene um das Android-WebView entfernt; die Desktop-App öffnet ihr Fenster auf dem Monitor mit der höchsten Bildwiederholrate."
     ],
     "es": [
-      "El fondo animado ahora usa una imagen fija con un lento zoom (Ken Burns): ya no se decodifica el vídeo a pantalla completa y toda la animación la hace el compositor, la mayor mejora en gráficos integrados.",
-      "Nuevo ajuste «Fondo de vídeo» (desactivado por defecto) para recuperar el vídeo en movimiento original.",
-      "El fondo se detiene automáticamente cuando la portada sale de la pantalla, lo que reduce el consumo en reposo."
+      "El brillo del esqueleto ya no se repinta en cada fotograma: avanza en 30 pasos por segundo, lo que reduce un 80 % los repintados del degradado durante la carga.",
+      "Al actualizar, N reflows forzados se agrupan en uno solo: se acabó el tirón del instante de actualización.",
+      "Se elimina una capa de hardware redundante alrededor del WebView de Android; la versión de escritorio abre su ventana en el monitor con mayor tasa de refresco."
     ],
     "pt": [
-      "O fundo animado passa a usar uma imagem fixa com um lento zoom (Ken Burns): o vídeo em ecrã inteiro deixa de ser descodificado e toda a animação é feita pelo compositor — o maior ganho em gráficos integrados.",
-      "Nova opção «Vídeo de fundo» (desativada por predefinição) para recuperar o vídeo em movimento original.",
-      "O fundo para automaticamente quando o topo sai do ecrã, reduzindo o consumo em repouso."
+      "O brilho do esqueleto deixou de ser redesenhado a cada frame: avança em 30 passos por segundo, reduzindo cerca de 80 % os redesenhos do gradiente durante o carregamento.",
+      "Ao atualizar, N reflows forçados passam a ser agrupados num só: acabou o engasgo no momento da atualização.",
+      "Removida uma camada de hardware redundante à volta do WebView do Android; a versão de desktop abre a janela no monitor com maior taxa de atualização."
     ],
     "ru": [
-      "Анимация фона теперь строится на статичном изображении с медленным зумом (Ken Burns): полноэкранное видео больше не декодируется, вся анимация выполняется композитором — наибольший прирост на встроенной графике.",
-      "Новый переключатель «Видео-фон» (по умолчанию выключен), если хочется вернуть движущееся видео.",
-      "Анимация фона автоматически останавливается, когда первый экран уходит из вида, — меньше расход в простое."
+      "Мерцание скелетона больше не перерисовывается каждый кадр: оно идёт шагами по 30 в секунду — перерисовок градиента при загрузке стало примерно на 80 % меньше.",
+      "При обновлении N принудительных пересчётов layout объединяются в один — рывок в момент обновления исчез.",
+      "Убрана лишняя аппаратная прослойка вокруг Android WebView; десктопная версия открывает окно на мониторе с максимальной частотой обновления."
     ]
   },
   "tags": [
@@ -88,15 +88,15 @@
   ],
   "requirements": "Android 7.0（API 24）及以上；无需 Google 服务；首次启动需授予定位权限以获取本地天气。",
   "requirementsEn": "Android 7.0 (API 24) or later; no Google services required; location permission is requested on first launch for local weather.",
-  "fileName": "apexon-weather-2.9.3.apk",
+  "fileName": "apexon-weather-2.9.4.apk",
   "changelog": [
-    "背景动效改为「静态图 + 缓慢推拉」：不再解码全屏视频，动画全部交给合成器，核显设备帧率提升最明显。",
-    "设置新增「视频背景」开关（默认关闭），想要原来的动态视频观感可以手动打开。",
-    "首屏滚出视口后背景动效自动暂停，减少待机耗电。"
+    "骨架屏扫光从「跟随刷新率重绘」改为分步推进（每秒 30 次），首屏加载期的渐变重绘次数下降约 80%。",
+    "数据刷新时把 N 次强制重排合并成 1 次，刷新瞬间不再卡一下。",
+    "Android 去掉 WebView 外层多余的硬件图层；桌面端窗口自动开到刷新率最高的那块屏。"
   ],
   "changelogEn": [
-    "Background motion now comes from a still image with a slow Ken Burns push, so the full-screen video is no longer decoded — the whole animation runs on the compositor, the biggest frame-rate win on integrated graphics.",
-    "New \"Video background\" switch (off by default) if you want the original moving-video look back.",
-    "Background motion pauses automatically once the hero scrolls out of view, saving idle power."
+    "The skeleton shimmer no longer repaints with every display frame — it advances in 30 discrete steps per second, cutting gradient repaints during load by roughly 80%.",
+    "Refreshing now batches N forced reflows into one, so the update no longer stutters.",
+    "Removed a redundant hardware layer around the Android WebView, and the desktop shell now opens on the highest-refresh-rate monitor."
   ]
 }
