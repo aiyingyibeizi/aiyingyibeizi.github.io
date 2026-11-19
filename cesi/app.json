@@ -2,13 +2,13 @@
   "id": "com.apexon.weather",
   "name": "APEXON Weather",
   "nameZh": "APEXON 天气",
-  "version": "2.8.4",
-  "versionCode": 33,
+  "version": "2.8.3",
+  "versionCode": 32,
   "releaseDate": "2026-11-18",
-  "buildTime": "2026-11-18T19:25:29+08:00",
-  "size": 38223827,
+  "buildTime": "2026-11-18T17:54:55+08:00",
+  "size": 38223323,
   "sizeText": "36.45 MB",
-  "sha256": "340A05AD778E5A528CD52E0A210BB01EC2F35E8A59BAE78A6BA12E6987EB4142",
+  "sha256": "BFDF5C7BBE4CD8F7DB30223555D6FCB79BB04B3D21FCA5FB7017431CDD5468BA",
   "platform": "android",
   "packageType": "apk",
   "architectures": "universal",
@@ -19,7 +19,7 @@
   "publisher": "APEXON",
   "license": "Proprietary",
   "homepage": "https://apexon.qzz.io/",
-  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.4.apk?v=33",
+  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.8.3.apk?v=32",
   "icon": "icon-512x512.png",
   "iconUrl": "",
   "summary": "一个安静、克制、为每天而生的天气应用。",
@@ -28,7 +28,6 @@
   "descriptionEn": "APEXON Weather takes \"just checking the weather\" to its limit.\n\nReal-time conditions, 24-hour hourly forecast, 7-day trend, air quality with health advice and weather alerts — all readable on a single screen. The background shifts with the sky: clear, rain, snow, thunder, fog, starfield, each with its own palette.\n\nIt is thrifty: layered caching and request de-duplication keep daily API calls to a minimum, and a saved snapshot is still there when the network is not. It is also quiet: no pop-ups, no ads, no ornamental animation — only the numbers you actually need.\n\nCity search and multi-city management, auto / light / dark themes, 10 languages, safe-area aware on both iOS and Android, and installable to the home screen for offline use.\n\nI cannot control the weather, but I try my best to explain it clearly.",
   "changelogI18n": {
     "zh-CN": [
-      "恢复观感：去掉毛玻璃后，卡片改用静态顶部高光 + 内侧 1px 亮边找回材质；夜空换成纯 CSS 的深蓝星空（月光晕 + 星点），不再用那张糊成一团的大月亮照片。",
       "重做整机流畅度：手机端去掉全屏毛玻璃、滚动容器上的遮罩与大图层，滚动交还给合成线程；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
       "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
       "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
@@ -37,7 +36,6 @@
       "网页版与桌面版上线：weather.apexon.qzz.io 打开即用，定位失败时自动按 IP 估算城市；滚动与动画按屏幕刷新率调度，120Hz 下更跟手。"
     ],
     "zh-TW": [
-      "恢復觀感：移除毛玻璃後，卡片改用靜態頂部高光 + 內側 1px 亮邊找回材質；夜空換成純 CSS 的深藍星空（月光暈 + 星點），不再用那張糊成一團的大月亮照片。",
       "重做整機流暢度：手機端移除全螢幕毛玻璃，捲動時不再逐幀重算背景；幀率守衛改為在真實捲動中實測，掉幀就自動降一檔畫質。",
       "修好桌面小工具：2×2 / 4×2 / 4×4 三種尺寸都能正常加入，不再出現「載入小工具時發生錯誤」的黑框。",
       "首頁、搜尋與警示的層疊關係全部重排：搜尋框不再壓住第一筆結果，警示列不再和首頁第一欄重疊，異形螢幕與瀏海、手勢列等安全區都會自動讓位。",
@@ -46,7 +44,6 @@
       "網頁版與桌面版上線：weather.apexon.qzz.io 開啟即用，定位失敗時自動依 IP 估算城市；捲動與動畫依螢幕更新率調度，120Hz 下更順手。"
     ],
     "en": [
-      "Looks restored: with the blur gone, cards get their material back from a static top highlight and a 1px inner edge, and the night sky is now pure CSS — a moonlight glow with scattered stars — instead of the smeared moon photo.",
       "Smoothness rebuilt: the mobile build drops full-screen glass blur plus the mask and oversized layer on the scroll container, so scrolling runs on the compositor thread again, and the frame-rate guard now measures real scrolling to pick a quality tier.",
       "Home-screen widgets fixed: 2×2, 4×2 and 4×4 can all be added again, with no more black \"couldn't load widget\" panels.",
       "Home, search and alerts have been re-layered: the search bar no longer covers the first result, the alert bar no longer overlaps the first home section, and notches, gesture bars and other safe areas are respected automatically.",
@@ -55,7 +52,6 @@
       "Web and desktop editions: weather.apexon.qzz.io works instantly, and when location is unavailable the city is inferred from IP; scrolling and animation are paced to the display, so 120Hz feels smooth."
     ],
     "ja": [
-      "見た目を立て直しました。ぼかしを外したカードは静的な上部ハイライトと内側 1px の光で質感を取り戻し、夜空は写真ではなく CSS だけの深い藍色の星空（月明かりの暈＋星々）に変更しました。",
       "モバイル版の滑らかさを作り直しました。全画面のガラスぼかしを廃止してスクロール中の毎フレームの再サンプリングをなくし、実際のスクロール中のフレームレートを測って画質を自動調整します。",
       "ホーム画面ウィジェットを修正：2×2 / 4×2 / 4×4 のすべてを追加でき、「ウィジェットを読み込めません」の黒いパネルは出なくなりました。",
       "ホーム・検索・警報の重なりを全面的に整理：検索バーが最初の結果を隠さず、警報バーがホームの最初のセクションと重ならず、ノッチやジェスチャーバーなどのセーフエリアにも自動で収まります。",
@@ -64,7 +60,6 @@
       "Web 版とデスクトップ版を公開：weather.apexon.qzz.io はすぐ使え、位置情報が取れないときは IP から都市を推定します。スクロールとアニメーションは画面のリフレッシュレートに合わせ、120Hz でも滑らかに動きます。"
     ],
     "ko": [
-      "겉모습을 되살렸습니다. 흐림을 없앤 카드는 정적인 상단 하이라이트와 1px 내부 광선으로 질감을 되찾았고, 밤하늘은 뭉개진 달 사진 대신 CSS만으로 만든 짙은 남색 별밤(달빛 번짐 + 별)으로 바꿨습니다.",
       "모바일 버전의 부드러움을 다시 만들었습니다. 전체 화면 유리 흐림을 없애 스크롤 중 매 프레임 배경을 다시 계산하지 않으며, 실제 스크롤 프레임레이트를 측정해 화질 단계를 자동 조정합니다.",
       "홈 화면 위젯을 고쳤습니다: 2×2 / 4×2 / 4×4 모두 정상적으로 추가되며, '위젯을 불러올 수 없습니다' 검은 패널이 더 이상 나타나지 않습니다.",
       "홈·검색·경보의 겹침을 전면 재정리했습니다: 검색창이 첫 결과를 가리지 않고, 경보 바가 홈 첫 섹션과 겹치지 않으며, 노치와 제스처 바 등 안전 영역에도 자동으로 맞춰집니다.",
@@ -73,7 +68,6 @@
       "웹과 데스크톱 버전 공개: weather.apexon.qzz.io 는 바로 사용할 수 있고, 위치를 못 잡으면 IP로 도시를 추정합니다. 스크롤과 애니메이션은 화면 주사율에 맞춰 120Hz에서도 부드럽습니다."
     ],
     "fr": [
-      "Aspect retrouvé : sans flou, les cartes reprennent leur matière grâce à un reflet supérieur statique et un liseré interne de 1 px, et le ciel nocturne est désormais en CSS pur — halo de lune et étoiles — au lieu de la photo de lune brouillée.",
       "Fluidité refaite : la version mobile supprime le flou plein écran, cesse de rééchantillonner l'arrière-plan à chaque image pendant le défilement, et mesure le défilement réel pour choisir le niveau de qualité.",
       "Widgets d’écran d’accueil réparés : les formats 2×2, 4×2 et 4×4 s’ajoutent à nouveau, sans panneau noir « impossible de charger le widget ».",
       "Accueil, recherche et alertes retravaillés en profondeur : la barre de recherche ne recouvre plus le premier résultat, la barre d’alerte ne chevauche plus la première section, et les encoches, barres gestuelles et autres zones sûres sont respectées automatiquement.",
@@ -82,7 +76,6 @@
       "Éditions web et bureau : weather.apexon.qzz.io fonctionne immédiatement et, sans géolocalisation, la ville est déduite de l’IP ; défilement et animations suivent la fréquence de l’écran, jusqu’à 120 Hz."
     ],
     "de": [
-      "Optik zurück: Ohne Unschärfe erhalten Karten ihre Materialität durch ein statisches oberes Highlight und eine 1-px-Innenkante, und der Nachthimmel ist jetzt reines CSS – Mondhof und Sterne – statt des verwaschenen Mondfotos.",
       "Flüssigkeit überarbeitet: Die Mobilversion entfernt die vollflächige Unschärfe, tastet den Hintergrund beim Scrollen nicht mehr pro Frame neu ab und misst die echte Scroll-Bildrate für die Qualitätsstufe.",
       "Startbildschirm-Widgets repariert: 2×2, 4×2 und 4×4 lassen sich wieder hinzufügen, ohne schwarzes „Widget konnte nicht geladen werden“.",
       "Startseite, Suche und Warnungen neu geschichtet: die Suchleiste verdeckt nicht mehr das erste Ergebnis, die Warnleiste überlappt nicht mehr den ersten Startseiten-Block, und Notch, Gestenleiste und andere Safe Areas werden automatisch berücksichtigt.",
@@ -91,7 +84,6 @@
       "Web- und Desktop-Version: weather.apexon.qzz.io ist sofort nutzbar; ohne Standort wird die Stadt aus der IP abgeleitet. Scrollen und Animationen folgen der Bildwiederholrate, bis 120 Hz."
     ],
     "es": [
-      "Aspecto recuperado: sin desenfoque, las tarjetas recuperan su material con un brillo superior estático y un borde interior de 1 px, y el cielo nocturno ahora es CSS puro — halo de luna y estrellas — en lugar de la foto de luna borrosa.",
       "Fluidez renovada: la versión móvil elimina el desenfoque de pantalla completa, deja de remuestrear el fondo en cada fotograma al desplazarse y mide la tasa real de fotogramas para elegir la calidad.",
       "Widgets de inicio corregidos: los formatos 2×2, 4×2 y 4×4 vuelven a añadirse, sin el panel negro de «no se pudo cargar el widget».",
       "Inicio, búsqueda y avisos reorganizados: el buscador ya no tapa el primer resultado, la barra de avisos no se solapa con la primera sección y el notch, la barra de gestos y demás zonas seguras se respetan automáticamente.",
@@ -100,7 +92,6 @@
       "Ediciones web y de escritorio: weather.apexon.qzz.io funciona al instante y, si no hay ubicación, la ciudad se deduce por IP; el desplazamiento y las animaciones siguen la frecuencia de la pantalla, hasta 120 Hz."
     ],
     "pt": [
-      "Aspeto recuperado: sem desfoque, os cartões recuperam a matéria com um brilho superior estático e um rebordo interior de 1 px, e o céu noturno passou a ser CSS puro — halo de lua e estrelas — em vez da foto de lua desfocada.",
       "Fluidez refeita: a versão móvel remove o desfoque de tela cheia, para de reamostrar o fundo a cada quadro ao rolar e mede a taxa real de quadros para escolher a qualidade.",
       "Widgets do ecrã inicial corrigidos: 2×2, 4×2 e 4×4 voltam a poder ser adicionados, sem o painel negro de «não foi possível carregar o widget».",
       "Início, pesquisa e avisos reorganizados: a barra de pesquisa já não cobre o primeiro resultado, a barra de avisos não se sobrepõe à primeira secção e o notch, a barra de gestos e outras áreas seguras são respeitados automaticamente.",
@@ -109,7 +100,6 @@
       "Edições web e de ambiente de trabalho: weather.apexon.qzz.io funciona de imediato e, sem localização, a cidade é inferida pelo IP; o deslocamento e as animações seguem a taxa do ecrã, até 120 Hz."
     ],
     "ru": [
-      "Внешний вид восстановлен: без размытия карточки снова обрели материальность благодаря статичному верхнему блику и внутренней кромке в 1 px, а ночное небо теперь на чистом CSS — ореол луны и звёзды — вместо смазанного фото луны.",
       "Плавность переработана: в мобильной версии убрано полноэкранное размытие, фон больше не пересчитывается каждый кадр при прокрутке, а уровень качества выбирается по реальному FPS прокрутки.",
       "Виджеты главного экрана исправлены: снова добавляются 2×2, 4×2 и 4×4 — без чёрной панели «не удалось загрузить виджет».",
       "Главная, поиск и предупреждения перестроены: строка поиска больше не закрывает первую строку результатов, панель предупреждений не перекрывает первый блок главной, а вырез, полоса жестов и другие безопасные зоны учитываются автоматически.",
@@ -128,9 +118,8 @@
   ],
   "requirements": "Android 7.0（API 24）及以上；无需 Google 服务；首次启动需授予定位权限以获取本地天气。",
   "requirementsEn": "Android 7.0 (API 24) or later; no Google services required; location permission is requested on first launch for local weather.",
-  "fileName": "apexon-weather-2.8.4.apk",
+  "fileName": "apexon-weather-2.8.3.apk",
   "changelog": [
-    "恢复观感：去掉毛玻璃后，卡片改用静态顶部高光 + 内侧 1px 亮边找回材质；夜空换成纯 CSS 的深蓝星空（月光晕 + 星点），不再用那张糊成一团的大月亮照片。",
     "重做整机流畅度：手机端去掉全屏毛玻璃、滚动容器上的遮罩与大图层，滚动交还给合成线程；帧率守卫改为在真实滚动中实测，掉帧就自动降一档画质。",
     "修好桌面小组件：2×2 / 4×2 / 4×4 三种尺寸都能正常添加，不再出现「加载小部件时出错」的黑框。",
     "首页、搜索与预警的层叠关系全部重排：搜索框不再压住第一条结果，预警条不再和首页首栏重叠，异形屏与刘海、手势条等安全区都会自动让位。",
@@ -139,7 +128,6 @@
     "网页版与桌面版上线：weather.apexon.qzz.io 打开即用，定位失败时自动按 IP 估算城市；滚动与动画按屏幕刷新率调度，120Hz 下更跟手。"
   ],
   "changelogEn": [
-    "Looks restored: with the blur gone, cards get their material back from a static top highlight and a 1px inner edge, and the night sky is now pure CSS — a moonlight glow with scattered stars — instead of the smeared moon photo.",
     "Smoothness rebuilt: the mobile build drops full-screen glass blur plus the mask and oversized layer on the scroll container, so scrolling runs on the compositor thread again, and the frame-rate guard now measures real scrolling to pick a quality tier.",
     "Home-screen widgets fixed: 2×2, 4×2 and 4×4 can all be added again, with no more black \"couldn't load widget\" panels.",
     "Home, search and alerts have been re-layered: the search bar no longer covers the first result, the alert bar no longer overlaps the first home section, and notches, gesture bars and other safe areas are respected automatically.",
