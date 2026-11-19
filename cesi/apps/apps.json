@@ -3,6 +3,17 @@
   "apps": [
     {
       "id": "apexon-weather",
+      "name": "APEXON 天气",
+      "tagline": "把「看一眼天气」这件事做到极致",
+      "icon": "apps/apexon-weather-icon.png?v=36",
+      "platform": "android",
+      "requirements": "Android 7.0+",
+      "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
+      "highlights": [
+        "动态天气背景",
+        "10 种语言",
+        "离线可用"
+      ],
       "latest": {
         "version": "2.9.0",
         "versionCode": 36,
