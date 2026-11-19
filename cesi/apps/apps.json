@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=37",
+      "icon": "apps/apexon-weather-icon.png?v=38",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.1",
-        "versionCode": 37,
+        "version": "2.9.2",
+        "versionCode": 38,
         "packageType": "apk",
         "date": "2026-11-19",
-        "size": "36.47 MB",
-        "file": "apps/apexon-weather-2.9.1.apk?v=37",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.1.apk?v=37",
-        "sha256": "8e6035fd8b2c343a730d368abbdd1bc11b1dc4c408923cf2abd07f7e6dc37c34",
+        "size": "36.48 MB",
+        "file": "apps/apexon-weather-2.9.2.apk?v=38",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.2.apk?v=38",
+        "sha256": "ea8b121473e4cb6d6bebb5e6b792c8282a9cc909ebd3e380dd0acc0ec2757685",
         "minSdk": 24,
         "changelog": [
-          "设置新增「动态背景」开关：一键停掉全屏视频与夜空动画，只保留静态渐变，低配设备帧率提升最明显。",
-          "「动效」选项更名为「降低动效」，开启后同时停用场景动画与视频解码。",
-          "关闭动态背景后天气信息、配色与布局完全不变，只是画面不再动。"
+          "修复控制台反复刷出的 Service Worker 报错：浏览器扩展等非本站请求不再被缓存拦截，网络失败时也不会再抛 \"Failed to convert value to Response\"。",
+          "修复切到后台再切回时的 264ms 长任务卡顿，视频同步改到下一帧执行。",
+          "白天彻底移除夜空四层全屏动画，静态页面不再空转合成；新增 ?fx=off 诊断模式，可一键关掉全部动效对比帧率。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.1.exe?v=37",
+        "windowsFile": "apps/apexon-weather-setup-2.9.2.exe?v=38",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
