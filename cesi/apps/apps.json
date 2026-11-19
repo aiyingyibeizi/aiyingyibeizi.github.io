@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=40",
+      "icon": "apps/apexon-weather-icon.png?v=41",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.4",
-        "versionCode": 40,
+        "version": "2.9.5",
+        "versionCode": 41,
         "packageType": "apk",
         "date": "2026-11-19",
         "size": "36.48 MB",
-        "file": "apps/apexon-weather-2.9.4.apk?v=40",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.4.apk?v=40",
-        "sha256": "837ce4c4b87b88887cab92ce37f89f5da87c0181333b45457b002c54205125dd",
+        "file": "apps/apexon-weather-2.9.5.apk?v=41",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.5.apk?v=41",
+        "sha256": "b9e18da0eca2514ca519ccd9868cf36c3f61e42fc66730e28e0e2d9188454ce5",
         "minSdk": 24,
         "changelog": [
-          "骨架屏扫光从「跟随刷新率重绘」改为分步推进（每秒 30 次），首屏加载期的渐变重绘次数下降约 80%。",
-          "数据刷新时把 N 次强制重排合并成 1 次，刷新瞬间不再卡一下。",
-          "Android 去掉 WebView 外层多余的硬件图层；桌面端窗口自动开到刷新率最高的那块屏。"
+          "新增 ?fps=1 帧率角标，web、APK、exe 三个壳都能直接看实时帧率，不用连电脑。",
+          "Android 改用 preferredDisplayModeId 直接点名最高刷新率的显示模式，并在日志里打印系统实际给出的模式。",
+          "桌面端关闭窗口遮挡检测，窗口被压在其他窗口下面时不再停止绘制。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.4.exe?v=40",
+        "windowsFile": "apps/apexon-weather-setup-2.9.5.exe?v=41",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
