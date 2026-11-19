@@ -4116,7 +4116,12 @@
         ? { dpr: 1, particleScale: 0, cloudScale: 0, lineScale: 0, noise: false, static: true }
         : lowEnd
           ? { dpr: 1.25, particleScale: 0.6, cloudScale: 0.5, lineScale: 0.5, noise: false, static: false }
-          : { dpr: Math.min(window.devicePixelRatio || 1, 2), particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false };
+          : {
+          // 这层画的全是柔和光晕，没有文字和细线：DPR 从 2 降到 1.5，
+          // 像素量直接少 44%，观感没有可分辨的差别。
+          dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+          particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false
+        };
       // 减弱动态效果时强制静态背景（用户可随时在设置中手动开启），可访问性与续航兼顾
       if (preferReduced) ParticleSystem.settings.animated = false;
 
@@ -4873,20 +4878,32 @@
       let ambientW = 0;
       let ambientH = 0;
 
-      const drawAmbient = () => {
-        const cw = Math.max(1, Math.round(window.innerWidth * AMBIENT_SCALE));
-        const ch = Math.max(1, Math.round(window.innerHeight * AMBIENT_SCALE));
-        if (ambientW !== cw || ambientH !== ch) {
+      const AMBIENT_INTERVAL = 32; // ≈30fps
+      let lastAmbientAt = 0;
+
+      const drawAmbient = (now) => {
+        const ww = window.innerWidth;
+        const wh = window.innerHeight;
+        const cw = Math.max(1, Math.round(ww * AMBIENT_SCALE));
+        const ch = Math.max(1, Math.round(wh * AMBIENT_SCALE));
+        const sizeChanged = ambientW !== cw || ambientH !== ch;
+        if (sizeChanged) {
           ambientCanvas.width = ambientW = cw;
           ambientCanvas.height = ambientH = ch;
         }
-        // 重置变换后按缩放系数映射，绘制函数内部仍使用 CSS 像素坐标
-        ambientCtx.setTransform(AMBIENT_SCALE, 0, 0, AMBIENT_SCALE, 0, 0);
-        ambientCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        if (quality.noise) drawNoiseBackground(ambientCtx);
-        drawClouds(ambientCtx);
-        drawNeonLines(ambientCtx);
-        ctx.drawImage(ambientCanvas, 0, 0, window.innerWidth, window.innerHeight);
+        // 噪声渐变、云、霓虹线的周期都在秒级：按 30fps 重绘、其余帧直接复用上一张。
+        // 观感没有差别，但把十来次全屏渐变填充从「每帧一次」压到「每 3~5 帧一次」，
+        // 这才是 144Hz 下真正吃满 GPU 填充率的部分。
+        if (sizeChanged || now - lastAmbientAt >= AMBIENT_INTERVAL) {
+          lastAmbientAt = now;
+          // 重置变换后按缩放系数映射，绘制函数内部仍使用 CSS 像素坐标
+          ambientCtx.setTransform(AMBIENT_SCALE, 0, 0, AMBIENT_SCALE, 0, 0);
+          ambientCtx.clearRect(0, 0, ww, wh);
+          if (quality.noise) drawNoiseBackground(ambientCtx);
+          drawClouds(ambientCtx);
+          drawNeonLines(ambientCtx);
+        }
+        ctx.drawImage(ambientCanvas, 0, 0, ww, wh);
       };
 
       const draw = () => {
@@ -4910,7 +4927,7 @@
 
         // 绘制顺序：噪声背景 → 云朵 → 扫描线 → 连线 → 粒子 → 爆发 → 星星
         if (ParticleSystem.settings.animated) {
-          drawAmbient();
+          drawAmbient(now);
         }
         drawConnections();
         drawParticles();
