@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=36",
+      "icon": "apps/apexon-weather-icon.png?v=37",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,23 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.0",
-        "versionCode": 36,
+        "version": "2.9.1",
+        "versionCode": 37,
         "packageType": "apk",
-        "date": "2026-11-18",
+        "date": "2026-11-19",
         "size": "36.47 MB",
-        "file": "apps/apexon-weather-2.9.0.apk?v=36",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.0.apk?v=36",
-        "sha256": "0e2289072c3073653e98e8bf074ccaebf52fe99b5d4ee1b418aef24fc17bc880",
+        "file": "apps/apexon-weather-2.9.1.apk?v=37",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.1.apk?v=37",
+        "sha256": "8e6035fd8b2c343a730d368abbdd1bc11b1dc4c408923cf2abd07f7e6dc37c34",
         "minSdk": 24,
         "changelog": [
-          "夜间不再是静态一张图：新增星点呼吸、月晕起伏与偶发流星，白天和夜里都有动。",
-          "深色主题下场景底部渐隐加长，顶部影像会「沉」进内容区，不再是上亮下黑一条硬边。",
-          "视频解码优化：滚动、切到后台、低画质或省流量时自动停播并释放解码器；浅色主题也恢复动态背景。",
-          "电脑端设置等面板改为居中对话框，鼠标悬停有明确反馈，不再从屏幕底部抽出一整条。",
-          "配色整体重做：海洋蓝主色 + 青绿副色 + 暖砂强调，浅色底去掉发闷的紫调。"
+          "设置新增「动态背景」开关：一键停掉全屏视频与夜空动画，只保留静态渐变，低配设备帧率提升最明显。",
+          "「动效」选项更名为「降低动效」，开启后同时停用场景动画与视频解码。",
+          "关闭动态背景后天气信息、配色与布局完全不变，只是画面不再动。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.0.exe?v=36",
+        "windowsFile": "apps/apexon-weather-setup-2.9.1.exe?v=37",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
