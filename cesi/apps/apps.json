@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=38",
+      "icon": "apps/apexon-weather-icon.png?v=39",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.2",
-        "versionCode": 38,
+        "version": "2.9.3",
+        "versionCode": 39,
         "packageType": "apk",
         "date": "2026-11-19",
         "size": "36.48 MB",
-        "file": "apps/apexon-weather-2.9.2.apk?v=38",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.2.apk?v=38",
-        "sha256": "ea8b121473e4cb6d6bebb5e6b792c8282a9cc909ebd3e380dd0acc0ec2757685",
+        "file": "apps/apexon-weather-2.9.3.apk?v=39",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.3.apk?v=39",
+        "sha256": "9f624d30c747512c4c01d4026f7835bf564292acf8e7d12a6d40114b4698ce83",
         "minSdk": 24,
         "changelog": [
-          "修复控制台反复刷出的 Service Worker 报错：浏览器扩展等非本站请求不再被缓存拦截，网络失败时也不会再抛 \"Failed to convert value to Response\"。",
-          "修复切到后台再切回时的 264ms 长任务卡顿，视频同步改到下一帧执行。",
-          "白天彻底移除夜空四层全屏动画，静态页面不再空转合成；新增 ?fx=off 诊断模式，可一键关掉全部动效对比帧率。"
+          "背景动效改为「静态图 + 缓慢推拉」：不再解码全屏视频，动画全部交给合成器，核显设备帧率提升最明显。",
+          "设置新增「视频背景」开关（默认关闭），想要原来的动态视频观感可以手动打开。",
+          "首屏滚出视口后背景动效自动暂停，减少待机耗电。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.2.exe?v=38",
+        "windowsFile": "apps/apexon-weather-setup-2.9.3.exe?v=39",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
