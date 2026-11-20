@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=44",
+      "icon": "apps/apexon-weather-icon.png?v=45",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.8",
-        "versionCode": 44,
+        "version": "2.9.9",
+        "versionCode": 45,
         "packageType": "apk",
-        "date": "2026-11-20",
+        "date": "2026-11-21",
         "size": "36.50 MB",
-        "file": "apps/apexon-weather-2.9.8.apk?v=44",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.8.apk?v=44",
-        "sha256": "bdeec560e6323354d9174f5f1a6a20a6fa0938169e8d12e3362d08f5fbd6fc15",
+        "file": "apps/apexon-weather-2.9.9.apk?v=45",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.9.apk?v=45",
+        "sha256": "23ea7384d1bddc5a7b142f55c421d08a1b43a7e142ec37acf1a74708d303a38f",
         "minSdk": 24,
         "changelog": [
-          "牵手里的称呼重做了：现在选的是「你是 TA 的谁」——选「爸爸」，TA 那边看到的就是「爸爸」；选「儿子」，TA 看到的就是「儿子」。",
-          "聊天页顶部写「和 TA」，正文第一行写「你是 X」，每句话前面标上是谁说的，不会再分不清哪句是谁说的。",
-          "邀请口令不再占着称呼的位置，回到状态行里显示。"
+          "「牵手」的称呼改成你自己备注：你管 TA 叫爸爸，你这边就显示爸爸；TA 管你叫儿子，TA 那边显示儿子，两边互不影响。",
+          "聊天页标题就是你给 TA 的备注，消息前面标「你」或这个备注，不会再出现反过来的名字。",
+          "备注只存在你自己的手机上，不会传给对方。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.8.exe?v=44",
+        "windowsFile": "apps/apexon-weather-setup-2.9.9.exe?v=45",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
