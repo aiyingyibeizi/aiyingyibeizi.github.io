@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=43",
+      "icon": "apps/apexon-weather-icon.png?v=44",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.7",
-        "versionCode": 43,
+        "version": "2.9.8",
+        "versionCode": 44,
         "packageType": "apk",
         "date": "2026-11-20",
-        "size": "36.49 MB",
-        "file": "apps/apexon-weather-2.9.7.apk?v=43",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.7.apk?v=43",
-        "sha256": "a87304503f50758bc5540fc3528e2188aa091c763ad03978c22720825593ffac",
+        "size": "36.50 MB",
+        "file": "apps/apexon-weather-2.9.8.apk?v=44",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.8.apk?v=44",
+        "sha256": "bdeec560e6323354d9174f5f1a6a20a6fa0938169e8d12e3362d08f5fbd6fc15",
         "minSdk": 24,
         "changelog": [
-          "牵手换了说法：称呼、口令、等待和确认都改成日常语气，不再像设置向导，每天三句话的规则也讲清楚了。",
-          "夜里不再一片死黑：夜空换成深靛蓝配远处暖色灯火，月光和星点偏暖，暗色主题底色也提亮一点。",
-          "修好牵手快捷短语：之前点「天气 / 关照 / 想你」插进输入框的是一串英文键名，现在是真的句子。"
+          "牵手里的称呼重做了：现在选的是「你是 TA 的谁」——选「爸爸」，TA 那边看到的就是「爸爸」；选「儿子」，TA 看到的就是「儿子」。",
+          "聊天页顶部写「和 TA」，正文第一行写「你是 X」，每句话前面标上是谁说的，不会再分不清哪句是谁说的。",
+          "邀请口令不再占着称呼的位置，回到状态行里显示。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.7.exe?v=43",
+        "windowsFile": "apps/apexon-weather-setup-2.9.8.exe?v=44",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
