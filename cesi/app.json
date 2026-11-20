@@ -2,13 +2,13 @@
   "id": "com.apexon.weather",
   "name": "APEXON Weather",
   "nameZh": "APEXON 天气",
-  "version": "2.9.6",
-  "versionCode": 42,
-  "releaseDate": "2026-11-19",
-  "buildTime": "2026-11-19T21:18:50+08:00",
-  "size": 38262207,
+  "version": "2.9.7",
+  "versionCode": 43,
+  "releaseDate": "2026-11-20",
+  "buildTime": "2026-11-20T22:06:41+08:00",
+  "size": 38266571,
   "sizeText": "36.49 MB",
-  "sha256": "697062411F8EE2011D27EF3FE941514CCE633EA3822103897E6BD571BDB5B14C",
+  "sha256": "A87304503F50758BC5540FC3528E2188AA091C763AD03978C22720825593FFAC",
   "platform": "android",
   "packageType": "apk",
   "architectures": "universal",
@@ -19,7 +19,7 @@
   "publisher": "APEXON",
   "license": "Proprietary",
   "homepage": "https://apexon.qzz.io/",
-  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.6.apk?v=42",
+  "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.7.apk?v=43",
   "icon": "icon-512x512.png",
   "iconUrl": "",
   "summary": "一个安静、克制、为每天而生的天气应用。",
@@ -28,54 +28,54 @@
   "descriptionEn": "APEXON Weather takes \"just checking the weather\" to its limit.\n\nReal-time conditions, 24-hour hourly forecast, 7-day trend, air quality with health advice and weather alerts — all readable on a single screen. The background shifts with the sky: clear, rain, snow, thunder, fog, starfield, each with its own palette.\n\nIt is thrifty: layered caching and request de-duplication keep daily API calls to a minimum, and a saved snapshot is still there when the network is not. It is also quiet: no pop-ups, no ads, no ornamental animation — only the numbers you actually need.\n\nCity search and multi-city management, auto / light / dark themes, 10 languages, safe-area aware on both iOS and Android, and installable to the home screen for offline use.\n\nI cannot control the weather, but I try my best to explain it clearly.",
   "changelogI18n": {
     "zh-CN": [
-      "网页版可以直接安装到桌面：安卓与桌面 Chrome 走系统安装框，iPhone / iPad 用「分享 → 添加到主屏幕」，装完和 APK 一样全屏运行。",
-      "设置里新增「安装到桌面」入口，检测到已经在独立窗口运行（含 APK）时自动隐藏，浏览器没有开放安装时给出换用 Chrome / Edge 的说明。",
-      "补全 manifest 的 id、display_override 与启动方式，满足浏览器的可安装判定。"
+      "牵手换了说法：称呼、口令、等待和确认都改成日常语气，不再像设置向导，每天三句话的规则也讲清楚了。",
+      "夜里不再一片死黑：夜空换成深靛蓝配远处暖色灯火，月光和星点偏暖，暗色主题底色也提亮一点。",
+      "修好牵手快捷短语：之前点「天气 / 关照 / 想你」插进输入框的是一串英文键名，现在是真的句子。"
     ],
     "zh-TW": [
-      "網頁版可以直接安裝到桌面：Android 與桌面 Chrome 走系統安裝框，iPhone / iPad 用「分享 → 加入主畫面」，裝完和 APK 一樣全螢幕執行。",
-      "設定裡新增「安裝到桌面」入口，偵測到已在獨立視窗執行（含 APK）時自動隱藏，瀏覽器未開放安裝時會提示改用 Chrome / Edge。",
-      "補齊 manifest 的 id、display_override 與啟動方式，符合瀏覽器的可安裝判定。"
+      "牽手換了說法：稱呼、口令、等待和確認都改成日常語氣，不再像設定精靈，每天三句話的規則也講清楚了。",
+      "夜裡不再一片死黑：夜空換成深靛藍配遠處暖色燈火，月光和星點偏暖，暗色主題底色也提亮一點。",
+      "修好牽手快捷短語：之前點「天氣 / 關照 / 想你」插進輸入框的是一串英文鍵名，現在是真的句子。"
     ],
     "en": [
-      "The web app can now be installed to the home screen: Android and desktop Chrome use the system install prompt, and iPhone/iPad use Share → Add to Home Screen, running full screen like the APK.",
-      "Added an \"Install to home screen\" entry in Settings. It hides itself when already running standalone (including the APK) and explains how to switch to Chrome/Edge when the browser has no install entry.",
-      "Completed the manifest (id, display_override, launch handler) so browsers recognise the app as installable."
+      "Hand in hand now speaks plainly: names, codes, waiting and confirming all use everyday words instead of setup-wizard language, and the three-lines-a-day rule is stated clearly.",
+      "Nights are no longer pitch black: the sky is deep indigo with warm distant lights, the moon and stars are warmer, and the dark theme background is a little lighter.",
+      "Fixed the hand-in-hand shortcuts: tapping Weather / Care / Miss used to insert an English key name into the input — now it inserts a real line."
     ],
     "ja": [
-      "Web 版をホーム画面にインストールできるようになりました。Android / デスクトップ Chrome はシステムのインストール画面、iPhone / iPad は「共有 → ホーム画面に追加」を使います。",
-      "設定に「ホーム画面に追加」を追加しました。APK を含むスタンドアロン実行中は自動的に非表示になり、インストール入口のないブラウザでは Chrome / Edge の利用を案内します。",
-      "manifest に id・display_override・起動方法を補い、ブラウザのインストール判定を満たすようにしました。"
+      "「ハンド・イン・ハンド」の言い回しを全面的に見直しました。呼び名、合言葉、待つ／確認する場面を日常の言葉にし、1日3通のルールもわかりやすく書きました。",
+      "夜が真っ暗でなくなりました。夜空は深い藍色に遠くの暖かな灯り、月と星は暖色寄りになり、ダークテーマの背景も少し明るくしました。",
+      "定型文の不具合を修正しました。「天気／気づかい／会いたい」を押すと英語のキー名が入力されていたのを、実際の文章にしました。"
     ],
     "ko": [
-      "웹 앱을 홈 화면에 설치할 수 있습니다. Android와 데스크톱 Chrome은 시스템 설치 창을, iPhone/iPad는 공유 → 홈 화면에 추가를 사용합니다.",
-      "설정에 「홈 화면에 추가」 항목을 넣었습니다. APK를 포함해 독립 창으로 실행 중이면 자동으로 숨기고, 설치 메뉴가 없는 브라우저에서는 Chrome / Edge 안내를 표시합니다.",
-      "manifest에 id, display_override, 실행 방식을 보완해 브라우저 설치 조건을 충족했습니다."
+      "「손잡기」의 표현을 전면 다듬었습니다. 호칭, 암호, 기다림과 확인을 일상적인 말투로 바꾸고 하루 세 마디 규칙도 쉽게 설명했습니다.",
+      "밤이 더 이상 새까맣지 않습니다. 밤하늘은 짙은 남색에 멀리 따뜻한 불빛, 달과 별은 따뜻한 색으로 바꾸고 어두운 테마 배경도 조금 밝혔습니다.",
+      "손잡기 빠른 문구를 고쳤습니다. 「날씨 / 걱정 / 보고 싶어」를 누르면 영어 키 이름이 입력되던 문제를 실제 문장으로 바꿨습니다."
     ],
     "fr": [
-      "L'application web peut désormais être installée sur l'écran d'accueil : Android et Chrome utilisent l'invite système, iPhone/iPad passent par Partager → Sur l'écran d'accueil.",
-      "Nouvelle entrée « Installer sur l’écran d’accueil » dans les réglages : masquée en mode autonome (APK inclus), avec une consigne Chrome / Edge si le navigateur n’offre pas d’installation.",
-      "Manifest complété (id, display_override, mode de lancement) pour satisfaire les critères d’installation des navigateurs."
+      "« Main dans la main » parle désormais simplement : noms, codes, attente et confirmation en langage courant, et la règle des trois messages par jour est clairement expliquée.",
+      "Les nuits ne sont plus noires : ciel indigo profond avec des lumières chaudes au loin, lune et étoiles plus chaudes, fond du thème sombre un peu plus clair.",
+      "Correction des raccourcis : « Météo / Attention / Tu me manques » inséraient un nom de clé anglais dans le champ, ils insèrent maintenant une vraie phrase."
     ],
     "de": [
-      "Die Web-App lässt sich jetzt zum Startbildschirm hinzufügen: Android und Chrome nutzen den Systemdialog, iPhone/iPad „Teilen → Zum Startbildschirm“.",
-      "In den Einstellungen gibt es nun „Zum Startbildschirm hinzufügen“; im eigenständigen Fenster (auch APK) ausgeblendet, mit Chrome-/Edge-Hinweis, wenn der Browser keine Installation anbietet.",
-      "Manifest vervollständigt (id, display_override, Startmodus), damit Browser die App als installierbar erkennen."
+      "„Hand in Hand“ spricht jetzt alltäglich: Namen, Codes, Warten und Bestätigen in normaler Sprache, und die Regel mit drei Nachrichten pro Tag ist klar erklärt.",
+      "Nächte sind nicht mehr pechschwarz: tief indigoblauer Himmel mit warmen Lichtern in der Ferne, Mond und Sterne wärmer, dunkler Hintergrund etwas heller.",
+      "Kurzbefehle repariert: „Wetter / Fürsorge / Vermisse dich“ fügten einen englischen Schlüsselnamen ein — jetzt einen echten Satz."
     ],
     "es": [
-      "La versión web ya se puede instalar en la pantalla de inicio: Android y Chrome usan el diálogo del sistema, iPhone/iPad usan Compartir → Añadir a pantalla de inicio.",
-      "Nueva entrada «Instalar en la pantalla de inicio» en Ajustes: se oculta si ya se ejecuta como ventana independiente (incluida la APK) y explica cómo usar Chrome o Edge si el navegador no ofrece instalación.",
-      "Manifest completado (id, display_override, modo de inicio) para cumplir los criterios de instalación."
+      "«De la mano» ahora habla de forma natural: nombres, códigos, espera y confirmación con palabras cotidianas, y la regla de tres mensajes al día queda clara.",
+      "Las noches ya no son negras: cielo índigo profundo con luces cálidas al fondo, luna y estrellas más cálidas, y el fondo del tema oscuro algo más claro.",
+      "Arreglados los atajos: «Tiempo / Cuidado / Te extraño» insertaban un nombre de clave en inglés; ahora insertan una frase real."
     ],
     "pt": [
-      "A versão web agora pode ser instalada na tela inicial: Android e Chrome usam o diálogo do sistema, iPhone/iPad usam Compartilhar → Adicionar à Tela de Início.",
-      "Nova opção «Instalar na tela inicial» nos Ajustes: oculta quando o app já roda em janela própria (incluindo o APK) e orienta a usar Chrome ou Edge se o navegador não oferecer instalação.",
-      "Manifest completado (id, display_override, modo de abertura) para atender aos critérios de instalação."
+      "«De mãos dadas» agora fala de forma simples: nomes, códigos, espera e confirmação em linguagem do dia a dia, e a regra de três mensagens por dia ficou clara.",
+      "As noites não são mais escuras: céu azul-índigo profundo com luzes quentes ao longe, lua e estrelas mais quentes, e o fundo do tema escuro um pouco mais claro.",
+      "Corrigidos os atalhos: «Tempo / Cuidado / Sinto sua falta» inseriam um nome de chave em inglês; agora inserem uma frase de verdade."
     ],
     "ru": [
-      "Веб-версию теперь можно установить на главный экран: Android и Chrome используют системное окно, iPhone/iPad — «Поделиться → На экран «Домой»».",
-      "В настройках появился пункт «Установить на главный экран»; в отдельном окне (включая APK) он скрывается, а если браузер не предлагает установку — подсказывает открыть Chrome или Edge.",
-      "Манифест дополнен (id, display_override, режим запуска), чтобы браузеры считали приложение устанавливаемым."
+      "«Рука в руке» заговорил обычными словами: имена, коды, ожидание и подтверждение — без языка мастеров настройки, а правило трёх сообщений в день объяснено понятно.",
+      "Ночь больше не кромешная: небо глубокого индиго с тёплыми огнями вдали, луна и звёзды теплее, фон тёмной темы чуть светлее.",
+      "Исправлены быстрые фразы: «Погода / Забота / Скучаю» вставляли английское имя ключа, теперь вставляют настоящую фразу."
     ]
   },
   "tags": [
@@ -88,15 +88,15 @@
   ],
   "requirements": "Android 7.0（API 24）及以上；无需 Google 服务；首次启动需授予定位权限以获取本地天气。",
   "requirementsEn": "Android 7.0 (API 24) or later; no Google services required; location permission is requested on first launch for local weather.",
-  "fileName": "apexon-weather-2.9.6.apk",
+  "fileName": "apexon-weather-2.9.7.apk",
   "changelog": [
-    "网页版可以直接安装到桌面：安卓与桌面 Chrome 走系统安装框，iPhone / iPad 用「分享 → 添加到主屏幕」，装完和 APK 一样全屏运行。",
-    "设置里新增「安装到桌面」入口，检测到已经在独立窗口运行（含 APK）时自动隐藏，浏览器没有开放安装时给出换用 Chrome / Edge 的说明。",
-    "补全 manifest 的 id、display_override 与启动方式，满足浏览器的可安装判定。"
+    "牵手换了说法：称呼、口令、等待和确认都改成日常语气，不再像设置向导，每天三句话的规则也讲清楚了。",
+    "夜里不再一片死黑：夜空换成深靛蓝配远处暖色灯火，月光和星点偏暖，暗色主题底色也提亮一点。",
+    "修好牵手快捷短语：之前点「天气 / 关照 / 想你」插进输入框的是一串英文键名，现在是真的句子。"
   ],
   "changelogEn": [
-    "The web app can now be installed to the home screen: Android and desktop Chrome use the system install prompt, and iPhone/iPad use Share → Add to Home Screen, running full screen like the APK.",
-    "Added an \"Install to home screen\" entry in Settings. It hides itself when already running standalone (including the APK) and explains how to switch to Chrome/Edge when the browser has no install entry.",
-    "Completed the manifest (id, display_override, launch handler) so browsers recognise the app as installable."
+    "Hand in hand now speaks plainly: names, codes, waiting and confirming all use everyday words instead of setup-wizard language, and the three-lines-a-day rule is stated clearly.",
+    "Nights are no longer pitch black: the sky is deep indigo with warm distant lights, the moon and stars are warmer, and the dark theme background is a little lighter.",
+    "Fixed the hand-in-hand shortcuts: tapping Weather / Care / Miss used to insert an English key name into the input — now it inserts a real line."
   ]
 }

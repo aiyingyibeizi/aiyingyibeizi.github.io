@@ -5,7 +5,7 @@
       "id": "apexon-weather",
       "name": "APEXON 天气",
       "tagline": "把「看一眼天气」这件事做到极致",
-      "icon": "apps/apexon-weather-icon.png?v=42",
+      "icon": "apps/apexon-weather-icon.png?v=43",
       "platform": "android",
       "requirements": "Android 7.0+",
       "description": "实时天气、24 小时逐时预报、7 天趋势、空气质量与灾害预警，一屏读完。动态背景随天气切换，离线也能看上一份数据。",
@@ -15,21 +15,21 @@
         "离线可用"
       ],
       "latest": {
-        "version": "2.9.6",
-        "versionCode": 42,
+        "version": "2.9.7",
+        "versionCode": 43,
         "packageType": "apk",
-        "date": "2026-11-19",
+        "date": "2026-11-20",
         "size": "36.49 MB",
-        "file": "apps/apexon-weather-2.9.6.apk?v=42",
-        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.6.apk?v=42",
-        "sha256": "697062411f8ee2011d27ef3fe941514cce633ea3822103897e6bd571bdb5b14c",
+        "file": "apps/apexon-weather-2.9.7.apk?v=43",
+        "downloadUrl": "https://apexon.qzz.io/apps/apexon-weather-2.9.7.apk?v=43",
+        "sha256": "a87304503f50758bc5540fc3528e2188aa091c763ad03978c22720825593ffac",
         "minSdk": 24,
         "changelog": [
-          "网页版可以直接安装到桌面：安卓与桌面 Chrome 走系统安装框，iPhone / iPad 用「分享 → 添加到主屏幕」，装完和 APK 一样全屏运行。",
-          "设置里新增「安装到桌面」入口，检测到已经在独立窗口运行（含 APK）时自动隐藏，浏览器没有开放安装时给出换用 Chrome / Edge 的说明。",
-          "补全 manifest 的 id、display_override 与启动方式，满足浏览器的可安装判定。"
+          "牵手换了说法：称呼、口令、等待和确认都改成日常语气，不再像设置向导，每天三句话的规则也讲清楚了。",
+          "夜里不再一片死黑：夜空换成深靛蓝配远处暖色灯火，月光和星点偏暖，暗色主题底色也提亮一点。",
+          "修好牵手快捷短语：之前点「天气 / 关照 / 想你」插进输入框的是一串英文键名，现在是真的句子。"
         ],
-        "windowsFile": "apps/apexon-weather-setup-2.9.6.exe?v=42",
+        "windowsFile": "apps/apexon-weather-setup-2.9.7.exe?v=43",
         "webUrl": "https://weather.apexon.qzz.io/"
       }
     }
