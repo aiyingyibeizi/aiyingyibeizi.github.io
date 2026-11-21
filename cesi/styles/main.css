@@ -351,9 +351,11 @@ body.loaded .apexon-page {
   height: calc(var(--header-height) + var(--safe-top));
   padding-top: var(--safe-top);
   z-index: 1000;
-  background: rgba(5, 7, 13, 0.72);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  /* 顶栏不再用 backdrop-filter。
+     背景 canvas 每帧都在重绘，滤镜就必须跟着每帧把整条 Top Bar 的底重新采样 + 两遍模糊，
+     滚动时还要再叠一次内容重绘——这是「滚起来发涩」最稳定的一个开销源。
+     换成近乎不透明的底色后，观感几乎无差别，合成器不必再每帧做全宽模糊。 */
+  background: linear-gradient(180deg, rgba(5, 7, 13, 0.94) 0%, rgba(5, 7, 13, 0.88) 100%);
   border-bottom: 1px solid rgba(34, 211, 238, 0.08);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.45),
@@ -475,8 +477,6 @@ body.loaded .apexon-page {
   border: 1px solid var(--apex-border);
   border-radius: var(--apex-radius-full);
   box-shadow: var(--apex-shadow-sm);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
 .apexon-header-nav a {
@@ -2068,8 +2068,9 @@ html[data-bw="true"] .hero-stat-chip {
   background: var(--game-card-bg);
   color: var(--apex-text);
   border: 1px solid var(--game-card-border);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  /* 首页有 40 张卡片。每张卡一旦挂 backdrop-filter，底下的粒子 canvas 每帧变化，
+     40 块 24px 模糊就要跟着每帧重算一次，滚动时再叠上内容重绘——
+     这是首页掉帧的最大头。去掉模糊、只留半透明底色，卡片依旧是「玻璃」观感。 */
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -8835,16 +8836,12 @@ body {
    （模糊是造成滚动卡顿与交互迟滞的主要 GPU 负担，减轻半径以保住帧率）
    ============================================================================ */
 @media (max-width: 767px) {
-  .apexon-header,
-  .item-card,
-  .apex-card--game,
   .profile-overlay,
   .login-overlay,
   .theme-pill,
   [class*="dropdown"],
   [class*="modal"],
-  .auth-overlay,
-  .profile-overlay {
+  .auth-overlay {
     -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
     backdrop-filter: blur(8px) saturate(130%) !important;
   }
@@ -8852,12 +8849,6 @@ body {
 
 /* 全端：优先用 transform/opacity 组合做按钮与面板反馈，避免触发昂贵的重新布局，
    让点击与弹窗开关更跟手 */
-@media (prefers-reduced-motion: no-preference) {
-  .apexon-header {
-    transform: translateZ(0);
-    will-change: backdrop-filter;
-  }
-}
 
 /* ============================================================================
    P1-11 移动端：去掉系统原生 tap 高亮矩形与长按文本选区，保持品牌圆角视觉

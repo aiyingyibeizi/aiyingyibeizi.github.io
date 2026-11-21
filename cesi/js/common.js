@@ -4120,9 +4120,9 @@
         : lowEnd
           ? { dpr: 1.25, particleScale: 0.6, cloudScale: 0.5, lineScale: 0.5, noise: false, static: false }
           : {
-          // 这层画的全是柔和光晕，没有文字和细线：DPR 从 2 降到 1.5，
-          // 像素量直接少 44%，观感没有可分辨的差别。
-          dpr: Math.min(window.devicePixelRatio || 1, 1.5),
+          // 这层画的全是柔和光晕，没有文字和细线：DPR 从 2 降到 1.25，
+          // 像素量直接少 60%，观感没有可分辨的差别。
+          dpr: Math.min(window.devicePixelRatio || 1, 1.25),
           particleScale: 1, cloudScale: 1, lineScale: 1, noise: true, static: false
         };
       // 减弱动态效果时强制静态背景（用户可随时在设置中手动开启），可访问性与续航兼顾
@@ -4909,10 +4909,22 @@
         ctx.drawImage(ambientCanvas, 0, 0, ww, wh);
       };
 
+      // 帧率上限：这层背景的运动周期都是秒级，144Hz 屏上多画的帧肉眼看不出来，
+      // 却会把 GPU 填充率和合成线程时间全部吃满，滚动自然发涩。
+      // 阈值取 1000/75：60Hz 屏逐帧正常绘制，120/144Hz 屏自动隔帧绘制（72fps），
+      // 工作量砍半、观感不变，把余量让给滚动与交互。
+      const TARGET_FRAME_MS = 1000 / 75;
+      let lastDrawAt = 0;
+
       const draw = () => {
         if (!isActive) return;
-        frameCount++;
         const now = performance.now();
+        if (now - lastDrawAt < TARGET_FRAME_MS) {
+          frameId = requestAnimationFrame(draw);
+          return;
+        }
+        lastDrawAt = now;
+        frameCount++;
         const delta = now - lastFrameTime;
         lastFrameTime = now;
 
