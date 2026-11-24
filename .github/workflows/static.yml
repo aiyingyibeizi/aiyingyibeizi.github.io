@@ -32,6 +32,9 @@ jobs:
         with:
           path: './cesi'
 
+      - name: Wait for artifact indexing
+        run: sleep 30
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5.0.1
