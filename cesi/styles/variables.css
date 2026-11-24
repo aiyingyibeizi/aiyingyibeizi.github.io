@@ -410,9 +410,9 @@ html[data-bw="true"][data-theme],
 html[data-theme="light"] {
   color-scheme: light;
 
-  --apex-primary: #7c6bc4;
-  --apex-primary-dark: #6d5dfc;
-  --apex-primary-light: #9b8fd4;
+  --apex-primary: #6d5fc2;
+  --apex-primary-dark: #5b4bb0;
+  --apex-primary-light: #b3a8e6;
 
   --apex-accent-green: #10b981;
   --apex-accent-red: #ef4444;
@@ -423,43 +423,43 @@ html[data-theme="light"] {
   --apex-success: #10b981;
   --apex-warning: #f59e0b;
   --apex-danger: #ef4444;
-  --apex-info: #7c6bc4;
+  --apex-info: #6d5fc2;
 
-  --apex-bg: #eef6ff;
+  --apex-bg: #f4f5f9;
   --apex-bg-elevated: #ffffff;
   --apex-surface: #ffffff;
   --apex-surface-elevated: #ffffff;
-  --apex-surface-hover: rgba(30, 27, 75, 0.06);
+  --apex-surface-hover: rgba(15, 23, 42, 0.05);
   --apex-overlay: rgba(255, 255, 255, 0.96);
 
-  --apex-text: #1e1b4b;
-  --apex-text-secondary: #5b56a6;
-  --apex-text-tertiary: #8b87c9;
+  --apex-text: #1f2430;
+  --apex-text-secondary: #5b6478;
+  --apex-text-tertiary: #8a91a5;
   --apex-text-inverse: #ffffff;
 
-  --apex-border: rgba(124, 107, 196, 0.14);
-  --apex-border-subtle: rgba(124, 107, 196, 0.08);
-  --apex-border-strong: rgba(124, 107, 196, 0.22);
+  --apex-border: rgba(15, 23, 42, 0.10);
+  --apex-border-subtle: rgba(15, 23, 42, 0.06);
+  --apex-border-strong: rgba(15, 23, 42, 0.16);
 
-  --apex-glow-primary: rgba(124, 107, 196, 0.25);
-  --apex-glow-violet: rgba(139, 92, 246, 0.25);
-  --apex-shadow-sm: 0 2px 8px rgba(124, 107, 196, 0.10);
-  --apex-shadow-md: 0 8px 28px rgba(124, 107, 196, 0.14);
-  --apex-shadow-lg: 0 22px 60px rgba(124, 107, 196, 0.18);
-  --apex-shadow-glow: 0 0 24px rgba(124, 107, 196, 0.20), 0 0 40px rgba(139, 92, 246, 0.16);
+  --apex-glow-primary: rgba(109, 95, 194, 0.18);
+  --apex-glow-violet: rgba(139, 92, 246, 0.18);
+  --apex-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --apex-shadow-md: 0 6px 20px rgba(15, 23, 42, 0.10);
+  --apex-shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.14);
+  --apex-shadow-glow: 0 0 20px rgba(109, 95, 194, 0.14), 0 0 36px rgba(139, 92, 246, 0.10);
 
-  --focus-ring: 0 0 0 3px rgba(124, 107, 196, 0.25);
+  --focus-ring: 0 0 0 3px rgba(109, 95, 194, 0.22);
 
-  --game-card-bg: linear-gradient(135deg, #c4f0ff 0%, #e6d5ff 100%);
-  --game-card-glow: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.10) 100%);
-  --game-card-border: rgba(124, 107, 196, 0.14);
-  --game-card-border-hover: rgba(124, 107, 196, 0.28);
-  --game-card-title: #312e81;
-  --game-card-desc: #5b56a6;
+  --game-card-bg: #ffffff;
+  --game-card-glow: linear-gradient(135deg, rgba(109, 95, 194, 0.05) 0%, rgba(139, 92, 246, 0.04) 100%);
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-border-hover: rgba(109, 95, 194, 0.30);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 
-  --game-canvas-bg: rgba(238, 246, 255, 0.72);
+  --game-canvas-bg: rgba(244, 245, 249, 0.72);
 
-  --clerk-avatar-bg: linear-gradient(135deg, #7c6bc4 0%, #a855f7 100%);
+  --clerk-avatar-bg: linear-gradient(135deg, #6d5fc2 0%, #a855f7 100%);
   --clerk-avatar-text: #ffffff;
 }
 
@@ -494,10 +494,10 @@ html[data-theme="light"] {
   --apex-primary-light: #10b981;
   --apex-accent-cyan: #059669;
   --apex-glow-primary: rgba(5, 150, 105, 0.25);
-  --game-card-bg: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  --game-card-border: rgba(5, 150, 105, 0.16);
-  --game-card-title: #064e3b;
-  --game-card-desc: #047857;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 3：琥珀金 */
@@ -519,10 +519,10 @@ html[data-theme="light"] {
   --apex-primary-light: #f59e0b;
   --apex-accent-cyan: #d97706;
   --apex-glow-primary: rgba(217, 119, 6, 0.25);
-  --game-card-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  --game-card-border: rgba(217, 119, 6, 0.16);
-  --game-card-title: #78350f;
-  --game-card-desc: #b45309;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 4：玫瑰粉 */
@@ -544,10 +544,10 @@ html[data-theme="light"] {
   --apex-primary-light: #ec4899;
   --apex-accent-cyan: #db2777;
   --apex-glow-primary: rgba(219, 39, 119, 0.25);
-  --game-card-bg: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-  --game-card-border: rgba(219, 39, 119, 0.16);
-  --game-card-title: #831843;
-  --game-card-desc: #be185d;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 5：靛蓝深海 */
@@ -569,10 +569,10 @@ html[data-theme="light"] {
   --apex-primary-light: #6366f1;
   --apex-accent-cyan: #4f46e5;
   --apex-glow-primary: rgba(79, 70, 229, 0.25);
-  --game-card-bg: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  --game-card-border: rgba(79, 70, 229, 0.16);
-  --game-card-title: #312e81;
-  --game-card-desc: #4338ca;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 6：珊瑚橙 */
@@ -594,10 +594,10 @@ html[data-theme="light"] {
   --apex-primary-light: #f97316;
   --apex-accent-cyan: #ea580c;
   --apex-glow-primary: rgba(234, 88, 12, 0.25);
-  --game-card-bg: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
-  --game-card-border: rgba(234, 88, 12, 0.16);
-  --game-card-title: #7c2d12;
-  --game-card-desc: #c2410c;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 7：日落晚霞（粉橙渐变） */
@@ -621,10 +621,10 @@ html[data-theme="light"] {
   --apex-accent-cyan: #d97706;
   --apex-accent-purple: #be185d;
   --apex-glow-primary: rgba(217, 119, 6, 0.25);
-  --game-card-bg: linear-gradient(135deg, #fef3c7 0%, #fbcfe8 100%);
-  --game-card-border: rgba(217, 119, 6, 0.16);
-  --game-card-title: #7c2d12;
-  --game-card-desc: #b45309;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 8：薄荷青柠 */
@@ -646,10 +646,10 @@ html[data-theme="light"] {
   --apex-primary-light: #14b8a6;
   --apex-accent-cyan: #0d9488;
   --apex-glow-primary: rgba(13, 148, 136, 0.25);
-  --game-card-bg: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-  --game-card-border: rgba(13, 148, 136, 0.16);
-  --game-card-title: #134e4a;
-  --game-card-desc: #0f766e;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* 配色 9：深红绛紫 */
@@ -672,10 +672,10 @@ html[data-theme="light"] {
   --apex-primary-light: #e11d48;
   --apex-accent-cyan: #be123c;
   --apex-glow-primary: rgba(190, 18, 60, 0.25);
-  --game-card-bg: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
-  --game-card-border: rgba(190, 18, 60, 0.16);
-  --game-card-title: #881337;
-  --game-card-desc: #9f1239;
+  --game-card-bg: #ffffff;
+  --game-card-border: rgba(15, 23, 42, 0.10);
+  --game-card-title: #1f2430;
+  --game-card-desc: #5b6478;
 }
 
 /* ==========================================================================

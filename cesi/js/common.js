@@ -2040,7 +2040,7 @@
         document.dispatchEvent(new CustomEvent('apexon:themechange', { detail: { isLight: isBW } }));
       };
       const bwStored = localStorage.getItem('apex-bw-mode');
-      const isBW = bwStored === 'true';
+      const isBW = bwStored === null ? true : bwStored === "true";
       applyBW(isBW);
       const bwInput = document.getElementById('bwToggleInput');
       const bwToggle = document.getElementById('bwToggle');
